@@ -1,0 +1,85 @@
+			Warren J. Jasper
+			wjasper@tx.ncsu.edu
+			February 2, 2016
+
+This file will hopefully guide you on using the mcc-libusb package that will
+interface to the Measurement Computing data acquisition devices.  This package uses
+libusb-1.0 (not libusb-0.1 which is not backward compatible).  This is a complete rewrite of
+the drivers found in mcc-libid which uses the legacy libusb/libhid API.  This package
+also uses HIDAPI to interface to the HID devices.
+
+There are major differences between the mcc-libhid and the newer mcc-libusb library:
+1. The mcc-libusb now uses the Lesser GPL License.
+2. Linux specific types such as __u8 have been replaced with C99 standard uintN_t type.
+3. libhid/libusb-0.1 as been replaced with libusb-1.0
+4. The ability for callbacks and asynchronous IO has been added.
+5. The library supports multiple devices of the same type.
+6. The library interface to hid devices with HIDAPI instead of libhid
+
+Special Notes on compiling the libusb version.
+
+1. You must have installed the following packages
+      libusb-1.0
+      libusb-1.0-devel  or libusbx-devel-1.0 (Fedora) 
+      hidapi and related packages (See their README)
+
+   For example, on Fedora Core 8, they would be
+      libusbx
+      libusbx-devel
+
+   An easy way to get this is:
+
+    yum install libusbx libusbx-devel                           (Older versions of Fedora)
+    dnf install libusbx libusbx-devel                           (For Fedora 22 and later)
+    apt-get install libudev-dev libusb-1.0-0-dev libfox-1.6-dev (Ubuntu)
+
+  Then you need to get hidapi from http://www.signal11.us/oss/hidapi/
+  The easiest way to get this if you have git is:
+  
+      git clone git://github.com/signal11/hidapi.git
+   
+   and following the directions to install hidapi for your system (Linux/Windows/Mac)
+    For Unbuntu:
+
+    sudo apt-get install libudev-dev libusb-1.0-0-dev libfox-1.6-dev
+    sudo apt-get install autotools-dev autoconf automake libtool
+    ./bootstrap
+    ./configure
+    make
+    sudo make install
+
+  For Fedora 22 and later, the following may work:
+      dnf install hidapi hidapi-devel
+
+3. Get the file 61-mcc.rules (or 60-mcc.rules for Linux 2.6) from https://github.com/wjasper/Linux_Drivers
+   cp 61-mcc.rules /etc/udev/rules.d
+   /sbin/udevcontrol --reload_rules 
+             or
+   /sbin/udevadm control --reload-rules
+             or
+   /sbin/udevadm control --reload
+             or 
+         ... (udev changes a lot so see the man page for the incantation de jour)
+
+  Note: on the Raspberry Pi and some versions of Debian, you may need to rename 61-mcc.rules
+  to 99-mcc.rules, otherwise the rules get overwritten.
+
+4. NOW you are ready to compile the USB programs which you can get from:
+   git clone https://github.com/wjasper/Linux_Drivers.git
+   cd USB
+   make
+   sudo make install
+
+Note:  These drivers have been tested under Fedora Core, Ubuntu, and on the Raspberry Pi (Raspbian). 
+       It should work on any version of Linux.  If they don't drop me a line.
+
+       There is also limited Python support.  Google Python MCC.  One source is:
+       https://pypi.python.org/pypi/mccdaq_linux
+
+Good luck
+
+Warren Jasper PhD, PE
+North Carolina State University
+wjasper@tx.ncsu.edu
+
+
