@@ -1,0 +1,360 @@
+
+                             PCI-DAS1002 Version 1.9   
+                           ---------------------------
+
+ Linux loadable module for the Measurement Computing PCI-DAS 1002 A/D D/A DIO adapter
+ ---------------------------------------------------____-------------------------------
+
+Introduction:
+-------------
+This driver was written by Warren J. Jasper at North Carolina State
+University.  It is a driver for the Measurement Computing PCI-DAS1002 A/D
+adapter. It should run on all Linux 2.4, 2.6 and 3.X kernels on
+Pentium machines.  With minor modification, it should run on other
+architectures.
+
+Please send comments and bug fixes to wjasper@tx.ncsu.edu.  The source
+for the driver is located at https://github.com/wjasper/Linux_Drivers
+
+Distribution contents:
+----------------------
+README            - this file
+Makefile          - Makefile to compile and install the driver
+a2dc.c	          - PCI-DAS1002 driver wrapper
+a2dc_2_4.c        - kernel version 2.4
+a2dc_2_6.c        - kernel version 2.6.18 to 2.6.27
+a2dc_2_6_29.c     - kernel version 2.6.29
+a2dc_3_3_7.c      - kernel version 3.3.7
+a2dc_3_10_11.c    - kernel version 3.10.11
+a2dc.h	          - Driver definitions and constants.
+pci-das1002.h     - User and driver definitions and constants.
+test-das1002.c    - Test program.
+AD7376_0.pdf      - Documentation on the AD 7376
+cal100x.doc       - Word Document on Calibrating the DAS 1002
+dac8800.pdf       - Documentation on the dac8800
+RegMapSTC1000.pdf - Documentation on Register Maps
+PCI-DAS100x.pdf   - User's Manual for the PCI-DAS1002
+
+
+Building and installing the driver:
+-----------------------------------
+
+1. Untar the tar file:
+
+   tar zxvf PCI-DAS1002.1.9.tgz
+
+2. This should create the following files:
+
+a2dc_2_4.c
+a2dc_2_6.c
+a2dc_2_6_29.c
+a2dc_3_3_7.c
+a2dc_3_10_11.c
+AD7376_0.pdf
+Makefile
+a2dc.c      
+cal100x.doc   
+ModList        
+RegMapSTC1000.pdf
+PCI-DAS100x.pdf
+dac8800.pdf   
+pci-das1002.h  
+test-das1002.c
+a2dc.h      
+License
+README
+
+3. The default configuration is for the kernel to dynamically set the
+   major number.  If you wish to override this option and force a particular
+   major number, set the following in a2dc.h
+
+   #define DEFAULT_MAJOR_DEV  0    /* Default Major Device Number */
+
+   If you have more than one PCI-DAS1002 board in your computer, edit NUM_BOARDS and set
+   it to the correct value in the Makefile.
+
+        NUM_BOARDS=2
+
+4. To compile, type:
+
+   make
+
+5. To install the driver type:
+
+    make install
+
+Note:   The driver tries to install itself in /lib/modules/`uname -r`/kernel/drivers/char
+        Edit MODULE_DIR in the Makefile to install the driver in another directory.
+
+6. Copy the file 61-mcc.rules to /etc/udev/rules.d,
+   (or 60-mcc.rules for the older 2.6 kernel).
+
+   or inlcude the following rules:
+
+#Enable non-root access to pci devices
+SUBSYSTEM=="das1002", KERNEL=="ad[0-5]_*",     NAME="das1002/%k", MODE="666"
+SUBSYSTEM=="das1002", KERNEL=="da[0-5]_[0-1]", NAME="das1002/%k", MODE="666"
+SUBSYSTEM=="das1002", KERNEL=="dio[0-5]_*",    NAME="das1002/%k", MODE="666"
+
+To test your updated rules you can do one of the following:
+1.    /sbin/udevadm control --reload  (or something similar.  type man udevadm)
+2.    Reboot your system
+
+You will be able to search the attributes of the device by
+   /sbin/udevadm info -a -p $(/sbin/udevadm info -q path -n /dev/das1002/dio0_0A)
+
+
+7. To test run the test program 'test-das1002'
+
+    test-das1002
+
+Having the driver install at boot:  (2.4 kernel only)
+----------------------------------
+
+There are 2 ways to install the driver so that it comes up every time on boot-up. 
+
+1) add the following line to your /etc/modules.conf
+
+   alias char-major-253 pci-das1002
+
+2) You will need to do include the following lines in one of your boot rc
+   files.  The one we used is called /etc/rc.d/rc.local. Your setup may
+   vary.
+
+#! /bin/sh
+#
+# rc.local	This does local customization.
+#
+# Author:	Warren Jasper <wjasper@tx.ncsu.edu>
+#
+echo -n "Local customization:"
+
+
+if [ -x /sbin/insmod -a -r /lib/modules/`uname -r`/kernel/drivers/char/pci-das1002.o ]; then
+        echo -n "PCI-DAS1002"
+        /sbin/insmod -f /lib/modules/`uname -r`/kernel/drivers/char/pci-das1002.o
+fi
+
+
+How the driver works:
+---------------------
+
+(This is still under construction.  May not be correct)
+
+The driver is fairly straight forward, but since the current version of
+Linux is not 1003.4 compliant (it is not a real-time operating system),
+certain design decisions were made in writing this driver.
+
+Each A/D channel and  D/A channel and DIO  have their own minor number.
+I call these virtual channels or just channels.  There are 16 virtual A/D channels.
+The board has 16 physical A/D channels. When a channel is opened, it is mapped 1 to 1 to
+it's physical channel with a gain of +/- 5V.  Therefore, opening /dev/das1002/ad0_0
+will allow you to read from physical channel 0 on board 0. 
+Examples are:
+
+/dev/das1002/ad0_0      A/D channel board 0  physical channel 0
+/dev/das1002/da2_1      D/A channel board 2  physical channel 1
+/dev/das1002/dio1_0A    DIO         board 1  port A
+
+These device nodes are generated automagically for you by /sysfs and udev.
+Type ls -l /dev/das1002 to see all the devices.
+
+After the device is opened, it is possible to map or remap different
+physical channels to your virtual channel.  For example, if you want
+to read from all 16 channels at once, you will need to map the beginning and
+ending physical channel with ioctl calls (see below).  There are also many 
+triggering and gain options possible.
+
+Each channel can be opened in one of two modes:
+
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
+...
+
+  int fd;
+  fd = open("/dev/das1002/ad0_0", Mode);
+                              ^^------------------------ virtual channel number
+                            |___________________________ board number
+...
+
+
+Where Mode (Pacer Source) is an integer and equal to:
+
+(for A/D)
+ADC_SOFT_CONVERT             -- software pacer (one shot)
+ADC_PACER_CLOCK              -- internal pacer clock with interrupts.
+
+
+NOTE:  Each device has a pair of (hex) numbers at the end.  The first number refers to the
+       board number.  For example, Board 0 is the first PCI-DAS1002 board, Board 1 is the second
+       board, etc.  When the PCI BIOS is probing the boards, they are in the order of the slots.
+
+       The second number is the channel number.  When the device is
+       open, the virtual channel number is mapped to the physical channel 
+       number.  For example
+
+       fd = open("/dev/das1002/ad0_0", ADC_SOFT_CONVERT)
+
+       the fd would refer to physical channel 0.
+       However, after the device is open, you can map any contigous range of physical
+       channels to a virtual channel.  For example, if you wanted to sample on
+       physical A/D channels 0-3:
+
+       ioctl(fd, SET_MUX_HIGH, 3);
+
+       (See the section on ioctl call below.
+    
+
+Please read the limited documentation with the board if you are not
+familiar with the different ways to trigger an A/D conversion. (There are
+a bunch of them).
+
+
+****************************************************************************
+NOTE:  You can only open one channel at a time.  If you are running
+multiple processes, you must make sure you close the file descriptor before
+tying to open it again.
+****************************************************************************
+
+To read from a channel, use:
+
+  int bytesRead;             /* number of bytes read */
+  int count = 2;             /* desired number of conversions */
+  unsigned short data[2048]  /* buffer for data */
+
+  bytesRead = read( fd, data, count);
+
+
+****************************************************************************
+Warning: read() is implemented as a blocking function.  It will return
+when "count" conversions are completed.  Since there is only one A/D
+chip on the board, conversions are multiplexed anyway.
+****************************************************************************
+
+The following ioctl() functions have been implemented:
+
+1. ioctl(fd, ADC_SET_GAINS, Gain); 
+   This sets the input gain settings.  There are 8 allowable settings.
+   See header file pic-das1002.h for more information.
+
+2. ioctl(fd, ADC_GET_GAINS, Gain); 
+   Returns gain setting for that channel.  See header file pci-das1002.h 
+   for more information.
+
+3. ioctl(fd, ADC_SET_PACER_FREQ, frequency);
+   Pass the value of the pacer frequency in Hertz.  Should be a number
+   between 1 and 200000.  Not all values are possible, but the driver will
+   choose the closest possible one.
+
+4. ioctl(fd, ADC_GET_PACER_FREQ, &frequency);
+   Gets the actual pacer frequency.
+
+5. ioctl(fd, ADC_START_PACER, 0);
+   Starts the pacer clock.
+
+6. ioctl(fd, ADC_STOP_PACER, 0);
+   Stops the pacer clock.  Does not change any values.
+
+7. ioctl(fd, COUNTER0, CTR0_MODE2 | 10) ;
+   This call programs and sets the control register and the counter register
+   of the 8254 COUNTER 0.  You really need to get the documentation on
+   the 82C54 Programmable Timer from Intel if you want to program the
+   timer. The data argument is packed as follows:
+
+       Value for Counter 0  XXXX    Mode    MSB     LSB
+                            Byte 3  Byte 2  Byte 1  Byte 0
+
+   Where Mode is one of the five programmable modes, and Byte 0 and Byte 1
+   contain the data value for the 16 bit Counter 0.  In the above example,
+   counter0 is set to Mode 2, and the value 10 is loaded into the timer.
+   See header file pci-das1002.h for more information.
+
+8. ioctl(fd, ADC_DIO_PRESET, value);
+   Sometimes, it is useful to set some digital bits just before a read.
+   Since there may be some latency between a call to the dio followed
+   by a read, the call stores the desired output bit pattern.  Just
+   before interrupts are enabled, the dio is set (lower 4 bits of value).
+   (Not currently implemented :(
+
+9. ioctl(fd, ADC_TRIGGER_SOURCE, value);
+   Load the value of Trigger Control/Status Register (BADR1+4).  See the file
+   pci-das1002.h for possible values.
+
+10. ioctl(fd, SET_MUX_LOW, value);
+    Set the beginning value of in the MUX scan register.  This forces the A/D to
+    begin conversion on this channel.
+
+11. ioctl(fd, SET_MUX_HIGH, value);
+    Set the ending value of in the MUX scan register.  This forces the A/D to
+    convert from low_chan to high_chan;
+
+12. ioctl(fd, ADC_GET_CHAN_MUX_REG, *value);
+    Return the value of the MUX scan limit register, BADR1 + 2.
+
+13. ioctl(fd, ADC_SET_FRONT_END, True/False);
+    Sets board in Differential or Single Ended Mode.
+    1 = Single Ended Mode. Supports up to 16 Channels.
+    0 = Differential Mode. Supports up to  8 Channels.
+
+14. ioctl(fd, ADC_BURST_MODE, True/False);
+    True = Enable Burst Mode
+    Channel-to-channel skew is the result of multiplexing the A/D inputs
+    and is defined as the time between consecutive samples.  For examle,
+    if four channels are sampled at a rate of 1 KHz per channel, the
+    channel skew is 250 us ( 1 ms / 4).  Burst mode minimized channel-to-
+    channel skew by clocking the A/D at the maximum rate between successive
+    channels.  For example, at the 1-ms pulse channel 0 is sampled, channel 1
+    is sampled 5 us later, channel 2, 5 us after that and so on.  Then
+    no samples are taken until the next 1 ms pulse, when channel 0 is
+    sampled again.  In this mode the rate for all channels is 1 KHz, but
+    the channel-to-channel skew (delay) is not 5 us, or 20 us total.  The
+    minimum burst mode skew/delay on the PCI-DAS1002 is 6 us.
+
+15. ioctl(fd, ADC_PRETRIG, PretirgCount)
+    Set up the board for pre-triggering.  PretrigCount must be less than
+     32768 and also less than TotalCount - 512.
+
+16. ioctl(fd, NBIO_CANCEL)
+    Cancel non-blocking semaphore, clear non-block flag.
+
+17. ioctl(fd, NBIO_PENDIG, &value)
+    value = 1 Check to see if read is pending in non-blocking mode.
+    value = 0 No read is pending in non-blocking mode.
+
+18. ioctl(fd, NBIO_COMPLETE, &value)
+       value = 1  Non-blocking read is complete.  
+       value = 0  Non-blocking read is not complete.  
+
+19. ioctl(fd, DIO_SET_MODE, Mode);
+   Sets the INTEL 8255 Programmable Peripheral Interface to one of three modes:
+       MODE_IO            - normal input/output mode
+       MODE_STROBE_IO     - Strobed Input/Output (port A or B)
+       MODE_BIDIRECTIONAL - Bi-Directional Bus (port A only )
+    See the documentation of the chip for more information
+
+20. ioctl(fd, DIO_SET_DIRECTION, Direction)
+   Set the direction of the port to either input or output.  Port C can be split
+   into two levels (4 bits each), while ports A and B are either all input or
+   all output.
+
+21. ioctl(fd, DAC_SET_GAINS, gain);
+    Possible DAC gain settings are:
+    BP_10_00V           +/- 10V
+    BP_5_00V            +/-  5V 
+    UP_10_00V           0 - 10V
+    UP_5_00V            0 -  5V
+
+22. ioctl(fd, DAC_GET_GAINS, gain);
+    Returs the value of the current gain.  See pci-das1002.h for meaning of the
+    values.
+
+23. ioctl(fd, DAC_MODE, arg)
+      arg = 0 DACn updated with data written to DACn register
+      arg = 1 Both DAC0 and DAC1 updated with data written to DAC0 register
+
+24. ioctl(fd, GET_BUF_SIZE, &value);
+    get MAX_COUNT, the maximum number of samples you can
+    take in one read().  This is the size of the
+    internal buffers in the driver.

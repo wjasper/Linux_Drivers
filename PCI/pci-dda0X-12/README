@@ -1,0 +1,191 @@
+
+                        PCI-DDA0X-12 Version 0.6
+                       ---------------------------
+
+Linux loadable module for the Measurement Computing PCI-DDA0X-12
+------------------------------------------------------------------------
+
+NOTE:  kernel 2.6     driver is called:  dda0X-12_2_6.c
+       kernel 2.6.29  driver is called:  dda0X-12_2_6_29.c
+       kernel 3.3.7   driver is called:  dda0X-12_3_3_7.c
+       kernel 3.10.11 driver is called:  dda0X-12_3_10_11.c
+
+Introduction:
+-------------
+This driver was written by Warren J. Jasper at North Carolina State
+University.  It is a driver for the Measurement Computing PCI-DDA0X-12
+adapter.  
+
+Please send comments and bug fixes to wjasper@tx.ncsu.edu.  The source for the
+driver is located at https://github.com/wjasper/Linux_Drivers
+
+
+Distribution contents:
+----------------------
+README                 - this file
+Makefile               - Makefile to compile and install the driver
+dda0X-12.c             - PCI-DDA0X-12 Driver source.
+dda0X-12_2_6.c         - PCI-DDA0X-12 Driver source 2.6 Kernel
+dda0X-12_2_6_29.c      - PCI-DDA0X-12 Driver source 2.6.29 Kernel
+dda0X-12_3_3_7.c       - PCI-DDA0X-12 Driver source 3.3.7 Kernel
+dda0X-12_3_10_11.c     - PCI-DDA0X-12 Driver source 3.10.11 Kernel
+dda0X-12.h             - Driver definitions and constants.
+test-dda0X-12.c        - Test program.
+RegMapPCI-DDA0x-12.pdf - Register Map
+
+Building and installing the driver:
+-----------------------------------
+
+1. Untar the tar file:
+
+   tar zxvf PCI-DDA0X-12.0.6.tgz
+
+2. This should create the following files:
+    README  
+    Makefile
+    dda0X-12.c
+    ddda0X-12_2_6.c
+    ddda0X-12_2_6_29.c
+    ddda0X-12_3_3_7.c
+    ddda0X-12_3_10_11.c
+    dda0X-12.h
+    pci-dda0X-12.h	
+    test-dda0X-12.c
+    RegMapPCI-DDA0x-12.pdf
+
+3. The default configuration is for the kernel to dynamically set the
+   major number.  If you wish to override this option and force a particular
+   major number, set the following in dda0X-12.h
+
+   #define DEFAULT_MAJOR_DEV  0    /* Default Major Device Number */
+ 
+
+4. To compile, type:
+
+   make
+
+5. To install the driver type:
+
+    make install
+
+    check that the destination directory is correct.
+
+6. Copy the file 61-mcc.rules to /etc/udev/rules.d,
+   (or 60-mcc.rules for the older 2.6 kernel).
+
+   or inlcude the following rules:
+
+#Enable non-root access to pci devices
+SUBSYSTEM=="dda0x-12", KERNEL=="da[0-9]_[0-7]", NAME="dda0x-12/%k", MODE="666"
+SUBSYSTEM=="dda0x-12", KERNEL=="dio[0-9]_*",    NAME="dda0x-12/%k", MODE="666"
+
+To test your updated rules you can do one of the following:
+1.    /sbin/udevadm control --reload  (or something similar.  type man udevadm)
+2.    Reboot your system
+
+You will be able to search the attributes of the device by
+   /sbin/udevadm info -a -p $(/sbin/udevadm info -q path -n /dev/dda0X-12/dio0_0A)
+
+
+
+Having the driver install at boot:
+----------------------------------
+There are 2 ways to do this:
+
+
+1) To install the driver so that it comes up every time on boot-up, you
+  will need to include the following lines in one of your boot rc files.
+  The one we used is called /etc/rc.d/rc.local. Your setup may vary.
+
+#! /bin/sh
+#
+# rc.local	This does local customization.
+#
+# Author:	Warren Jasper <wjasper@tx.ncsu.edu>
+#
+echo -n "Local customization:"
+
+if [ -x /sbin/insmod -a -r /lib/modules/`uname -r`/kernel/drivers/char/dda0X-12.ko ]; then
+    echo -n " PCI-DDA0X-12"
+    /sbin/insmod -f /lib/modules/`uname -r`/kernel/drivers/char/dda0X-12.ko
+fi
+
+
+2)  add the following line to your /etc/modules.conf
+
+        alias char-major-243  dda0X-12.ko
+
+
+
+Multiple Boards
+--------------
+The driver supports the pci-dda02-12, pci-dd04-12, and the pci-dda08-12.  These differ only
+in the number of DAC channels (2, 4, or 8 respectively).  The driver will auto detect which
+board you have, and only let you open the correct number of DAC channels.  If you have
+multiple boards,  edit the Makefile and dda0X-12.h for the macro NUM_BOARDS and change it
+from 1 (default) to the number that you have.  Than type "make devices", "make", "make install".
+
+
+How the driver works:
+---------------------
+The driver is fairly straight forward, but since the current version of
+Linux is not 1003.4 compliant (it is not a real-time operating system),
+certain design decisions were made in writing this driver. 
+
+The device name for the driver is:
+
+/dev/dda0x-12/da[Board Number]_[Channel Number]
+/dev/dda0x-12/dio[Board Number]_[Port Number]
+
+where:
+     Board Number is the number of the board, usually 0 if you only have 1 board
+     Channel Number is the DAC channel number [0-7]
+     Port Number is the 8255 Port name {0A, 0B, 0C, 1A, 1B, 1C}
+
+For example:
+
+fd_1 = open("/dev/dda0x-12/da0_0", O_RDWR );
+fd_2 = open("/dev/dda0x-12/dio0_0A", O_RDWR );
+
+
+
+****************************************************************************
+
+The following ioctl() functions have been implemented:
+
+1. ioctl(fd, DIO_SET_DIRECTION, PORT_INPUT);
+   Set the direction of the port to either input or output.  Port C can be split
+   into two levels (4 bits each), while ports A and B are either all input or
+   all output.
+
+2. ioctl(fd, DAC_SET_GAINS, gain);
+   Sets the gain for the given channel.  Allowed values for gain are found in
+   pci-dda0X-12.h and they are:
+  
+          BP_2_5V    +/- 2.5V  Full Scale
+          BP_5_0V    +/- 5.0V  Full Scale
+          BP_10_0V   +/- 10.0V Full Scale
+          UP_2_5V    0 - 2.5V  Full Scale
+          UP_5_0V    0 - 5.0V  Full Scale
+          UP_10_0V   0 - 10.0V Full Scale
+
+3. ioctl(fd, DAC_GET_GAINS, &gain);
+   get the current gain for the channel.
+
+4. ioctl(fd, DAC_ENABLE, 0);
+   Enable the DAC for output.
+
+5. ioctl(fd, DAC_DISABLE, 0);
+   DISABLE the DAC for output.  Output is zero.
+
+6. ioctl(fd, DAC_SIMULT_UPDATE, 0);
+     Updates all the channels simultaneously.
+
+7. ioctl(fd, DAC_SET_SIMULT, value);
+      value = 0 false/disable  1 = true/enable
+      if enabled, that channel will update simultaneously.  See documentation.
+
+8. ioctl(fd, DAC_GET_SIMULT, &value);
+        value = 0 false/disable  1 = true/enable
+
+

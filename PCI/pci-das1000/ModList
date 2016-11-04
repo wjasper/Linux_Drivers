@@ -1,0 +1,43 @@
+08-7-2015/17:20 --wjj--
+  removed IRQF_DISABLED as deprecated.
+
+07-24-2015/17:20 --wjj--
+  change filePtr->f_dentry->d_inode to filePtr->f_path.dentry->d_inode
+
+02-16-2011/14:22 --wjj--
+  added pci_enable_device before calling request_irq()
+
+08-12-2009/15:00  --wjj--
+  added sub version numbers for 2.6.X for kernel releases in a2dc.c
+  modfied device_create to add extra argument
+  changed nopage method to fault method
+
+09-6-2007/11:00 --wjj--
+  - Let kernel dynamically select major number
+  - Register device with /sys/class/das1000
+  - Include udev rules to create device nodes
+  - Change pci_module_init() to pci_register_driver()
+    (pci_module_init() doesn't exist on recent kernels)
+  - Reimplemented interrupts.
+  - updated Register Map and User Manual documentation.
+
+09-19-2005/8:30  --wjj--
+    deleted references to cli(), sti(), save_flags() and restore_flags().  Used
+    spinlocks in a2dc_2_6.c.
+
+09-17-2005/8:30  --wjj--
+  Deleted including <linux/modversions> in a2dc.c, as its location moved from
+  2.4.X to 2.6.X kernel and is not needed.
+
+08-03-2004/11:00 --wjj--
+  Added a2dc_2_6 for the 2.6 kernel.  Updated Makefile to work with
+  2.4 and 2.6 kernels.
+
+11-19-2004/10:30 --wjj--
+  removed get_page() from nopage() method.  Added memory protection  SetPageReserved()
+  to A/D buffer.
+
+11-12-2003/10:00 --wjj--
+  Add 30 usec dealy after reading FIFO in SoftRead to reduce noise jitter.
+  Added mmap method to memory map buffer to user space
+  Added non blocking read and associated ioctl calls.

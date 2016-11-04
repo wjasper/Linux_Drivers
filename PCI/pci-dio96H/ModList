@@ -1,0 +1,14 @@
+10-26-2009/15:00  --wjj--
+  added support for the PCIe-DIO96H card.
+
+08-12-2009/15:00  --wjj--
+  added sub version numbers for 2.6.X for kernel releases in dio96H.c
+  modfied device_create to add extra argument
+
+06-16-2008/11:00 --wjj--
+  added linux/fs.h explicitly.
+
+08-30-2007/11:00 --wjj--
+  Let kernel dynamically select major number
+  register device with /sys/class/dio96H
+  include udev rules to create device nodes

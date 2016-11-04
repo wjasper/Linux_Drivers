@@ -1,0 +1,21 @@
+08-7-2015/17:20 --wjj--
+  removed IRQF_DISABLED as deprecated.
+
+07-24-2015/17:20 --wjj--
+  change filePtr->f_dentry->d_inode to filePtr->f_path.dentry->d_inode
+  for 4.0.8 kernel.
+
+06-24-2014/11:45 --wjj--
+  fixed bit toggle bug in SET_CLOCK_INPUT for c9513_2_6.c, c9513_2_6_29, c9513_3_10_11.c, 
+  c9513_3_3_7.c.
+
+08-12-2009/15:00  --wjj--
+  added sub version numbers for 2.6.X for kernel releases in c9513.c
+  modfied device_create to add extra argument
+
+09-6-2007/11:00 --wjj--
+  - Let kernel dynamically select major number
+  - Register device with /sys/class/ctr20HD
+  - Include udev rules to create device nodes
+  - Change pci_module_init() to pci_register_driver()
+    (pci_module_init() doesn't exist on recent kernels)

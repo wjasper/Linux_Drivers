@@ -1,0 +1,154 @@
+
+                      PCI-DIO-48H Version 1.10
+                      ----------------------
+
+ Linux loadable module for the Measurement Computing  PCI-DIO-48H
+ ------------------------------------------------------------------------
+
+NOTE:  kernel 2.4     driver is called:  dio48H_2_4.c
+       kernel 2.6     driver is called:  dio48H_2_6.c
+       kernel 3.3.7   driver is called:  dio48H_3_3_7.c
+       kernel 3.10.11 driver is called:  dio48H_3_10_11.c
+       kernel 4.0.8   driver is called:  dio48H_4_0.8.c
+
+Introduction:
+-------------
+This driver was written by Warren J. Jasper at North Carolina State
+University.  It is a driver for the ComputerBoards PCI-DIO-48H
+adapter.  
+
+Please send comments and bug fixes to wjasper@tx.ncsu.edu.  The source for the
+driver is located at https://github.com/wjasper/Linux_Drivers
+
+Distribution contents:
+----------------------
+README           - this file
+Makefile         - Makefile to compile and install the driver
+dio48H.c         - PCI-DIO-48H Driver source.
+dio48H_2_4.c     - PCI-DIO-48H Driver source 2.4 Kernel
+dio48H_2_6.c     - PCI-DIO-48H Driver source 2.6 Kernel
+dio48H_2_6_29.c  - PCI-DIO-48H Driver source 2.6.29 Kernel
+dio48H_3_3_7.c   - PCI-DIO-48H Driver source 3.3.7 Kernel
+dio48H_3_10_11.c - PCI-DIO-48H Driver source 3.3.7 Kernel
+dio48H_4_0_8.c   - PCI-DIO-48H Driver source 3.3.7 Kernel
+dio48H.h         - Driver definitions and constants.
+pci-dio48H.h     - User and driver definitions and constants.
+test-dio48H.c    - Test program.
+PCI-DIOxxH.pdf   - Users Manual
+
+Building and installing the driver:
+-----------------------------------
+
+1. Untar the tar file:
+
+   tar zxvf PCI-DIO48H.1.10.tgz
+
+2. This should create the following files:
+    README  
+    Makefile
+    dio48H.c
+    dio48H_2_4.c
+    dio48H_2_6.c
+    dio48H_2_6_29.c
+    dio48H_3_3_6.c
+    dio48H_3_10_11.c
+    dio48H_4_0_8.c
+    dio48H.h
+    pci-dio48H.h	
+    test-dio48H.c
+    PCI-DIOxxH.pdf
+
+3. The default configuration is for the kernel to dynamically set the
+   major number.  If you wish to override this option and force a particular
+   major number, set the following in dio96H.h
+
+   #define DEFAULT_MAJOR_DEV  0    /* Default Major Device Number */
+
+Note: Only 82C55 mode 0 is available on the PCI-DIO48H, as this board emulates
+      the Intel 82C55 chip.
+
+4. To compile, type:
+
+   make
+
+5. To install the driver type:
+
+    make install
+
+    check that the destination directory is correct.
+
+6. Copy the file 61-mcc.rules to /etc/udev/rules.d,
+   (or 60-mcc.rules for the older 2.6 kernel).
+
+   or inlcude the following rule:
+
+#Enable non-root access to pci devices
+SUBSYSTEM=="dio48H", KERNEL=="dio[0-9]_*",    NAME="dio48H/%k", MODE="666"
+
+To test your updated rules you can do one of the following:
+1.    /sbin/udevadm control --reload  (or something similar.  type man udevadm)
+2.    Reboot your system
+
+You will be able to search the attributes of the device by
+   /sbin/udevadm info -a -p $(/sbin/udevadm info -q path -n /dev/dio48H/dio0_0A)
+
+
+
+Having the driver install at boot:  (2.4 kernel only)
+----------------------------------
+There are 2 ways to do this:
+
+
+1) To install the driver so that it comes up every time on boot-up, you
+  will need to include the following lines in one of your boot rc files.
+  The one we used is called /etc/rc.d/rc.local. Your setup may vary.
+
+#! /bin/sh
+#
+# rc.local	This does local customization.
+#
+# Author:	Warren Jasper <wjasper@tx.ncsu.edu>
+#
+echo -n "Local customization:"
+
+if [ -x /sbin/insmod -a -r /lib/modules/`uname -r`/kenrel/drivers/char/pci-dio48H.o ]; then
+        echo -n " PCI-DIO48H"
+       /sbin/insmod -f /lib/modules/`uname -r`/kernel/drivers/char/pci-dio48H.o
+fi
+
+
+2)  add the following line to your /etc/modules.conf
+
+        alias char-major-249 pci-dio48H
+
+
+How the driver works:
+---------------------
+
+The driver is fairly straight forward, but since the current version of
+Linux is not 1003.4 compliant (it is not a real-time operating system),
+certain design decisions were made in writing this driver. 
+
+All the devices nodes are automagically created for you by /sysfs and udev. They are
+
+/dev/dio48H/dio[Board Number]_[Port Number][A-C]
+
+so
+
+/dev/dio48H/dio0_1B would be Board 0, Port 1, Port C.  Type
+
+	ls -l /dev/dio48H
+ 
+to list all the devie nodes.  The dio48H has 2 sets of ports [0-1],
+and each set has 3 ports A, B, and C.  See the documentaion on the 8255.
+
+
+****************************************************************************
+
+The following ioctl() functions have been implemented:
+
+1. ioctl(fd, DIO_SET_DIRECTION, PORT_INPUT);
+   Set the direction of the port to either input or output.  Port C can be split
+   into two levels (4 bits each), while ports A and B are either all input or
+   all output.
+

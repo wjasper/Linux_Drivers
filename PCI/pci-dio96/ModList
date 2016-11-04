@@ -1,0 +1,18 @@
+08-7-2015/17:20 --wjj--
+  removed IRQF_DISABLED as deprecated.
+
+07-24-2015/17:20 --wjj--
+  change filePtr->f_dentry->d_inode to filePtr->f_path.dentry->d_inode
+  for 4.0.8 kernel.
+
+08-12-2009/15:00  --wjj--
+  added sub version numbers for 2.6.X for kernel releases in dio24.c
+  modfied device_create to add extra argument
+
+06-16-2008/11:00 --wjj--
+  added linux/fs.h explicitly.
+
+08-28-2007/11:00 --wjj--
+  Let kernel dynamically select major number
+  register device with /sys/class/dio96
+  include udev rules to create device nodes

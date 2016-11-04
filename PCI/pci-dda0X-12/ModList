@@ -1,0 +1,15 @@
+07-24-2015/17:20 --wjj--
+  change filePtr->f_dentry->d_inode to filePtr->f_path.dentry->d_inode
+
+08-12-2009/15:00  --wjj--
+  added sub version numbers for 2.6.X for kernel releases in dda0X-12
+  modfied device_create to add extra argument
+
+08-27-2007/11:00 --wjj--
+  Let kernel dynamically select major number
+  register device with /sys/class/dda0x-12
+  include udev rules to create device nodes
+
+08-20-2007/8:30  --wjj--
+   Relsease of driver.  Fixed simultaneous update of dac.
+

@@ -1,0 +1,128 @@
+08-7-2015/17:20 --wjj--
+  removed IRQF_DISABLED as deprecated.
+
+07-24-2015/17:20 --wjj--
+  change filePtr->f_dentry->d_inode to filePtr->f_path.dentry->d_inode
+
+08-12-2009/15:00  --wjj--
+  added sub version numbers for 2.6.X for kernel releases in a2dc.c
+  modfied device_create to add extra argument
+  changed nopage method to fault method
+
+06-16-2008/12:30 --wjj--
+   removed asm/page.h from test-das4020
+
+03-28-2008/09:15 --wjj--
+  - Moved spin_lock_init() to __init just before pci_register_driver().
+
+09-17-2007/09:00 --wjj--
+  - Memory corruption on read() of DIO due to nonBlockFlag getting written to invalid channel. 
+  - control byte written to wrong register for soft read. 
+  - Incorrect clearing of the busy flag when a DIO read is performed. 
+
+08-27-2007/11:00 --wjj--
+  -Let kernel dynamically select major number
+  -Register device with /sys/class/das4020-12
+  -Include udev rules to create device nodes
+  - Change pci_module_init() to pci_register_driver()
+    (pci_module_init() doesn't exist on recent kernels)
+  - Enable bus mastering in case the BIOS forgot to (otherwise DMA
+     doesn't work)
+  - Use remap_pfn_range() to ensure that the VM system doesn't try to
+    free the DMA pages on munmap(), in parallel with PG_reserved, which is
+    ignored starting with kernel 2.6.15. This fixes the kernel panic and
+    system crash which otherwise occurs on munmap() or program exit. 
+  - Eliminate the nopage() handler, which is unnecessary now that the DMA
+    pages are mapped with remap_pfn_range().
+
+01-01-2007/22:00 --wjj--
+Changes in a2dc_2_6.c
+  Fixed compiler warnings on return types.  Added ioctl ADC_SET_CLK_SRC
+  and ADC_GET_CLK_SRC to implement external clocking.
+
+
+01-24-2006/19:55 --wjj--
+  for a2dc_2_6.c (v2.6 only)
+  Changed verify_area() to !access_ok().
+  Deleted ADC_ChanRec.gain as information was redundant in ADC_ChanRec.bitmask.
+  Fixed bugs and reimplemented analog triggering correctly. Changes
+  to load_calibartion_coef, ADC_SET_ATRIG_MODE.  Added defines to pci-das4020.h
+  Fixed documentation bug for POSITIVE_HYSTERESIS and NEGATIVE_HYSTERESIS 
+  being swapped.
+  
+01-23-2006/10:09 --wjj--
+  Fixed bug in implementation in settingup analog triggering.  Changes to
+  ADC_SET_ATRIG_MODE, dma_read() and adc_soft_conversion().
+  Fixed nonsense values in ATRIG_CH[0-3].
+
+10-26-2005/15:27 --wjj--
+  Patches from Steve Holland <sdh4@cornell.edu>.  Newer boards lock up
+  when performing DMA aborts.  The problem seems to be related to
+  disabling the DMA channel while aborting DMA in READY MODE. Fix
+  is to not turn off the enable bit.  Also, recent kernel releases
+  (post 2.6.11) perform interrupt routing in pci_enable_device(), so
+  it must be called before extracting the irq from the pdev structure.
+
+07-23-2004:/10:00 --wjj--
+  Rewrote Makefile to conform to new way of kernel building. 
+  Updated to support 2.6 kernel.  Added file a2dc_2.6.c
+
+12-10-2003:/12:15 --wjj--
+  Implemented true scatter-gather dma.  Added elements to BoardRec and two 
+  constants: ADC_BUFF_PHY_SIZE (which can be > 2MB) and ADC_BUFF_PAGE_SIZE.
+  Added 2 new ioctl calls;
+  ADC_GET_HALF_FIFO_SIZE and ADC_GET_DMA_BUF_SIZE.
+    
+ 11-18-2003/9:30 --wjj--
+  Patches from Steve Holland <sdh4@cornell.edu> to fix kernel oops.  removed call to get_page() in
+  nopage method, and allocate reserved pages with SetPageReserved().
+  remove all references to dma_phy_addr <sdh4@cornell.edu>.
+
+05-07-2003/8:30 --wjj--
+  Removed MAX_COUNT and ADC_KernBuff.  Use buffer returned from pci_alloc_consistent.
+
+03-17-2003/11:30 --wjj--
+   1. added munmap to test-das4020.c to unmap the dma buffer from user space.
+   2. fixed bug in virtual address of nopage method.  added memory size check.
+  
+03-13-2003/14:00 --wjj--
+   remove mmap flag.  Not needed and causes problems with multiple channels.
+   Only one call to mmap needed per board.  All channels on the same
+   board share the same dam buffer.
+
+11-25-2002/10:30 --wjj--
+  1. Added ALIGN_ADDRESS it insure that dma buffers are mapped along PAGE_SIZE addresses.
+  2. Using kernel macros u8/u16/u32.
+  3. Set default dio control reg to 0x9b.
+  4. Improved debug printk information to reflect board.
+
+11-13-2002/   -- Robert Penny --
+  test-das4020.c 
+  1. Fixed noprint option
+  2. Removed double line breaks in useage message
+  3. Added command line switch to select different boards
+
+11-13-2002/10:00 --wjj--
+  Added support for multiple boards.
+  Using PCI hotpluggable interface.
+
+11-08-2002/9:30  --wjj--
+  There is a timing problem in soft_conversion when polling HW_STAT_REG.
+  I believe that rapid polling of that register prevents the correct bits
+  from being set.  Added a small delay to the inner loop.
+
+10-22-2002/10:30 --wjj--
+  defined USE_DMA_BUFFER so that driver would work without dma, and checked 
+  that memory region was not in use. 
+  Fixed bug in loading DAC0 and DAC1.
+  Added non-blocking mode per suggestion of Steve Holland <sdh4@cornell.edu>.
+
+09-17-2002/10:10 --wjj--
+  Changed && to & to fix bug in BoardData.SampleInterval.
+  Fixed bug in switch statement for setting CR1_CHANMODE.
+
+09-06-2002/16:00 --wjj--
+   Added module version control to module.  depmod should now work without errors
+   at boot time.
+ 
+

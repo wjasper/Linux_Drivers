@@ -1,0 +1,1 @@
+cmd_/home/wjj/Linux_Drivers/PCI/pci-dda0X-12/dda0X-12.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/wjj/Linux_Drivers/PCI/pci-dda0X-12/dda0X-12.ko /home/wjj/Linux_Drivers/PCI/pci-dda0X-12/dda0X-12.o /home/wjj/Linux_Drivers/PCI/pci-dda0X-12/dda0X-12.mod.o

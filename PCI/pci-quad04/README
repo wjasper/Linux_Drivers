@@ -1,0 +1,184 @@
+
+                      PCI-QUAD04 Version 1.2
+                      ----------------------
+
+ Linux loadable module for the Measurement Computing PCI-QUAD04 Encoder Board
+ ------------------------------------------------------------------------
+
+NOTE:        kernel 2.3.30  driver is called:  LS7266R1_2_6_30.c
+             kernel 3.3.7   driver is called:  LS7266R1_3_3_7.c
+             kernel 3.10.11 driver is called:  LS7266R1_3_10_11.c
+
+Introduction:
+-------------
+This driver was written by Warren J. Jasper at North Carolina State
+University (wjasper@tx.ncsu.edu).  It is a driver for the
+Measurement Computing PCI-QUAD04 Quadrature Encoder Input Board.
+
+Please send comments and bug fixes to wjasper@tx.ncsu.edu.  The source for the
+driver is located at https://github.com/wjasper/Linux_Drivers
+
+
+Distribution contents:
+----------------------
+README               - this file
+Makefile             - Makefile to compile and install the driver
+LS7266R1.c           - PCI-QUAD04  Driver source.
+LS7266R1_2_6_30.c    - PCI-QUAD04 2.6.X Kernel
+LS7266R1_3_3_7.c     - PCI-QUAD04 3.3.7 Kernel
+LS7266R1_3_10_11.c   - PCI-QUAD04 3.10.11 Kernel
+quad04.h	     - Driver definitions and constants.
+pci-quad04.h         - User and driver definitions and constants.
+test-quad04.c        - Test program.
+pci-quad04.pdf       - PCI-QUAD04 Users Guilde
+RegMapPCI-QUAD04.pdf - Register Map for the PCI-QUAD04
+8259.pdf             - Documentation on the 82C59A Priority Interrupt Controller
+LS7266R1.pdf         - Documentation on the LS7266R1 24-bit Quadrature Counter
+
+Building and installing the driver:
+-----------------------------------
+
+1. Untar the tar file:
+
+   tar zxvf PCI-QUAD04.1.3.tgz
+
+2. This should create the following files:
+
+LS7266R1.c
+LS7266R1_2_6_30.c
+LS7266R1_3_3_7.c
+LS7266R1_3_10_11.c
+quad04.h
+pci-quad04.h
+test-quad04.c
+License
+Makefile
+README
+ModList
+
+3. The default configuration is for the kernel to dynamically set the
+   major number.  If you wish to override this option and force a particular
+   major number, set the following in quad04.h
+
+   #define DEFAULT_MAJOR_DEV  0    /* Default Major Device Number */
+
+4. If you have more than one board on your system, edit
+       MAX_BOARDS=1
+
+5. To compile, type:
+
+   make
+
+  To install the driver type:
+
+  make install
+
+6. Copy the file 61-mcc.rules to /etc/udev/rules.d,
+   (or 60-mcc.rules for the older 2.6 kernel).
+
+   or inlcude the following rule:
+
+#Enable non-root access to pci devices
+SUBSYSTEM=="quad04",      KERNEL=="channel[0-9]_*",    NAME="quad04/%k",      MODE="666"
+
+To test your updated rules you can run:
+
+To test your updated rules you can do one of the following:
+1.    /sbin/udevadm control --reload  (or something similar.  type man udevadm)
+2.    Reboot your system
+
+You will be able to search the attributes of the device by
+   /sbin/udevadm info -a -p $(/sbin/udevadm info -q path -n /dev/quad04/channel0_0)
+
+
+7. To install the driver type:
+
+    make install
+
+8. To test run the test program "test-ctr05":
+
+    test-ctr05
+
+How the driver works:
+---------------------
+
+The driver is fairly straight forward, but since the current version of
+Linux is not 1003.4 compliant (it is not a real-time operating system),
+certain design decisions were made in writing this driver. 
+
+The PCI-QUAD04 is based on the LS7266R1 24-bit dual-axis quadrature counter.
+Please refer to the documentation on the Register Map and the Data Sheet for
+the LS7266R1 provided.
+
+Each minor number corresponds to a given counter.  There are four (4)
+counters on the quad04 (2 for each LS7266R1) , so minor number 0
+corresponds to counter 1, minor number 1 to counter 2 etc.
+
+----------------------------------------------------------------------
+| X | X | X | X | X | X | X | X | X | X | B2 | B1 | B0 | X | C1 | C0 |
+----------------------------------------------------------------------
+
+The minor number is made up as follows:
+
+Bits 4-6 (B2-B0) comprise the board number (up to 8 boards on the PCI bus)
+Bits 0-3 (C0-C1) comprise the counter number
+
+The devices are made in /dev.  For example:
+
+/dev/quad04/channel0_1
+                   ^ ^
+                   | |___________  channel number (0-3)
+                   |______________ board number (0-7)
+
+
+To open the channel:
+
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
+...
+
+  int fd;
+  fd = open("/dev/pci-quad04/channel0_1", O_RDWR);
+
+--
+
+
+The following ioctl() functions have been implemented:
+1.  ioctl(fd, LOAD_CMD_REG, command);
+    Loads the 8 bit value into the Command Register of the LS7266R1.
+    command is an 8-bit value.  See pci-quad04.h
+
+2.  ioctl(fd, GET_CMD_REG, &flag);
+    Reads the flag regester for the counter on the LS7266R1.
+    FLAG is an 8-bit value.  See pci-quad04.h
+
+3. ioctl(fd, LOAD_IRCR_REG, reg);
+   Loads the Interrupt Routing and Control Register.
+   See pci-quad04.h.
+
+4. ioctl(fd, GET_IRCR_REG, &reg);
+   Reads the Interrupt Routing and Control Register.
+
+5. ioctl(fd, LOAD_ISCR_REG, reg);
+   Loads the Interrupt Signal and Control Register.
+   See pci-quad04.h.
+
+6. ioctl(fd, GET_ISCR_REG, &reg);
+   Reads the Interrupt Signal and Control Register.
+
+7. ioctl(fd, LOAD_PIC_A_REG, &reg);
+   Loads the 8259 Programmable Interrupt Controller, Part A
+
+8. ioctl(fd, LOAD_PIC_B_REG, &reg);
+   Loads the 8259 Programmable Interrupt Controller, Part B
+
+
+
+
+
+
+
+
+

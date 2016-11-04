@@ -1,0 +1,205 @@
+
+                      PCI-DIO-96 Version 1.7
+                      ----------------------
+
+ Linux loadable module for the Measurement Computing PCI-DIO-96 
+ ------------------------------------------------------------------------
+
+NOTE:  kernel 2.4     driver is called:  dio96_2_4.c
+       kernel 2.6     driver is called:  dio96_2_6.c
+       kernel 2.6.29  driver is called:  dio96_2_6_29.c
+       kernel 3.3.7   driver is called:  dio96_3_3_7.c
+       kernel 3.10.11 driver is called:  dio96_3_10_11.c
+       kernel 4.0.8   driver is called:  dio96_4_0.8.c
+
+Introduction:
+-------------
+This driver was written by Warren J. Jasper at North Carolina State
+University.  It is a driver for the Measurement Computing PCI-DIO-96
+adapter.  
+
+Please send comments and bug fixes to wjasper@tx.ncsu.edu.  The source for the
+driver is located at https://github.com/wjasper/Linux_Drivers
+
+
+Distribution contents:
+----------------------
+README          - this file
+Makefile        - Makefile to compile and install the driver
+dio96.c         - PCI-DIO-96 Driver source.
+dio96_2_4.c     - PCI-DIO-96 Driver source 2.4 Kernel
+dio96_2_6.c     - PCI-DIO-96 Driver source 2.6 Kernel
+dio96_2_6_29.c  - PCI-DIO-96 Driver source 2.6.29 Kernel
+dio96_3_3_7.c   - PCI-DIO-96 Driver source 3.3.7 Kernel
+dio96_3_10_11.c - PCI-DIO-96 Driver source 3.10.11 Kernel
+dio96_4_0_8.c   - PCI-DIO-96 Driver source 4.0.8 Kernel
+dio96.h         - Driver definitions and constants.
+pci-dio96.      - User and driver definitions and constants.
+test-dio96.c    - Test program.
+PCI-DIO96.pdf   -  Users Manual
+
+Building and installing the driver:
+-----------------------------------
+
+1. Untar the tar file:
+
+   tar zxvf PCI-DIO96.1.7.tgz
+
+2. This should create the following files:
+    README  
+    Makefile
+    dio96.c
+    dio96_2_4.c
+    dio96_2_6.c
+    dio96_2_6_29.c
+    dio96_3_3_7.c
+    dio96_3_10_11.c
+    dio96_4_0_8.c
+    dio96.h
+    pci-dio96.h	
+    test-dio96.c
+    PCI-DIO96.pdf
+
+3. The default configuration is for the kernel to dynamically set the
+   major number.  If you wish to override this option and force a particular
+   major number, set the following in dio96.h
+
+   #define DEFAULT_MAJOR_DEV  0    /* Default Major Device Number */
+ 
+   #define ENABLE_INTERRUPTS TRUE  /* FALSE = disable ,  TRUE = enable   */
+
+  NOTE:  If interrupts are enabled, the driver will block unless the O_NONBLOCK flag is 
+         used in open().  Thus, an interrupt will generate a read.
+
+  NOTE:  the Intel 82C55 may be programmed to operate in Input/Output (mode 0), 
+         Strobed Input/Output (mode 1) or Bi-Directional Bus (mode 2)
+
+
+4. To compile, type:
+
+   make
+
+5. To install the driver type:
+
+    make install
+
+    check that the destination directory is correct.
+
+6. Copy the file 61-mcc.rules to /etc/udev/rules.d,
+   (or 60-mcc.rules for the older 2.6 kernel).
+
+   or inlcude the following rule:
+
+#Enable non-root access to pci devices
+SUBSYSTEM=="dio96", KERNEL=="dio[0-9]_*",    NAME="dio96/%k", MODE="666"
+
+To test your updated rules you can do one of the following:
+1.    /sbin/udevadm control --reload  (or something similar.  type man udevadm)
+2.    Reboot your system
+
+You will be able to search the attributes of the device by
+   /sbin/udevadm info -a -p $(/sbin/udevadm info -q path -n /dev/dio96/dio0_0A)
+
+
+
+Having the driver install at boot:  (2.4 kernel only)
+----------------------------------
+
+1) To install the driver so that it comes up every time on boot-up, you
+  will need to include the following lines in one of your boot rc files.
+  The one we used is called /etc/rc.d/rc.local. Your setup may vary.
+
+#! /bin/sh
+#
+# rc.local	This does local customization.
+#
+# Author:	Warren Jasper <wjasper@tx.ncsu.edu>
+#
+echo -n "Local customization:"
+
+if [ -x /sbin/insmod -a -r /lib/modules/`uname -r`/kernel/drivers/char/dio96.o ]; then
+    echo -n " PCI-DIO96"
+    /sbin/insmod -f /lib/modules/`uname -r`/kernel/drivers/char/dio96.o
+fi
+
+
+How the driver works:
+---------------------
+
+The driver is fairly straight forward, but since the current version of
+Linux is not 1003.4 compliant (it is not a real-time operating system),
+certain design decisions were made in writing this driver. 
+
+When interrupts are disabled, all the read/write calls to the driver are
+non-blocking.  When interrupts are enabled, all reads are blocked,
+unless the O_NONBLOCK flag is set when the device is opened. writes are
+never blocked.
+
+
+All the devices nodes are automagically created for you by /sysfs and udev. They are
+
+/dev/dio96/dio[Board Number]_[Port Number][A-C]
+
+so
+
+/dev/dio96/dio0_2B would be Board 0, Port 2, Port C.  Type
+	ls -l /dev/dio96 
+to list all the device nodes.  The dio96 has 4 sets of ports [0-3],
+and each set has 3 ports A, B, and C.  See the documentaion on the 8255.
+
+****************************************************************************
+
+The following ioctl() functions have been implemented:
+
+1. ioctl(fd, DIO_SET_MODE, MODE,IO);
+   Sets the INTEL 8255 Programmable Peripheral Interface to one of three modes:
+       MODE_IO            - normal input/output mode
+       MODE_STROBE_IO     - Strobed Input/Output (port A or B)
+       MODE_BIDIRECTIONAL - Bi-Directional Bus (port A only )
+    See the documentation of the chip for more information
+
+2. ioctl(fd, DIO_SET_DIRECTION, PORT_INPUT);
+   Set the direction of the port to either input or output.  Port C can be split
+   into two levels (4 bits each), while ports A and B are either all input or
+   all output.
+
+3. ioctl(fd, INTERRUPT_ENABLE, NULL);
+   Enable interrutps.
+
+4. ioctl(fd, INTERRUPT_DISABLE, NULL);
+   Disable interrutps.
+
+5. ioctl(fd, INTERRUPT_POLARITY, polarity);
+     Sets the interrupt polarity on the board
+     polarity = INT_ACTIVE_LOW   interrupt active low, (default)
+              = INT_ACTIVE_HIGH  interrupt active high
+
+6. ioctl(fd, INTERRUPT_SELECT, type);
+     Sets the interrupt Level/Edge Select
+     type = INT_LEVEL_SENSITIVE  interrupt level sensitive
+          = INT_EDGE_SENSITIVE   interrupt edge sensitive
+
+7. ioctl(fd, WRITE_INT_CNTRL_1, arg);
+   write 1 byte to interrupt control 1.  See document Register Map for the PCI-DIO96.
+
+8. ioctl(fd, READ_INT_CTRL_1, &value);
+   reads the contents of interrupt control 1. See document Register Map for the PCI-DIO96.
+
+9. ioctl(fd, WRITE_INT_CNTRL_2, value);
+   write 1 byte to interrupt control 2.  See document Register Map for the PCI-DIO96.
+
+10. ioctl(fd, READ_INT_CTRL_1, &value);
+   reads the contents of interrupt control 2. See document Register Map for the PCI-DIO96.
+
+11. ioctl(fd, WRITE_COUNTER, value);
+    write 32 bit value into the 8254 Counter;
+
+12. ioctl(fd, READ_COUNTER, &value);
+    returns initial value of couter, not current value.
+
+13. ioctl(fd, WRITE_COUNTER_CONFIG, value);
+     write 1 byte to counter configuration register.  See document Register Map for the PCI-DIO96.
+
+14. ioctl(fd, READ_COUNTER_CONFIG, &value);
+     read 1 byte from counter configuration register.  See document Register Map for the PCI-DIO96.
+

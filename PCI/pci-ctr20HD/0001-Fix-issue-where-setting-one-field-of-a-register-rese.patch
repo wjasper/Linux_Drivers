@@ -1,0 +1,204 @@
+From 132285d73b77c78b53ff802c36e20a7858f15bc4 Mon Sep 17 00:00:00 2001
+From: Aaron Linville <aaron@linville.org>
+Date: Mon, 23 Jun 2014 21:10:57 -0400
+Subject: [PATCH] Fix issue where setting one field of a register reset all the
+ other fields.
+
+---
+ c9513_2_6.c     | 12 ++++++------
+ c9513_2_6_29.c  | 12 ++++++------
+ c9513_3_10_11.c | 12 ++++++------
+ c9513_3_3_7.c   | 12 ++++++------
+ 4 files changed, 24 insertions(+), 24 deletions(-)
+
+diff --git a/c9513_2_6.c b/c9513_2_6.c
+index 2e42e21..2d85596 100644
+--- a/c9513_2_6.c
++++ b/c9513_2_6.c
+@@ -792,22 +792,22 @@ static int ctr20HD_ioctl(struct inode *iNode, struct file *filePtr, unsigned int
+     case SET_CLOCK_INPUT:
+       switch(chip) {
+         case 0x0:  // Chip A
+-	  BoardData[board].clockSelectReg_AB &= CLK_A(7);
++	  BoardData[board].clockSelectReg_AB &= ~CLK_A(7);
+   	  BoardData[board].clockSelectReg_AB |= CLK_A(arg);
+    	  outb_p(BoardData[board].clockSelectReg_AB, CNT_AB_INT);
+ 	  break;
+         case 0x1:  // Chip B
+-	  BoardData[board].clockSelectReg_AB &= CLK_B(7);
++	  BoardData[board].clockSelectReg_AB &= ~CLK_B(7);
+   	  BoardData[board].clockSelectReg_AB |= CLK_B(arg);
+      	  outb_p(BoardData[board].clockSelectReg_AB, CNT_AB_INT);
+ 	  break;
+         case 0x2:  // Chip C
+-	  BoardData[board].clockSelectReg_CD &= CLK_C(7);
++	  BoardData[board].clockSelectReg_CD &= ~CLK_C(7);
+   	  BoardData[board].clockSelectReg_CD |= CLK_C(arg);
+       	  outb_p(BoardData[board].clockSelectReg_CD, CNT_AB_INT);
+ 	  break;
+         case 0x3:  // Chip D
+-	  BoardData[board].clockSelectReg_CD &= CLK_D(7);
++	  BoardData[board].clockSelectReg_CD &= ~CLK_D(7);
+   	  BoardData[board].clockSelectReg_CD |= CLK_D(arg);
+ 	  outb_p(BoardData[board].clockSelectReg_CD, CNT_AB_INT);
+ 	  break;
+@@ -817,13 +817,13 @@ static int ctr20HD_ioctl(struct inode *iNode, struct file *filePtr, unsigned int
+       switch(chip) {
+         case 0x0:  // Chip A
+         case 0x1:  // Chip B
+-	  BoardData[board].clockSelectReg_AB &= INTAB_POL;
++	  BoardData[board].clockSelectReg_AB &= ~INTAB_POL;
+ 	  BoardData[board].clockSelectReg_AB |= (arg & 0x1) << 7;
+  	  outb_p(BoardData[board].clockSelectReg_AB, CNT_AB_INT);
+ 	  break;
+         case 0x2:  // Chip C
+         case 0x3:  // Chip D
+-	  BoardData[board].clockSelectReg_CD &= INTCD_POL;
++	  BoardData[board].clockSelectReg_CD &= ~INTCD_POL;
+ 	  BoardData[board].clockSelectReg_CD |= (arg & 0x1) << 7;
+ 	  outb_p(BoardData[board].clockSelectReg_CD, CNT_CD_INT);
+ 	  break;
+diff --git a/c9513_2_6_29.c b/c9513_2_6_29.c
+index 3b5c39f..862358e 100644
+--- a/c9513_2_6_29.c
++++ b/c9513_2_6_29.c
+@@ -792,22 +792,22 @@ static int ctr20HD_ioctl(struct inode *iNode, struct file *filePtr, unsigned int
+     case SET_CLOCK_INPUT:
+       switch(chip) {
+         case 0x0:  // Chip A
+-	  BoardData[board].clockSelectReg_AB &= CLK_A(7);
++	  BoardData[board].clockSelectReg_AB &= ~CLK_A(7);
+   	  BoardData[board].clockSelectReg_AB |= CLK_A(arg);
+    	  outb_p(BoardData[board].clockSelectReg_AB, CNT_AB_INT);
+ 	  break;
+         case 0x1:  // Chip B
+-	  BoardData[board].clockSelectReg_AB &= CLK_B(7);
++	  BoardData[board].clockSelectReg_AB &= ~CLK_B(7);
+   	  BoardData[board].clockSelectReg_AB |= CLK_B(arg);
+      	  outb_p(BoardData[board].clockSelectReg_AB, CNT_AB_INT);
+ 	  break;
+         case 0x2:  // Chip C
+-	  BoardData[board].clockSelectReg_CD &= CLK_C(7);
++	  BoardData[board].clockSelectReg_CD &= ~CLK_C(7);
+   	  BoardData[board].clockSelectReg_CD |= CLK_C(arg);
+       	  outb_p(BoardData[board].clockSelectReg_CD, CNT_AB_INT);
+ 	  break;
+         case 0x3:  // Chip D
+-	  BoardData[board].clockSelectReg_CD &= CLK_D(7);
++	  BoardData[board].clockSelectReg_CD &= ~CLK_D(7);
+   	  BoardData[board].clockSelectReg_CD |= CLK_D(arg);
+ 	  outb_p(BoardData[board].clockSelectReg_CD, CNT_AB_INT);
+ 	  break;
+@@ -817,13 +817,13 @@ static int ctr20HD_ioctl(struct inode *iNode, struct file *filePtr, unsigned int
+       switch(chip) {
+         case 0x0:  // Chip A
+         case 0x1:  // Chip B
+-	  BoardData[board].clockSelectReg_AB &= INTAB_POL;
++	  BoardData[board].clockSelectReg_AB &= ~INTAB_POL;
+ 	  BoardData[board].clockSelectReg_AB |= (arg & 0x1) << 7;
+  	  outb_p(BoardData[board].clockSelectReg_AB, CNT_AB_INT);
+ 	  break;
+         case 0x2:  // Chip C
+         case 0x3:  // Chip D
+-	  BoardData[board].clockSelectReg_CD &= INTCD_POL;
++	  BoardData[board].clockSelectReg_CD &= ~INTCD_POL;
+ 	  BoardData[board].clockSelectReg_CD |= (arg & 0x1) << 7;
+ 	  outb_p(BoardData[board].clockSelectReg_CD, CNT_CD_INT);
+ 	  break;
+diff --git a/c9513_3_10_11.c b/c9513_3_10_11.c
+index b744e0c..bf378ba 100644
+--- a/c9513_3_10_11.c
++++ b/c9513_3_10_11.c
+@@ -793,22 +793,22 @@ static long ctr20HD_ioctl(struct file *filePtr, unsigned int cmd, unsigned long
+     case SET_CLOCK_INPUT:
+       switch(chip) {
+         case 0x0:  // Chip A
+-	  BoardData[board].clockSelectReg_AB &= CLK_A(7);
++	  BoardData[board].clockSelectReg_AB &= ~CLK_A(7);
+   	  BoardData[board].clockSelectReg_AB |= CLK_A(arg);
+    	  outb_p(BoardData[board].clockSelectReg_AB, CNT_AB_INT);
+ 	  break;
+         case 0x1:  // Chip B
+-	  BoardData[board].clockSelectReg_AB &= CLK_B(7);
++	  BoardData[board].clockSelectReg_AB &= ~CLK_B(7);
+   	  BoardData[board].clockSelectReg_AB |= CLK_B(arg);
+      	  outb_p(BoardData[board].clockSelectReg_AB, CNT_AB_INT);
+ 	  break;
+         case 0x2:  // Chip C
+-	  BoardData[board].clockSelectReg_CD &= CLK_C(7);
++	  BoardData[board].clockSelectReg_CD &= ~CLK_C(7);
+   	  BoardData[board].clockSelectReg_CD |= CLK_C(arg);
+       	  outb_p(BoardData[board].clockSelectReg_CD, CNT_AB_INT);
+ 	  break;
+         case 0x3:  // Chip D
+-	  BoardData[board].clockSelectReg_CD &= CLK_D(7);
++	  BoardData[board].clockSelectReg_CD &= ~CLK_D(7);
+   	  BoardData[board].clockSelectReg_CD |= CLK_D(arg);
+ 	  outb_p(BoardData[board].clockSelectReg_CD, CNT_AB_INT);
+ 	  break;
+@@ -818,13 +818,13 @@ static long ctr20HD_ioctl(struct file *filePtr, unsigned int cmd, unsigned long
+       switch(chip) {
+         case 0x0:  // Chip A
+         case 0x1:  // Chip B
+-	  BoardData[board].clockSelectReg_AB &= INTAB_POL;
++	  BoardData[board].clockSelectReg_AB &= ~INTAB_POL;
+ 	  BoardData[board].clockSelectReg_AB |= (arg & 0x1) << 7;
+  	  outb_p(BoardData[board].clockSelectReg_AB, CNT_AB_INT);
+ 	  break;
+         case 0x2:  // Chip C
+         case 0x3:  // Chip D
+-	  BoardData[board].clockSelectReg_CD &= INTCD_POL;
++	  BoardData[board].clockSelectReg_CD &= ~INTCD_POL;
+ 	  BoardData[board].clockSelectReg_CD |= (arg & 0x1) << 7;
+ 	  outb_p(BoardData[board].clockSelectReg_CD, CNT_CD_INT);
+ 	  break;
+diff --git a/c9513_3_3_7.c b/c9513_3_3_7.c
+index 5fd4044..fb9f8a2 100644
+--- a/c9513_3_3_7.c
++++ b/c9513_3_3_7.c
+@@ -793,22 +793,22 @@ static long ctr20HD_ioctl(struct file *filePtr, unsigned int cmd, unsigned long
+     case SET_CLOCK_INPUT:
+       switch(chip) {
+         case 0x0:  // Chip A
+-	  BoardData[board].clockSelectReg_AB &= CLK_A(7);
++	  BoardData[board].clockSelectReg_AB &= ~CLK_A(7);
+   	  BoardData[board].clockSelectReg_AB |= CLK_A(arg);
+    	  outb_p(BoardData[board].clockSelectReg_AB, CNT_AB_INT);
+ 	  break;
+         case 0x1:  // Chip B
+-	  BoardData[board].clockSelectReg_AB &= CLK_B(7);
++	  BoardData[board].clockSelectReg_AB &= ~CLK_B(7);
+   	  BoardData[board].clockSelectReg_AB |= CLK_B(arg);
+      	  outb_p(BoardData[board].clockSelectReg_AB, CNT_AB_INT);
+ 	  break;
+         case 0x2:  // Chip C
+-	  BoardData[board].clockSelectReg_CD &= CLK_C(7);
++	  BoardData[board].clockSelectReg_CD &= ~CLK_C(7);
+   	  BoardData[board].clockSelectReg_CD |= CLK_C(arg);
+       	  outb_p(BoardData[board].clockSelectReg_CD, CNT_AB_INT);
+ 	  break;
+         case 0x3:  // Chip D
+-	  BoardData[board].clockSelectReg_CD &= CLK_D(7);
++	  BoardData[board].clockSelectReg_CD &= ~CLK_D(7);
+   	  BoardData[board].clockSelectReg_CD |= CLK_D(arg);
+ 	  outb_p(BoardData[board].clockSelectReg_CD, CNT_AB_INT);
+ 	  break;
+@@ -818,13 +818,13 @@ static long ctr20HD_ioctl(struct file *filePtr, unsigned int cmd, unsigned long
+       switch(chip) {
+         case 0x0:  // Chip A
+         case 0x1:  // Chip B
+-	  BoardData[board].clockSelectReg_AB &= INTAB_POL;
++	  BoardData[board].clockSelectReg_AB &= ~INTAB_POL;
+ 	  BoardData[board].clockSelectReg_AB |= (arg & 0x1) << 7;
+  	  outb_p(BoardData[board].clockSelectReg_AB, CNT_AB_INT);
+ 	  break;
+         case 0x2:  // Chip C
+         case 0x3:  // Chip D
+-	  BoardData[board].clockSelectReg_CD &= INTCD_POL;
++	  BoardData[board].clockSelectReg_CD &= ~INTCD_POL;
+ 	  BoardData[board].clockSelectReg_CD |= (arg & 0x1) << 7;
+ 	  outb_p(BoardData[board].clockSelectReg_CD, CNT_CD_INT);
+ 	  break;
+-- 
+1.8.5.2 (Apple Git-48)
+

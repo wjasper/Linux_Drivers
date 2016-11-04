@@ -1,0 +1,194 @@
+
+                      PCI-DIO-24 Version 2.15
+                      ----------------------
+
+ Linux loadable module for the Measurement Computing PCI-DIO-24 
+ ------------------------------------------------------------------------
+
+NOTE:  kernel 2.4              driver is called:  dio24_2_4.c
+       kernel 2.6.0 - 2.6.25   driver is called:  dio24_2_6.c
+       kernel 2.6_29           driver is called:  dio24_2_6_29.c
+       kernel 3.3.7            driver is called:  dio24_3_3_7.c
+       kernel 3.10.11          driver is called:  dio24_3_10_11.c
+       kernel 4.0.8            driver is called:  dio24_4_0.8.c
+
+Introduction:
+-------------
+This driver was written by Warren J. Jasper at North Carolina State
+University.  It is a driver for the Measurement Computing PCI-DIO24,
+PCI-DIO24/LP, PCI-DIO24/S, and the PCIe-DIO24 adapter.
+
+Please send comments and bug fixes to wjasper@tx.ncsu.edu.  The source for the
+driver is located at https://github.com/wjasper/Linux_Drivers
+
+
+Distribution contents:
+----------------------
+README          - this file
+Makefile        - Makefile to compile and install the driver
+dio24.c         - PCI-DIO-24 Driver source.
+dio24_2_4.c     - PCI-DIO-24 Driver source 2.4 Kernel
+dio24_2_6.c     - PCI-DIO-24 Driver source 2.6 Kernel
+dio24_2_6_29.c  - PCI-DIO-24 Driver source 2.6.29 Kernel
+dio24_3_3_7.c   - PCI-DIO-24 Driver source 3.3.7 Kernel
+dio24_3_10_11.c - PCI-DIO-24 Driver source 3.10.11 Kernel
+dio24_4_0_8.c   - PCI-DIO-24 Driver source 4.0.8 Kernel
+dio24.h         - Driver definitions and constants.
+pci-dio24.      - User and driver definitions and constants.
+test-dio24.c    - Test program.
+PCI-DIO24x.pdf  - Users Manual
+PCIe-DIO24.pdf  - Users Manual for the PCIe-DIO24
+RegMapPCI-DIO24X.pdf - Register Maps
+
+Building and installing the driver:
+-----------------------------------
+1. Untar the tar file:
+
+   tar zxvf PCI-DIO24.2.15.tgz
+
+2. This should create the following files:
+    README  
+    Makefile
+    dio24.c
+    dio24_2_4.c
+    dio24_2_6.c
+    dio24_2_6_29.c
+    dio24_3_3_7.c
+    dio24_3_10_11.c
+    dio24_4_0_8.c
+    dio24.h
+    pci-dio24.h	
+    test-dio24.c
+    PCI-DIO24x.pdf
+    RegMapPCI-DIO24X.pdf
+
+3. The default configuration is for the kernel to dynamically set the
+   major number.  If you wish to override this option and force a particular
+   major number, set the following in dio24.h
+
+   #define DEFAULT_MAJOR_DEV  0    /* Default Major Device Number */
+ 
+
+  NOTE:  If interrupts are enabled, the driver will block unless the O_NONBLOCK flag is 
+         used in open().  Thus, an interrupt will generate a read.
+
+  NOTE:  the Intel 82C55 may be programmed to operate in Input/Output (mode 0), 
+         Strobed Input/Output (mode 1) or Bi-Directional Bus (mode 2)
+
+         Pin 1 of the 37 pin connector is an input jumper which maps the 
+         interrupt directly onto the PCI bus.  The signal to the bus is buffered.  
+         The buffer is enabled by a LOW level on Pin 2, interrupt enable.
+
+4. To compile, type:
+
+   make
+
+   Make sure your have installed the kernel-devel package
+      e.g. dnf install kernel-devel
+
+5. To install the driver type:
+
+    make install
+
+    check that the destination directory is correct.
+
+6. Copy the file 61-mcc.rules to /etc/udev/rules.d,
+   (or 60-mcc.rules for the older 2.6 kernel).  
+
+   or inlcude the following rule:
+
+#Enable non-root access to pci devices
+SUBSYSTEM=="dio24", KERNEL=="dio[0-9]_*",    NAME="dio24/%k", MODE="666"
+
+To test your updated rules you can do one of the following:
+1.    /sbin/udevadm control --reload  (or something similar.  type man udevadm)
+2.    Reboot your system
+
+You will be able to search the attributes of the device by
+   /sbin/udevadm info -a -p $(/sbin/udevadm info -q path -n /dev/dio24/dio0_0A)
+
+7. Under some distributions, such as Ubuntu (and only some versions), you will need to disable the
+   COMEDI drivers which conflict with resources needed by the pci-dio24 module.  If the driver does not
+   load or you can't run the test program, that is usually the reason. Do the following:
+   
+    1. Type lspci -vv or lsmod  and look for 8255_pci.
+    2. edit the file /etc/modprobe.d/blacklist an add the line:
+         blacklist 8255_pci
+    3. /usr/sbin/depmod -a
+    4. reboot and double check that the offending module is no longer installed as shown in step 1.
+
+
+Having the driver install at boot  (2.4 kernel only):
+----------------------------------
+
+1) To install the driver so that it comes up every time on boot-up, you
+  will need to include the following lines in one of your boot rc files.
+  The one we used is called /etc/rc.d/rc.local. Your setup may vary.
+
+#! /bin/sh
+#
+# rc.local	This does local customization.
+#
+# Author:	Warren Jasper <wjasper@tx.ncsu.edu>
+#
+echo -n "Local customization:"
+
+if [ -x /sbin/insmod -a -r /lib/modules/`uname -r`/kernel/drivers/char/dio24.o ]; then
+    echo -n " PCI-DIO24"
+    /sbin/insmod -f /lib/modules/`uname -r`/kernel/drivers/char/dio24.o
+fi
+
+
+How the driver works:
+---------------------
+
+The driver is fairly straight forward, but since the current version of
+Linux is not 1003.4 compliant (it is not a real-time operating system),
+certain design decisions were made in writing this driver. 
+
+When interrupts are disabled, all the read/write calls to the driver are
+non-blocking.  When interrupts are enabled, all reads are blocked,
+unless the O_NONBLOCK flag is set when the device is opened. writes are
+never blocked.
+
+All the devices nodes are automagically created for you by /sysfs and udev. They are
+
+/dev/dio24/dio[Board Number]_0[A-C]
+
+so
+
+/dev/dio24/dio0_0B would be Board 0,  Port B.  Type
+	ls -l /dev/dio24 
+to list all the device nodes.  See the documentaion on the 8255.
+
+****************************************************************************
+
+The following ioctl() functions have been implemented:
+
+1. ioctl(fd, DIO_SET_MODE, MODE_IO);
+   Sets the INTEL 8255 Programmable Peripheral Interface to one of three modes:
+       MODE_IO            - normal input/output mode
+       MODE_STROBE_IO     - Strobed Input/Output (port A or B)
+       MODE_BIDIRECTIONAL - Bi-Directional Bus (port A only )
+    See the documentation of the chip for more information
+
+2. ioctl(fd, DIO_SET_DIRECTION, PORT_INPUT);
+   Set the direction of the port to either input or output.  Port C can be split
+   into two levels (4 bits each), while ports A and B are either all input or
+   all output.
+
+3. ioctl(fd, INTERRUPT_ENABLE, NULL);
+   Enable interrutps.
+
+4. ioctl(fd, INTERRUPT_DISABLE, NULL);
+   Disable interrutps.
+
+5. ioctl(fd, INTERRUPT_POLARITY, polarity);
+     Sets the interrupt polarity on the board
+     polarity = INT_ACTIVE_LOW   interrupt active low, (default)
+              = INT_ACTIVE_HIGH  interrupt active high
+
+6. ioctl(fd, INTERRUPT_SELECT, type);
+     Sets the interrupt Level/Edge Select
+     type = INT_LEVEL_SENSITIVE  interrupt level sensitive
+          = INT_EDGE_SENSITIVE   interrupt edge sensitive

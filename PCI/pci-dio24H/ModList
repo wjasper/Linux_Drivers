@@ -1,0 +1,49 @@
+08-7-2015/17:20 --wjj--
+  removed IRQF_DISABLED as deprecated.
+
+07-24-2015/17:20 --wjj--
+  change filePtr->f_dentry->d_inode to filePtr->f_path.dentry->d_inode
+
+05-11-2011/9:00 --wjj--
+  Included linux/sched.h to driver to eliminate 'TASK_INTERRUPTABLE' 
+  undeclared.
+
+08-12-2009/15:00  --wjj--
+  added sub version numbers for 2.6.X for kernel releases in dio24H.c
+  modfied device_create to add extra argument
+
+06-16-2008/12:00  --wjj--
+  added linux/fs.h explicitly.
+
+09-17-2005/8:30  --wjj--
+  Deleted including <linux/modversions> in dio24H.c, as its location moved from
+  2.4.X to 2.6.X kernel and is not needed.
+
+02-07-2005:/8:57 --wjj--
+  Added documentation on the register map.
+
+07-23-2004:/10:00 --wjj--
+  Rewrote Makefile to conform to new way of kernel building. 
+  Updated to support 2.6 kernel.  Added file dio24H_2.6.c
+
+09-23-2003/9:20 --wjj--
+   -m486' is deprecated. Used `-march=i486' instead.
+   Fixed multi-line string literals in test-dio24H.c.
+
+02-13-2003/16:00 --wjj--
+  Added support for multiple pci boards.  Implemented new pci API.
+
+12-04-2002/9:00 --wjj--
+   Fixed bug in Makefile wile generating dependency files.  Also deleted
+   All references to BYTE, WORD, LONG deleted.
+
+08-29-2002/16:20 --wjj--
+   Modified Makefile to automacially generate dependency file. Also search/install paths
+   changed to reflect Red Hat 7.3/ 2.4 kernel file structure.
+
+09-05-2001/14:50 --wjj--
+   Added #include <linux/init.h> since it was not getting in by default.
+
+04-24-2001/12:00 --wjj--
+  Ported driver to run under the 2.4.X kernel.
+  Change major device number to 249.

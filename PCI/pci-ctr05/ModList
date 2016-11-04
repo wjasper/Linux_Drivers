@@ -1,0 +1,30 @@
+08-7-2015/17:20 --wjj--
+  removed IRQF_DISABLED as deprecated.
+
+07-24-2015/17:20 --wjj--
+  change filePtr->f_dentry->d_inode to filePtr->f_path.dentry->d_inode
+  for 4.0.8 kernel.
+
+08-12-2009/15:00  --wjj--
+  added sub version numbers for 2.6.X for kernel releases in c9513.c
+  modfied device_create to add extra argument
+
+09-6-2007/11:00 --wjj--
+  - Let kernel dynamically select major number
+  - Register device with /sys/class/c9513
+  - Include udev rules to create device nodes
+  - Change pci_module_init() to pci_register_driver()
+    (pci_module_init() doesn't exist on recent kernels)
+
+07-04-2006:/23:26 --wjj--
+  for c9513_2_6.c (v2.6 only)
+  Changed verify_area() to !access_ok().
+
+09-17-2005/8:30  --wjj--
+  Deleted including <linux/modversions> in c9513.c, as its location moved from
+  2.4.X to 2.6.X kernel and is not needed. 
+
+07-23-2004:/10:00 --wjj--
+  Rewrote Makefile to conform to new way of kernel building. 
+  Updated to support 2.6 kernel.  Added file c9513_2.6.c
+

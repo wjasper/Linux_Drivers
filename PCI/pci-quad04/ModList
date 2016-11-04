@@ -1,0 +1,7 @@
+07-24-2015/17:20 --wjj--
+  change filePtr->f_dentry->d_inode to filePtr->f_path.dentry->d_inode
+
+06-1-2010/15:00  --wjj--
+  initial release of drier
+
+

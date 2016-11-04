@@ -1,0 +1,404 @@
+
+                      PCI-DAS4020/12 Version 1.25   
+                      ---------------------------
+
+ Linux loadable module for the Computer Boards PCI-DAS 4020/12 Analog & Digital I/O Board
+ -----------------------------------------------------------------------------------------
+
+Introduction:
+-------------
+This driver was written by Warren J. Jasper at North Carolina State
+University.  It is a driver for the Measurement Computing PCI-DAS 4020/12 A/D
+adapter. It should run on all Linux 2.4, 2.6 and 3.X kernels on Pentium machines.
+With minor modification, it should run on other architectures.
+
+I would like to acknowledge the help and assistance of Eric Blossom.
+Parts of this driver are based off of his code that can be found at
+http://www.gnu.org/software/gnuradio.
+
+Please send comments and bug fixes to wjasper@tx.ncsu.edu.  The source
+for the driver is located at https://github.com/wjasper/Linux_Drivers
+
+Distribution contents:
+----------------------
+README              - this file
+Makefile            - Makefile to compile and install the driver
+ModList             - Chronological list of modifications
+a2dc.c	            - PCI-DAS4020/12 source
+a2dc_2_4.c          - kernel version 2.4
+a2dc_2_6_20.c       - kernel version 2.6.20
+a2dc_2_6_26.c       - kernel version 2.6.26
+a2dc_2_6_29.c       - kernel version 2.6.29
+a2dc_3_3_7.c        - kernel version 3.3.7
+a2dc_3_10_11.c      - kernel version 3.10.11
+a2dc.h	            - Driver definitions and constants.
+pci-das4020.h       - User and driver definitions and constants.
+test-das4020.c      - Test program.
+plx9080.pdf         - Documentation for the PLX 9080 PCI Controller
+9080-3errata-13.pdf - Documentation for the PLX 9080 PCI Controller
+9080-3dn-13.pdf     - Documentation for the PLX 9080 PCI Controller
+Calibration.ps      - Documentation for the Calibration ceofficents.
+
+Building and installing the driver:
+-----------------------------------
+
+1. Untar the tar file:
+
+   tar zxvf PCI-DAS4020-12.1.25.tgz
+
+2. This should create the following files:
+
+License
+a2dc.c
+a2dc_2_4.c
+a2dc_2_6_20.c
+a2dc_2_6_26.c
+a2dc_2_6_29.c
+a2dc_3_3_7.c
+a2dc_3_10_11.c
+a2dc.h
+pci-das4020.h
+test-das4020.c
+Makefile
+README
+ModList
+plx9080.pdf
+9080-3errata-13.pdf
+9080-3dn-13.pdf
+Calibration.ps
+
+3. The default configuration is for the kernel to dynamically set the
+   major number.  If you wish to override this option and force a particular
+   major number, set the following in a2dc.h
+
+   #define DEFAULT_MAJOR_DEV  0    /* Default Major Device Number */
+ 
+
+4. To compile, type:
+
+   make
+
+5. To install the driver type:
+
+    make install
+
+6. Copy the file 61-mcc.rules to /etc/udev/rules.d,
+   (or 60-mcc.rules for the older 2.6 kernel).
+
+   or inlcude the following rules:
+
+#Enable non-root access to pci devices
+SUBSYSTEM=="das4020-12", KERNEL=="ad[0-9]_[0-4]", NAME="das4020-12/%k", MODE="666"
+SUBSYSTEM=="das4020-12", KERNEL=="da[0-9]_[0-1]", NAME="das4020-12/%k", MODE="666"
+SUBSYSTEM=="das4020-12", KERNEL=="dio[0-9]_*",    NAME="das4020-12/%k", MODE="666"
+
+To test your updated rules you can do one of the following:
+1.    /sbin/udevadm control --reload  (or something similar.  type man udevadm)
+2.    Reboot your system
+
+You will be able to search the attributes of the device by
+   /sbin/udevadm info -a -p $(/sbin/udevadm info -q path -n /dev/das4020-12/dio0_0A)
+
+
+7. To test run the test program 'test-das4020'
+
+    ./test-das4020
+
+
+Having the driver install at boot: (2.4 kernel only)
+----------------------------------
+
+There are 2 ways you can do this:
+
+1) add the following line to your /etc/modules.conf
+
+        alias char-major-250 pci-das4020-12
+
+2) To install the driver so that it comes up every time on boot-up, you
+   will need to include the following lines in one of your boot rc files.
+   The one we used is called /etc/rc.d/rc.local. Your setup may vary.
+
+#! /bin/sh
+#
+# rc.local	This does local customization.
+#
+# Author:	Warren Jasper <wjasper@tx.ncsu.edu>
+#
+echo -n "Local customization:"
+
+if [ -x /sbin/insmod -a -r /lib/modules/`uname -r`/kernel/drivers/char/das4020-12.ko ]; then
+        echo -n "PCI-DAS4020/12"
+        /sbin/insmod -f /lib/modules/`uname -r`/kernel/drivers/char/das4020-12.ko
+fi
+
+****************************************************************************
+IMPORTANT:  The driver works in one of 2 modes (see below).  
+One of the modes is ADC_DMA_CONVERSION.  This driver supports chained dma and
+also maps the dma buffer into local user space with an mmap call. To use this
+mode, some things have to be set up correctly at boot time.
+
+Some background about dma usage.  Before data from a slave board can
+be transferred to main memory, a dma buffer needs to be set up.  This
+is sort of special memory, since the kernel must not cache or swap it.
+Some drivers (See Eric Blossom's mc4020.c driver) set up a link list
+of kernel pages allocated with get_zeroed_page(GFP_KERNEL), and use
+scatter-gather-dma.  The only problem with this is one is not
+guaranteed that there will be enough free pages at run time.
+
+I have chosen a slightly different approach.  Since loadable modules
+can not allocate kernel memory at load time (exclusively) , 
+I try to reserve memory at load time using pci_alloc_consistent() and
+a nopage vma method.
+
+Then edit ADC_BUFF_PHY_SIZE accordingly in a2dc.h, to set the DMA
+Buffer Size FOR EACH BOARD.  A call to mmap (see example in
+test-das4020.c) will map this memory into user space, avoiding the
+need to copy data from kernel space into user space!
+
+One should only use dma for large acquisitions at very high speeds.
+For smaller sample counts (less than 100), it turns out the polling is
+probably more efficient.
+
+Sample rate
+   The sample rate is calculated as follows:
+  sampleRate = (ADC_PACER_FREQ_VALUE/40 MHz) with the restriction that:
+     ADC_PACER_FREQ_VALUE <= 20MHz for 1 or 2 channels
+     ADC_PACER_FREQ_VALUE <= 10MHz for 3 or 4 channels
+
+thus the maximum sampling frequency for the board is 20 MHz for 2 channels.
+
+How the driver works:
+---------------------
+
+The driver is fairly straight forward, but since the current version of
+Linux is not 1003.4 compliant (it is not a real-time operating system),
+certain design decisions were made in writing this driver.
+
+Each A/D channel and  D/A channel and DIO  have their own minor number.
+I call these virtual channels or just channels.  There are 4 virtual A/D channels.
+The board has 4 physical A/D channels. When a channel is opened, it is mapped 1 to 1 to
+it's physical channel with a gain of +/- 5V.  Therefore, opening /dev/das4020-12/ad0_0
+will allow you to read from physical channel 0 on board 0. 
+Examples are:
+
+/dev/das4020-12/ad0_0      A/D channel board 0  physical channel 0
+/dev/das4020-12/da2_1      D/A channel board 2  physical channel 1
+/dev/das4020-12/dio1_0A    DIO         board 1  port A
+
+
+These device nodes are generated automagically for you by /sysfs and udev.
+Type ls -l /dev/das4020-12 to see all the devices.
+
+After the device is opened, it is possible to map or remap different
+physical channels to your virtual channel.  For example, if you want
+to read from all 4 channels at once, you will need to map the beginning and
+ending physical channel with ioctl calls (see below).  There are also many 
+triggering and gain options possible.
+
+
+Each ADC channel can be opened in one of two modes:
+
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
+...
+
+  int fd;
+  fd = open("/dev/das4020/ad0_0", Mode);
+
+...
+
+Where Mode (Pacer Source) is an integer and equal to:
+
+(for A/D)
+ADC_SOFT_CONVERSION          -- software pacer (polled one shot)
+ADC_DMA_CONVERSION           -- uses dma/mmap
+
+(Note: Not all triggering modes have been implemented!)
+
+****************************************************************************
+NOTE:  You can only open one channel at a time, meaning that channel 0 can 
+only be open by one process.  Of course another process can open channel 2.  
+If you are running multiple processes, you must make sure you close the 
+file descriptor before tying to open it again.
+****************************************************************************
+
+To read from a channel, use:
+
+  int bytesRead;             /* number of bytes read */
+  int count = 2;             /* desired number of conversions */
+  unsigned short data[2048]  /* buffer for data */
+
+  bytesRead = read(fd, data, count);
+
+****************************************************************************
+Warning: read() is implemented as a blocking function.  It will return
+when "count" conversions are completed.  
+****************************************************************************
+
+Non-blocking read has recently been implemented (DMA only) with the
+O_NONBLOCK flag. Use read(...) once to initate a request (will always
+return error EAGAIN). Then you can use poll()/select() to wait until
+the transfer finishes and use read(...) a second time to complete the
+request. You could also busyloop on read(...) until it stops returning
+EAGAIN. You should pass the same sample count to read() when you call
+it to obtain the data, as you did when you called it the first time to
+initiate the request. You can use ADC_NBIO_CANCEL, ADC_NBIO_PENDING, and
+ADC_NBIO_COMPLETE to help manage pending non-blocking i/o.
+
+
+The following ioctl() functions have been implemented:
+
+1.  ioctl(fd, ADC_SET_GAINS, Gain); 
+    This sets the input gain settings.  There are 10 allowable settings:
+    BP_5_00V      //  +/-  5V  for all 4 channels
+    BP_1_00V      //  +/-  1V  for all 4 channels
+
+    BP_CH0_5V	 // channel 0 range: +/- 5V
+    BP_CH0_1V	 // channel 0 range: +/- 1V
+
+    BP_CH1_5V	 // channel 1 range: +/- 5V
+    BP_CH1_1V	 // channel 1 range: +/- 1V
+
+    BP_CH2_5V	 // channel 2 range: +/- 5V
+    BP_CH2_1V	 // channel 2 range: +/- 1V
+
+    BP_CH3_5V	 // channel 3 range: +/- 5V
+    BP_CH3_1V	 // channel 3 range: +/- 1V
+
+   eg.  ioctl(fd, ADC_SET_GAINS, BP_CH0_5V | BP_CH1_1V | BP_CH2_5V | BP_CH3_1V); 
+
+
+    See header file pic-das4020.h for more information.
+
+2.  ioctl(fd, ADC_GET_GAINS, Gain); 
+    Returns gain setting for that channel.  See header file pci-das4020.h 
+    for more information.
+
+3.  ioctl(fd, ADC_SET_PACER_FREQ, frequency);
+    Pass the value of the pacer frequency (sample rate) in Hertz.  Should be a number
+    between 1k Hz and 20 MHz.  Not all values are possible, but the driver will
+    choose the closest possible one.
+
+4.  ioctl(fd, ADC_GET_PACER_FREQ, &frequency);
+    Gets the actual pacer frequency in Hz.
+
+5.  ioctl(fd, ADC_SET_TRIGGER, value);
+    Set trigger source.  Valid values are:
+
+    DISABLE
+    SOFT_TRIGGER     --  In this mode, a software trigger source is used as the starting trigger.  Whan the
+                         DAQ Start Register is written to a TRIG1 strobe is generated.
+    EXTERNAL_TRIGGER --  In this mode, an external TRIG1 source is used as the starting trigger.  The
+                         XTRIX_SRC bit in the DAQ ATRIGLOW register defines the actual external XTRIG1
+                         source to be used.
+    ANALOG_TRIGGER   --  In this mode, the Analog Trigger source is used as the starting trigger.  The
+                         ATRIGSRC bits in the DAQ Control Register 1 are used to select one of the four
+                         analog channels as the analog trigger source.  The ATRIGMD bits in the DAQ
+                         Control 1 Register select the trigger typed desired.  The DAQATRIG LOW/HIGH
+                         registers are used to select the analog trigger level.
+
+6.  ioctl(fd, ADC_SET_GATE, value);
+    Set gate source.  Valid values are:
+    DISABLE
+    EXTERNAL_GATE
+    ANALOG_GATE
+
+7.  ioctl(fd, ADC_SET_CHAN_LOW, value);
+    Set the low channel of in  2 channel mode.  This forces the A/D to
+    begin conversion on this channel.
+
+8.  ioctl(fd, ADC_SET_CHAN_HIGH, value);
+    Set the high channel value in 2 channel mode.  This forces the A/D to
+    convert from low_chan to high_chan;
+
+9.  ioctl(fd, ADC_SET_ATRIG_LOW, value);
+    Set the ADC analog tirgger value low registers.  See documentation on the DAS4020 
+    for the proper values.
+
+10. ioctl(fd, ADC_SET_ATRIG_HIGH, value);
+    Set the ADC analog tirgger value high registers.  See documentation on the DAS4020 
+    for the proper values.
+
+11. ioctl(fd, ADC_SET_ATRIG_MODE, value);
+    value = (ATRIG_CH[0-3] | MODE)
+    Set the analog trigger mode.  Valid values are:
+    INACTIVE            -- Inactive state.  Prior to programming the analog trigger to the desired state, 
+                           the analog trigger should be programmed to the inactive state to clear out the 
+                           trigger circuitry.
+    POSITIVE_HYSTERESIS -- The trigger is generated when the signal value is greater than the high-value,
+                           with hysteresis specified by low_value.
+    NEGATIVE_HYSTERESIS -- The trigger is generated when the signal value is greater than the low-value,
+                           with hysteresis specified by high_value.
+    NEGATIVE_SLOPE      -- The trigger is generated when the signal value is less than low-value.
+    POSITIVE__SLOPE     -- The trigger is generated when the signal value is greater than high-value.
+    WINDOW              -- The trigger is generated when the signal value is between the low-value and
+                           high-value.
+12. ioctl(fd, ADC_GET_HALF_FIFO_SIZE, &size);
+    get the size of the half the FIFO in bytes.
+
+13. ioctl(fd, ADC_SET_FIFO_SIZE, size);
+    Set the size of the ADC FIFO buffer (in sample size).  Legal values are: 256, 512, 1024, 2048, 4096, 
+    8192, 16384, 32768.
+
+14. ioctl(fd, ADC_SET_HW_CONFIG_REG, value);
+    Set the Hardware Configuration Register (base2 + 0x2).
+
+15. ioctl(fd, ADC_SET_CONTROL_REG0, value);
+    Set the ADC Control Rgister 0 (base2 + 0x10).
+
+16. ioctl(fd, ADC_SET_CONTROL_REG1, value);
+    Set the ADC Control Rgister 1 (base2 + 0x12).
+
+17. ioctl(fd, ADC_GET_DMA_BUF_SIZE, &value);
+    Get the value of the dma buffer size in bytes.
+
+18. ioctl(fd, ADC_NBIO_CANCEL, force)
+    cancel a pending non-blocking read request. If force is non-zero, then
+    it will cancel a request even if the original request was on a different
+    file descriptor
+
+19. ioctl(fd, ADC_NBIO_PENDING, &ispending)
+    returns whether there is currently a non-blocking read request pending
+
+20. ioctl(fd, ADC_NBIO_COMPLETE, &iscomplete)
+    returns non-zero if there is a non-blocking read request pending and
+    the dma is complete (e.g. ready for second read() call)
+
+21. ioctl(fd, ADC_PSC_ENB, value);
+     value = 1 enable PSC     value = 0 disable PSC
+
+22. ioctl(fd, ADC_SET_CKL_SRC, value);
+     value = CLK_INTERNAL          Use internal clock (default)
+     value = CLK_EXT_BNC           Clock with external BNC
+     value = CLK_AD_START_TRIG_IN  External A/D start trigger IN pin.
+
+23. ioctl(fd, ADC_GET_CLK_SRC, &value);
+     returns the current state fo the clock source.
+     value = CLK_INTERNAL          Use internal clock (default)
+     value = CLK_EXT_BNC           Clock with external BNC
+     value = CLK_AD_START_TRIG_IN  External A/D start trigger IN pin.
+     
+ 
+24. ioctl(fd, DIO_SET_MODE, Mode);
+    Sets the INTEL 8255 Programmable Peripheral Interface to one of three modes:
+       MODE_IO            - normal input/output mode
+       MODE_STROBE_IO     - Strobed Input/Output (port A or B)
+       MODE_BIDIRECTIONAL - Bi-Directional Bus (port A only )
+    See the documentation of the chip for more information
+
+25. ioctl(fd, DIO_SET_DIRECTION, Direction)
+    Set the direction of the port to either input or output.  Port C can be split
+    into two levels (4 bits each), while ports A and B are either all input or
+    all output.
+
+26. ioctl(fd, DAC_SET_GAINS, gain);
+    Possible DAC gain settings are:
+    BP_10_00V           +/- 10V
+    BP_5_00V            +/-  5V 
+
+27. ioctl(fd, DAC_GET_GAINS, gain);
+    Returns the value of the current gain.  See pci-das4020.h for meaning of the
+    values.
+

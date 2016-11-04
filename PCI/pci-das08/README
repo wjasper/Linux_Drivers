@@ -1,0 +1,245 @@
+
+                      PCI-DAS08 Version 2.10
+                      ----------------------
+
+ Linux loadable module for the Measurement Computing PCI-DAS08 A/D adapter
+ ------------------------------------------------------------------------
+
+NOTE:  kernel 2.4     driver is called:  a2dc_2_4.c
+       kernel 2.6     driver is called:  a2dc_2_6.c
+       kernel 2.6.29  driver is called:  a2dc_2_6_29.c
+       kernel 3.3.7   driver is called:  a2dc_3_3_7.c
+       kernel 3.10.11 driver is called:  a2dc_3_10_11.c
+
+Introduction:
+-------------
+
+This driver was written by Warren J. Jasper at North Carolina State
+University.  It is a driver for the Measurement Computing PCI-DAS08 A/D
+adapter.  
+
+Please send comments and bug fixes to wjasper@tx.ncsu.edu.  The source for the
+driver is located at https://github.com/wjasper/Linux_Drivers
+
+
+Distribution contents:
+----------------------
+
+README              - this file
+Makefile            - Makefile to compile and install the driver
+License             - GPL License
+a2dc.c              - PCI-DAS08 Driver source.
+a2dc_2_4.c          - 2.4 kernel version
+a2dc_2_6.c          - 2.6.22 to 2.6.27 kernel version
+a2dc_2_6.29.c       - 2.6.29 kernel version
+a2dc_3_3.7.c        - 3.3.7 kernel version
+a2dc_3_10.11.c      - 3.10.11 kernel version
+a2dc.h	            - Driver definitions and constants.
+pci-das08.h         - User and driver definitions and constants.
+test-das08.c        - Test program.
+pci-das08.pdf       - user manual
+RegMapPCI-DAS08.pdf - register maps
+
+Building and installing the driver:
+-----------------------------------
+
+1. Untar the tar file:
+
+   tar zxvf PCI-DAS08-2.10.tgz
+
+2. This should create the following files:
+
+License
+Makefile
+ModList
+README
+a2dc.c
+a2dc_2_4.c
+a2dc_2_6.c
+a2dc_2_6.29.c
+a2dc_3_3.7.c
+a2dc_3_10.11.c
+a2dc.h
+pci-das08.h
+test-das08.c
+pci-das08.pdf
+RegMapPCI-DAS08.pdf
+
+
+3. The default configuration is for the kernel to dynamically set the
+   major number.  If you wish to override this option and force a particular
+   major number, set the following in a2dc.h
+
+   #define DEFAULT_MAJOR_DEV  0    /* Default Major Device Number */
+
+   If you have more than one PCI-DAS08 board in your computer, edit NUM_BOARDS and set
+   it to the correct value in the Makefile.
+
+        NUM_BOARDS=2
+
+
+4. To compile, type:
+
+   make
+
+5. To install the driver type:
+
+    make install
+
+Note:   The driver tries to install itself in /lib/modules/`uname -r`/kernel/drivers/char
+        Edit MODULE_DIR in the Makefile to install the driver in another directory.
+
+6. Copy the file 61-mcc.rules to /etc/udev/rules.d,
+   (or 60-mcc.rules for the older 2.6 kernel).
+
+   or inlcude the following rule:
+
+#Enable non-root access to pci devices
+SUBSYSTEM=="das08",      KERNEL=="ad[0-9]_[0-7]", NAME="das08/%k",      MODE="666"
+
+To test your updated rules you can do one of the following:
+1.    /sbin/udevadm control --reload  (or something similar.  type man udevadm)
+2.    Reboot your system
+
+You will be able to search the attributes of the device by
+   /sbin/udevadm info -a -p $(/sbin/udevadm info -q path -n /dev/das08/ad0_0)
+
+
+7. To install the driver type:
+
+    make install
+
+8. To test run the test program 'adcread':
+
+    test-das08
+
+Having the driver install at boot:   (2.4 kernel only)
+----------------------------------
+
+To install the driver so that it comes up every time on boot-up, you
+will need to include the following lines in one of your boot rc files.
+The one we used is called /etc/rc.d/rc.local. Your setup may vary.
+
+#! /bin/sh
+#
+# rc.local	This does local customization.
+#
+# Author:	Warren Jasper <wjasper@tx.ncsu.edu>
+#
+
+echo -n "Local customization:"
+
+if [ -x /sbin/insmod -a -r /lib/modules/`uname -r`/kernel/drivers/char/pci-das08.o ]; then
+        echo -n " PCI-DAS08"
+        /sbin/insmod  /lib/modules/`uname -r`/kernel/drivers/char/pci-das08.o
+fi
+
+How the driver works:
+---------------------
+
+The driver is fairly straight forward, but since the current version of
+Linux is not 1003.4 compliant (it is not a real-time operating system),
+certain design decisions were made in writing this driver. 
+
+Each A/D channel has their own minor number.  I call these virtual
+channels or just channels.  There are 16 virtual A/D channels.  The
+board has 7 physical A/D channels. When a channel is opened, it is
+mapped 1 to 1 to it's physical channel with a gain of +/- 5V.
+Therefore, opening /dev/das08/ad0_0 will allow you to read from
+physical channel 0 on board 0.  Examples are:
+
+/dev/das08/ad0_0      A/D channel board 0  physical channel 0
+
+These device nodes are generated automagically for you by /sysfs and udev.
+Type ls -l /dev/das08 to see all the devices.
+
+After the device is opened, it is possible to map or remap different
+physical channels to your virtual channel.  For example, if you want
+to read from all 16 channels at once, you will need to map the beginning and
+ending physical channel with ioctl calls (see below).  
+
+Each channel can be opened in one of two modes:
+
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
+...
+
+  int fd;
+  fd = open("/dev/pci-das08/ad0_0", Mode);
+
+...
+
+
+Where Mode is an integer and equal to:
+
+ADC_SOFT_TRIGGER       -- software trigger (one shot)
+ADC_EXTERNAL_PACER     -- external pacer on interrupt pin 24.
+                          (code not yet implemented)
+
+Please read the limited documentation with the board if you are not
+familiar with the different ways to trigger an A/D conversion.
+
+****************************************************************************
+NOTE:  You can only open one channel at a time.  If you are running
+multiple processes, you must make sure you close the file descriptor before
+tying to open it again.
+****************************************************************************
+
+To read from a channel, use:
+
+  int bytesRead;             /* number of bytes read */
+  int count = 2;             /* desired number of conversions */
+  unsigned short data[2048]  /* buffer for data */
+
+  bytesRead = read(fd, data, count);
+
+
+****************************************************************************
+Warning: read() is implemented as a blocking function.  It will return
+when "count" conversions are completed.  Since there is only one A/D
+chip on the board, conversions are multiplexed anyway.
+****************************************************************************
+
+The following ioctl() functions have been implemented:
+
+
+
+1. ioctl(fd, COUNTER0, CTR0_MODE2 | 10) ;
+   ioctl(fd, COUNTER1, CTR0_MODE2 | 10) ;
+   ioctl(fd, COUNTER2, CTR0_MODE2 | 10) ;
+   This call programs and sets the control register and the counter register
+   of the 8254 COUNTER 0.  You really need to get the documentation on
+   the 82C54 Programmable Timer from Intel if you want to program the
+   timer. The data argument is packed as follows:
+
+       Value for Counter 0  XXXX    Mode    MSB     LSB
+                            Byte 3  Byte 2  Byte 1  Byte 0
+
+   Where Mode is one of the five programmable modes, and Byte 0 and Byte 1
+   contain the data value for the 16 bit Counter 0.  In the above example,
+   counter0 is set to Mode 2, and the value 10 is loaded into the timer.
+   See header file adc.h for more information.
+
+2. ioctl(fd, ADC_GET_STATUS, *value);
+    Returns the value of the Status Register, base1+2.
+
+
+3. ioctl(fd, ADC_GET_DIO, *value);
+     Return bits 4-6 base+2 of the digital input lines, pins 25-27.
+
+4. ioctl(fd, ADC_SET_DIO, value);
+     Sets bits 4-7 base+2 (OP1-OP4) - OP4) of the digital output lines on the 37 pin
+     connector, pins 7-10
+
+5. ioctl(fd, INT_SELECT, value);
+     Selects the input to the interrupt.
+     value = INTERRUPT_PIN24  // interrupt triggered by pin 24
+           = COUNTER2_OUTPUT  // interrupt triggered by couter 2 output
+
+6. ioctl(fd, INT_ENABLE, value);
+     Enable or disable interrupts
+     value = INTERRUPT_ENABLE  // enable interrupts
+           = INTERRUPT_DISABLE // disable interrupts
+

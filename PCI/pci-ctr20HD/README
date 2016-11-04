@@ -1,0 +1,300 @@
+
+                      PCI-CTR20 HD Version 1.5
+                      ----------------------
+
+ Linux loadable module for the Measurement Computing PCI-CTR20HD Counter Timer
+ ------------------------------------------------------------------------
+
+NOTE:   kernel 2.6.X   driver is called:  c9513_2_6.c
+NOTE:   kernel 2.6.29  driver is called:  c9513_2_6_29.c
+NOTE:   kernel 3.3.7   driver is called:  c9513_3_3_7.c
+NOTE:   kernel 3.10.11 driver is called:  c9513_3_10_11.c
+NOTE:   kernel 4.0.8   driver is called:  c9513_4_0_8.c
+
+Introduction:
+-------------
+This driver was written by Warren J. Jasper at North Carolina State
+University (wjasper@tx.ncsu.edu).  It is a driver for the
+Measurement Computing PCI-CTR20HD Counter Timer board.
+
+Please send comments and bug fixes to wjasper@tx.ncsu.edu.  The source for the
+driver is located at https://github.com/wjasper/Linux_Drivers
+
+
+Distribution contents:
+----------------------
+README                - this file
+Makefile              - Makefile to compile and install the driver
+c9513.c	              - PCI-CTR20HD  Driver source.
+c9513_2_6.c           - PCI-CTR20HD 2.6.22 to 2.6.27
+c9513_2_6_29.c        - PCI-CTR20HD 2.6.29 
+c9513_3_3_7.c         - PCI-CTR20HD 3.3.7 
+c9513_3_10_11.c       - PCI-CTR20HD 3.10.11
+c9513_4_0_8.c         - PCI-CTR20HD 4.0.8
+c9513.h	              - Driver definitions and constants.
+pci-ctr20HD.h         - User and driver definitions and constants.
+test-ctr20HD.c        - Test program.
+pci-ctr20HD.pdf       - PCI-CTR20HD Users Guilde
+RegMapPCI-CTR20HD.pdf - Register Map for the PCI-CTR20HD
+
+Building and installing the driver:
+-----------------------------------
+
+1. Untar the tar file:
+
+   tar zxvf PCI-CTR20HD.1.5.tgz
+
+2. This should create the following files:
+
+c9513.c
+c9513_2_6.c
+c9513_2_6_29.c
+c9513_3_3_7.c
+c9513_3_10_11.c
+c9513_4_0_8.c
+c9513.h
+pci-ctr20HD.h
+test-ctr20HD.c
+License
+Makefile
+README
+ModList
+RegMapPCI-CTR20HD.pdf
+
+3. The default configuration is for the kernel to dynamically set the
+   major number.  If you wish to override this option and force a particular
+   major number, set the following in c9513.h
+
+   #define DEFAULT_MAJOR_DEV  0    /* Default Major Device Number */
+
+
+4. If you have more than one board on your system, edit
+       MAX_BOARDS=1
+
+5. To compile, type:
+
+   make
+
+6. Copy the file 61-mcc.rules to /etc/udev/rules.d
+   (or 60-mcc.rules for 2.6 kernel). 
+
+   or inlcude the following rules:
+
+#Enable non-root access to pci devices
+SUBSYSTEM=="ctr20HD",    KERNEL=="ctr[0-9]_*",    NAME="ctr20HD/%k",    MODE="666"
+
+To test your updated rules you can do one of the following:
+1.    /sbin/udevadm control --reload  (or something similar.  type man udevadm)
+2.    Reboot your system
+
+
+8. To test run the test program "test-ctr20HD":
+
+    test-ctr20HD
+
+Having the driver install at boot: (2.4 kernel only)
+----------------------------------
+
+There are 2 ways you can do this:
+
+1) add the following line to your /etc/modules.conf
+
+        alias char-major-241 pci-ctr20HD
+
+2) To install the driver so that it comes up every time on boot-up, you
+   will need to include the following lines in one of your boot rc files.
+   The one we used is called /etc/rc.d/rc.local. Your setup may vary.
+
+#! /bin/sh
+#
+# rc.local	This does local customization.
+#
+# Author:	Warren Jasper <wjasper@tx.ncsu.edu>
+#
+
+echo -n "Local customization:"
+
+if [ -x /sbin/insmod -a -r /lib/modules/`uname -r`/kernel/drivers/char/pci-ctr20HD.o ]; then
+        echo -n "PCI-CTR20HD"
+        /sbin/insmod -f /lib/modules/`uname -r`/kernel/drivers/char/pci-ctr20HD.o
+fi
+
+How the driver works:
+---------------------
+
+The driver is fairly straight forward, but since the current version of
+Linux is not 1003.4 compliant (it is not a real-time operating system),
+certain design decisions were made in writing this driver. 
+
+The CIO-CTR20HD is based on the AM9513.  I have two comments about the
+AM9513.  First, the chip is way too complicated for its own good. Second,
+the chip is no longer made by AMD, and documentation is hard to come by.
+If you really want to use this driver and the chip to its fullest extent,
+you need to get a copy of the manual Am9513A/Am9513 Technical Manual.  I have
+included a pdf version of the docement called 9513.pdf.
+
+The driver is a stright Linux implementation based loosly on the DOS
+driver for this board by ComputerBoards.  Each minor number
+corresponds to a given counter.  There are five counters on the 9513,
+so minor number 1 corresponds to counter 1, minor number 2 to counter
+etc.  
+
+-------------------------------------------------------------------------
+| X | X | X | X | X | B2 | B1 | B0 | X | X | X | S1 | S0 | C2 | C1 | C0 |
+-------------------------------------------------------------------------
+
+The minor number is made up as follows:
+
+Bits 8-10 (B2-B0) comprise the board number (up to 8 boards on the PCI bus)
+Bits 3-4  (S1-S0) comprise the chip select if there are multiple 9513-2 chips.
+Bits 0-2  (C2-C0) comprise the counter number
+
+The devices are made in /dev.  For example:
+
+/dev/ctr20HD/ctr0_01
+                ^ ^^
+                | ||___________  counter number (1-5)
+                | |____________  chip number    (0-3)
+                |______________  board number   (0-7)
+
+Each device starts with the name /dev/ctr20HD/ctr0_XX (for the counters).
+The first digit is the board number.  If you only have one board, that number is 0.  
+ 
+Each channel can be opened in one of two modes:
+
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
+...
+
+  int fd;
+  fd = open("/dev/ctr20HD/ctr0_01", Mode);
+
+...
+
+Where Mode is an integer and equal to:
+
+CTR20HD_COUNTER   -- use the counter to count pulses on rising edge
+CTR20HD_FREQUENCY -- use the counter to count pulses for a specified time
+
+In order to read a count, you have to write a value to tell the
+counter the input source.  Possible values are listed in pci-ctr20HD.h,
+and are listed in the test-ctr20HD.c source.  For example, to read from
+counter 1, input source 4 (pin 15)
+
+int fd;
+WORD buf;
+
+fd = open("/dev/ctr20HD/ctr0_01", CTR20HD_COUNTER);
+write(fd, SRC4, 2);       /* SRC4 is a 16 bit value! */
+.
+.
+.
+read(fd, &buf, 2);       /* read 16 bit counter value */
+
+Another write() will reset the counter.
+
+--------------------------------------------------------------
+
+Reading a frequency is a bit different.  Counter 5 is reserved as a
+timer, while pulses are incremented on the counter N (1 - 4).  You
+need to externally connect pin 31 (CTR 5 Out) to CTR N GATE (eg. pin
+16 for N = 3) via the termial block or through a cable.  The input to
+the counter, (ie. the frequency you are trying to measure) is through
+pin 17 (Source 3 or CTR3CLK).
+
+For example:
+
+int fd;
+WORD buf;
+
+fd = open("/dev/ctr20HD/ctr0_03", CTR20HD_FREQUENCY);
+ioctl(fd, SET_GATE_INTERVAL, 5000);         /* 5000 = 1 second */
+write(fd, SRC3, 2);                         /* SRC3 is a 16 bit value! */
+.
+.
+.
+read(fd, &value, 1);
+.
+.
+read(fd, &value, 1);
+.
+.
+read(fd, &value, 1);
+
+In this case, every second a new frequency is latched in the hold
+register, and the counters are reset and restarted.  To turn off the
+counters, you need to close the file.
+
+Please read the limited documentation with the board if you are not
+familiar with the chip or the board.
+
+****************************************************************************
+NOTE:  You can only open one counter/timer at a time.  If you are running
+multiple processes, you must make sure you close the file descriptor before
+tying to open it again.
+****************************************************************************
+
+The following ioctl() functions have been implemented:
+
+1.  ioctl(fd, LOAD_CMD_REG, arg);
+    Loads the 8 bit value into the Command Register.
+
+2.  ioctl(fd, LOAD_MASTER_MODE_REG, arg);
+    Load the 16 bit value into the Master Mode Register.
+
+3.  ioctl(fd, LOAD_ALARM_REG1, arg);
+    Loads the 16 bit value into Counter 1 Alarm Register.
+
+4.  ioctl(fd, LOAD_ALARM_REG2, arg);
+    Loads the 16 bit value into Counter 2 Alarm Register.
+
+5.  ioctl(fd, LOAD_MODE_REG, arg);
+    Load the 16 bit value into the Counter Mode Register.  There are
+    5 counters, each corresponding to the minor number or device that
+    was opened.  For example, opening /dev/ctr20HD/ctr0_01 corresponds to
+    counter 1.
+
+6.  ioctl(fd, LOAD_LOAD_REG, arg);
+    Load the 16 bit value into the Counter Load Register.  There are
+    5 counters, each corresponding to the minor number or device that
+    was opened.  For example, opening /dev/ctr20HD/ctr0_01 corresponds to
+    counter 1.
+
+7.  ioctl(fd, LOAD_HOLD_REG, arg);
+    Load the 16 bit value into the Counter Hold Register.  There are
+    5 counters, each corresponding to the minor number or device that
+    was opened.  For example, opening /dev/ctr20HD/ctr0_01 corresponds to
+    counter 1.
+
+8.  ioctl(fd, GET_MASTER_MODE_REG, &arg);
+    returns the 16 bit master mode register value.
+
+9.  ioctl(fd, GET_COUNTER_MODE_REG, &arg);
+    returns the 16 bit counter mode register value.
+
+10.  ioctl(fd, GET_STATUS_REG, &arg);
+    returns the 8 bit status register.
+
+11. ioctl(fd, SET_GATE_INTERVAL, value);
+    Sets the gateing interval, where a value is an integer
+    in 1/5000 th of a second (For a 5 MHz clock frequency).  For
+    example, to count the number of pulses for 1 second, set value to 5000.
+
+12. ioctl(fd, SET_CLOCK_INPUT, value);
+    Sets the clock input frequency for the 9513 Counter/Timers:
+    5 MHz     value = C_5MHZ     (Default)
+    1 MHz     value = C_1MHZ
+    3.33 MHz  value = C_3_33MHz
+    1.67 MHz  vlaue = C_1_67MHz
+
+13. ioctl(fd, SET_SQUARE_FREQ, frequency);
+    Programs counter as a square wave with given frequency.  The output for
+    channel 1 is CRT1OUT (pin 35), channel 2 is CRT2OUT (pin 34) etc.
+
+NOTE: Many of the values for the bits are #defined in pci-ctr20HD.h.  Please
+look over that file and the documentation before trying out the ioctl 
+calls.
+
+

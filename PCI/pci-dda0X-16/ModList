@@ -1,0 +1,14 @@
+07-24-2015/17:20 --wjj--
+  change filePtr->f_dentry->d_inode to filePtr->f_path.dentry->d_inode
+
+02-28-2008/19:30 --wjj--
+  added #include <linux/fs.h> to dda0X-16_2_6.c to file_operations would be defined.
+
+08-27-2007/11:00 --wjj--
+  Let kernel dynamically select major number
+  register device with /sys/class/dda0x-16
+  include udev rules to create device nodes
+
+08-20-2007/8:30  --wjj--
+   Relsease of driver.  Fixed simultaneous update of dac.
+

@@ -1,0 +1,66 @@
+08-7-2015/17:20 --wjj--
+  removed IRQF_DISABLED as deprecated.
+
+07-24-2015/17:20 --wjj--
+  change filePtr->f_dentry->d_inode to filePtr->f_path.dentry->d_inode
+
+08-12-2009/15:00  --wjj--
+  added sub version numbers for 2.6.X for kernel releases in das08.c
+  modfied device_create to add extra argument
+
+09-6-2007/11:00 --wjj--
+  - Let kernel dynamically select major number
+  - Register device with /sys/class/das08
+  - Include udev rules to create device nodes
+  - Change pci_module_init() to pci_register_driver()
+    (pci_module_init() doesn't exist on recent kernels)
+  - Reimplemented interrupts.
+  - updated Register Map and User Manual documentation.
+
+03-15-2007    --wjj--
+  Disabled interrupts.  The board does not handle interrupts
+  correctly, and they are not needed for the operation of the 
+  board anyway.  
+
+07-04-2006:23:01 --wjj--
+  replaced verify_area() with access_ok().
+  removed references to modversion.h
+
+07-29-2004:/10:00 --wjj--
+  Rewrote Makefile to conform to new way of kernel building. 
+  Updated to support 2.6 kernel.  Added file a2dc_2.6.c
+  Support multi boards, dynamic allocation of kernel buffer.
+
+06-24-2004/18:15 --wjj--
+  Changed Makefile to use  -march instead of -m which has been deprecated.
+  multi-line string literals are deprecated, fixed in test-das08.c.
+
+08-30-2002/9:00 --wjj--
+  Use gcc to generate .d dependency file.  Changed install rules to reflect
+  Red Hat's latest file structure.  Added uninstall rule to Makefile.
+
+09-05-2001/14:50 --wjj--
+   Added #include <linux/init.h> since it was not getting in by default.
+
+05-01-2001/12:00 --wjj--
+  Ported driver to run under the 2.4.X kernel.
+  Change major device number to 247.
+
+05-06-2000/23:00 --wjj--
+   Fixed Makefile so that /usr/src/linux/.config is conditional.
+
+03-20-2000/08:00 TM
+   Fixed for compile gcc-2.95.2 on glibc-2.1 system: 
+   added -I/usr/src/linux/include
+   added SMP and real time autodetection in Makefile
+
+11-25-98/12:05 -wjj--
+  added version support to modules to dynamically load module with depmod/modprobe
+  changed install file to /lib/modules/preferred/misc/das08-AO.o
+
+01-12-98/07:24 - 
+   Mods to das08-AO driver:
+	  Install driver.
+
+		  
+

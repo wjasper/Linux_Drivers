@@ -1,0 +1,72 @@
+08-7-2015/17:20 --wjj--
+  removed IRQF_DISABLED as deprecated.
+
+07-24-2015/17:20 --wjj--
+  change filePtr->f_dentry->d_inode to filePtr->f_path.dentry->d_inode
+
+08-12-2009/15:00  --wjj--
+  added sub version numbers for 2.6.X for kernel releases in a2dc.c
+  modfied device_create to add extra argument
+
+08-27-2007/11:00 --wjj--
+  -Let kernel dynamically select major number
+  -Register device with /sys/class/das1602-16
+  -Include udev rules to create device nodes
+  - Change pci_module_init() to pci_register_driver()
+    (pci_module_init() doesn't exist on recent kernels)
+
+07-04-2006:/23:26 --wjj--
+  for a2dc_2_6.c (v2.6 only)
+  Changed verify_area() to !access_ok().
+
+09-19-2005/8:30  --wjj--
+    deleted references to cli(), sti(), save_flags() and restore_flags().  Used
+    spinlocks in a2dc_2_6.c.
+
+09-17-2005/8:30  --wjj--
+  Deleted including <linux/modversions> in a2dc.c, as its location moved from
+  2.4.X to 2.6.X kernel and is not needed.
+
+09-27-2004/11:00 --wjj--
+  Updated to 2.6 kernel.  Also renamed pci-das1602.h to pci-das1602-16.h
+
+08-30-2002/9:00 --wjj--
+  Use gcc to generate .d dependency file.  Changed install rules to reflect
+  Red Hat's latest file structure.  Added uninstall rule to Makefile.
+
+08-15-2002/8:19 --wjj--
+  Added MODULE_LICENSE("GPL") to a2dc_2.4.
+
+09-05-2001/14:50 --wjj--
+   Added #include <linux/init.h> since it was not getting in by default.
+
+04-19-2001/17:00 --wjj--
+   Updated driver to run under 2.4 kernel.
+   Change Major Device number to 248
+
+03-29-01/10:00 --wjj--
+   Fixed reading port addresses and interrupts numbers through struct
+   pci_dev and not by reading the config space.  IRQ's may be remapped
+   in SMP systems causing incorrect irq to be registered.
+
+05-06-00/23:00 --wjj--
+   Fixed Makefile so that /usr/src/linux/.config is conditional.
+
+03-20-00/08:00 TM
+   Fixed for compile gcc-2.95.2 on glibc-2.1 system: 
+   added -I/usr/src/linux/include
+   added SMP and real time autodetection in Makefile
+
+03-14-00/4:40  - wjj
+   In SetADCGain masked out SEDIFF correctly, othewise, calibration gains
+   loaded every read while in single-ended mode.
+
+02-08-99/11:36 - wjj
+   residual count armed on multiple of 256 on total count, stopping A/D too soon.
+
+07-10-97/07:24 - wjj
+    Mods to a2dc.c
+	  Install driver.
+
+		  
+

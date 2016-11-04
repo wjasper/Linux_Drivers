@@ -1,0 +1,35 @@
+07-24-2015/17:20 --wjj--
+  change filePtr->f_dentry->d_inode to filePtr->f_path.dentry->d_inode
+  for 4.0.8 kernel.
+
+12-13-2013/15:00  --wjj--
+   changed base1 to base2.  PLX chipset no longer available.
+
+08-12-2009/15:00  --wjj--
+  added sub version numbers for 2.6.X for kernel releases in dio48H.c
+  modfied device_create to add extra argument
+
+06-16-2008/11:00 --wjj--
+  added linux/fs.h explicitly
+
+09-04-2007/11:00 --wjj--
+  Let kernel dynamically select major number
+  register device with /sys/class/dio48H
+  include udev rules to create device nodes
+
+09-17-2005/8:30  --wjj--
+  Deleted including <linux/modversions> in dio48H.c, as its location moved from
+  2.4.X to 2.6.X kernel and is not needed.
+
+07-23-2004:/10:00 --wjj--
+  Rewrote Makefile to conform to new way of kernel building. 
+  Updated to support 2.6 kernel.  Added file dio48H_2.6.c
+
+09-23-2003/9:20 --wjj--
+   -m486' is deprecated. Used `-march=i486' instead.
+   Fixed multi-line string literals in test-dio48H.c.
+
+02-20-2003/16:00 --wjj--
+  Initial release of driver
+
+
