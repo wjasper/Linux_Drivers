@@ -31,18 +31,6 @@ ISA drivers are in the ISA directory, etc.
 
 I have written drivers for the following boards:
 
-ISA Cards (No longer supported):       Major Number  (For 2.4 kernel only)
-===========                           =============
-1. CIO-CTRO5                              242
-2. CIO-DAS08-AO/AOL                       243
-3. CIO-DAS16-330                          244
-4. CIO-DAS16-M1                           245 
-5. CIO-DDA06                              246
-6. CIO-DIO24H                             240
-7. CIO-DIO48H                             241
-8. CIO-DAS1600
-9. CIO-DI192
-
 PCI Cards:
 ==========
  1. PCI-DAS08                              247
@@ -65,47 +53,18 @@ PCI Cards:
 18. PCIM-DAS1602/16
 19. PCIM-DAS16Jr/16
 
-PC104 Cards:
-============
-1. PC104-DAS08                             243
-2. PC104-DAS16Jr                           244
-3. PC104-DAC06                             246
-
-PCMCIA/PCCARD
-=============
-1. PC-CARD-DAS16/330                       251
-
-PMD (OBSOLETE, DO NOT USE)
-=============
-PMD.1.10       (API for PMD-1208FS, PMD-1024LS, PMD-1024HLS, PMD-1608FS, PMD-1208LS
-               PMD-TC, PMD-TEMP, USB-1096HFS, USB-1616FS)
-
 Ethernet
-=============
+========
 MCCLIBETH.1.01 (E-1608, E-DIO24)
 
+Bluetooth
+==========
+MCCLIBBTH.1.04 (BTH-1208LS)
+
 USB
-=============
->>> Uses the native hiddev driver <<<
-MCCUSBHID.1.37 (API for USB-1208FS, USB-1024LS, USB-1024HLS, USB-1608FS, USB-1208LS
-                USB-TC, USB-TEMP, USB-1096HFS, USB-1616FS miniLAB-1008, USB-5201, USB-5203
-                USB-SSR24, USB-SSR08, USB-3102, USB-3104, USB-3105, USB-3106, USB-3114, 
-                USB-PDISO8, USB-ERB, USB-DIO96H, USB-DIO96H/50, USB-4301, USB-4303, 
-                USB-DIO24, USB-DIO24H, USB-1408FS, USB-TC-AI, USB-TEMP-AI )
-
->>> Uses the libusb.0.1/libhid API   (this is getting phsed out) <<<
-MCCLIBHID.1.63 (API for USB-1208FS, USB-1024LS, USB-1024HLS, USB-1608FS, USB-1208LS
-               USB-TC, USB-TEMP, USB-1096HFS, USB-1616FS miniLAB-1008, USB-5201, USB-5203
-               USB-SSR24, USB-SSR08, USB-3101,USB-3102, USB-3103,USB-3104, USB-3105, 
-               USB-3106, USB-3110, USB-3112, USB-3114, 
-               USB-501, USB-502, USB-503, USB-504, USB-ERB, USB-DIO96H, USB-DIO96H/50, 
-               USB-4301, USB-4303, USB-DIO24, USB-DIO24H, USB-1408FS, USB-TC-AI, USB-TEMP-AI
-               USB-1608HS, USB-1608HS-2AO, USB-2416, USB-1208HS, USB-1608G, USB-1608GX, UB-1608GX-2AO
-               USB-1608FS-Plus, USB-2633, USB-2637, USB-201, USB-204, USB-205, USB-CTR8, USB-1208FS-Plus,
-               USB-1408FS-Plus, USB-2020
-
->>> Uses the libusb.1.0/HIDAPI   
-MCCLIBUSB.1.09 (API for USB-1208FS, USB-1024LS, USB-1024HLS, USB-1608FS, USB-1208LS
+====
+Uses the libusb.1.0/HIDAPI   
+MCCLIBUSB.1.17 (API for USB-1208FS, USB-1024LS, USB-1024HLS, USB-1608FS, USB-1208LS
                USB-TC, USB-TEMP, USB-1096HFS, USB-1616FS miniLAB-1008, USB-5201, USB-5203
                USB-SSR24, USB-SSR08, USB-3101,USB-3102, USB-3103,USB-3104, USB-3105, 
                USB-3106, USB-3110, USB-3112, USB-3114, 
