@@ -336,6 +336,7 @@ bool AIn_E1608(DeviceInfo_E1608 *device_info, uint8_t channel, uint8_t range, ui
   unsigned char buffer[16];
   unsigned char replyBuffer[16];
   bool result = false;
+  int data;
   int length;
   int dataCount = 2;
   int replyCount;
@@ -375,8 +376,19 @@ bool AIn_E1608(DeviceInfo_E1608 *device_info, uint8_t channel, uint8_t range, ui
 
   if (result == false) {
     printf("Error in AIn_E1608. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    *value = 0xffff;
+    return result;
   }
-  *value = rint((*value)*device_info->table_AIn[range].slope + device_info->table_AIn[range].intercept);
+
+  data = rint((*value)*device_info->table_AIn[range].slope + device_info->table_AIn[range].intercept);
+  if (data >= 65536) {
+    *value = 65535;
+  } else if (data < 0) {
+    *value = 0;
+  } else {
+    *value = data;
+  }
+  
   return result;
 }
 
