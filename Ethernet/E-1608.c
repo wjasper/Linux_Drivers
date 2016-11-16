@@ -75,6 +75,7 @@ bool DIn_E1608(DeviceInfo_E1608 *device_info, uint8_t *value)
   int length;
   int dataCount = 0;
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -90,7 +91,7 @@ bool DIn_E1608(DeviceInfo_E1608 *device_info, uint8_t *value)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 1;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -127,6 +128,7 @@ bool DOutR_E1608(DeviceInfo_E1608 *device_info, uint8_t *value)
   int length;
   int dataCount = 0;
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -142,7 +144,7 @@ bool DOutR_E1608(DeviceInfo_E1608 *device_info, uint8_t *value)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 1;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -179,7 +181,8 @@ bool DOut_E1608(DeviceInfo_E1608 *device_info, uint8_t value)
   int length;
   int dataCount = 1;
   int replyCount;
-
+  int timeout = device_info->timeout;
+  
   if (sock < 0) {
     return false;
   }
@@ -195,7 +198,7 @@ bool DOut_E1608(DeviceInfo_E1608 *device_info, uint8_t value)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -232,7 +235,8 @@ bool DConfigR_E1608(DeviceInfo_E1608 *device_info, uint8_t *value)
   int length;
   int dataCount = 0;
   int replyCount;
-
+  int timeout = device_info->timeout;
+  
   if (sock < 0) {
     return false;
   }
@@ -247,7 +251,7 @@ bool DConfigR_E1608(DeviceInfo_E1608 *device_info, uint8_t *value)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 1;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -284,6 +288,7 @@ bool DConfigW_E1608(DeviceInfo_E1608 *device_info, uint8_t value)
   int length;
   int dataCount = 1;
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -300,7 +305,7 @@ bool DConfigW_E1608(DeviceInfo_E1608 *device_info, uint8_t value)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -340,7 +345,8 @@ bool AIn_E1608(DeviceInfo_E1608 *device_info, uint8_t channel, uint8_t range, ui
   int length;
   int dataCount = 2;
   int replyCount;
-
+  int timeout = device_info->timeout;
+  
   if (sock < 0) {
     return false;
   }
@@ -357,7 +363,7 @@ bool AIn_E1608(DeviceInfo_E1608 *device_info, uint8_t channel, uint8_t range, ui
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 2;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -461,10 +467,11 @@ bool AInScanStart_E1608(DeviceInfo_E1608 *device_info, uint32_t count, double fr
   unsigned char buffer[64];
   unsigned char replyBuffer[64];
   bool result = false;
+  uint32_t pacer_period;
   int length;
   int dataCount = 9;
   int replyCount;
-  uint32_t pacer_period;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -511,7 +518,7 @@ bool AInScanStart_E1608(DeviceInfo_E1608 *device_info, uint32_t count, double fr
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -542,9 +549,9 @@ int AInScanRead_E1608(DeviceInfo_E1608 *device_info, uint32_t count, uint8_t nCh
   int sock = device_info->device.scan_sock;
   int length = 0;
   int replyCount;
-  int timeout = 1000;
   int index = 0;
   int bytesReceived = 0;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return -1;
@@ -552,7 +559,7 @@ int AInScanRead_E1608(DeviceInfo_E1608 *device_info, uint32_t count, uint8_t nCh
  
   replyCount = count*nChan*2;
 
-  do  {
+  do {
     bytesReceived = receiveMessage(sock, &data[index], replyCount - length, timeout);
     if (bytesReceived <= 0) {  // error
       printf("Error in AInScanRead: length = %d     replyCount = %d \n", length, replyCount);
@@ -584,6 +591,7 @@ bool AInQueueR_E1608(DeviceInfo_E1608 *device_info)
   int length;
   int dataCount = 0;
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -599,7 +607,7 @@ bool AInQueueR_E1608(DeviceInfo_E1608 *device_info)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 2*device_info->queue[0]+1;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -643,6 +651,7 @@ bool AInQueueW_E1608(DeviceInfo_E1608 *device_info)
   int length;
   int dataCount = 2*device_info->queue[0] + 1;
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -663,7 +672,7 @@ bool AInQueueW_E1608(DeviceInfo_E1608 *device_info)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -699,7 +708,8 @@ bool AInScanStop_E1608(DeviceInfo_E1608 *device_info, uint8_t close_socket)
   int length;
   int dataCount = 1;
   int replyCount;
-
+  int timeout = device_info->timeout;
+  
   if (sock < 0) {
     return false;
   }
@@ -715,7 +725,7 @@ bool AInScanStop_E1608(DeviceInfo_E1608 *device_info, uint8_t close_socket)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -756,6 +766,7 @@ bool AOutR_E1608(DeviceInfo_E1608 *device_info, uint16_t value[2])
   int length;
   int dataCount = 0;
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -771,7 +782,7 @@ bool AOutR_E1608(DeviceInfo_E1608 *device_info, uint16_t value[2])
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 4;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -812,6 +823,7 @@ bool AOut_E1608(DeviceInfo_E1608 *device_info, uint8_t channel, uint16_t value)
   int length;
   int dataCount = 3;
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -831,7 +843,7 @@ bool AOut_E1608(DeviceInfo_E1608 *device_info, uint8_t channel, uint16_t value)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -869,6 +881,7 @@ bool BlinkLED_E1608(DeviceInfo_E1608 *device_info, unsigned char count)
   int length;
   int dataCount = 1;
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -885,7 +898,7 @@ bool BlinkLED_E1608(DeviceInfo_E1608 *device_info, unsigned char count)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -918,6 +931,7 @@ bool Reset_E1608(DeviceInfo_E1608 *device_info)
   int length;
   int dataCount = 0;  // no data for this command
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -933,7 +947,7 @@ bool Reset_E1608(DeviceInfo_E1608 *device_info)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -966,6 +980,7 @@ bool Status_E1608(DeviceInfo_E1608 *device_info, uint16_t *status)
   int length;
   int dataCount = 0;  // no input data for this command
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -981,7 +996,7 @@ bool Status_E1608(DeviceInfo_E1608 *device_info, uint16_t *status)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 2;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -1019,6 +1034,7 @@ bool NetworkConfig_E1608(DeviceInfo_E1608 *device_info, struct in_addr network[3
   int length;
   int dataCount = 0;  // no input data for this command
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -1034,7 +1050,7 @@ bool NetworkConfig_E1608(DeviceInfo_E1608 *device_info, struct in_addr network[3
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 12;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -1072,6 +1088,7 @@ bool FirmwareUpgrade_E1608(DeviceInfo_E1608 *device_info)
   int length;
   int dataCount = 2;
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -1089,7 +1106,7 @@ bool FirmwareUpgrade_E1608(DeviceInfo_E1608 *device_info)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -1126,6 +1143,7 @@ bool CounterR_E1608(DeviceInfo_E1608 *device_info, uint32_t *counter)
   int length;
   int dataCount = 0;  
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -1141,7 +1159,7 @@ bool CounterR_E1608(DeviceInfo_E1608 *device_info, uint32_t *counter)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 4;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -1177,6 +1195,7 @@ bool ResetCounter_E1608(DeviceInfo_E1608 *device_info)
   int length;
   int dataCount = 0;  
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -1193,7 +1212,7 @@ bool ResetCounter_E1608(DeviceInfo_E1608 *device_info)
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0; // no input arguments
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -1230,6 +1249,7 @@ bool CalMemoryR_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint16_t 
   int length;
   int dataCount = 4;  
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0 || count > 512) {
     return false;
@@ -1249,7 +1269,7 @@ bool CalMemoryR_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint16_t 
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = count;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -1292,6 +1312,7 @@ bool CalMemoryW_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint16_t 
   int length;
   int dataCount;  
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -1314,7 +1335,7 @@ bool CalMemoryW_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint16_t 
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0; // no input arguments
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -1350,6 +1371,7 @@ bool UserMemoryR_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint16_t
   int length;
   int dataCount = 4;  
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -1373,7 +1395,7 @@ bool UserMemoryR_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint16_t
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = count;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -1411,6 +1433,7 @@ bool UserMemoryW_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint16_t
   int length;
   int dataCount;  
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -1433,7 +1456,7 @@ bool UserMemoryW_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint16_t
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0; // no input arguments
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -1470,6 +1493,7 @@ bool SettingsMemoryR_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint
   int length;
   int dataCount = 4;  
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -1493,7 +1517,7 @@ bool SettingsMemoryR_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = count;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -1532,6 +1556,7 @@ bool SettingsMemoryW_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint
   int length;
   int dataCount;  
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -1554,7 +1579,7 @@ bool SettingsMemoryW_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0; // no input arguments
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -1595,6 +1620,7 @@ bool BootloaderMemoryR_E1608(DeviceInfo_E1608 *device_info, uint16_t address, ui
   int length;
   int dataCount = 4;  
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -1618,7 +1644,7 @@ bool BootloaderMemoryR_E1608(DeviceInfo_E1608 *device_info, uint16_t address, ui
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = count;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
@@ -1676,6 +1702,7 @@ bool BootloaderMemoryW_E1608(DeviceInfo_E1608 *device_info, uint16_t address, ui
   int length;
   int dataCount;  
   int replyCount;
+  int timeout = device_info->timeout;
 
   if (sock < 0) {
     return false;
@@ -1698,7 +1725,7 @@ bool BootloaderMemoryW_E1608(DeviceInfo_E1608 *device_info, uint16_t address, ui
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0; // no input arguments
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&

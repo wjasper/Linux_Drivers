@@ -68,6 +68,7 @@ int main(int argc, char**argv)
   device_info.device.connectCode = 0x0;   // default connect code
   device_info.device.frameID = 0;         // zero out the frameID
   device_info.queue[0] = 0;               // set count in gain queue to zero
+  device_info.timeout = 1000;             // set default timeout to 1000 ms.
 
   if (argc == 2) {
     printf("E-1608 IP address = %s\n", argv[1]);
