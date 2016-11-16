@@ -461,7 +461,7 @@ bool AInScanStart_E1608(DeviceInfo_E1608 *device_info, uint32_t count, double fr
 		 bit 6:      Reserved
 		 bit 7:      Reserved
   */
-  struct sockaddr_in sendaddr;  // secod TCP sockt for scan data.
+  struct sockaddr_in sendaddr;  // second TCP sockt for scan data.
   int scan_sock;
   int sock = device_info->device.sock;
   unsigned char buffer[64];
@@ -484,6 +484,7 @@ bool AInScanStart_E1608(DeviceInfo_E1608 *device_info, uint32_t count, double fr
     pacer_period = 0;
   } else {
     pacer_period = rint((80.E6 / frequency) - 1.0);
+    device_info->timeout = 1000*(1.0 + 1/frequency);
   }
 
   buffer[MSG_INDEX_COMMAND]        = CMD_AIN_SCAN_START;
@@ -509,9 +510,9 @@ bool AInScanStart_E1608(DeviceInfo_E1608 *device_info, uint32_t count, double fr
 
   // create a tcp connection
   if ((connect(scan_sock, (const struct sockaddr*) &sendaddr, sizeof(sendaddr))) < 0) {
-      perror("AInScanStart_E1608: can not connect to device.");
-      close(scan_sock);
-      return false;
+    perror("AInScanStart_E1608: can not connect to device.");
+    close(scan_sock);
+    return false;
   }
 
   device_info->device.scan_sock = scan_sock;
@@ -558,6 +559,7 @@ int AInScanRead_E1608(DeviceInfo_E1608 *device_info, uint32_t count, uint8_t nCh
   }
  
   replyCount = count*nChan*2;
+
 
   do {
     bytesReceived = receiveMessage(sock, &data[index], replyCount - length, timeout);

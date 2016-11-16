@@ -943,7 +943,7 @@ bool SettingsMemoryR_DIO24(EthernetDeviceInfo *device_info, uint16_t address, ui
   return result;
 }
   
-bool SettingsMemory_DIO24(EthernetDeviceInfo *device_info, uint16_t address, uint16_t count, uint8_t *data)
+bool SettingsMemoryW_DIO24(EthernetDeviceInfo *device_info, uint16_t address, uint16_t count, uint8_t *data)
 {
   /* This command writes the nonvolatile settings memory.  The
      settings memory is 256 bytes (address 0 - 0xff). The amount of

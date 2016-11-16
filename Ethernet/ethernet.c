@@ -110,7 +110,7 @@ int discoverDevice(EthernetDeviceInfo *device_info, uint16_t productID)
     return -1;
   }
 
-  // look for replies (including the original broadcast
+  // look for replies (including the original broadcast)
   while (!finished) {
     switch (recvfromTimeOut(sock, 1, 0)) {
       case 0:
