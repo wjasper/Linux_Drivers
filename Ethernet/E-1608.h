@@ -81,9 +81,9 @@ extern "C" {
 #define SE    0   // Single Ended
 #define DF    8   // Differential
 
-#define NCHAN_AIN   8  // max number of ADC channels
+#define NCHAN_AIN   8  // max number of ADC channels  (8 single ended, 4 differential)
 #define NCHAN_AOUT  2  // max nubmer of DAC chanels
-#define NGAINS      4  // max number of gain levles
+#define NGAINS      4  // max number of gain levles (+/- 10V, +/- 5V, +/- 2V, +/- 1V)
 
 typedef struct Calibration_AIn_t {
   float slope;
@@ -97,7 +97,8 @@ typedef struct Calibration_AOut_t {
 
 typedef struct DeviceInfo_E1608_t {
   EthernetDeviceInfo device;
-  Calibration_AIn table_AIn[NGAINS];                 // ADC gains (slope and intercept)
+  Calibration_AIn table_AInDF[NGAINS];               // ADC gains differential (slope and intercept)
+  Calibration_AIn table_AInSE[NGAINS];               // ADC gains single ended (slope and intercept)
   Calibration_AOut table_AOut[NCHAN_AOUT];           // DAC gain (slope and offset)
   uint8_t queue[17];                                 // gain queue
   int timeout;                                       // timeout (in ms) for AIn Scan reads
@@ -143,3 +144,76 @@ uint16_t valueAOut_E1608(double volts);
 } /* closing brace for extern "C" */
 #endif
 #endif // E_1608_H
+
+/* 
+
+    Settings memory map
+|=====================================================================================|
+|    Address    |        Value                                        | Default value |
+|=====================================================================================|
+| 0x000 - 0x001 | Network options:                                    | 0x0000        |
+|               |   Bit 0: 0 = DHCP enabled     1 = DHCP disabled     |               |
+|               |   Bit 1: 0 = Auto IP enabled  1 = Auto IP disabled  |               |
+|               |   Bits 2-15 reserved                                |               |
+|-------------------------------------------------------------------------------------|
+| 0x002 - 0x005 | Default IP address                                  | 192.168.0.101 |
+|-------------------------------------------------------------------------------------|
+| 0x006 - 0x009 | Default subnet mask                                 | 255.255.255.0 |
+|-------------------------------------------------------------------------------------|
+| 0x00A - 0x00D | Default gateway address                             | 192.168.0.1   |
+|-------------------------------------------------------------------------------------|
+| 0x00E - 0x00F | Reserved                                            |               |
+|-------------------------------------------------------------------------------------|
+| 0x010 - 0x011 | Reserved                                            |               |
+|-------------------------------------------------------------------------------------|
+| 0x012 - 0x015 | Connection code, 4 bytes                            | 0x00000000    |
+|-------------------------------------------------------------------------------------|
+| 0x016         | DOut connection mode.  This determines the DOut     | 0             |
+|               | value when the connection status changes.           |               |
+|               |   0 = no change                                     |               |
+|               |   1 = apply specified tristate / latch values       |               |              
+|-------------------------------------------------------------------------------------|
+| 0x017         | DOut tristate mask for connection / disconnection   | 0xFF          |
+|               | (bits set to 0 are outputs, bits set to 1 are no    |               |
+|               | change                                              |               |
+|-------------------------------------------------------------------------------------|
+| 0x018         | Reserved                                            |               |
+|-------------------------------------------------------------------------------------|
+| 0x019         | DOut latch value when host is connected             | 0x00          |
+|-------------------------------------------------------------------------------------|
+| 0x01A         | DOut latch value when host is disconnected          | 0x00          |
+|-------------------------------------------------------------------------------------|
+| 0x01B         | AOut channel 0 connection mode.  This determines    | 0             |
+|               | the AOut value when the connection status changes.  |               |
+|               |   0 = no change                                     |               |
+|               |   1 = apply specified values to channel 0           |               |
+|-------------------------------------------------------------------------------------|
+| 0x01C - 0x01D | AOut channel 0 value when host is connected         | 32768         |
+|-------------------------------------------------------------------------------------|
+| 0x01E - 0x01F | AOut channel 0 value when host is disconnected      | 32768         |
+|-------------------------------------------------------------------------------------|
+| 0x020         | AOut channel 1 connection mode.  This determines    | 0             |
+|               | the AOut value when the connection status changes.  |               |
+|               |   0 = no change                                     |               |
+|               |   1 = apply specified values to channel 1           |               |
+|-------------------------------------------------------------------------------------|
+| 0x021 - 0x022 | AOut channel 1 value when host is connected         | 32768         |
+|-------------------------------------------------------------------------------------|
+| 0x023 - 0x024 | AOut channel 1 value when host is disconnected      | 32768         |
+|-------------------------------------------------------------------------------------|
+| 0x025 - 0x1FF | Reserved                                            |               |
+|=====================================================================================|
+
+Note: The settings do not take effect until after device is reset or power cycled.
+
+
+    User memory map
+
+|=================================================================|
+|    Address     |        Value                                   |
+|=================================================================|
+| 0x000 - 0x3FF  | Available for UL use                           |
+|=================================================================|
+
+
+*/

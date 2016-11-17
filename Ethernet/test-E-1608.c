@@ -92,8 +92,12 @@ int main(int argc, char**argv)
 
   buildGainTableAIn_E1608(&device_info);
   for (i = 0; i < NGAINS; i++) {
-    printf("Calibration Table: Range = %d Slope = %f  Intercept = %f\n",
-	   i, device_info.table_AIn[i].slope, device_info.table_AIn[i].intercept);
+    printf("Calibration Table (Differential): Range = %d Slope = %f  Intercept = %f\n",
+	   i, device_info.table_AInDF[i].slope, device_info.table_AInDF[i].intercept);
+  }
+  for (i = 0; i < NGAINS; i++) {
+    printf("Calibration Table (Single Ended): Range = %d Slope = %f  Intercept = %f\n",
+	   i, device_info.table_AInSE[i].slope, device_info.table_AInSE[i].intercept);
   }
 
   buildGainTableAOut_E1608(&device_info);
@@ -208,7 +212,11 @@ int main(int argc, char**argv)
               k = i*nchan + j;  // sample number
               channel = device_info.queue[2*j+1];  // channel
               range = device_info.queue[2*j+2];    // range value
-	      dataIn[k] = rint(dataIn[k]*device_info.table_AIn[range].slope + device_info.table_AIn[range].intercept);
+	      if (channel < DF) {  // single ended
+		dataIn[k] = rint(dataIn[k]*device_info.table_AInSE[range].slope + device_info.table_AInSE[range].intercept);
+	      } else {  // differential
+		dataIn[k] = rint(dataIn[k]*device_info.table_AInDF[range].slope + device_info.table_AInDF[range].intercept);
+	      }
 	      printf("Range %d Channel %d  Sample[%d] = %#x Volts = %lf\n", range, channel,
 		     k, dataIn[k], volts_E1608(dataIn[k], range));
 	    }

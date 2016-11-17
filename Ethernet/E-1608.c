@@ -24,21 +24,32 @@
 
 void buildGainTableAIn_E1608(DeviceInfo_E1608 *device_info)
 {
-  /* Builds a lookup talbe of calibration coefficients to translate values into voltages:
+  /* Builds a lookup table of calibration coefficients to translate values into voltages:
      The calibration coefficients are stored in the onboard FLASH memory on the device in
      IEEE-754 4-byte floating point values.
 
      calibrated code = code*slope + intercept
+
   */
 
   uint16_t address;
   int i;
-  
+
+  // Analog Input Calibration, differential 0x000 - 0x01C
   address = 0x0;
   for (i = 0; i < NGAINS; i++) {
-    CalMemoryR_E1608(device_info, address, 4, (uint8_t *) &device_info->table_AIn[i].slope);
+    CalMemoryR_E1608(device_info, address, 4, (uint8_t *) &device_info->table_AInDF[i].slope);
     address += 4;
-    CalMemoryR_E1608(device_info, address, 4, (uint8_t *) &device_info->table_AIn[i].intercept);
+    CalMemoryR_E1608(device_info, address, 4, (uint8_t *) &device_info->table_AInDF[i].intercept);
+    address += 4;
+  }
+
+  // Analog Input Calibration, single ended 0x020 - 0x03C
+  address = 0x020;
+  for (i = 0; i < NGAINS; i++) {
+    CalMemoryR_E1608(device_info, address, 4, (uint8_t *) &device_info->table_AInSE[i].slope);
+    address += 4;
+    CalMemoryR_E1608(device_info, address, 4, (uint8_t *) &device_info->table_AInSE[i].intercept);
     address += 4;
   }
 }
@@ -335,6 +346,9 @@ bool AIn_E1608(DeviceInfo_E1608 *device_info, uint8_t channel, uint8_t range, ui
 {
   /* This command reads the value of an analog input channel.  This commands will
      not return valid data if AIn scan is currently running.
+
+     channel 0-7  single ended
+     channel 8-11 differential
   */
 
   int sock = device_info->device.sock;
@@ -386,7 +400,12 @@ bool AIn_E1608(DeviceInfo_E1608 *device_info, uint8_t channel, uint8_t range, ui
     return result;
   }
 
-  data = rint((*value)*device_info->table_AIn[range].slope + device_info->table_AIn[range].intercept);
+  if (channel < DF) { // single ended
+    data = rint((*value)*device_info->table_AInSE[range].slope + device_info->table_AInSE[range].intercept);
+  } else {  // differential
+    data = rint((*value)*device_info->table_AInDF[range].slope + device_info->table_AInDF[range].intercept);    
+  }
+
   if (data >= 65536) {
     *value = 65535;
   } else if (data < 0) {
@@ -559,7 +578,6 @@ int AInScanRead_E1608(DeviceInfo_E1608 *device_info, uint32_t count, uint8_t nCh
   }
  
   replyCount = count*nChan*2;
-
 
   do {
     bytesReceived = receiveMessage(sock, &data[index], replyCount - length, timeout);
@@ -1751,7 +1769,7 @@ bool BootloaderMemoryW_E1608(DeviceInfo_E1608 *device_info, uint16_t address, ui
 
 void getMFGCAL_E1608(DeviceInfo_E1608 *device_info, struct tm *date)
 {
-  // get the manufacturers calibration data
+  // get the manufacturers calibration data (timestamp) from the Calibration memory
 
   time_t time;
   uint16_t address;

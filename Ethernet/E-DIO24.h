@@ -79,7 +79,7 @@ bool BootloaderMemoryW_DIO24(EthernetDeviceInfo *device_info, uint16_t address, 
 #endif
 #endif // E_1608_H
 
-/* 
+/*
     Configuration memory map
 |=================================================================|
 |    Address   |        Value                                     |
@@ -114,7 +114,7 @@ bool BootloaderMemoryW_DIO24(EthernetDeviceInfo *device_info, uint16_t address, 
 |-------------------------------------------------------------------------------------|
 | 0x012 - 0x015 | Connection code, 4 bytes                            | 0x00000000    |
 |-------------------------------------------------------------------------------------|
-| 0x016         | DOut connection mode.  This determins the DOut      | 0             |
+| 0x016         | DOut connection mode.  This determines the DOut     | 0             |
 |               | value when the connection status changes.           |               |
 |               |   0 = no change                                     |               |
 |               |   1 = apply specified tristate / latch values       |               |              
@@ -123,15 +123,15 @@ bool BootloaderMemoryW_DIO24(EthernetDeviceInfo *device_info, uint16_t address, 
 |-------------------------------------------------------------------------------------|
 | 0x018         | DOut port 0 tristate mask for connection /          | 0xFF          |            
 |               | disconnection (bits set to 0 are outputs, bits set  |               |
-|               | 1 are no change)                                    |               |
+|               | to 1 are no change)                                 |               |
 |-------------------------------------------------------------------------------------|
 | 0x019         | DOut port 1 tristate mask for connection /          | 0xFF          |            
 |               | disconnection (bits set to 0 are outputs, bits set  |               |
-|               | 1 are no change)                                    |               |
+|               | to 1 are no change)                                 |               |
 |-------------------------------------------------------------------------------------|
 | 0x01A         | DOut port 2 tristate mask for connection /          | 0xFF          |            
 |               | disconnection (bits set to 0 are outputs, bits set  |               |
-|               | 1 are no change)                                    |               |
+|               | to 1 are no change)                                 |               |
 |-------------------------------------------------------------------------------------|
 | 0x01B         | Reserved                                            |               |
 |-------------------------------------------------------------------------------------|
@@ -149,7 +149,7 @@ bool BootloaderMemoryW_DIO24(EthernetDeviceInfo *device_info, uint16_t address, 
 |-------------------------------------------------------------------------------------|
 | 0x022         | DOut port2 latch value when host is disconnected    | 0x00          |
 |-------------------------------------------------------------------------------------|
-| 0x023 - 0xFF  | Reserved                                            |               |
+| 0x023 - 0x0FF | Reserved                                            |               |
 |=====================================================================================|
 
 Note: The settings do not take effect until after device is reset or power cycled.
@@ -159,7 +159,7 @@ Note: The settings do not take effect until after device is reset or power cycle
 |=================================================================|
 |    Address     |        Value                                   |
 |=================================================================|
-| 0x000 - 0xEEF  | Available fgor UL use                          |
+| 0x000 - 0xEEF  | Available for UL use                           |
 |=================================================================|
 
 */
