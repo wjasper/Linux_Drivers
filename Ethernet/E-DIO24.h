@@ -155,7 +155,6 @@ bool BootloaderMemoryW_DIO24(EthernetDeviceInfo *device_info, uint16_t address, 
 Note: The settings do not take effect until after device is reset or power cycled.
 
     User memory map
-
 |=================================================================|
 |    Address     |        Value                                   |
 |=================================================================|

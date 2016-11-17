@@ -208,12 +208,10 @@ Note: The settings do not take effect until after device is reset or power cycle
 
 
     User memory map
-
 |=================================================================|
 |    Address     |        Value                                   |
 |=================================================================|
 | 0x000 - 0x3FF  | Available for UL use                           |
 |=================================================================|
-
 
 */
