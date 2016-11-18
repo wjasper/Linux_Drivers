@@ -32,43 +32,46 @@ USB drivers are in the USB directory, etc.
 I have written drivers for the following boards:
 
 ##PCI Cards:
-1. PCI-DAS08                              247
-2. PCI-DAS1602/16                         248
-3. PCI-DAS4020/12                         250
-4. PCI-DIO24,PCIe, DIO24/LP, DIO24/S      249
-5. PCI-DIO24H                             249
-6. PCI-DIO48H                             249
-7. PCI-DIO96                              249
-8. PCI-DIO96H                             254
-9. PCI-DAS1000                            252
-10. PCI-DAS1001                            251
-11. PCI-DAS1002                            253
-12. PCI-CTR05                              242
-13. PCI-CTR10                              241
+1. PCI-DAS08                              
+2. PCI-DAS1602/16                        
+3. PCI-DAS4020/12                         
+4. PCI-DIO24,PCIe, DIO24/LP, DIO24/S      
+5. PCI-DIO24H                            
+6. PCI-DIO48H                             
+7. PCI-DIO96                              
+8. PCI-DIO96H                             
+9. PCI-DAS1000                            
+10. PCI-DAS1001                            
+11. PCI-DAS1002                            
+12. PCI-CTR05                              
+13. PCI-CTR10                             
 14. PCI-CTR20HD                            
-15. PCI-DDA0x-12                           243
-16. PCI-DDA0x-16                           244
+15. PCI-DDA0x-12                           
+16. PCI-DDA0x-16                           
 17. PCI-QUAD04
 18. PCIM-DAS1602/16
 19. PCIM-DAS16Jr/16
 
 ##Ethernet
-MCCLIBETH.1.01 (E-1608, E-DIO24)
+1. E-1608 
+2. E-DIO24
+3. E-TC 
+4. E-TC32
 
 ##Bluetooth
-MCCLIBBTH.1.04 (BTH-1208LS)
+1. BTH-1208LS
 
 ##USB
 *Uses the libusb.1.0/HIDAPI*   
-MCCLIBUSB.1.17 (API for USB-1208FS, USB-1024LS, USB-1024HLS, USB-1608FS, USB-1208LS
-               USB-TC, USB-TEMP, USB-1096HFS, USB-1616FS miniLAB-1008, USB-5201, USB-5203
-               USB-SSR24, USB-SSR08, USB-3101,USB-3102, USB-3103,USB-3104, USB-3105, 
-               USB-3106, USB-3110, USB-3112, USB-3114, 
-               USB-501, USB-502, USB-503, USB-504, USB-ERB, USB-DIO96H, USB-DIO96H/50, 
-               USB-4301, USB-4303, USB-DIO24, USB-DIO24H, USB-1408FS, USB-TC-AI, USB-TEMP-AI
-               USB-1608HS, USB-1608HS-2AO, USB-2416, USB-1208HS, USB-1608G, USB-1608GX, UB-1608GX-2AO
-               USB-1608FS-Plus, USB-2633, USB-2637, USB-201, USB-204, USB-205, USB-CTR8, USB-1208FS-Plus,
-               USB-1408FS-Plus, USB-2020 USB-2001TC USB-2408 USB-7202 USB-7204 USB-DIO32HS
+   USB-1208FS, USB-1024LS, USB-1024HLS, USB-1608FS, USB-1208LS
+   USB-TC, USB-TEMP, USB-1096HFS, USB-1616FS miniLAB-1008, USB-5201, USB-5203
+   USB-SSR24, USB-SSR08, USB-3101,USB-3102, USB-3103,USB-3104, USB-3105, 
+   USB-3106, USB-3110, USB-3112, USB-3114, 
+   USB-501, USB-502, USB-503, USB-504, USB-ERB, USB-DIO96H, USB-DIO96H/50, 
+   USB-4301, USB-4303, USB-DIO24, USB-DIO24H, USB-1408FS, USB-TC-AI, USB-TEMP-AI
+   USB-1608HS, USB-1608HS-2AO, USB-2416, USB-1208HS, USB-1608G, USB-1608GX, UB-1608GX-2AO
+   USB-1608FS-Plus, USB-2633, USB-2637, USB-201, USB-204, USB-205, USB-CTR8, USB-1208FS-Plus,
+   USB-1408FS-Plus, USB-2020 USB-2001TC USB-2408 USB-7202 USB-7204 USB-DIO32HS
 
 New!!: USB-DIO32HS, E-1608, E-DIO24
 
