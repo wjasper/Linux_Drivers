@@ -133,14 +133,16 @@ FAQ:  Here are some questions that I sometimes get that might help.
 
 7.  Q: How do I access the drivers as a non-root user.  
     A: for the 2.6 kernels: copy the file 60-mcc.rules to /etc/udev/rules.d and restart udev (or reboot)  
-         $ cp 60-mcc.rules /etc/udev/rules.d  
-         $ /sbin/udevcontrol reload_rules  (old)  
-              or the new way:  
-         $ /sbin/udevadm control --reload-rules  
+     ```bash
+     $ cp 60-mcc.rules /etc/udev/rules.d  
+     $ /sbin/udevadm control --reload-rules
+     ```
 
-       for the 3.X kernels: copy the file 61-mcc.rules to /etc/udev/rules.d and restart udev (or reboot)  
-         $ cp 61-mcc.rules /etc/udev/rules.d  
-         $ /sbin/udevadm control --reload    
+     for the 3.X kernels: copy the file 61-mcc.rules to /etc/udev/rules.d and restart udev (or reboot)
+     ```bash
+     $ cp 61-mcc.rules /etc/udev/rules.d  
+     $ /sbin/udevadm control --reload 
+     ````
 
 8. Q: Under Ubuntu, the drivers compile correctly, but do not load.  I can not run the test-pci* program.  
    A: Recent versions of Ubuntu are now shipping with the COMEDI drivers.  These are a set of
