@@ -103,9 +103,8 @@ FAQ:  Here are some questions that I sometimes get that might help.
 
 4. Q: How do I know if I have a hardware problem with the board?  
    A: Measurement Computing tests each and every board and QC's it before
-      shipping.  It is rare, but possible that you have a bad board.  
-      Run InstaCal (under Windows).  If InstaCal fails, you should
-      contact Measurement Computing, as it is likely you have a hardware problem.
+   shipping.  It is rare, but possible that you have a bad board. Run InstaCal (under Windows). If InstaCal fails, you should
+   contact Measurement Computing, as it is likely you have a hardware problem.
       
 5. Q: The driver fails to load.  
    A: There are many reasons why the driver may fail to load.  Check that  
