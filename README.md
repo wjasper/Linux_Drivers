@@ -121,6 +121,7 @@ FAQ:  Here are some questions that I sometimes get that might help.
     $ make
     $ make install
     $/sbin/depmod -a
+    ```
     
     This should put the correct entry in /lib/modules/`uname -r`/modules.alias file and 
     /lib/modules/`uname -r`/modules.pcimap
