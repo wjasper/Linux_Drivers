@@ -121,7 +121,8 @@ FAQ:  Here are some questions that I sometimes get that might help.
         and your system will load the driver (kernel module) on bootup.  If you update
         your kernel, you will need to repeat the process (make, make install, depmod -a).
         If this fails, put the following line in rc.local:
-        ```bash
+        
+       ```bash
        if [ -x /sbin/modprobe ]; then
          /sbin/modprobe driver_name
        fi
@@ -136,12 +137,14 @@ FAQ:  Here are some questions that I sometimes get that might help.
 
 7.  Q: How do I access the drivers as a non-root user.  
     A: for the 2.6 kernels: copy the file 60-mcc.rules to /etc/udev/rules.d and restart udev (or reboot)  
+     
      ```bash
      $ cp 60-mcc.rules /etc/udev/rules.d  
      $ /sbin/udevadm control --reload-rules
      ```
 
      for the 3.X kernels: copy the file 61-mcc.rules to /etc/udev/rules.d and restart udev (or reboot)
+     
      ```bash
      $ cp 61-mcc.rules /etc/udev/rules.d  
      $ /sbin/udevadm control --reload 
@@ -153,11 +156,14 @@ FAQ:  Here are some questions that I sometimes get that might help.
       in question may look like cb_* or 8255_pci.  Type lsmod -vv | grep cb  or lspci -vv to 
       see the names of the driver associated with your board.  Then go to /etc/modprobe.d/blacklist.conf
       and add the line
+      
       ```bash
       blacklist 8255_pci (or whatever the name of the kernel module is)
        ```
+      
       Then run 
-      ```bash
+     
+     ```bash
       $ depmod -a 
       ```
       and reboot. 
