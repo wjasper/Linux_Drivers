@@ -81,7 +81,7 @@ I have written drivers for the following boards:
 
 ====================================================================
 
-FAQ:  Here are some questions that I sometimes get that might help.
+##FAQ:  Here are some questions that I sometimes get that might help.
 
 1. Q: Should Plug-And-Play be set in the BIOS  
    A: You should disable/Turn off Plug-And-Play in the BIOS.
