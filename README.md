@@ -121,10 +121,11 @@ FAQ:  Here are some questions that I sometimes get that might help.
         and your system will load the driver (kernel module) on bootup.  If you update
         your kernel, you will need to repeat the process (make, make install, depmod -a).
         If this fails, put the following line in rc.local:
-
+        ```bash
        if [ -x /sbin/modprobe ]; then
          /sbin/modprobe driver_name
        fi
+       ```
 
 6. Q: The driver loads, but the test program does not run correctly.  
    A: Type "dmesg" as see if there is a message at the end about the driver
@@ -152,10 +153,14 @@ FAQ:  Here are some questions that I sometimes get that might help.
       in question may look like cb_* or 8255_pci.  Type lsmod -vv | grep cb  or lspci -vv to 
       see the names of the driver associated with your board.  Then go to /etc/modprobe.d/blacklist.conf
       and add the line
-      
+      ```bash
       blacklist 8255_pci (or whatever the name of the kernel module is)
-
-      Then run depmod -a and reboot. 
+       ```
+      Then run 
+      ```bash
+      $ depmod -a 
+      ```
+      and reboot. 
 
 9. Q: Under Raspian on the Raspberry Pi, I can not run the test program except as root.  
    A: Go to /etc/udev/rules.d and rename the file 61-mcc.rules to 99-mcc.rules and reboot.
