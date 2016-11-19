@@ -18,7 +18,7 @@ If you don't see a driver for a card you want or have, or if there is
 a feature that you want but are having problems implementing, please
 write me (wjasper@tx.ncsu.edu) about it.
 
-Note: There have been many changes to the 2.6 kernel API.  All the
+**Note:** There have been many changes to the 2.6 kernel API.  All the
 drivers have been tested with the 2.6.22 kernel.  There are backward
 compatibility issues, so it may or may not work under earlier versions
 of 2.6 (pre 2.6.22).  Please send email and I'll try to work them out,
@@ -26,7 +26,7 @@ or upgrade to the 2.6.22 or later kernel.  Around 2.6.29, the kernel
 API changed enough that I started a new version of the modules. I do
 not have a new version of the moduls for each version of the kernel.
 If you notice problems that are kernel version related, use a later
-version or email me.  These drivers should also work on the 3.X kernels.
+version or email me.  The pci drivers should also work on the 3.X and 4.Xkernels.
 
 I have divided the drivers into categories by bus type.  Thus, all the
 USB drivers are in the USB directory, etc.  
