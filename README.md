@@ -114,13 +114,19 @@ FAQ:  Here are some questions that I sometimes get that might help.
         b) Check that the board is installed.  You can not install the driver
            if the boards are not installed.  
 
-        Under the new 2.6 improved drivers, the modules should autoload if
-        you have pci-coldplug installed.  After you do a "make install"
-        run  "/sbin/depmod -a".  This should put the correct entry in
-        /lib/modules/`uname -r`/modules.alias file and /lib/modules/`uname -r`/modules.pcimap
-        and your system will load the driver (kernel module) on bootup.  If you update
-        your kernel, you will need to repeat the process (make, make install, depmod -a).
-        If this fails, put the following line in rc.local:
+    Under the new 2.6 improved drivers, the modules should autoload if
+    you have pci-coldplug installed.  After typeing
+
+    ```bash
+    $ make
+    $ make install
+    $/sbin/depmod -a.  T
+    
+    his should put the correct entry in /lib/modules/`uname -r`/modules.alias file and 
+    /lib/modules/`uname -r`/modules.pcimap
+    and your system will load the driver (kernel module) on bootup.  If you update
+    your kernel, you will need to repeat the process (make, make install, depmod -a).
+    If this fails, put the following line in rc.local:
         
        ```bash
        if [ -x /sbin/modprobe ]; then
