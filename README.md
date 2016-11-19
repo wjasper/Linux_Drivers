@@ -2,6 +2,8 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](http://www.gnu.org/licenses/lgpl-3.0)
 
+:hear_no_evil: :see_no_evil: :speak_no_evil:
+
 This git site contains drivers for data acquisition boards from
 Measurement Computing Corp., MCC (aka ComputerBoards).  All these drivers are
 maintained by Warren J. Jasper (wjasper@tx.ncsu.edu).  Please send any
