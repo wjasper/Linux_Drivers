@@ -1,6 +1,6 @@
 #Measurement Computing (MCC) Linux Drivers
 
-[![License Badge][license image]][https://www/gnu.org/license/gpl.txt]
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 
 This git site contains drivers for data acquisition boards from
 Measurement Computing Corp., MCC (aka ComputerBoards).  All these drivers are
@@ -159,4 +159,5 @@ FAQ:  Here are some questions that I sometimes get that might help.
 
 9. Q: Under Raspian on the Raspberry Pi, I can not run the test program except as root.  
    A: Go to /etc/udev/rules.d and rename the file 61-mcc.rules to 99-mcc.rules and reboot.
-
+   
+   
