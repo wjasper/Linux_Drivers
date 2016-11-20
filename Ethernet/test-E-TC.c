@@ -249,14 +249,30 @@ int main(int argc, char**argv)
 	}
 	break;
       case 'W':
-	printf("Writing System Memory.\n");
+	printf("Writing Settings Memory.\n");
 	printf("Note: The could be dangerous if you add invalid data!!!\n");
+
 	printf("Enter new default IP address (eg. 192.168.0.101): ");
 	scanf("%s", buf);
 	address = inet_addr((char *) buf);
-	ip_addr.s_addr = address;
-	printf("%#x, %s\n", address, inet_ntoa(ip_addr));
 	SettingsMemoryW_E_TC(&device_info, 0x2, 4, (uint8_t*) &address);
+
+	printf("Enter new default netmask (eg. 255.255.255.0): ");
+	scanf("%s", buf);
+	address = inet_addr((char *) buf);
+	SettingsMemoryW_E_TC(&device_info, 0x6, 4, (uint8_t*) &address);
+
+	printf("Enter new default gateway (eg. 192.168.0.1): ");
+	scanf("%s", buf);
+	address = inet_addr((char *) buf);
+	SettingsMemoryW_E_TC(&device_info, 0xa, 4, (uint8_t*) &address);
+
+	printf("Enter new Network options (0-3): ");
+	scanf("%hhd", buf);
+	SettingsMemoryW_E_TC(&device_info, 0x0, 1, buf);
+
+	printf("Reset or powercycle for changes to take effect.\n");
+	
         break;
 	
       case 'v':
