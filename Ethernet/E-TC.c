@@ -1876,11 +1876,11 @@ bool ConfigMemoryR_E_TC(DeviceInfo_TC *device_info, uint16_t address, uint16_t c
   }
 
   if (address > 0x0F) {
-    printf("SettingsMemoryW_E_TC: max value of address is 0x0F.\n");
+    printf("ConfigMemoryR_E_TC: max value of address is 0x0F.\n");
     return false;
   }
   if (count > 16) {
-    printf("SettingsMemoryR_E_TC: max value of count is 16\n");
+    printf("ConfigMemoryR_E_TC: max value of count is 16\n");
     return false;
   }
 
@@ -1940,12 +1940,12 @@ bool ConfigMemoryW_E_TC(DeviceInfo_TC *device_info, uint16_t address, uint16_t c
   }
 
   if (address > 0x0F) {
-    printf("ConfigurationMemoryW_E_TC: max value of address is 0x0F.\n");
+    printf("ConfigMemoryW_E_TC: max value of address is 0x0F.\n");
     return false;
   }
     
   if (count > 16) {
-    printf("ConfigurationMemoryW_E_TC: max value of count is 0x16.\n");
+    printf("ConfigMemoryW_E_TC: max value of count is 0x16.\n");
     return false;
   }
 
@@ -2112,8 +2112,8 @@ bool SettingsMemoryR_E_TC(DeviceInfo_TC *device_info, uint16_t address, uint16_t
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  unsigned char buffer[64];
+  unsigned char replyBuffer[64];
   bool result = false;
   int length;
   int dataCount = 4;
@@ -2128,7 +2128,7 @@ bool SettingsMemoryR_E_TC(DeviceInfo_TC *device_info, uint16_t address, uint16_t
     return false;
   }
   if (count > 32) {
-    printf("SettingsMemoryR_E_TC: max value of count is 32\n");
+    printf("SettingsMemoryR_E_TC: max value of count is 32.\n");
     return false;
   }
 
@@ -2177,8 +2177,8 @@ bool SettingsMemoryW_E_TC(DeviceInfo_TC *device_info, uint16_t address, uint16_t
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  unsigned char buffer[64];
+  unsigned char replyBuffer[64];
   bool result = false;
   int length;
   int dataCount = count+2;
@@ -2201,7 +2201,7 @@ bool SettingsMemoryW_E_TC(DeviceInfo_TC *device_info, uint16_t address, uint16_t
   buffer[MSG_INDEX_COMMAND]        = SETTINGS_MEMORY_W;
   buffer[MSG_INDEX_START]          = MSG_START;
   memcpy(&buffer[MSG_INDEX_DATA], &address, 2);
-  memcpy(&buffer[MSG_INDEX_DATA+2], &data, count);
+  memcpy(&buffer[MSG_INDEX_DATA+2], data, count);
   buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
   buffer[MSG_INDEX_STATUS]         = 0;
   buffer[MSG_INDEX_COUNT_LOW]      = (unsigned char) (dataCount);

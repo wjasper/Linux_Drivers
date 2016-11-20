@@ -1332,8 +1332,8 @@ bool SettingsMemoryR_E_TC32(DeviceInfo_TC32 *device_info, uint16_t address, uint
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  unsigned char buffer[64];
+  unsigned char replyBuffer[64];
   bool result = false;
   int length;
   int dataCount = 4;
@@ -1397,8 +1397,8 @@ bool SettingsMemoryW_E_TC32(DeviceInfo_TC32 *device_info, uint16_t address, uint
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  unsigned char buffer[64];
+  unsigned char replyBuffer[64];
   bool result = false;
   int length;
   int dataCount = count+2;
@@ -1421,7 +1421,7 @@ bool SettingsMemoryW_E_TC32(DeviceInfo_TC32 *device_info, uint16_t address, uint
   buffer[MSG_INDEX_COMMAND]        = CMD_SETTINGS_MEMORY_W;
   buffer[MSG_INDEX_START]          = MSG_START;
   memcpy(&buffer[MSG_INDEX_DATA], &address, 2);
-  memcpy(&buffer[MSG_INDEX_DATA+2], &data, count);
+  memcpy(&buffer[MSG_INDEX_DATA+2], data, count);
   buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
   buffer[MSG_INDEX_STATUS]         = 0;
   buffer[MSG_INDEX_COUNT_LOW]      = (unsigned char) (dataCount);

@@ -59,6 +59,8 @@ int main(int argc, char**argv)
   uint8_t channel;
   uint8_t tc_type;
   uint8_t options;
+  uint8_t buf[32];
+  in_addr_t address;
 
  start:
   device_info.device.connectCode = 0x0;   // default connect code
@@ -99,6 +101,8 @@ int main(int argc, char**argv)
     printf("Hit 'r' to reset the device.\n");
     printf("Hit 'n' to get networking information.\n");
     printf("Hit 's' for thermocouple status\n");
+    printf("hit 'R' to read System Memory Map\n");
+    printf("hit 'W' to write System Memory Map\n");
     printf("Hit 't' for temperature.\n");
     printf("Hit 'v' for version and calibration date.\n");
 
@@ -237,6 +241,24 @@ int main(int argc, char**argv)
 	ip_addr.s_addr =  network.gateway_address;
 	printf("Device gateway address: %s\n", inet_ntoa(ip_addr));
 	break;
+      case 'R':
+	printf("Reading Settings Memory.\n");
+	for (i = 0x0; i < 0x1f; i++) {
+	  SettingsMemoryR_E_TC(&device_info, i, 1, buf);
+	  printf("address: %#x      value: %d\n", i, buf[0]);
+	}
+	break;
+      case 'W':
+	printf("Writing System Memory.\n");
+	printf("Note: The could be dangerous if you add invalid data!!!\n");
+	printf("Enter new default IP address (eg. 192.168.0.101): ");
+	scanf("%s", buf);
+	address = inet_addr((char *) buf);
+	ip_addr.s_addr = address;
+	printf("%#x, %s\n", address, inet_ntoa(ip_addr));
+	SettingsMemoryW_E_TC(&device_info, 0x2, 4, (uint8_t*) &address);
+        break;
+	
       case 'v':
 	FactoryCalDateR_E_TC(&device_info, &date);
 	printf("Factory Calibration date = %s\n", asctime(&date));
