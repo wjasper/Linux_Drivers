@@ -4,7 +4,7 @@
 
 :hear_no_evil: :see_no_evil: :speak_no_evil:
 
-This git site contains drivers for data acquisition boards from
+This repository contains Linux drivers for data acquisition boards from
 Measurement Computing Corp., MCC (aka ComputerBoards).  All these drivers are
 maintained by Warren J. Jasper (wjasper@tx.ncsu.edu).  Please send any
 comments, suggestions, or questions to me.  All drivers are licensed
@@ -152,7 +152,7 @@ I have written drivers for the following boards:
      $ /sbin/udevadm control --reload-rules
      ```
 
-     for the 3.X kernels: copy the file 61-mcc.rules to /etc/udev/rules.d and restart udev (or reboot)
+     for the 3.X and 4.X kernels: copy the file 61-mcc.rules to /etc/udev/rules.d and restart udev (or reboot)
      
      ```bash
      $ cp 61-mcc.rules /etc/udev/rules.d  
