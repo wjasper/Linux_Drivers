@@ -152,7 +152,7 @@ I have written drivers for the following boards:
      $ /sbin/udevadm control --reload-rules
      ```
 
-     for the 3.X kernels: copy the file 61-mcc.rules to /etc/udev/rules.d and restart udev (or reboot)
+     for the 3.X and 4.X kernels: copy the file 61-mcc.rules to /etc/udev/rules.d and restart udev (or reboot)
      
      ```bash
      $ cp 61-mcc.rules /etc/udev/rules.d  
