@@ -58,6 +58,8 @@ int main(int argc, char**argv)
   uint32_t count;
   int flag;
   int ch;
+  int corrected_data;
+
   uint8_t options;
   uint8_t input;
   uint8_t channel;
@@ -213,12 +215,17 @@ int main(int argc, char**argv)
               channel = device_info.queue[2*j+1];  // channel
               range = device_info.queue[2*j+2];    // range value
 	      if (channel < DF) {  // single ended
-		dataIn[k] = rint(dataIn[k]*device_info.table_AInSE[range].slope + device_info.table_AInSE[range].intercept);
+		corrected_data = rint(dataIn[k]*device_info.table_AInSE[range].slope + device_info.table_AInSE[range].intercept);
 	      } else {  // differential
-		dataIn[k] = rint(dataIn[k]*device_info.table_AInDF[range].slope + device_info.table_AInDF[range].intercept);
+		corrected_data = rint(dataIn[k]*device_info.table_AInDF[range].slope + device_info.table_AInDF[range].intercept);
+	      }
+	      if (corrected_data > 65536) {
+		corrected_data = 65535;  // max value
+	      } else if (corrected_data < 0) {
+		corrected_data = 0;
 	      }
 	      printf("Range %d Channel %d  Sample[%d] = %#x Volts = %lf\n", range, channel,
-		     k, dataIn[k], volts_E1608(dataIn[k], range));
+		     k, corrected_data, volts_E1608(corrected_data, range));
 	    }
 	}
 	break;
