@@ -58,6 +58,8 @@ int main(int argc, char**argv)
   uint8_t tc_type;
   int ch;
   uint8_t options;
+  uint8_t buf[32];
+  in_addr_t address;
 
  start:
   device_info.device.connectCode = 0x0;   // default connect code
@@ -65,6 +67,9 @@ int main(int argc, char**argv)
 
   if (argc == 2) {
     printf("E-TC32 IP address = %s\n", argv[1]);
+    device_info.device.Address.sin_family = AF_INET;
+    device_info.device.Address.sin_port = htons(COMMAND_PORT);
+    device_info.device.Address.sin_addr.s_addr = INADDR_ANY;
     if (inet_aton(argv[1], &device_info.device.Address.sin_addr) == 0) {
       printf("Improper destination address.\n");
       return -1;
@@ -97,6 +102,8 @@ int main(int argc, char**argv)
     printf("Hit 'r' to reset the device\n");
     printf("Hit 'n' to get networking information\n");
     printf("Hit 's' to get Status\n");
+    printf("hit 'R' to read System Memory Map\n");
+    printf("hit 'W' to write System Memory Map\n");
     printf("Hit 't' for temperature.\n");
     printf("Hit 'T' for multiple temperature readings.\n");
     printf("Hit 'v' for version and calibration date.\n");
@@ -266,6 +273,40 @@ int main(int argc, char**argv)
 	ip_addr.s_addr =  network.gateway_address;
 	printf("Device gateway address: %s\n", inet_ntoa(ip_addr));
 	break;
+      case 'R':
+	printf("Reading Settings Memory.\n");
+	for (i = 0x0; i < 0x1f; i++) {
+	  SettingsMemoryR_E_TC32(&device_info, i, 1, buf);
+	  printf("address: %#x      value: %d\n", i, buf[0]);
+	}
+	break;
+      case 'W':
+	printf("Writing Settings Memory.\n");
+	printf("Note: The could be dangerous if you add invalid data!!!\n");
+
+	printf("Enter new default IP address (eg. 192.168.0.101): ");
+	scanf("%s", buf);
+	address = inet_addr((char *) buf);
+	SettingsMemoryW_E_TC32(&device_info, 0x2, 4, (uint8_t*) &address);
+
+	printf("Enter new default netmask (eg. 255.255.255.0): ");
+	scanf("%s", buf);
+	address = inet_addr((char *) buf);
+	SettingsMemoryW_E_TC32(&device_info, 0x6, 4, (uint8_t*) &address);
+
+	printf("Enter new default gateway (eg. 192.168.0.1): ");
+	scanf("%s", buf);
+	address = inet_addr((char *) buf);
+	SettingsMemoryW_E_TC32(&device_info, 0xa, 4, (uint8_t*) &address);
+
+	printf("Enter new Network options (0-3): ");
+	scanf("%hhd", buf);
+	SettingsMemoryW_E_TC32(&device_info, 0x0, 1, buf);
+
+	printf("Reset or powercycle for changes to take effect.\n");
+	
+        break;
+
     }
   }
 }

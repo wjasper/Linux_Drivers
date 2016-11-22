@@ -1864,8 +1864,8 @@ bool ConfigMemoryR_E_TC(DeviceInfo_TC *device_info, uint16_t address, uint16_t c
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  unsigned char buffer[64];
+  unsigned char replyBuffer[64];
   bool result = false;
   int length;
   int dataCount = 4;
@@ -1928,8 +1928,8 @@ bool ConfigMemoryW_E_TC(DeviceInfo_TC *device_info, uint16_t address, uint16_t c
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  unsigned char buffer[64];
+  unsigned char replyBuffer[64];
   bool result = false;
   int length;
   int dataCount = count;
@@ -1952,7 +1952,7 @@ bool ConfigMemoryW_E_TC(DeviceInfo_TC *device_info, uint16_t address, uint16_t c
   buffer[MSG_INDEX_COMMAND]        = CONFIG_MEMORY_W;
   buffer[MSG_INDEX_START]          = MSG_START;
   memcpy(&buffer[MSG_INDEX_DATA], &address, 2);
-  memcpy(&buffer[MSG_INDEX_DATA+2], &data, count);
+  memcpy(&buffer[MSG_INDEX_DATA+2], data, count);
   buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
   buffer[MSG_INDEX_STATUS]         = 0;
   buffer[MSG_INDEX_COUNT_LOW]      = (unsigned char) (dataCount);
@@ -1996,8 +1996,8 @@ bool UserMemoryR_E_TC(DeviceInfo_TC *device_info, uint16_t address, uint16_t cou
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  unsigned char buffer[64];
+  unsigned char replyBuffer[64];
   bool result = false;
   int length;
   int dataCount = 4;
@@ -2055,8 +2055,8 @@ bool UserMemoryW_E_TC(DeviceInfo_TC *device_info, uint16_t address, uint16_t cou
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  unsigned char buffer[64];
+  unsigned char replyBuffer[64];
   bool result = false;
   int length;
   int dataCount = count+2;

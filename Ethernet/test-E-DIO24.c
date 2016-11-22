@@ -61,6 +61,9 @@ int main(int argc, char**argv)
 
   if (argc == 2) {
     printf("E-DIO24 IP address = %s\n", argv[1]);
+    device_info.Address.sin_family = AF_INET;
+    device_info.Address.sin_port = htons(COMMAND_PORT);
+    device_info.Address.sin_addr.s_addr = INADDR_ANY;
     if (inet_aton(argv[1], &device_info.Address.sin_addr) == 0) {
       printf("Improper destination address.\n");
       return -1;
