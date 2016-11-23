@@ -55,6 +55,8 @@ int main(int argc, char**argv)
   uint32_t counter;
   int ch;
   int flag;
+  uint8_t buf[32];
+  in_addr_t address;
 
   device_info.connectCode = 0x0;   // default connect code
   device_info.frameID = 0;         // zero out the frameID
@@ -88,6 +90,8 @@ int main(int argc, char**argv)
     printf("Hit 'C' to configure the DIO for input or output\n");
     printf("Hit 'r' to reset the device\n");
     printf("Hit 'n' to get networking information\n");
+    printf("hit 'R' to read System Memory Map\n");
+    printf("hit 'W' to write System Memory Map\n");
     printf("Hit 's' to get Status\n");
     printf("Hit 'e' to exit\n");
 
@@ -177,6 +181,40 @@ int main(int argc, char**argv)
 	printf("  subnet mask = %s\n", inet_ntoa(network[1]));
 	printf("  gateway = %s\n", inet_ntoa(network[2]));
 	break;
+      case 'R':
+	printf("Reading Settings Memory.\n");
+	for (i = 0x0; i < 0x1f; i++) {
+	  SettingsMemoryR_DIO24(&device_info, i, 1, buf);
+	  printf("address: %#x      value: %d\n", i, buf[0]);
+	}
+	break;
+      case 'W':
+	printf("Writing Settings Memory.\n");
+	printf("Note: The could be dangerous if you add invalid data!!!\n");
+
+	printf("Enter new default IP address (eg. 192.168.0.101): ");
+	scanf("%s", buf);
+	address = inet_addr((char *) buf);
+	SettingsMemoryW_DIO24(&device_info, 0x2, 4, (uint8_t*) &address);
+
+	printf("Enter new default netmask (eg. 255.255.255.0): ");
+	scanf("%s", buf);
+	address = inet_addr((char *) buf);
+	SettingsMemoryW_DIO24(&device_info, 0x6, 4, (uint8_t*) &address);
+
+	printf("Enter new default gateway (eg. 192.168.0.1): ");
+	scanf("%s", buf);
+	address = inet_addr((char *) buf);
+	SettingsMemoryW_DIO24(&device_info, 0xa, 4, (uint8_t*) &address);
+
+	printf("Enter new Network options (0-3): ");
+	scanf("%hhd", buf);
+	SettingsMemoryW_DIO24(&device_info, 0x0, 1, buf);
+
+	printf("See E-DIO24.h for other values in Systems Memory Map\n");
+	printf("Reset or powercycle for changes to take effect.\n");
+	
+        break;
     }
   }
 }
