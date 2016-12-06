@@ -69,12 +69,16 @@ Special Notes on compiling the libusb version.
    cd USB
    make
    sudo make install
+   sudo ldconfig   (Note, you only need to do this the first time you install the driver.)
 
 Note:  These drivers have been tested under Fedora Core, Ubuntu, and on the Raspberry Pi (Raspbian). 
        It should work on any version of Linux.  If they don't drop me a line.
 
        There is also limited Python support.  Google Python MCC.  One source is:
        https://pypi.python.org/pypi/mccdaq_linux
+       
+5. Plug in your device and run the test program (e.g. test-usb1608FS) associated with that device.
+     You should see an optons menu to test out the features of the device. 
 
 Good luck
 
