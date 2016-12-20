@@ -28,7 +28,7 @@ or upgrade to the 2.6.22 or later kernel.  Around 2.6.29, the kernel
 API changed enough that I started a new version of the modules. I do
 not have a new version of the moduls for each version of the kernel.
 If you notice problems that are kernel version related, use a later
-version or email me.  The pci drivers should also work on the 3.X and 4.Xkernels.
+version or email me.  The pci drivers should also work on the 3.X and 4.X kernels.
 
 I have divided the drivers into categories by bus type.  Thus, all the
 USB drivers are in the USB directory, etc.  
