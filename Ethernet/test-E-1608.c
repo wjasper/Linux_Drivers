@@ -66,6 +66,9 @@ int main(int argc, char**argv)
   uint8_t range;
   uint8_t nchan;
   int temp;
+  char ip[16];
+  char subnetmask[16];
+  char gateway[16];
 
   device_info.device.connectCode = 0x0;   // default connect code
   device_info.device.frameID = 0;         // zero out the frameID
@@ -119,6 +122,7 @@ int main(int argc, char**argv)
     printf("Hit 'o' to test Analog Output.\n");
     printf("Hit 'r' to reset the device\n");
     printf("Hit 'n' to get networking information\n");
+    printf("Hit 'N' to set networking information\n");
     printf("Hit 's' to get Status\n");
     printf("Hit 'e' to exit\n");
 
@@ -267,6 +271,43 @@ int main(int argc, char**argv)
 	printf("  subnet mask = %s\n", inet_ntoa(network[1]));
 	printf("  gateway = %s\n", inet_ntoa(network[2]));
 	break;
+
+	case 'N':
+		printf("Set network configuration values [xxx.xxx.xxx.xxx]: \n");
+		uint8_t setIPData[22] = {0};
+		
+		setIPData[1] = 0;
+
+		printf("  DHCP[0,1]: ");
+		scanf("%d", &setIPData[0]);
+		if(setIPData[0]){
+			setIPData[0] = 0; // index 0 = dhcp on; index 3 = static;
+		}else{
+
+			setIPData[0] = 3;
+			printf("  IP address: ");
+			scanf("%s",ip);
+			sscanf(ip, "%d.%d.%d.%d", &setIPData[2], &setIPData[3], &setIPData[4], &setIPData[5]);
+
+			printf("  subnet mask: ");
+			scanf("%s",subnetmask);
+			sscanf(subnetmask, "%d.%d.%d.%d", &setIPData[6], &setIPData[7], &setIPData[8], &setIPData[9]);
+
+			printf("  gateway: ");
+			scanf("%s",gateway);
+			sscanf(gateway, "%d.%d.%d.%d", &setIPData[10], &setIPData[11], &setIPData[12], &setIPData[13]);
+		}
+		
+
+
+		if(!SetNetworkW_E1608(&device_info, setIPData, sizeof(setIPData)/sizeof(setIPData[0]))){
+			printf("Error during setting...!\n");
+		}else{
+			
+			printf("\n");
+		}
+	
+		break;
     }
   }
 }

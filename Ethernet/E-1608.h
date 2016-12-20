@@ -125,6 +125,7 @@ bool BlinkLED_E1608(DeviceInfo_E1608 *device_info, unsigned char count);
 bool Reset_E1608(DeviceInfo_E1608 *device_info);
 bool Status_E1608(DeviceInfo_E1608 *device_info, uint16_t *status);
 bool NetworkConfig_E1608(DeviceInfo_E1608 *device_info, struct in_addr newtork[3]);
+bool SetNetworkW_E1608(DeviceInfo_E1608 *device_info, uint8_t *data, uint16_t count);
 bool FirmwareUpgrade_E1608(DeviceInfo_E1608 *device_info);
 bool CalMemoryR_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint16_t count, uint8_t *data);
 bool CalMemoryW_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint16_t count, uint8_t *data);
