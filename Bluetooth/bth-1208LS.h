@@ -161,7 +161,7 @@ double volts_BTH1208LS(uint16_t value, uint8_t range);
 #ifdef __cplusplus
 } /* closing brace for extern "C" */
 #endif
-#endif // BTH_!208LS_H
+#endif // BTH_1208LS_H
 
 /* 
     Settings memory map
