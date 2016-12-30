@@ -163,3 +163,45 @@ double volts_BTH1208LS(uint16_t value, uint8_t range);
 #endif
 #endif // BTH_!208LS_H
 
+/* 
+    Settings memory map
+|===========================================================================================|
+|    Address    |        Value                                                              |
+|===========================================================================================|
+| 0x000         | DOut Bluetooth connection mode.  This determines the DOut value           |
+|               | when the Bluetooth connection status changes (not applicable in USB mode) |
+|               |    0 = no change                                                          |
+|               |    1 = apply specified values                                             |
+|-------------------------------------------------------------------------------------------|
+| 0x001         | DOut value when Bluetooth connected                                       |
+|-------------------------------------------------------------------------------------------|
+| 0x002         | DOut value when Bluetooth disconnected                                    |
+|-------------------------------------------------------------------------------------------|
+| 0x003         | AOut channel 0 Bluetooth connection mode.  This determines the AOut value |
+|               | when the Bluetooth connection status changes (not applicable in USB mode) |
+|               |    0 = no change                                                          |
+|               |    1 = apply specified values                                             |
+|-------------------------------------------------------------------------------------------|
+| 0x004 - 0x005 | AOut channel 0 value when Bluetooth connected                             |
+|-------------------------------------------------------------------------------------------|
+| 0x006 - 0x007 | AOut channel 0 value when Bluetooth disconnected                          |
+|-------------------------------------------------------------------------------------------|
+| 0x008         | AOut channel 1 Bluetooth connection mode.  This determines the AOut value |
+|               | when the Bluetooth connection status changes (not applicable in USB mode) |
+|               |    0 = no change                                                          |
+|               |    1 = apply specified values                                             |
+|-------------------------------------------------------------------------------------------|
+| 0x009 - 0x00A | AOut channel 1 value when Bluetooth connected                             |
+|-------------------------------------------------------------------------------------------|
+| 0x00B - 0x00C | AOut channel 1 value when Bluetooth disconnected                          |
+|-------------------------------------------------------------------------------------------|
+| 0x00C         | Auto shutdown timer value in minutes (0 = no auto shutdown).  When this   |
+|               | is used the device will automatically power down when powered by          |
+|               | batteries and no Bluetooth connection is present for this amount of time. |
+|-------------------------------------------------------------------------------------------|
+| 0x00E         | Allow charging when Bluetooth connected                                   |
+|               |   0 = do not allow                                                        |
+|               |   1 = allow                                                               |
+|-------------------------------------------------------------------------------------------|
+| 0x00F - 0x3FF | Unused                                                                    |
+|===========================================================================================|
