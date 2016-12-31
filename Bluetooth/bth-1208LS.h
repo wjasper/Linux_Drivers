@@ -86,7 +86,7 @@ extern "C" {
 #define STALL_ON_OVERRUN        (0x0)
 #define INHIBIT_STALL           (0x1 << 7)
 
- /* Ranges */
+/* Ranges */
 #define BP_20V   0x0      // +/- 20 V
 #define BP_10V   0x1      // +/- 10V
 #define BP_5V    0x2      // +/- 5V
@@ -97,7 +97,7 @@ extern "C" {
 #define BP_1V    0x7      // +/- 1V
 #define UP_2_5V  0x8      // 0-2.5V
 
-  // Status bit values */
+/* Status bit values */
 #define AIN_SCAN_RUNNING   (0x1 << 1)
 #define AIN_SCAN_OVERRUN   (0x1 << 2)
 #define NO_BATTERY         (0x0)
