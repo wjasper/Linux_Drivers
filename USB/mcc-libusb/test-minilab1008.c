@@ -108,7 +108,7 @@ int main (int argc, char **argv)
       break;
     case 's':
       printf("enter a user id :");
-      scanf("%d",&temp);
+      ret = scanf("%d",&temp);
       usbSetID_miniLAB1008(hid, temp);
       printf("User ID is set to %d\n", usbGetID_miniLAB1008(hid));      
       break;
@@ -118,7 +118,10 @@ int main (int argc, char **argv)
     case 'o': /* test the analog output */
       printf("Testing the analog output...\n");
       printf("Enter channel [0-1] => (pin 13-14):");
-      scanf("%d", &temp);
+      ret = scanf("%d", &temp);
+      if (ret < 0) {
+	perror("Error in scanf.");
+      }
       channel = (uint8_t) temp;
       for ( j = 0; j < 5; j++ ) {
         for ( value = 0; value < 0x3ff; value++ ) {
@@ -145,7 +148,10 @@ int main (int argc, char **argv)
       printf("i.e.: A0 <=> B0, A1 <=> B1, ... A7 <=> B7 \n");
       do {
         printf("Enter a byte number [0-0xff]: " );
-        scanf("%x", &temp);
+        ret = scanf("%x", &temp);
+	if (ret < 0) {
+  	  perror("Error in scanf.");
+	}
         usbDOut_miniLAB1008(hid, DIO_PORTA, (uint8_t)temp);
         usbDIn_miniLAB1008(hid, DIO_PORTB, &input);
         usbDOut_miniLAB1008(hid, DIO_AUXPORT, (uint8_t)temp);
@@ -157,10 +163,16 @@ int main (int argc, char **argv)
       usbDOut_miniLAB1008(hid, DIO_PORTA, 0x0);
       printf("\nTesting Bit  I/O....\n");
       printf("Enter a bit value for output (0 | 1) : ");
-      scanf("%d", &temp);
+      ret = scanf("%d", &temp);
+      if (ret < 0) {
+	perror("Error in scanf.");
+      }
       input = (uint8_t) temp;
       printf("Select the Pin in port A [0-7] :");
-      scanf("%d", &temp);
+      ret = scanf("%d", &temp);
+      if (ret < 0) {
+	perror("Error in scanf.");
+      }
       pin = (uint8_t) temp;
       usbDBitOut_miniLAB1008(hid, DIO_PORTA, pin, input);
       usbDIn_miniLAB1008(hid, DIO_PORTB, &input);
@@ -176,7 +188,10 @@ int main (int argc, char **argv)
       printf("\t\t7. +/- 1.25V\n");
       printf("\t\t8. +/- 1.0V\n");
       printf("Select gain: [1-8]\n");
-      scanf("%d", &temp);
+      ret = scanf("%d", &temp);
+      if (ret < 0) {
+	perror("Error in scanf.");
+      }
       switch(temp) {
         case 1: gains[0] = BP_20_00V;
                 break;
@@ -198,9 +213,15 @@ int main (int argc, char **argv)
                 break;
       }
       printf("Select sampling rate [Hz]: ");
-      scanf("%d", &rate);
+      ret = scanf("%d", &rate);
+      if (ret < 0) {
+	perror("Error in scanf.");
+      }
       printf("Select number of samples: ");
-      scanf("%hd", &count);
+      ret = scanf("%hd", &count);
+      if (ret < 0) {
+	perror("Error in scanf.");
+      }
       options = AIN_EXECUTION;
       usbAInScan_miniLAB1008(hid, count, rate, 0, 0, options, sdata, gains);
       for ( i = 0; i < count; i++ ) {
@@ -209,7 +230,10 @@ int main (int argc, char **argv)
       break;
     case 'i':
       printf("Select channel [0-3]: ");
-      scanf("%d", &temp);
+      ret = scanf("%d", &temp);
+      if (ret < 0) {
+	perror("Error in scanf.");
+      }
       if ( temp < 0 || temp > 3 ) break;
       channel = (uint8_t) temp;
       printf("\t\t1. +/- 20.V\n");
@@ -221,7 +245,10 @@ int main (int argc, char **argv)
       printf("\t\t7. +/- 1.25V\n");
       printf("\t\t8. +/- 1.0V\n");
       printf("Select gain: [1-8]\n");
-      scanf("%d", &temp);
+      ret = scanf("%d", &temp);
+      if (ret < 0) {
+	perror("Error in scanf.");
+      }
       switch(temp) {
         case 1: gain = BP_20_00V;
                 break;
@@ -261,7 +288,10 @@ int main (int argc, char **argv)
     case 'I':
       printf("Single Ended test.\n");
       printf("Select channel [0-7]: ");
-      scanf("%d", &temp);
+      ret = scanf("%d", &temp);
+      if (ret < 0) {
+	perror("Error in scanf.");
+      }
       if ( temp < 0 || temp > 7 ) break;
       channel = (uint8_t) temp;
       gain = SE_10_00V;

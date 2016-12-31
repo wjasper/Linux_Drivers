@@ -116,10 +116,17 @@ libusb_device_handle* usb_device_find_USB_MCC( int productId, char *serialID )
       }
       /* Check to see if serial ID match */
       if (serialID != NULL) {
-	libusb_get_string_descriptor_ascii(udev, desc.iSerialNumber, (unsigned char *) serial, 8);
-	serial[8] = '\0';
+	err = libusb_get_string_descriptor_ascii(udev, desc.iSerialNumber, (unsigned char *) serial, sizeof(serial));
+	if (err < 0) {
+	  perror("Error reading serial number for device.");
+	  libusb_close(udev);
+	  udev = NULL;
+	  continue;
+	}
         if (strcmp(serialID, serial) == 0) {
 	  break;
+	} else {
+	  udev = NULL;
 	}
       } else {
         
