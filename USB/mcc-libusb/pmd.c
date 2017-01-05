@@ -85,11 +85,15 @@ libusb_device_handle* usb_device_find_USB_MCC( int productId, char *serialID )
   for (i = 0; i < cnt; i++) {
     device = list[i];
     err = libusb_get_device_descriptor(device, &desc);
-    if (err < 0) goto out;
+    if (err < 0) {
+      perror("Can not get USB device descriptor");
+      goto out;
+    }
     if (desc.idVendor == vendorId && desc.idProduct == productId) {
       found = device;
       err = libusb_open(found, &udev);
       if (err < 0) {
+	perror("libusb_open failed.");
 	udev = NULL;
 	continue;
       }
@@ -109,7 +113,7 @@ libusb_device_handle* usb_device_find_USB_MCC( int productId, char *serialID )
       }
       err = libusb_claim_interface(udev, 0);
       if (err < 0) {
-        //printf("error claiming interface 0.\n");
+        // perror("error claiming interface 0");
 	libusb_close(udev);
 	udev = NULL;
 	continue;
