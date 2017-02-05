@@ -78,7 +78,7 @@ Note:  These drivers have been tested under Fedora Core, Ubuntu, and on the Rasp
        https://pypi.python.org/pypi/mccdaq_linux
        
 5. Plug in your device and run the test program (e.g. test-usb1608FS) associated with that device.
-     You should see an optons menu to test out the features of the device. 
+     You should see an options menu to test out the features of the device. 
 
 Good luck
 
