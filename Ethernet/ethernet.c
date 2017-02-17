@@ -140,10 +140,109 @@ int discoverDevice(EthernetDeviceInfo *device_info, uint16_t productID)
 	  memcpy(&device.Address, &remoteaddr, sizeof(remoteaddr));
 	  printDeviceInfo(&device);
           if (device.ProductID == productID) {  // check for match
-	    device.connectCode = device_info->connectCode;
-	    device.frameID = device_info->frameID;
 	    memcpy(device_info, &device, sizeof(EthernetDeviceInfo));
 	    nfound++;
+	  }
+	}
+	break;
+    }
+  }
+  close(sock);
+  return nfound;
+}
+
+int discoverDevices(EthernetDeviceInfo *devices_info[], uint16_t productID, int maxDevices)
+{
+  EthernetDeviceInfo device;  // a MCC device that responded
+  struct sockaddr_in sendaddr;
+  struct sockaddr_in recvaddr;
+  struct sockaddr_in remoteaddr;
+  int sock;
+  int broadcast;
+  unsigned char msg[64];
+  bool finished = false;   
+  int nfound = 0;            // number of matched devices found
+  socklen_t remoteaddrSize;
+  int BytesReceived;
+
+  // create the socket
+  if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    perror("discoverDevices: Error in creating socket");
+    return -1;
+  }
+
+  // set the broadcast option
+  broadcast = 1;
+  if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) < 0) {
+    perror("discoverDevices: Error setting socket options");
+    close(sock);
+    return -1;
+  }
+
+  // set up the send and receive addresses
+  memset(&sendaddr, 0, sizeof(sendaddr));
+  sendaddr.sin_family = AF_INET;
+  sendaddr.sin_addr.s_addr = INADDR_BROADCAST;
+  sendaddr.sin_port = htons(DISCOVER_PORT);
+  
+  memset(&recvaddr, 0, sizeof(recvaddr));
+  recvaddr.sin_family = AF_INET;
+  recvaddr.sin_addr.s_addr = INADDR_ANY;
+  recvaddr.sin_port = htons(DISCOVER_PORT);
+
+  // bind the socket for receive
+  if (bind(sock, (struct sockaddr*)&recvaddr, sizeof(recvaddr)) < 0) {
+    perror("discoverDevices: Error binding port");
+    close(sock);
+    return -1;
+  }
+
+  // send a broadcast discover datagram
+  msg[0] = 'D';
+  if (sendto(sock, msg, 1, 0, (struct sockaddr*)&sendaddr, sizeof(sendaddr)) != 1) {
+    perror("discoverDevices: sendto failed");
+    close(sock);
+    return -1;
+  }
+
+  // look for replies (including the original broadcast)
+  while (!finished) {
+    switch (recvfromTimeOut(sock, 1, 0)) {
+      case 0:
+        // timed out
+        finished = true;
+        break;
+      case -1:
+        // error
+        printf("Error from recvfromTimeOut\n");
+        finished = true;
+        close(sock);
+        return -1;
+        break;
+      default:
+       // got a reply
+        remoteaddrSize = sizeof(remoteaddr);
+        BytesReceived = recvfrom(sock, msg, 64, 0, (struct sockaddr*)&remoteaddr, &remoteaddrSize);
+        if ((BytesReceived == 64) && (msg[0] == 'D')) {
+	  memcpy(device.MAC, &msg[1], 6);
+	  memcpy(&device.ProductID, &msg[7], 2);
+	  memcpy(&device.FirmwareVersion, &msg[9], 2);
+	  memcpy(device.NetBIOS_Name, &msg[11], 16);
+	  memcpy(&device.CommandPort, &msg[27], 2);
+	  memcpy(&device.Status, &msg[33], 2);
+	  memcpy(&device.RemoteHost.sin_addr, &msg[35], 4);
+	  memcpy(&device.BootloaderVersion, &msg[39], 2);
+	  memcpy(&device.Address, &remoteaddr, sizeof(remoteaddr));
+	  printDeviceInfo(&device);
+          if (device.ProductID == productID) {  // check for match
+	    memcpy(devices_info[nfound], &device, sizeof(EthernetDeviceInfo));
+	    devices_info[nfound]->connectCode = 0x0;
+	    devices_info[nfound]->frameID = 0x0;
+	    nfound++;
+	    if (nfound > maxDevices) {
+	      close(sock);
+	      return nfound;
+	    }
 	  }
 	}
 	break;

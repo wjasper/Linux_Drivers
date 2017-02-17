@@ -107,6 +107,7 @@ int receiveMessage(int sock, void *message, int maxLength, unsigned long timeout
 void printDeviceInfo(EthernetDeviceInfo *device_info);
 unsigned char calcChecksum(void *buffer, int length);
 int discoverDevice(EthernetDeviceInfo *device_info, uint16_t productID);
+int discoverDevices(EthernetDeviceInfo *devices_info[], uint16_t productID, int maxDevices);
 int openDevice(uint32_t addr, uint32_t connectCode);
 
 #ifdef __cplusplus
