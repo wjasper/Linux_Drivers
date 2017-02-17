@@ -297,6 +297,13 @@ int main(int argc, char**argv)
 	printf("  IP address = %s\n", inet_ntoa(network[0]));
 	printf("  subnet mask = %s\n", inet_ntoa(network[1]));
 	printf("  gateway = %s\n", inet_ntoa(network[2]));
+        printf("   MAC: %02X:%02X:%02X:%02X:%02X:%02X\n",
+	  device_info.device.MAC[0],
+	  device_info.device.MAC[1],
+	  device_info.device.MAC[2],
+	  device_info.device.MAC[3],
+	  device_info.device.MAC[4],
+	  device_info.device.MAC[5]);
 	break;
     }
   }
