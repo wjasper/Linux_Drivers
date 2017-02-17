@@ -97,8 +97,11 @@ int main(int argc, char**argv)
   if (nDevices <= 0) {
     printf("No device found.\n");
     return -1;
+  } else {
+    printf("%d E-1608 devices found!", nDevices);
   }
 
+  /* Do check here, manage MAC address, etc. */
   for (i = 0; i < nDevices; i++) {
     printDeviceInfo(devices[i]);
   }

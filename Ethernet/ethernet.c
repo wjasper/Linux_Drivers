@@ -138,7 +138,6 @@ int discoverDevice(EthernetDeviceInfo *device_info, uint16_t productID)
 	  memcpy(&device.RemoteHost.sin_addr, &msg[35], 4);
 	  memcpy(&device.BootloaderVersion, &msg[39], 2);
 	  memcpy(&device.Address, &remoteaddr, sizeof(remoteaddr));
-	  printDeviceInfo(&device);
           if (device.ProductID == productID) {  // check for match
 	    memcpy(device_info, &device, sizeof(EthernetDeviceInfo));
 	    nfound++;
@@ -233,11 +232,10 @@ int discoverDevices(EthernetDeviceInfo *devices_info[], uint16_t productID, int 
 	  memcpy(&device.RemoteHost.sin_addr, &msg[35], 4);
 	  memcpy(&device.BootloaderVersion, &msg[39], 2);
 	  memcpy(&device.Address, &remoteaddr, sizeof(remoteaddr));
-	  printDeviceInfo(&device);
           if (device.ProductID == productID) {  // check for match
 	    memcpy(devices_info[nfound], &device, sizeof(EthernetDeviceInfo));
-	    devices_info[nfound]->connectCode = 0x0;
-	    devices_info[nfound]->frameID = 0x0;
+	    devices_info[nfound]->connectCode = 0x0;  // default connect code
+	    devices_info[nfound]->frameID = 0x0;      // initialize frameID
 	    nfound++;
 	    if (nfound > maxDevices) {
 	      close(sock);
