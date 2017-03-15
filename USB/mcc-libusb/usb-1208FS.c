@@ -989,7 +989,7 @@ uint16_t usbGetStatus_USB1208FS(libusb_device_handle *udev)
   } while (statusReport.reportID != GET_STATUS);
   status = (uint16_t) (statusReport.status[0] | (statusReport.status[1] << 8));
 
-  status &= 0x1003;
+  status &= 0x8003;
   return status;
 }
 
