@@ -69,10 +69,10 @@ extern "C" {
 // #define DE_GAIN_ADJUSTMENT (0x1F60)   // Differential Gain Adjustment for A/D 0x1F60 - 0x1F67
 // #define CAL_PIN_VOLTAGE    (0x1FA0)   // Calibration pin voltage              0x1FA0 - 0x1FA3
 
-#define EXT_TRIG_FAILING_EDGE 0;
-#define EXT_TRIG_RAISING_EDGE 1;
-#define SYNC_MASTER 0
-#define SYNC_SLAVE  1
+/* Status Bits */
+#define SYNC           0x1  // 0 = Sync slave, 1 = Sync master
+#define EXT_TRIG_EDGE  0x2  // 0 = trigger falling edge, 1 = trigger rising edge
+#define UPDATE_MODE 0x8000  // 1 = program memory update mode
 
 // Gain Ranges
 #define SE_10_00V  (0x9)           // Single Ended 0-10.0 V
