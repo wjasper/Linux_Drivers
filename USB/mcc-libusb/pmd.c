@@ -158,7 +158,7 @@ out:
   libusb_free_device_list(list,1);
   libusb_close(udev);
   libusb_exit(NULL);
-  exit(0);
+  return (void *) -1;
 }
 
 void getUsbSerialNumber(libusb_device_handle *udev, unsigned char serial[])

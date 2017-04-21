@@ -131,7 +131,7 @@ void usbSetSync_USB1408FS(libusb_device_handle *udev, uint8_t type);
 void usbGetAll_USB1408FS(libusb_device_handle *udev, getAllValues* value);
 float volts_1408FS(const int gain, const signed short num);
 float volts_1408FS_SE(const signed short num);
-void init_USB1408FS(libusb_device_handle *udev);
+int init_USB1408FS(libusb_device_handle *udev);
 
 #ifdef __cplusplus
 } /* closing brace for extern "C" */

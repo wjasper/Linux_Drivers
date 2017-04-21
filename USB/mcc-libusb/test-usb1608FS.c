@@ -87,14 +87,14 @@ start:
     printf("----------------\n");
     printf("Hit 'b' to blink LED\n");
     printf("Hit 'c' to test counter\n");
-    printf("Hit 'd' to read digial word\n");
+    printf("Hit 'd' to read digital word\n");
     printf("Hit 'e' to exit\n");
     printf("Hit 'g' to test analog input scan\n");    
     printf("Hit 'i' to test analog input\n");
     printf("Hit 'r' to reset\n");
     printf("Hit 'S' to get Status\n");
     printf("Hit 's' to get serial number\n");
-    printf("Hit 'w' to write digial word\n");
+    printf("Hit 'w' to write digtial word\n");
 
     while((ch = getchar()) == '\0' ||
 	  ch == '\n');

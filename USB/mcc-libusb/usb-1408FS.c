@@ -33,7 +33,7 @@ enum Mode {Differential, SingleEnded};
 static int wMaxPacketSize;  // will be the same for all devices of this type so
                             // no need to be reentrant. 
 
-void init_USB1408FS(libusb_device_handle *udev)
+int init_USB1408FS(libusb_device_handle *udev)
 {
   int i;
   int ret;
@@ -44,19 +44,21 @@ void init_USB1408FS(libusb_device_handle *udev)
     if (ret < 0) {
       perror("usb1408FS: Can't detach kernel from interface");
       usbReset_USB1408FS(udev);
-      exit(-1);
+      return ret;  
     }
     ret = libusb_claim_interface(udev, i);
     if (ret < 0) {
       perror("usb1408FS: Can't claim interface.");
-      exit(-1);
+      return ret;
     }
   }
 
   wMaxPacketSize = usb_get_max_packet_size(udev, 0);
   if (wMaxPacketSize < 0) {
-  perror("usb1408FS: error in getting wMaxPacketSize");
+    perror("usb1408FS: error in getting wMaxPacketSize");
   }
+
+  return 0;
 }
 
 /* configures digital port */
