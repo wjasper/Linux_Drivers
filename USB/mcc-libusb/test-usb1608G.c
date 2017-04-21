@@ -68,10 +68,10 @@ int main (int argc, char **argv)
   uint16_t status;
   int usb1608GX_2AO = FALSE;
   int flag;
-  int transferred;             // number of bytes transferred
+  int transferred;            // number of bytes transferred
   uint16_t value, data;
-  uint16_t *sdataIn;        //holds 16 bit unsigned analog input data
-  uint16_t sdataOut[512*2]; // holds 16 bit unsigned analog output data
+  uint16_t *sdataIn;          // holds 16 bit unsigned analog input data
+  uint16_t sdataOut[512];     // holds 16 bit unsigned analog output data
 
   uint8_t mode, gain, channel;
 
