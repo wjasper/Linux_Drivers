@@ -135,7 +135,7 @@ I have written drivers for the following boards:
        if [ -x /sbin/modprobe ]; then
          /sbin/modprobe driver_name
        fi
-       ```
+      ```
 
 6. Q: The driver loads, but the test program does not run correctly.  
    A: Type "dmesg" as see if there is a message at the end about the driver
