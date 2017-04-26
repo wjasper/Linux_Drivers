@@ -157,7 +157,7 @@ I have written drivers for the following boards:
      ```bash
      $ cp 61-mcc.rules /etc/udev/rules.d  
      $ /sbin/udevadm control --reload 
-     ````
+     ```
 
 8. Q: Under Ubuntu, the drivers compile correctly, but do not load.  I can not run the test-pci* program.  
    A: Recent versions of Ubuntu are now shipping with the COMEDI drivers.  These are a set of
@@ -168,13 +168,13 @@ I have written drivers for the following boards:
       
       ```bash
       blacklist 8255_pci (or whatever the name of the kernel module is)
-       ```
+      ```
       
       Then run 
      
      ```bash
       $ depmod -a 
-      ```
+     ```
      
      and reboot. 
 
