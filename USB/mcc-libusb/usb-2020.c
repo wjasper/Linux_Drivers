@@ -284,6 +284,8 @@ void usbAInScanStart_USB2020(libusb_device_handle *udev, uint32_t count, uint32_
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
   uint8_t status;
 
+  if (count == 0) packet_size = 255;
+
   AInScan.count = count;
   AInScan.retrig_count = retrig_count;
   if (frequency == 0.0) {

@@ -33,32 +33,43 @@ enum Mode {Differential, SingleEnded};
 static int wMaxPacketSize;  // will be the same for all devices of this type so
                             // no need to be reentrant. 
 
-void init_USB1208FS(libusb_device_handle *udev)
+int init_USB1208FS(libusb_device_handle *udev)
 {
   int ret;
 
   // claim interfaces 1-3 for the USB-1208FS
   //libusb_set_auto_detach_kernel_driver(udev, 1);
-  libusb_detach_kernel_driver(udev, 1);  
+  if ((ret = libusb_detach_kernel_driver(udev, 1)) < 0) {
+    perror("init_USB1208FS: error detaching kernel");
+    return ret;
+  }
   if ((ret = libusb_claim_interface(udev, 1)) < 0) {
-    perror("Error claiming interface 1");
+    perror("init_USB1208FS: Error claiming interface 1");
+    return ret;
   }
-  libusb_detach_kernel_driver(udev, 2);  
+  if ((ret = libusb_detach_kernel_driver(udev, 2)) < 0) {
+    perror("init_USB1208FS: error detaching kernel");
+    return ret;
+  }
   if ((ret = libusb_claim_interface(udev, 2)) < 0) {
-    perror("Error claiming interface 2");
+    perror("init_USB1208FS: Error claiming interface 2");
   }
-  libusb_detach_kernel_driver(udev, 3);  
+  if ((ret = libusb_detach_kernel_driver(udev, 3)) < 0) {
+    perror("init_USB1208FS: error detaching kernel");
+    return ret;
+  }
   if ((ret = libusb_claim_interface(udev, 3)) < 0) {
-    perror("Error claiming interface 3");
+    perror("init_USB1208FS: Error claiming interface 3");
   }
   wMaxPacketSize = usb_get_max_packet_size(udev, 0);
   if (wMaxPacketSize < 0) {
   perror("usb1208FS: error in getting wMaxPacketSize");
   }
+  return 0;
 }
 
 /* configures digital port */
-void usbDConfigPort_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t direction)
+int usbDConfigPort_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t direction)
 {
 /* This command sets the direction of the DIO port to input or output. 
      Port:      0 = Port A,  1 = Port B
@@ -84,10 +95,12 @@ void usbDConfigPort_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t 
   ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &config_port, sizeof(config_port), 5000);
   if (ret < 0) {
     perror("Error in usbDConfigPort_USB1208FS: libusb_control_transfer error");
+    return ret;
   }
+  return 0;
 }
 
-void usbDIn_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t* din_value)
+int usbDIn_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t* din_value)
 {
   /* This command reads the current state of the DIO ports. The return
      value will be the value seen at the port pins.
@@ -108,8 +121,12 @@ void usbDIn_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t* din_val
   ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &reportID, sizeof(reportID), 5000);
   if (ret < 0) {
     perror("Error in usbDIn_USB1208FS: libusb_control_transfer error");
+    return ret;
   }
-  libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_IN  | 1, (unsigned char*) &read_port, sizeof(read_port), &transferred, FS_DELAY);
+  ret = libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_IN  | 1, (unsigned char*) &read_port, sizeof(read_port), &transferred, FS_DELAY);
+  if (ret < 0) {
+    return ret;
+  }
 
   /* don't return values off the stack*/
   if (port == DIO_PORTA) {
@@ -117,9 +134,8 @@ void usbDIn_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t* din_val
   } else {
     *din_value = read_port.value[1];
   }
-  return;
+  return 0;
 }
-
 
 void usbDOut_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t value)
 {

@@ -59,7 +59,7 @@ int main (int argc, char **argv)
   double frequency;
   int ret;
   uint16_t *sdataIn; // holds 16 bit unsigned analog input data
-  uint16_t dataC[256][8];  // corrected data
+  uint16_t dataC[1024][8];  // corrected data
   int aOutEnabled = 0;
   int flag;
   
@@ -107,7 +107,7 @@ int main (int argc, char **argv)
     printf("Hit 'd' to test digitial IO\n");
     printf("Hit 'i' to test Analog Input\n");
     printf("Hit 'I' to test Analog Input Scan\n");
-    printf("Hit 'C' to test continuous sampling at 10kHz.\n");
+    printf("Hit 'C' to test continuous sampling.\n");
     printf("Hit 'o' to test Analog Output (202/205 only).\n");
     printf("Hit 'r' to reset the device\n");
     printf("Hit 's' to get serial number\n");
@@ -237,7 +237,7 @@ int main (int argc, char **argv)
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
 	do {
 	  ret = usbAInScanRead_USB20X(udev, count, nchan, 1, sdataIn, options, 2000);
-	  for (scan = 0; scan < count; scan++) { //for each scan 
+	  for (scan = 0; scan < count; scan++) {    // for each scan 
 	    for (chan = 0; chan < nchan; chan++) {  // for each channel in a scan
 	      dataC[scan][chan] = rint(sdataIn[scan*nchan+chan]*table_AIN[chan][0] + table_AIN[chan][1]);
 	    }
@@ -250,7 +250,6 @@ int main (int argc, char **argv)
 	fcntl(fileno(stdin), F_SETFL, flag);
 	free(sdataIn);
         usbAInScanStop_USB20X(udev);
-	usbReset_USB20X(udev);
         sleep(2); // let things settle down.
         break;
       case 'o':

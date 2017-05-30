@@ -48,12 +48,21 @@ int usb_get_max_packet_size(libusb_device_handle* udev, int endpointNum)
   altsetting = &interface->altsetting[0];
   endpoint = &altsetting->endpoint[endpointNum];
   if (endpoint == NULL) {
-   libusb_get_device_descriptor(device, &desc);
+   ret = libusb_get_device_descriptor(device, &desc);
+   if (ret < 0) {
+     perror("usb_get_max_packet_size: error in libusb_get_device_descriptor");
+     return ret;
+   }
    packet_size = desc.bMaxPacketSize0;
   } else {
     packet_size = endpoint->wMaxPacketSize;
   }
   libusb_free_config_descriptor(config);
+  if (ret < 0) {
+    perror("usb_get_max_packet_size: error in libusb_free_condfig_descriptor");
+    return ret;
+  }
+  
   return packet_size;
 }
 
@@ -76,24 +85,23 @@ libusb_device_handle* usb_device_find_USB_MCC( int productId, char *serialID )
 
   // discover devices
   cnt = libusb_get_device_list(NULL, &list);
-
   if (cnt < 0) {
-    perror("No USB devices found on bus.");
-    return NULL;
+    perror("usb_device_find_USB_MCC: No USB devices found on bus.");
+    return (void *) cnt;
   }
 
   for (i = 0; i < cnt; i++) {
     device = list[i];
     err = libusb_get_device_descriptor(device, &desc);
     if (err < 0) {
-      perror("Can not get USB device descriptor");
+      perror("usb_device_find_USB_MCC: Can not get USB device descriptor");
       goto out;
     }
     if (desc.idVendor == vendorId && desc.idProduct == productId) {
       found = device;
       err = libusb_open(found, &udev);
       if (err < 0) {
-	perror("libusb_open failed.");
+	perror("usb_device_find_USB_MCC: libusb_open failed.");
 	udev = NULL;
 	continue;
       }
@@ -122,7 +130,7 @@ libusb_device_handle* usb_device_find_USB_MCC( int productId, char *serialID )
       if (serialID != NULL) {
 	err = libusb_get_string_descriptor_ascii(udev, desc.iSerialNumber, (unsigned char *) serial, sizeof(serial));
 	if (err < 0) {
-	  perror("Error reading serial number for device.");
+	  perror("usb_device_find_USB_MCC: Error reading serial number for device.");
 	  libusb_close(udev);
 	  udev = NULL;
 	  continue;
@@ -141,14 +149,14 @@ libusb_device_handle* usb_device_find_USB_MCC( int productId, char *serialID )
       }
     }
   }
-
   libusb_free_device_list(list,1);
+
   if (udev) {
     cfg = libusb_get_configuration(udev, &config);
     if (cfg != 0) {
       err = libusb_set_configuration(udev, 1);
       if (err < 0) {
-	perror("error in setting configuration.");
+	perror("usb_device_find_USB_MCC: error in setting configuration.");
       }
     }
   }
@@ -161,15 +169,19 @@ out:
   return (void *) -1;
 }
 
-void getUsbSerialNumber(libusb_device_handle *udev, unsigned char serial[])
+int getUsbSerialNumber(libusb_device_handle *udev, unsigned char serial[])
 {
   struct libusb_device_descriptor desc;
   struct libusb_device *device;
+  int ret;
 
   device = libusb_get_device(udev);
-  libusb_get_device_descriptor(device, &desc);
-  libusb_get_string_descriptor_ascii(udev, desc.iSerialNumber, serial, 8);
+  ret = libusb_get_device_descriptor(device, &desc);
+  if (ret < 0) return ret;
+  ret = libusb_get_string_descriptor_ascii(udev, desc.iSerialNumber, serial, 8);
+  if (ret < 0) return ret;
   serial[8] = '\0';
+  return 0;
 }
 
 #define HS_DELAY 20
