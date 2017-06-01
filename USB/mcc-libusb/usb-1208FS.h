@@ -93,8 +93,8 @@ extern "C" {
 #define AIN_GAIN_QUEUE    0x10 // 1 = Use Channel Gain Queue, 0 = Use channnel parameters
 
 /* function prototypes for the USB-1208FS */
-void usbDConfigPort_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t direction);
-void usbDIn_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t* din_value);
+int usbDConfigPort_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t direction);
+int usbDIn_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t* din_value);
 void usbDOut_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t value);
 
 signed short usbAIn_USB1208FS(libusb_device_handle *udev, uint8_t channel, uint8_t range);
@@ -122,7 +122,7 @@ void usbSetSync_USB1208FS(libusb_device_handle *udev, uint8_t type);
 void usbGetAll_USB1208FS(libusb_device_handle *udev, uint8_t data[]);
 float volts_FS(const int gain, const signed short num);
 float volts_SE(const signed short num);
-void init_USB1208FS(libusb_device_handle *udev);
+int init_USB1208FS(libusb_device_handle *udev);
 
 #ifdef __cplusplus
 } /* closing brace for extern "C" */

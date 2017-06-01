@@ -74,7 +74,7 @@ typedef struct calibrationTimeStamp_t {
 int PMD_SendOutputReport(hid_device* hid, uint8_t* values, size_t length);
 int PMD_GetInputReport(hid_device* hid, uint8_t *values, size_t length, int delay);
 int PMD_GetFeatureReport(hid_device* hid, uint8_t *data, int length);
-void getUsbSerialNumber(libusb_device_handle *udev, unsigned char serial[]);
+int getUsbSerialNumber(libusb_device_handle *udev, unsigned char serial[]);
 
 int sendStringRequest(libusb_device_handle *udev, char *message);
 int getStringReturn(libusb_device_handle *udev, char *message);

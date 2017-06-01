@@ -316,7 +316,8 @@ int main (int argc, char **argv)
         nScans = 0;         // for continuous mode
         nchan = 8;          // 8 channels
 	gain = BP_10V;
-	mode = DIFFERENTIAL;
+	// mode = DIFFERENTIAL;
+	mode = SINGLE_ENDED;
 
         for (channel = 0; channel < nchan; channel++) {
 	  list[channel].range = gain;
