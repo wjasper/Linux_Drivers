@@ -179,10 +179,12 @@ start:
       }
       usbAInScan_USB1608FS(udev, 0, 0, count, &freq, options, in_data, table_AIN, gainArray);
       printf("Actual frequency = %f\n", freq);
+
       for ( i = 0; i < count; i++ ) {
-	printf("data[%d] = %#hx  %.4fV\n", i, in_data[i], volts_USB1608FS(gain, in_data[i]));
+	in_data[i] = table_AIN[0][0].slope*((float) in_data[i]);
+    	printf("data[%d] = %#hx  %.4fV\n", i, in_data[i], volts_USB1608FS(gain, in_data[i]));
       }
-	break;
+      break;
     case 'i':
       printf("Connect pin 1 - pin 23\n");
       printf("Select channel [0-7]: ");
@@ -255,13 +257,14 @@ start:
   	goto start;
 	break;
     case 'e':
+      usbAInStop_USB1608FS(udev);
+      usbReset_USB1608FS(udev);
       for (i = 2; i <= 6; i++ ) {
 	libusb_clear_halt(udev, LIBUSB_ENDPOINT_IN | i);
       }
       for (i = 0; i <= 6; i++) {
         libusb_release_interface(udev, i);
       }
-      usbReset_USB1608FS(udev);
       libusb_close(udev);
       return 0;
       break;

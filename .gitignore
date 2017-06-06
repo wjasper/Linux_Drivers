@@ -1,0 +1,80 @@
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.d
+*.so
+*.a
+
+# Compiled test programs #
+##########################
+test-usb1608G
+test-usb20X
+test-usb500
+test-usb1208FS-Plus
+test-usb1608FS-Plus
+test-usb2020
+test-usb-ctr
+test-usb2600
+test-usb2408
+test-usb2416
+test-usb1608HS
+test-usb1208HS
+test-usb2001tc
+test-usb1024LS
+test-usb1208LS
+test-usb1208FS
+test-usb1408FS
+test-usb1608FS
+test-usb7202
+test-usb7204
+test-usb-tc
+test-usb-dio24
+test-usb-dio96H
+test-usb5201
+test-usb5203
+test-usb-temp
+test-usb-ssr
+test-usb-erb
+test-usb-pdiso8
+test-usb1616FS
+test-usb3100
+test-usb4300
+test-usb-tc-ai
+test-usb-temp-ai
+test-usb-dio32HS
+test-usb-tc32
+test-bth1208LS
+test-minilab1008
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and databases #
+######################
+*.log
+*.sql
+*.sqlite
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
