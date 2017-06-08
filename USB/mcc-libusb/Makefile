@@ -189,7 +189,7 @@ test-usb-pdiso8: test-usb-pdiso8.c usb-pdiso8.o libmccusb.a
 ####################################################################################################
 
 clean:
-	rm -rf *.d *.o *~ *.a *.so *.dylib *.dll *.lib *.dSYM $(TARGETS)
+	rm -rf \#*\# *.d *.o *~ *.a *.so *.dylib *.dll *.lib *.dSYM $(TARGETS)
 
 dist:	
 	make clean
