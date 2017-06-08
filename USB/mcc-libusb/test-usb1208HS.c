@@ -179,7 +179,7 @@ int main (int argc, char **argv)
 	printf("Hit any key to exit\n");
 	i = 0;
         do {
-  	  ret = usbAInScanRead_USB1208HS(udev, 256, nchan, sdataIn);  // read 256 scans at a time
+  	  ret = usbAInScanRead_USB1208HS(udev, 256, nchan, sdataIn, CONTINUOUS);   // read 256 scans at a time
           for (scan = 0; scan < 256; scan++) { //for each scan
 	    for (channel = 0; channel < nchan; channel++) {  // for each channel in a scan
 	      dataC[scan][channel] = rint(sdataIn[scan*8+channel]*table_AIN[mode][gain][0] + table_AIN[mode][gain][1]);
@@ -266,7 +266,7 @@ int main (int argc, char **argv)
         printf("Enter sampling frequency [Hz]: ");
 	scanf("%lf", &frequency);
 	usbAInScanStart_USB1208HS(udev, 512, 0, frequency, (0x1<<channel), 0xff, 0);
-	usbAInScanRead_USB1208HS(udev, 512, 1, sdataIn);
+	usbAInScanRead_USB1208HS(udev, 512, 1, sdataIn, 0);
 	for (i = 0; i < 512; i++) {
 	  sdataIn[i] = rint(sdataIn[i]*table_AIN[mode][gain][0] + table_AIN[mode][gain][1]);
 	  printf("Channel %d  Mode = %d  Gain = %d Sample[%d] = %#x Volts = %lf\n", channel,

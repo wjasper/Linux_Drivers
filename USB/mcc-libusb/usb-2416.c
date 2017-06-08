@@ -397,7 +397,7 @@ void usbAInScanStart_USB2416(libusb_device_handle *udev, double frequency, uint1
   libusb_control_transfer(udev, requesttype, AIN_SCAN_START, 0x0, 0x0, (unsigned char *) &scanPacket,  sizeof(scanPacket), HS_DELAY);
 }
 
-int usbAInScanRead_USB2416(libusb_device_handle *udev, uint16_t count, uint8_t nChan, int32_t *data)
+int usbAInScanRead_USB2416(libusb_device_handle *udev, uint16_t count, uint8_t nChan, int32_t *data, int options)
 {
   int nbytes = nChan*count*4;
   int transferred;
@@ -407,6 +407,12 @@ int usbAInScanRead_USB2416(libusb_device_handle *udev, uint16_t count, uint8_t n
   if (ret < 0) {
     perror("usbAInScanRead_USB2416: error in libusb_bulk_transfer");
   }
+  if (transferred != nbytes) {
+    fprintf(stderr, "usbAInScanRead_USB2416: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
+    return ret;
+  }
+
+  if (options & CONTINUOUS) return transferred;
 
   usbAInScanStop_USB2416(udev);
   usbAInScanFlush_USB2416(udev);

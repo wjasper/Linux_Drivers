@@ -131,7 +131,7 @@ int main (int argc, char **argv)
   count = 10;
   usbAInScanQueueWrite_USB2416(udev, &scanQueue);
   usbAInScanStart_USB2416(udev, 500., count, 15);
-  usbAInScanRead_USB2416(udev, count, 1, idata);
+  usbAInScanRead_USB2416(udev, count, 1, idata, 0);
   usbAInScanStop_USB2416(udev);
 
   while(1) {
@@ -197,6 +197,7 @@ int main (int argc, char **argv)
         j = 0;
 	do {
           ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|1, (unsigned char *) idata, 512*4, &transferred, 1000);
+	  usbAInScanRead_USB2408(udev, 512, 8, idata, 1);
 	  if (ret < 0) {
 	    perror(" Continuous scan error in libusb_bulk_transfer");
 	  }
@@ -294,7 +295,7 @@ int main (int argc, char **argv)
 	
 	usbAInScanQueueWrite_USB2416(udev, &scanQueue);
 	usbAInScanStart_USB2416(udev, 900., count, 15);
-	usbAInScanRead_USB2416(udev, count, 1, idata);
+	usbAInScanRead_USB2416(udev, count, 1, idata, 0);
 	usbAInScanStop_USB2416(udev);
 
 	usbAInScanQueueRead_USB2416(udev, &scanQueue);

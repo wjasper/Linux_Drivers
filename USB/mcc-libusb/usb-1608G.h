@@ -90,7 +90,8 @@ extern "C" {
 #define CALIBRATION    3
 #define LAST_CHANNEL   (0x80)
 #define PACKET_SIZE    512       // max bulk transfer size in bytes
-
+#define CONTINUOUS     1         // continuous input mode
+  
 /* Ananlog Output Scan Options */
 #define AO_CHAN0       0x1   // Include Channel 0 in output scan
 #define AO_CHAN1       0x2   // Include Channel 1 in output scan
@@ -186,7 +187,7 @@ void usbGetSerialNumber_USB1608G(libusb_device_handle *udev, char serial[9]);
 uint16_t usbAIn_USB1608G(libusb_device_handle *udev, uint16_t channel);
 void usbAInScanStart_USB1608G(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, double frequency, uint8_t options);
 void usbAInScanStop_USB1608G(libusb_device_handle *udev);
-int usbAInScanRead_USB1608G(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, unsigned int timeout);
+int usbAInScanRead_USB1608G(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, unsigned int timeout, int options);
 void usbAInConfig_USB1608G(libusb_device_handle *udev, ScanList scanList[NCHAN_1608G]);
 int usbAInConfigR_USB1608G(libusb_device_handle *udev, uint8_t *scanList);
 void usbAInScanClearFIFO_USB1608G(libusb_device_handle *udev);

@@ -239,7 +239,7 @@ start:
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
         do {
-  	  ret = usbAInScanRead_USB1608FS_Plus(udev, 256, nchan, sdataIn, 0);
+  	  ret = usbAInScanRead_USB1608FS_Plus(udev, 256, nchan, sdataIn, CONTINUOUS);
           for (scan = 0; scan < 256; scan++) { //for each scan
 	    for (channel = 0; channel < nchan; channel++) {  // for each channel in a scan
               dataC[scan][channel] = rint(sdataIn[scan*8+channel]*table_AIN[range][channel][0] + table_AIN[range][channel][1]);

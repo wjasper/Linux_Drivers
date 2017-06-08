@@ -77,6 +77,7 @@ extern "C" {
 #define TC_GAIN_POS      (0x8)      // TC Gain Calibration Positive
 #define TC_GAIN_NEG      (0x9)      // TC Gain Calibration Negative
 #define BURNOUT          (0xa)      // Thermocouple without burnout detect
+#define CONTINUOUS       (0x1)      // Continuous Mode
 
 // Gain Ranges
 #define BP_20V           (0x0)     // +/- 20V
@@ -154,7 +155,7 @@ uint8_t usbAInScanStatus_USB2416(libusb_device_handle *udev, uint16_t *depth);
 void usbAInScanQueueWrite_USB2416(libusb_device_handle *udev, AInScanQueue *queue);
 void usbAInScanQueueRead_USB2416(libusb_device_handle *udev, AInScanQueue *queue);
 void usbAInScanStart_USB2416(libusb_device_handle *udev, double frequency, uint16_t count, uint8_t packet_size);
-int usbAInScanRead_USB2416(libusb_device_handle *udev, uint16_t count, uint8_t nChan, int32_t *data);
+int usbAInScanRead_USB2416(libusb_device_handle *udev, uint16_t count, uint8_t nChan, int32_t *data, int options);
 void usbGetSerialNumber_USB2416(libusb_device_handle *udev, char serial[9]);
 void usbSetSerialNumber_USB2416(libusb_device_handle *udev, char serial[9]);
 void usbGetVersion_USB2416(libusb_device_handle *udev, uint16_t version[4]);

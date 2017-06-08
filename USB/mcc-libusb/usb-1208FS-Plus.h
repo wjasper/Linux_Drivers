@@ -81,6 +81,7 @@ extern "C" {
 #define TRIG_LEVEL_LOW          (0x4 << 2)
 #define RETRIGGER_MODE          (0x1 << 5)
 #define STALL_ON_OVERRUN        (0x0)
+#define CONTINUOUS              (0x1 << 6)
 #define INHIBIT_STALL           (0x1 << 7)
 
 /* Aanalog Input */

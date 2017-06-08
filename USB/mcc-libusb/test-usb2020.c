@@ -191,7 +191,7 @@ int main (int argc, char **argv)
           dataAIn[i] = 0xbeef;
 	}
 	usbAInScanStart_USB2020(device.udev, nSamples, 0, frequency, nSamples-1, options);
-	ret = usbAInScanRead_USB2020(device.udev, nSamples, 1, &dataAIn[0], 2000);
+	ret = usbAInScanRead_USB2020(device.udev, nSamples, 1, &dataAIn[0], 2000, 0);
 	printf("Number samples read = %d\n", ret/2);
 	for (i = 0; i < nSamples; i++) {
           dataAIn[i] &= 0xfff;
@@ -223,7 +223,7 @@ int main (int argc, char **argv)
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
         do {
-	  usbAInScanRead_USB2020(device.udev, 256, 1, &dataAIn[0], 2000);
+	  usbAInScanRead_USB2020(device.udev, 256, 1, &dataAIn[0], 2000, CONTINUOUS);
           if (i%100 == 0) {
 	    printf("Scan = %d.\n", i);
 	  }

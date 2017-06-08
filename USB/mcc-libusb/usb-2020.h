@@ -73,13 +73,14 @@ extern "C" {
 #define BP_1V  0x3    // +/- 1V
 
 /* Options for AInScan*/
+#define CONTINUOUS         (0x1 << 1) // continuous mode
 #define TRIGGER            (0x1 << 3) // 1 = use trigger or gate
 #define PACER_OUT          (0x1 << 5) // 1 = External Pacer Output, 0 = External Pacer Input
 #define RETRIGGER          (0x1 << 6) // 1 = retrigger mode, 0 = normal trigger
 #define DDR_RAM            (0x1 << 7) // 1 = Use DDR RAM as storage, 0 = Stream via USB
   
 /* Status bit values */
-#define AIN_SCAN_RUNNING  (0x1 << 1)
+#define AIN_SCAN_RUNNING   (0x1 << 1)
 #define AIN_SCAN_OVERRUN   (0x1 << 2)
 #define AIN_SCAN_DONE      (0x1 << 5)
 #define FPGA_CONFIGURED    (0x1 << 8)
@@ -143,7 +144,7 @@ uint16_t usbAIn_USB2020(libusb_device_handle *udev, uint16_t channel);
 void usbAInScanStart_USB2020(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, double frequency,
 			      uint32_t packet_size, uint8_t options);
 void usbAInScanStop_USB2020(libusb_device_handle *udev);
-int usbAInScanRead_USB2020(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, unsigned int timeout);
+int usbAInScanRead_USB2020(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, unsigned int timeout, int options);
 void usbAInConfig_USB2020(libusb_device_handle *udev, ScanList scanList[NCHAN_2020]);
 void usbAInConfigR_USB2020(libusb_device_handle *udev, ScanList scanList[NCHAN_2020]);
 void usbAInScanClearFIFO_USB2020(libusb_device_handle *udev);

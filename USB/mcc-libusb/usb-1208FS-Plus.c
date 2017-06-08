@@ -354,8 +354,15 @@ int usbAInScanRead_USB1208FS_Plus(libusb_device_handle *udev, int nScan, int nCh
     }
     if (transferred != nbytes) {
       fprintf(stderr, "usbAInScanRead_USB1208FS_Plus: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
-    }
+      status = usbStatus_USB1208FS_Plus(udev);
+      if ((status & AIN_SCAN_OVERRUN)) {
+        fprintf(stderr, "Analog AIn scan overrun.\n");
+      }
+      return ret;
+    }      
   }
+
+  if (options & CONTINUOUS) return nbytes;
 
   status = usbStatus_USB1208FS_Plus(udev);
   // if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
@@ -364,7 +371,7 @@ int usbAInScanRead_USB1208FS_Plus(libusb_device_handle *udev, int nScan, int nCh
   }
 
   if ((status & AIN_SCAN_OVERRUN)) {
-    printf("Analog AIn scan overrun.\n");
+    fprintf(stderr, "Analog AIn scan overrun.\n");
   }
 
   return nbytes;

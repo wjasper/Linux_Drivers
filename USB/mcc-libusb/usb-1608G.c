@@ -361,7 +361,7 @@ void usbAInScanStart_USB1608G(libusb_device_handle *udev, uint32_t count, uint32
   }
 }
 
-int usbAInScanRead_USB1608G(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, unsigned int timeout)
+int usbAInScanRead_USB1608G(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, unsigned int timeout, int options)
 {
   char value[PACKET_SIZE];
   int ret = -1;
@@ -376,7 +376,16 @@ int usbAInScanRead_USB1608G(libusb_device_handle *udev, int nScan, int nChan, ui
   }
   if (transferred != nbytes) {
     fprintf(stderr, "usbAInScanRead_USB1608G: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
+    status = usbStatus_USB1608G(udev);
+    if ((status & AIN_SCAN_OVERRUN)) {
+      fprintf(stderr, "usbAInScanRead: Analog In scan overrun.\n");
+      usbAInScanStop_USB1608G(udev);
+      usbAInScanClearFIFO_USB1608G(udev);
+    }
+    return ret;
   }
+
+  if (options & CONTINUOUS) return transferred;
 
   status = usbStatus_USB1608G(udev);
   // if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.

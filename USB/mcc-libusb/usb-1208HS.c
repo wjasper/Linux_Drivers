@@ -279,7 +279,7 @@ void usbAInScanStart_USB1208HS(libusb_device_handle *udev, uint32_t count, uint3
   libusb_control_transfer(udev, requesttype, AIN_SCAN_START, 0x0, 0x0, (unsigned char *) &AInScan, sizeof(AInScan), HS_DELAY);
 }
 
-int usbAInScanRead_USB1208HS(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data)
+int usbAInScanRead_USB1208HS(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, int options)
 {
   char value[MAX_PACKET_SIZE_HS];
   int ret = -1;
@@ -293,7 +293,14 @@ int usbAInScanRead_USB1208HS(libusb_device_handle *udev, int nScan, int nChan, u
   }
   if (transferred != nbytes) {
     fprintf(stderr, "usbAInScanRead_USB1208HS: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
+    status = usbStatus_USB1208HS(udev);
+    if ((status & AIN_SCAN_OVERRUN)) {
+      fprintf(stderr, "Analog In scan overrun.\n");
+    }
+    return ret;
   }
+
+  if (options & CONTINUOUS) return transferred;
 
   status = usbStatus_USB1208HS(udev);
   // if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
@@ -302,7 +309,7 @@ int usbAInScanRead_USB1208HS(libusb_device_handle *udev, int nScan, int nChan, u
   }
 
   if ((status & AIN_SCAN_OVERRUN)) {
-    printf("Analog In scan overrun.\n");
+    fprintf(stderr, "Analog In scan overrun.\n");
   }
   return ret;
 }

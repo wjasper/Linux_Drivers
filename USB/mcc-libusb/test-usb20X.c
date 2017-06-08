@@ -193,7 +193,7 @@ int main (int argc, char **argv)
 	  channel |= (0x1 << i);
 	}
 	usbAInScanStart_USB20X(udev, count, frequency, channel,  options, 0, 0);
-	ret = usbAInScanRead_USB20X(udev, count, nchan, 0, sdataIn, options, 20000);
+	ret = usbAInScanRead_USB20X(udev, count, nchan, sdataIn, options, 20000);
 	printf("Number samples read = %d\n", ret/2);
 	for (i = 0; i < count; i++) { // scan count
 	  for (chan = 0; chan < nchan; chan++) { // channel count
@@ -236,7 +236,7 @@ int main (int argc, char **argv)
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
 	do {
-	  ret = usbAInScanRead_USB20X(udev, count, nchan, 1, sdataIn, options, 2000);
+	  ret = usbAInScanRead_USB20X(udev, count, nchan, sdataIn, options | CONTINUOUS, 2000);
 	  for (scan = 0; scan < count; scan++) {    // for each scan 
 	    for (chan = 0; chan < nchan; chan++) {  // for each channel in a scan
 	      dataC[scan][chan] = rint(sdataIn[scan*nchan+chan]*table_AIN[chan][0] + table_AIN[chan][1]);

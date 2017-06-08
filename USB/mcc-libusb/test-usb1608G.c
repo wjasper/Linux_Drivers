@@ -291,7 +291,7 @@ int main (int argc, char **argv)
 	  printf("\n\n---------------------------------------");
 	  printf("\nrepeat: %d\n", m);
 	  usbAInScanStart_USB1608G(udev, nScans, 0, frequency, 0x0);
-	  ret = usbAInScanRead_USB1608G(udev, nScans, nchan, sdataIn, 20000);
+	  ret = usbAInScanRead_USB1608G(udev, nScans, nchan, sdataIn, 20000, 0);
 	  printf("Number bytes read = %d  (should be %d)\n", ret, 2*nchan*nScans);
 	  for (i = 0; i < nScans; i++) {
 	    printf("%6d", i);
@@ -308,13 +308,13 @@ int main (int argc, char **argv)
 	free(sdataIn);
         break;
       case 'C':
-      	printf("Testing USB-1608G Analog Input Scan in continuous mode 8 channels\n");
+      	printf("Testing USB-1608G Analog Input Scan in continuous mode 16 channels\n");
         printf("Hit any key to exit\n");
 	printf("Enter desired sampling frequency (greater than 1000): ");
 	scanf("%lf", &frequency);
 	usbAInScanStop_USB1608G(udev);
         nScans = 0;         // for continuous mode
-        nchan = 8;          // 8 channels
+        nchan = 16;         // 16 channels
 	gain = BP_10V;
 	// mode = DIFFERENTIAL;
 	mode = SINGLE_ENDED;
@@ -338,7 +338,7 @@ int main (int argc, char **argv)
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
         do {
-	  usbAInScanRead_USB1608G(udev, nread, nchan, sdataIn, 2000);
+	  usbAInScanRead_USB1608G(udev, nread, nchan, sdataIn, 2000, CONTINUOUS);
           if (i%100 == 0) {
             printf("Scan = %d\n", i);
 	  }

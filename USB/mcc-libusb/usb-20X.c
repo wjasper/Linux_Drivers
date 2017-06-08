@@ -257,7 +257,7 @@ void usbAInScanStart_USB20X(libusb_device_handle *udev, uint32_t count, double f
   libusb_control_transfer(udev, requesttype, AIN_SCAN_START, 0x0, 0x0, (unsigned char *) &AInScan, 12, HS_DELAY);
 }
 
-int usbAInScanRead_USB20X(libusb_device_handle *udev, int nScan, int nChan, int Continuous, uint16_t *data, uint8_t options, unsigned int timeout)
+int usbAInScanRead_USB20X(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, uint8_t options, unsigned int timeout)
 {
   char value[MAX_PACKET_SIZE];
   int i;
@@ -283,16 +283,21 @@ int usbAInScanRead_USB20X(libusb_device_handle *udev, int nScan, int nChan, int 
     }
     if (transferred != nbytes) {
       fprintf(stderr, "usbAInScanRead_USB20X: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
+      status = usbStatus_USB20X(udev);
+      if ((status & AIN_SCAN_OVERRUN)) {
+        fprintf(stderr, "Analog AIn scan overrun.\n");
+      }
+    return ret;
     }
+  }
+
+  if (options & CONTINUOUS) { // continuous mode
+    return transferred;
   }
 
   status = usbStatus_USB20X(udev);
   if ((status & AIN_SCAN_OVERRUN)) {
-    printf("Analog AIn scan overrun.\n");
-  }
-
-  if (Continuous) { // continuous mode
-    return nbytes;
+    fprintf(stderr, "Analog AIn scan overrun.\n");
   }
 
   usbAInScanStop_USB20X(udev);

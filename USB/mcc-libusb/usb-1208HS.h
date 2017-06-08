@@ -112,6 +112,7 @@ extern "C" {
 #define CHAN7  (0x1 << 7)
 
 #define BURST_MODE   0x1
+#define CONTINUOUS   0x2 
 #define TRIGGER_MODE 0x8
 #define DEBUG_MODE   0x20
 #define RETRIG_MODE  0x40
@@ -182,7 +183,7 @@ void usbAInConfig_USB1208HS(libusb_device_handle *udev, uint8_t mode, uint8_t ra
 void usbAInConfigR_USB1208HS(libusb_device_handle *udev, uint8_t *mode, uint8_t range[NCHAN_1208HS]);
 void usbAInScanStop_USB1208HS(libusb_device_handle *udev);
 void usbAInScanStart_USB1208HS(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, double frequency, uint8_t channels, uint8_t packet_size, uint8_t options);
-int usbAInScanRead_USB1208HS(libusb_device_handle *udev, int nScan, int nChan,  uint16_t *data);
+int usbAInScanRead_USB1208HS(libusb_device_handle *udev, int nScan, int nChan,  uint16_t *data, int options);
 void usbAOut_USB1208HS(libusb_device_handle *udev, uint8_t channel, double voltage, float table_AO[NCHAN_AO_1208HS][2]);
 void usbAOutR_USB1208HS(libusb_device_handle *udev, uint8_t channel, double *voltage, float table_AO[NCHAN_AO_1208HS][2]);
 void usbAOutScanStop_USB1208HS(libusb_device_handle *udev);

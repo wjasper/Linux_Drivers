@@ -232,7 +232,7 @@ int main (int argc, char **argv)
 	nread = 256;
 		
 	if (frequency < 1000) {
-	  options = DIFFERENTIAL_MODE || IMMEDIATE_TRANSFER_MODE;
+	  options = DIFFERENTIAL_MODE | IMMEDIATE_TRANSFER_MODE;
 	  timeout = nread*nchan*1000./frequency;
 	} else {
 	  options = DIFFERENTIAL_MODE;
@@ -249,7 +249,7 @@ int main (int argc, char **argv)
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
         do {
-	  ret = usbAInScanRead_USB1208FS_Plus(udev, nread, nchan, dataAIn, options, timeout);
+	  ret = usbAInScanRead_USB1208FS_Plus(udev, nread, nchan, dataAIn, options | CONTINUOUS, timeout);
           if (i%10 == 0) {
             printf("Scan = %d\n", i);
 	  }
