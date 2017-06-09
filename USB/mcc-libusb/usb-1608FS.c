@@ -548,12 +548,11 @@ void usbAInStop_USB1608FS(libusb_device_handle *udev)
 }
 
 int usbAInScan_USB1608FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t highchannel, uint32_t nSamples,
-			 float *frequency, uint8_t options, int16_t sdata[], Calibration_AIN table_AIN[NGAINS_USB1608FS][NCHAN_USB1608FS],
-			 uint8_t gainArray[NCHAN_USB1608FS])
+			 float *frequency, uint8_t options, uint16_t sdata[])
 {
   /*
     This command scans a range of analog input channels and sends the
-     readings in inerrupt transfers.  The gain ranges that are currently
+     readings in interrupt transfers.  The gain ranges that are currently
      set on the desired channels will be used (these may be changed
      with AIn or ALoadQueue
 
@@ -578,7 +577,7 @@ int usbAInScan_USB1608FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
      0xFFF to 0x0000.  The timer is preloaded with the value specified
      in timer_preload.  Thes allows for a lowest rate of 0.596Hz
      (1:256 prescale, preload = 0).  The preload value is calculated
-     by 65536 - desired number of counts.  Th is preferable to keep
+     by 65536 - desired number of counts.  It is preferable to keep
      the prescaler to the lowest value that will achieve the desired
      rate.
 
@@ -593,7 +592,7 @@ int usbAInScan_USB1608FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
 
     The data will use successive endpoints, beginning with the first 
     endpoint at the start of the scan and cycling through all 6 endpoints
-    until reaching the specified count or an AInStop is sent.
+    until reaching the specified count or until an AInStop is sent.
     
     Burst I/O mode will sample data to the onboard SRAM FIFO until
     full, and then return the data in continuous messages using all 5
@@ -718,22 +717,12 @@ int usbAInScan_USB1608FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
 
     if (nSamples <= 31) {  // only collect partial scan
       for (k = 0; k < nSamples; k++) {
-	if (data.value[k] >= 0x8000) {
-	  sdata[data.scan_index*31+k] = (data.value[k] - 0x8000);
-	} else {
-	  sdata[data.scan_index*31+k] = (0x8000 - data.value[k]);
-	  sdata[data.scan_index*31+k] *= (-1);
-	}
+	sdata[data.scan_index*31+k] = data.value[k];
       }
       break;
-    } else {     // put all 31 samples into buffer
+    } else {   // put all 31 samples into buffer
       for (k = 0; k < 31;  k++) {
-	if (data.value[k] >= 0x8000) {
-	  sdata[data.scan_index*31+k] = (data.value[k] - 0x8000);
-	} else {
-	  sdata[data.scan_index*31+k] = (0x8000 - data.value[k]);
-	  sdata[data.scan_index*31+k] *= (-1);
-	}
+	sdata[data.scan_index*31+k] = data.value[k];
       }
       nSamples -= 31;
     }

@@ -47,7 +47,8 @@ int main (int argc, char **argv)
   int temp, i,j;
   int ch;
   uint8_t gainArray[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-  signed short in_data[1024];
+  int16_t sdata[1024];
+  uint16_t data[2048];
   int count;
   int options;
   float freq;
@@ -174,15 +175,41 @@ start:
       // options = AIN_EXECUTION | AIN_TRANSFER_MODE;
       options = AIN_EXECUTION;
 
-      for ( i = 0; i < 1024; i++ ) {  // load data with known value
-	in_data[i] = 0xbeef;
+      for ( i = 0; i < 2048; i++ ) {  // load data with known value
+	data[i] = 0xbeef;
       }
-      usbAInScan_USB1608FS(udev, 0, 0, count, &freq, options, in_data, table_AIN, gainArray);
+      channel= 0;
+      usbAInScan_USB1608FS(udev, channel, channel, count, &freq, options, data);
       printf("Actual frequency = %f\n", freq);
 
       for ( i = 0; i < count; i++ ) {
-	in_data[i] = table_AIN[0][0].slope*((float) in_data[i]);
-    	printf("data[%d] = %#hx  %.4fV\n", i, in_data[i], volts_USB1608FS(gain, in_data[i]));
+        switch (gain) {
+	  case  BP_10_00V:
+	    sdata[i] = (int) (table_AIN[0][channel].slope*((float) data[i]) + table_AIN[0][channel].offset);
+	    break;
+	  case BP_5_00V:
+	    sdata[i] = (int) (table_AIN[1][channel].slope*((float) data[i]) + table_AIN[1][channel].offset);
+	    break;
+	  case BP_2_50V:  // use data from 2 V
+	  case BP_2_00V:
+	    sdata[i] = (int) (table_AIN[2][channel].slope*((float) data[i]) + table_AIN[2][channel].offset);
+	    break;
+	  case BP_1_25V:  // use data from 1 V
+	  case BP_1_00V:
+	  case BP_0_625V:
+	  case BP_0_3125V:
+	    sdata[i] = (int) (table_AIN[3][channel].slope*((float) data[i]) + table_AIN[3][channel].offset);
+	    break;
+	  default:
+	    break;
+	}
+	if (sdata[i] >= 0x8000) {
+	  sdata[i] -=  0x8000;
+	} else {
+	  sdata[i] = (0x8000 - sdata[i]);
+	  sdata[i] *= (-1);
+	}
+	printf("raw data = %#x   data[%d] = %#hx  %.4fV\n", data[i], i, sdata[i], volts_USB1608FS(gain, sdata[i]));
       }
       break;
     case 'i':

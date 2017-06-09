@@ -197,7 +197,7 @@ int main (int argc, char **argv)
         j = 0;
 	do {
           ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|1, (unsigned char *) idata, 512*4, &transferred, 1000);
-	  usbAInScanRead_USB2408(udev, 512, 8, idata, 1);
+	  usbAInScanRead_USB2416(udev, 512, 8, idata, 1);
 	  if (ret < 0) {
 	    perror(" Continuous scan error in libusb_bulk_transfer");
 	  }

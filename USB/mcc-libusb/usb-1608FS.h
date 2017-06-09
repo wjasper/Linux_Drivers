@@ -133,8 +133,7 @@ signed short usbAIn_USB1608FS(libusb_device_handle *udev, uint8_t channel, uint8
 void usbAOut_USB1608FS(libusb_device_handle *udev, uint8_t channel, uint16_t value);
 void usbAOutStop_USB1608FS(libusb_device_handle *udev);
 void usbAInStop_USB1608FS(libusb_device_handle *udev);
-int usbAInScan_USB1608FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t highchannel, uint32_t count,
-	 float *frequency, uint8_t options, int16_t sdata[], Calibration_AIN table_AIN[NGAINS_USB1608FS][NCHAN_USB1608FS], uint8_t gainArray[]);
+int usbAInScan_USB1608FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t highchannel, uint32_t count, float *frequency, uint8_t options, uint16_t sdata[]);
 void usbAInLoadQueue_USB1608FS(libusb_device_handle *udev, uint8_t gains[8]);
 void usbInitCounter_USB1608FS(libusb_device_handle *udev);
 uint32_t usbReadCounter_USB1608FS(libusb_device_handle *udev);
