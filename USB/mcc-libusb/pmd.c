@@ -138,6 +138,7 @@ libusb_device_handle* usb_device_find_USB_MCC( int productId, char *serialID )
         if (strcmp(serialID, serial) == 0) {
 	  break;
 	} else {
+	  libusb_release_interface(udev, 0);
 	  udev = NULL;
 	}
       } else {
