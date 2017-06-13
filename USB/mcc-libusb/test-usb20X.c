@@ -62,7 +62,8 @@ int main (int argc, char **argv)
   uint16_t dataC[1024][8];  // corrected data
   int aOutEnabled = 0;
   int flag;
-  
+
+start:
   udev = NULL;
 
   ret = libusb_init(NULL);
@@ -264,7 +265,12 @@ int main (int argc, char **argv)
 	usbAOut_USB20X(udev, channel, value);
         break;
       case 'r':
+	// with a reset, we need to reestabilsh communications with the device
+	printf("Resetting USB20X.  Restarting in 5 seconds ...\n");
         usbReset_USB20X(udev);
+	cleanup_USB20X(udev);
+	sleep(5); // let things settle down.
+	goto start;
         break;
       case 's':
         usbGetSerialNumber_USB20X(udev, serial);
