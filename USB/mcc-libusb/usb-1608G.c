@@ -284,10 +284,10 @@ void usbAInScanStart_USB1608G(libusb_device_handle *udev, uint32_t count, uint32
      for the number of channels in the scan; if not specified, the A/D
      is clocked on every rising edge of AI_CLK_IN.
 
-     The timer will be reset and sample acquired wien its value equals
+     The timer will be reset and sample acquired when its value equals
      timer_period.  The equation for calculating timer_period is:
 
-     timer_period = [64MHz / (sampl frequency)] - 1
+     timer_period = [64MHz / (sample frequency)] - 1
 
      The data will be returned in packets utilizing a bulk IN endpoint.
      The data will be in the format:
@@ -329,8 +329,9 @@ void usbAInScanStart_USB1608G(libusb_device_handle *udev, uint32_t count, uint32
 			   bit 6:  1 = retrigger mode, 0 = normal trigger
 			   bit 7:  Reserved
 		        */
-    uint8_t pad[4];
+    uint8_t pad[2];
   } AInScan;
+
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
   int i;
 
@@ -357,7 +358,7 @@ void usbAInScanStart_USB1608G(libusb_device_handle *udev, uint32_t count, uint32
 
   /* Pack the data into 14 bytes */
   if (libusb_control_transfer(udev, requesttype, AIN_SCAN_START, 0x0, 0x0, (unsigned char *) &AInScan, 14, HS_DELAY) < 0) {
-    perror("usbAinScanStart_USB1608G: Error");
+    perror("usbAInScanStart_USB1608G: Error");
   }
 }
 
@@ -365,7 +366,7 @@ int usbAInScanRead_USB1608G(libusb_device_handle *udev, int nScan, int nChan, ui
 {
   char value[PACKET_SIZE];
   int ret = -1;
-  int nbytes = nChan*nScan*2;    // nuber of bytes to read;
+  int nbytes = nChan*nScan*2;    // number of bytes to read;
   int transferred;
   uint8_t status;
 
@@ -511,7 +512,7 @@ void usbAOut_USB1608GX_2AO(libusb_device_handle *udev, uint8_t channel, double v
 {
   /*
     This command reads or writes the values for the analog output channels.
-    The values are 12-bit unsigned numbers.  Both read and write will result
+    The values are 16-bit unsigned numbers.  Both read and write will result
     in a control pipe stall if an output scan is running.  The equation for the
     output voltage is:
 
@@ -566,6 +567,7 @@ void usbAOutScanStop_USB1608GX_2AO(libusb_device_handle *udev)
 void usbAOutScanClearFIFO_USB1608GX_2AO(libusb_device_handle *udev)
 {
   /* This command clears any remaining output FIFO data after a scan */
+
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
   libusb_control_transfer(udev, requesttype, AOUT_CLEAR_FIFO, 0x0, 0x0, NULL, 0x0, HS_DELAY);
 }

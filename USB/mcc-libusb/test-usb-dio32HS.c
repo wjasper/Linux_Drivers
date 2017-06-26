@@ -81,7 +81,7 @@ int main (int argc, char **argv)
     printf("\nUSB DIO32HS Testing\n");
     printf("----------------\n");
     printf("Hit 'b' to blink\n");
-    printf("Hit 'd' to test digitial IO\n");
+    printf("Hit 'd' to test digital IO\n");
     printf("Hit 'o' to test DIO Out Scan\n");
     printf("Hit 'p' for pattern triggering\n");
     printf("Hit 'r' to reset the device\n");

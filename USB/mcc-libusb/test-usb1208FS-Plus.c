@@ -120,7 +120,7 @@ int main (int argc, char **argv)
     printf("Hit 'b' to blink\n");
     printf("Hit 'c' to test counter\n");
     printf("Hit 'C' to test continuous sampling.\n");
-    printf("Hit 'd' to test digitial IO\n");
+    printf("Hit 'd' to test digital IO\n");
     printf("Hit 'i' to test Analog Input\n");
     printf("Hit 'I' to test Analog Input Scan\n");
     printf("Hit 'o' to test Analog Output\n");

@@ -53,13 +53,13 @@ int main (int argc, char **argv)
   int ret;
   int device;
   uint32_t period;
-
   uint16_t version;
 
   char serial[9];
   uint8_t input;
   uint8_t options;
   uint8_t timer;
+  uint8_t debounce;
 
 
   udev = NULL;
@@ -95,7 +95,8 @@ int main (int argc, char **argv)
     printf("----------------\n");
     printf("Hit 'b' to blink\n");
     printf("Hit 'c' to test counter\n");
-    printf("Hit 'd' to test digitial IO\n");
+    printf("Hit 'd' to test digital IO\n");
+    printf("Hit 'D' to set counter debounce\n");
     printf("Hit 'r' to reset the device\n");
     printf("Hit 's' to get serial number\n");
     printf("Hit 'S' to get Status\n");
@@ -143,6 +144,22 @@ int main (int argc, char **argv)
 	  }
         } while (toContinue());
         break;
+      case 'D':
+	printf("Set and read debounce options of all 8 counters\n");
+	debounce = 0x10;     // 25.5 ms delay, trigger after stable
+	for (i = 0; i < 8; i++) {
+	  usbCounterDebounceW_USB_CTR(udev, i, debounce);
+	  usbCounterDebounceR_USB_CTR(udev, i, &input);
+	  printf("Counter %d  desired value = %#x  actual value read = %#x\n", i, debounce, input);
+	}
+	debounce = 0x0;     // disable debounce
+	printf("\n");
+	for (i = 0; i < 8; i++) {
+	  usbCounterDebounceW_USB_CTR(udev, i, debounce);
+	  usbCounterDebounceR_USB_CTR(udev, i, &input);
+	  printf("Counter %d  desired value = %#x  actual value read = %#x\n", i, debounce, input);
+	}
+        break;    
       case 'e':
         cleanup_USB_CTR(udev);
         return 0;

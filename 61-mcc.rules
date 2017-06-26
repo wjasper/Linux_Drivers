@@ -70,6 +70,8 @@ SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="0133", MODE="0666"
 SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="0134", MODE="0666"
 SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="0135", MODE="0666"
 SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="0136", MODE="0666"
+SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="013d", MODE="0666"
+SUBSYSTEM=="usb", ATTR{idVendor}=="09db", ATTR{idProduct}=="013e", MODE="0666"
 SUBSYSTEM=="usb", ATTR{idVendor}=="10c4", ATTR{idProduct}=="0002", MODE="0666"
 
 # Enable non-root access to HID devices

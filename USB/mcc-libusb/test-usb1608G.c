@@ -135,7 +135,7 @@ int main (int argc, char **argv)
     printf("Hit 'b' to blink\n");
     printf("Hit 'c' to test counter\n");
     printf("Hit 'C' to test continuous sampling at 1000 Hz.\n");
-    printf("Hit 'd' to test digitial IO\n");
+    printf("Hit 'd' to test digital IO\n");
     printf("Hit 'i' to test Analog Input\n");
     printf("Hit 'I' to test Analog Input Scan\n");
     printf("Hit 'o' to test Analog Output\n");
@@ -423,7 +423,7 @@ int main (int argc, char **argv)
         usbFPGAVersion_USB1608G(udev, &version);
 	printf("FPGA version %02x.%02x\n", version >> 0x8, version & 0xff);
 	break;
-    default:
+      default:
         break;
     }
   }
