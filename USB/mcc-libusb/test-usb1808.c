@@ -63,6 +63,7 @@ int main (int argc, char **argv)
   uint8_t input;
   int temp, ret;
   uint8_t options;
+  uint8_t timer;
   char serial[9];
   uint32_t count, period;
   uint16_t version;
@@ -397,6 +398,22 @@ int main (int argc, char **argv)
 	if (status & AOUT_SCAN_DONE)     printf("    AOUT scan done.\n");
 	if (status & FPGA_CONFIGURED)    printf("    FPGA configured.\n");
 	if (status & FPGA_CONFIG_MODE)   printf("    in FPGA configuration mode.\n");
+	break;
+      case 't':
+	printf("Test timers.\n");
+	printf("Enter desired frequency: ");
+	scanf("%lf", &frequency);
+	if (frequency == 0.0) {
+	  usbTimerControlW_USB1808(udev, timer, 0x0);  // stop timer
+	  break;
+	}
+	printf("Enter desired duty cycle (0-1.0): ");
+	scanf("%lf", &duty_cycle);
+	printf("Enter timer (0-1): ");
+	scanf("%hhd", &timer);
+	usbTimerControlW_USB1808(udev, timer, 0x0);  // stop timer
+	usbTimerParametersW_USB1808(udev, timer, frequency, duty_cycle, 0, 0);
+	usbTimerControlW_USB1808(udev, timer, TIMER_ENABLE);  // enable timer
 	break;
       case 'v':
 	version = 0xbeef;
