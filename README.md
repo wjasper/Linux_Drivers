@@ -35,7 +35,7 @@ USB drivers are in the USB directory, etc.
 
 I have written drivers for the following boards:
 
-##PCI Cards:
+**PCI Cards**
 1. PCI-DAS08                              
 2. PCI-DAS1602/16                        
 3. PCI-DAS4020/12                         
@@ -56,16 +56,16 @@ I have written drivers for the following boards:
 18. PCIM-DAS1602/16
 19. PCIM-DAS16Jr/16
 
-##Ethernet
+**Ethernet**
 1. E-1608 
 2. E-DIO24
 3. E-TC 
 4. E-TC32
 
-##Bluetooth
+**Bluetooth**
 1. BTH-1208LS
 
-##USB
+**USB**
 *Uses the libusb.1.0/HIDAPI*   
    USB-1208FS, USB-1024LS, USB-1024HLS, USB-1608FS, USB-1208LS
    USB-TC, USB-TEMP, USB-1096HFS, USB-1616FS miniLAB-1008, USB-5201, USB-5203
