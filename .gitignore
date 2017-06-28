@@ -29,6 +29,7 @@ test-usb1208LS
 test-usb1208FS
 test-usb1408FS
 test-usb1608FS
+test-usb1808
 test-usb7202
 test-usb7204
 test-usb-tc
