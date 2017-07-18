@@ -145,19 +145,36 @@ int main (int argc, char **argv)
         } while (toContinue());
         break;
       case 'D':
-	printf("Set and read debounce options of all 8 counters\n");
-	debounce = 0x10;     // 25.5 ms delay, trigger after stable
-	for (i = 0; i < 8; i++) {
-	  usbCounterDebounceW_USB_CTR(udev, i, debounce);
-	  usbCounterDebounceR_USB_CTR(udev, i, &input);
-	  printf("Counter %d  desired value = %#x  actual value read = %#x\n", i, debounce, input);
+	printf("Set and test debounce options.\n");
+	printf("Connect TMR0 to COIN.\n");
+        frequency = 1000;              // set
+	printf("frequency = %.1f\n", frequency);
+	timer = 0;
+	i = 0;
+        for (debounce = 0; debounce <= 16; debounce++) {
+	  printf("Setting debounce = %d:  ", debounce);
+	  usbCounterDebounceW_USB_CTR(udev, 0, debounce);
+	  usbCounterDebounceR_USB_CTR(udev, 0, &input);
+	  usbCounterSet_USB_CTR(udev, 0, 0x0);       // set counter 0 to zero
+	  usbCounterModeW_USB_CTR(udev, 0, 0x0);
+	  usbCounterOptionsW_USB_CTR(udev, 0, 0x0);  // count on rising edge
+	  usbCounterGateConfigW_USB_CTR(udev, 0, 0); // disable gate
+	  usbCounterOutConfigW_USB_CTR(udev, 0, 0);  // Output off
+	  period = 96.E6/frequency - 1;
+	  usbTimerPeriodW_USB_CTR(udev, timer, period);
+	  usbTimerPulseWidthW_USB_CTR(udev, timer, period/2);
+	  usbTimerCountW_USB_CTR(udev, timer, 0);
+	  usbTimerDelayW_USB_CTR(udev, timer, 0);
+	  usbTimerControlW_USB_CTR(udev, timer, 0x1); // turn timer 0 on
+	  sleep(1);
+	  usbTimerControlW_USB_CTR(udev, timer, 0x0); // turn timer 0 off
+	  printf("Count = %lld.\n", (long long) usbCounter_USB_CTR(udev, 0));
 	}
 	debounce = 0x0;     // disable debounce
 	printf("\n");
 	for (i = 0; i < 8; i++) {
 	  usbCounterDebounceW_USB_CTR(udev, i, debounce);
 	  usbCounterDebounceR_USB_CTR(udev, i, &input);
-	  printf("Counter %d  desired value = %#x  actual value read = %#x\n", i, debounce, input);
 	}
         break;    
       case 'e':
