@@ -207,6 +207,18 @@ int main(int argc, char**argv)
 		 range, channel,  i, value, volts_E1608(value, range));
 	  usleep(50000);	  
 	}
+	printf("Reading from all channels\n");
+	AIn_E1608(&device_info, 0, range, &value);
+	AIn_E1608(&device_info, 1, range, &value);
+	AIn_E1608(&device_info, 2, range, &value);
+	AIn_E1608(&device_info, 3, range, &value);
+	AIn_E1608(&device_info, 4, range, &value);
+	AIn_E1608(&device_info, 5, range, &value);
+	AIn_E1608(&device_info, 6, range, &value);
+	AIn_E1608(&device_info, 7, range, &value);
+	channel = 7;
+	printf("Range %d  Channel %d   Sample[%d] = %#x Volts = %lf\n",
+	       range, channel,  i, value, volts_E1608(value, range));
         break;
       case 'I':
 	printf("Testing E-1608 Analog Input Scan.\n");
