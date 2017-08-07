@@ -197,8 +197,7 @@ int main (int argc, char **argv)
 	} while (!isalpha(getchar()));
 	fcntl(fileno(stdin), F_SETFL, flag);
         usbAInScanStop_USB2408(udev);
-	usbReset_USB2408(udev);
-        libusb_close(udev);
+	libusb_clear_halt(udev, LIBUSB_ENDPOINT_IN|1);
         sleep(2); // let things settle down.
         break;
       case 'd':
