@@ -978,10 +978,13 @@ double volts_USB1208HS(const uint8_t mode, const uint8_t gain, uint16_t value)
   if (mode == DIFFERENTIAL) {
     switch (gain) {
       case BP_20V_DE:
+	volt = (value - 4096.)*20./4096.;
         break;
       case BP_10V_DE:
+	volt = (value - 4096.)*10./4096.;
         break;
       case BP_5V_DE:
+	volt = (value - 4096.)*5./4096.;
         break;
     }
   } else {

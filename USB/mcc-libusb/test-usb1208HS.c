@@ -231,10 +231,23 @@ int main (int argc, char **argv)
 	  case '4': gain = UP_10V; break;
 	  default:  gain = BP_10V; break;
 	}
+
 	mode = SINGLE_ENDED;
 	for (i = 0; i < NCHAN_1208HS; i++) {
 	  range[i] = gain;
 	}
+
+	/*
+        uncomment for differential mode.  For channel 0, the input pairs are AIN0/AIN1
+        use even values for range in differential mode.
+	mode = DIFFERENTIAL;
+	gain = BP_5V_DE;
+	range[0] = gain;
+	range[2] = gain;
+	range[4] = gain;
+	range[6] = gain;
+	*/
+	
 	usbAInConfig_USB1208HS(udev, mode, range);
 	for (i = 0; i < 20; i++) {
 	  value = usbAIn_USB1208HS(udev, channel);
