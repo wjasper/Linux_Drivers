@@ -62,7 +62,7 @@ int main (int argc, char **argv)
   uint16_t version;
 
   uint16_t value;
-  uint16_t dataAIn[256*20];  // holds 16 bit unsigned analog input data, must be multiple of 256.
+  uint16_t dataAIn[512*20];  // holds 16 bit unsigned analog input data, must be multiple of 256.
   uint8_t mode, gain, channel;
 
 
@@ -209,7 +209,7 @@ int main (int argc, char **argv)
 	usbAInScanClearFIFO_USB2020(device.udev);
 	printf("Enter desired sampling frequency (greater than 1000): ");
 	scanf("%lf", &frequency);
-        nSamples = 0;       // put in coninuous mode
+        nSamples = 0;       // put in continuous mode
         channel = 0;        // use channel 0
         gain = BP_10V;      // set gain to +/- 10 V
 	mode = (LAST_CHANNEL | SINGLE_ENDED);
@@ -223,11 +223,11 @@ int main (int argc, char **argv)
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
         do {
-	  usbAInScanRead_USB2020(device.udev, 256, 1, &dataAIn[0], 2000, CONTINUOUS);
-          if (i%100 == 0) {
-	    printf("Scan = %d.\n", i);
+	  i++;
+	  usbAInScanRead_USB2020(device.udev, 1024, 1, &dataAIn[0], 2000, CONTINUOUS);
+          if (i%((int)frequency/1024) == 0) {
+	    printf("Scan = %d.  Samples read = %d\n", i, 1024*i);
 	  }
-          i++;
 	} while (!isalpha(getchar()));
 	fcntl(fileno(stdin), F_SETFL, flag);
 	usbAInScanStop_USB2020(device.udev);
