@@ -72,12 +72,12 @@ extern "C" {
 #define BP_2V  0x2    // +/- 2V
 #define BP_1V  0x3    // +/- 1V
 
-/* Options for AInScan*/
+/* Options for AInScan */
 #define CONTINUOUS         (0x1 << 1) // continuous mode
 #define TRIGGER            (0x1 << 3) // 1 = use trigger or gate
 #define PACER_OUT          (0x1 << 5) // 1 = External Pacer Output, 0 = External Pacer Input
 #define RETRIGGER          (0x1 << 6) // 1 = retrigger mode, 0 = normal trigger
-#define DDR_RAM            (0x1 << 7) // 1 = Use DDR RAM as storage, 0 = Stream via USB
+#define DDR_RAM            (0x1 << 7) // 1 = Use DDR RAM as storage (BURSTIO) , 0 = Stream via USB
   
 /* Status bit values */
 #define AIN_SCAN_RUNNING   (0x1 << 1)

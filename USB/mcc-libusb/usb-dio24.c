@@ -26,6 +26,24 @@
 #include "pmd.h"
 #include "usb-dio24.h"
 
+/* Commands and Codes for USB-DIO24 HID reports */
+#define DCONFIG     (0x0D)     // Configure digital port
+#define DIN         (0x00)     // Read digital port
+#define DOUT        (0x01)     // Write digital port
+#define DBIT_IN     (0x02)     // Read Digital port bit
+#define DBIT_OUT    (0x03)     // Write Digital port bit
+
+#define CINIT       (0x05)     // Initialize counter
+#define CIN         (0x04)     // Read Counter
+
+#define MEM_READ    (0x09)     // Read Memory
+#define MEM_WRITE   (0x0A)     // Write Memory
+
+#define BLINK_LED   (0x0B)     // Causes LED to blink
+#define RESET       (0x11)     // Reset USB interface
+#define SET_ID      (0x0C)     // Set the user ID
+#define GET_ID      (0x0F)     // Get the user ID
+
 static uint8_t PortC = 0;
 
 /* configures digital port */
