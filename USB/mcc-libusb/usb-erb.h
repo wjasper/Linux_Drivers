@@ -31,25 +31,6 @@ extern "C" {
 #define DIO_PORTC_LOW (0x2)
 #define DIO_PORTC_HI  (0x3)
 
-/* Commands and Codes for USB ERB08/24 HID reports */
-#define DIN              (0x03) // Read digital port
-#define DOUT             (0x04) // Write digital port
-#define DBIT_IN          (0x05) // Read Digital port bit
-#define DBIT_OUT         (0x06) // Write Digital port bit
-
-#define MEM_READ         (0x30) // Read Memory
-#define MEM_WRITE        (0x31) // Write Memory
-
-#define BLINK_LED        (0x40) // Causes LED to blink
-#define RESET            (0x41) // Reset USB interface
-#define GET_STATUS       (0x44) // Retrieve device status
-#define GET_TEMP         (0x47) // Retrieve board temperature
-
-#define PREPARE_DOWNLOAD (0x50) // Prepare for program memory download
-#define WRITE_CODE       (0x51) // Write program memory
-#define WRITE_SERIAL     (0x53) // Write new serial number to device
-#define READ_CODE        (0x55) // Read program memory
-
 /* function prototypes for the USB-ERB */
 uint8_t usbDIn_USBERB(hid_device *hid, uint8_t port);
 void usbDOut_USBERB(hid_device *hid, uint8_t port, uint8_t value);

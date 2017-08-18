@@ -27,6 +27,32 @@
 #include "pmd.h"
 #include "usb-1208LS.h"
 
+/* Commands and Codes for USB 1208-LS HID reports */
+#define DCONFIG     (0x0D)     // Configure digital port
+#define DIN         (0x00)     // Read digital port
+#define DOUT        (0x01)     // Write digital port
+#define DBIT_IN     (0x02)     // Read digital port bit
+#define DBIT_OUT    (0x03)     // Write digital port bit
+
+#define AIN         (0x06)     // Read analog input channel
+#define AIN_SCAN    (0x0E)     // Scan analog channels
+#define AIN_STOP    (0x10)     // Stop scan
+#define ALOAD_QUEUE (0x07)     // Load the channel/gain queue
+
+#define AOUT        (0x08)     // Write analog output channel
+
+#define CINIT       (0x05)     // Initialize counter
+#define CIN         (0x04)     // Read Counter
+
+#define MEM_READ    (0x09)     // Read Memory
+#define MEM_WRITE   (0x0A)     // Write Memory
+
+#define BLINK_LED   (0x0B)     // Causes LED to blink
+#define RESET       (0x11)     // Reset USB interface
+#define SET_TRIGGER (0x14)     // Configure external trigger
+#define SET_ID      (0x0C)     // Set the user ID
+#define GET_ID      (0x0F)     // Get the user ID
+
 enum Mode {Differential, SingleEnded};
 
 /* configures digital port */

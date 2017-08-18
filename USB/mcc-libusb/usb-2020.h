@@ -27,39 +27,6 @@ extern "C" {
 
 #define USB2020_PID (0x011c)
 
-
-/* Commands and HID Report ID for USB 2020  */
-/* Digital I/O Commands */
-#define DTRISTATE        (0x00)   // Read/Write Tristate register
-#define DPORT            (0x01)   // Read digital port pins
-#define DLATCH           (0x02)   // Read/Write Digital port output latch register
-
-/* Analog Input Commands */
-#define AIN              (0x10)  // Read analog input channel
-#define AIN_SCAN_START   (0x12)  // Start input scan
-#define AIN_SCAN_STOP    (0x13)  // Stop input scan
-#define AIN_CONFIG       (0x14)  // Analog input channel configuration
-#define AIN_CLR_FIFO     (0x15)  // Clear firmware analog input FIFO
-
-/* Memory Commands */
-#define MEMORY            (0x30)  // Read/Write EEPROM
-#define MEM_ADDRESS       (0x31)  // EEPROM read/write address value
-#define MEM_WRITE_ENABLE  (0x32)  // Enable writes to firmware area
-
-/* Miscellaneous Commands */  
-#define STATUS            (0x40)  // Read device status
-#define BLINK_LED         (0x41)  // Causes LED to blink
-#define RESET             (0x42)  // Reset device
-#define TRIGGER_CONFIG    (0x43)  // External trigger configuration
-#define CAL_CONFIG        (0x44)  // Calibration configuration
-#define TEMPERATURE       (0x45)  // Read internal temperature
-#define SERIAL            (0x48)  // Read/Write USB Serial Number
-
-/* FPGA Configuration Commands */
-#define FPGA_CONFIG       (0x50) // Start FPGA configuration
-#define FPGA_DATA         (0x51) // Write FPGA configuration data
-#define FPGA_VERSION      (0x52) // Read FPGA version
-
 /* Aanalog Input */
 #define SINGLE_ENDED   0
 #define CALIBRATION    1

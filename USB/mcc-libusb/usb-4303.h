@@ -26,53 +26,6 @@ extern "C" {
 #define USB4301_PID  (0x00ae)
 #define USB4303_PID  (0x00b9)
 
-/* Commands and Codes for USB 4303 HID reports */
-#define DIN              (0x03) // Read digital port
-#define DOUT             (0x04) // Write digital port
-#define DBIT_IN          (0x05) // Read Digital port bit
-#define DBIT_OUT         (0x06) // Write Digital port bit
-
-/* Counter Commands */
-#define LOAD             (0x20) // Load the selected counter(s)
-#define SAVE             (0x21) // Save the selected counter(s)
-#define ARM              (0x22) // Arm the selected counter(s)
-#define DISARM           (0x23) // Disarm the selected counter(s)
-#define READ             (0x24) // Read counter value
-#define SET_TOGGLE       (0x25) // Set or Clear counter toggle output
-#define STEP             (0x26) // Step counter up or down
-
-/* 9513 Commands */
-#define SET9513CONFIG    (0x27) // Set 9513 configuration
-#define GET9513CONFIG    (0x28) // Get 9513 configuration
-#define SETOSCOUT        (0x29) // Enable/disable oscillator output
-#define SETREGISTER      (0x2a) // Set register value
-#define GETREGISTER      (0x2b) // Get register value
-#define RESET9513        (0x2c) // Reset 9513 chip to default settings
-#define SELECT9513CLOCK  (0x2e) // Select the counter chip's internal clock
-#define READFREQ         (0x2f) // Measure frequency
-
-/* Memory Commands */
-#define MEM_READ         (0x30) // Read Memory
-#define MEM_WRITE        (0x31) // Write Memory
-
-/* Miscellaneous Commands */
-#define BLINK_LED        (0x40) // Causes LED to blink
-#define RESET            (0x41) // Reset USB interface
-#define GET_STATUS       (0x44) // Retrieve device status
-#define INTERRUPT_CONFIG (0x45) // Configure external interrupt pin
-
-/* Code Update Commands */
-#define PREPARE_DOWNLOAD (0x50) // Prepare for program memory download
-#define WRITE_CODE       (0x51) // Write program memory
-#define WRITE_SERIAL     (0x53) // Write new serial number to device
-#define READ_CODE        (0x55) // Read program memory
-
-/* 9513 Direct Port Access Commands */
-#define WRITE_COMMAND    (0x60) // Write 9513 command port
-#define READ_COMMAND     (0x61) // Read 9513 command port
-#define WRITE_DATA       (0x62) // Write 9513 data port
-#define READ_DATA        (0x63) // Read 9513 data port
-
 #define CHIP_1            (1)
 #define CHIP_2            (2)
 #define COUNTER_1      (0x01)

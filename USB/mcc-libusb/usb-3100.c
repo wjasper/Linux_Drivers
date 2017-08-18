@@ -27,6 +27,33 @@
 #include "pmd.h"
 #include "usb-3100.h"
 
+/* Commands and  Report ID for the USB 31XX */
+#define DCONFIG          (0x01)  // Configure digital port
+#define DCONFIG_BIT      (0x02)  // Configure individual digital port bits
+#define DIN              (0x03)  // Read digital port
+#define DOUT             (0x04)  // Write digital port
+#define DBIT_IN          (0x05)  // Read digital port bit
+#define DBIT_OUT         (0x06)  // Write digital port bit
+
+#define AOUT             (0x14)  // Write analog output channel
+#define AOUT_SYNC        (0x15)  // Synchronously update outputs
+#define AOUT_CONFIG      (0x1C)  // Configure analog output channel
+
+#define CINIT            (0x20)  // Initialize counter
+#define CIN              (0x21)  // Read Counter
+
+#define MEM_READ         (0x30)  // Read Memory
+#define MEM_WRITE        (0x31)  // Write Memory
+
+#define BLINK_LED        (0x40)  // Causes LED to blink
+#define RESET            (0x41)  // Reset USB interface
+#define SET_SYNC         (0x43)  // Configure sync input/output
+#define GET_STATUS       (0x44)  // Get device status
+
+#define PREPARE_DOWNLOAD (0x50)  // Prepare for program memory download
+#define WRITE_CODE       (0x51)  // Write program memory
+#define WRITE_SERIAL     (0x53)  // Write a new serial number to device
+
 #define FS_DELAY 1000
 
 static USB31XX_CalibrationTable CalTable[NCHAN_31XX];

@@ -31,56 +31,6 @@ extern "C" {
 
 #define NTIMER    4        // Number of PWM Timers
 #define NCOUNTER  8        // Number of Counters
-  
-
- /* Commands and HID Report ID for USB-CTR  */
- /* Digital I/O Commands */
-#define DTRISTATE            (0x00)  // Read/Write Tristate register
-#define DPORT                (0x01)  // Read digital port pins
-#define DLATCH               (0x02)  // Read/Write Digital port output latch register
-  
-/* Counter Commands */
-#define COUNTER              (0x10)  // Read or set the counter's value
-#define COUNTER_MODE         (0x11)  // Read or set the counter's mode
-#define COUNTER_OPTIONS      (0x12)  // Read or set the counter's options
-#define COUNTER_DEBOUNCE     (0x13)  // Read or set the counter's debounce options
-#define COUNTER_GATE_CONFIG  (0x14)  // Read or set the options for the Counter Gate
-#define COUNTER_OUT_CONFIG   (0x15)  // Read or set the options for the Counter Out
-#define COUNTER_OUT_VALUES   (0x16)  // Read or set the counter's output values
-#define COUNTER_LIMIT_VALUES (0x17)  // Read or set the limit values
-#define COUNTER_PARAMETERS   (0x18)  // Read or set all of one counter's parameters
-  
-/* Acquisition Comands */
-#define SCAN_CONFIG          (0x20)  // Read/Write the scan list
-#define SCAN_START           (0x21)  // Start input scan
-#define SCAN_STOP            (0x22)  // Stop input scan
-#define SCAN_CLEAR_FIFO      (0x23)  // Clear data in the input FIFO
-#define BULK_FLUSH           (0x24)  // Flush the Bulk pipe
-
-/* Timer Commands */
-#define TIMER_CONTROL        (0x28)  // Read/Write timer control register
-#define TIMER_PERIOD         (0x29)  // Read/Write timer period register
-#define TIMER_PULSE_WIDTH    (0x2A)  // Read/Write timer pulse width registers
-#define TIMER_COUNT          (0x2B)  // Read/Write timer count registers
-#define TIMER_START_DELAY    (0x2C)  // Read/Write timer start delay registers
-#define TIMER_PARAMETERS     (0x2D)  // Read/Write all timer parameters at once
-
-/* Memory Commands */
-#define MEMORY               (0x30)  // Read/Write EEPROM
-#define MEM_ADDRESS          (0x31)  // EEPROM read/write address value
-#define MEM_WRITE_ENABLE     (0x32)  // Enable writes to firmware area
-
-/* Miscellaneous Commands */
-#define STATUS               (0x40)  // Read device status
-#define BLINK_LED            (0x41)  // Causes the LED to blink
-#define RESET                (0x42)  // Reset the device
-#define TRIGGER_CONFIG       (0x43)  // External trigger configuration
-#define SERIAL               (0x48)  // Read/Write USB Serial Number
-
-/* FPGA Configuration Commands */
-#define FPGA_CONFIG          (0x50) // Start FPGA configuration
-#define FPGA_DATA            (0x51) // Write FPGA configuration data
-#define FPGA_VERSION         (0x52) // Read FPGA version
 
   /* Status bit values */
 #define PACER_RUNNING      (0x1 << 1)

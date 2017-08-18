@@ -28,46 +28,6 @@ extern "C" {
 #define USB1608HS_PID (0x00bd)
 #define USB1608HS_2AO_PID (0x0099)
 
-/* Commands and USB Report ID for USB 1608HS  */
-/* Digital I/O Commands */
-#define DIN           (0x00)     // Read digital port
-#define DIN_BIT       (0x01)     // Read digital port bit
-#define DOUT          (0x08)     // Write digital port
-#define DOUT_BIT      (0x09)     // Write digital port bit
-
-/* Analog Input Commands */
-#define AIN           (0x10)     // Read analog input channel
-#define AIN_SCAN_CFG  (0x11)     // Analog input scan configuration
-#define AIN_START     (0x12)     // Start input scan
-#define AIN_STOP      (0x13)     // Stop input scan
-#define AIN_CONFIG    (0x14)     // Analog input channel configuration
-
-/* Analog Output Commands */
-#define AOUT          (0x18)     // Write analog output channel
-#define AOUT_SCAN_CFG (0x19)     // Analog output scan configuration
-#define AOUT_START    (0x1A)     // Start analog ouput scan
-#define AOUT_STOP     (0x1B)     // Stop analog output scan
-#define AOUT_CONFIG   (0x1D)     // Analog output channel configuration
-
-/* Miscellaneous Commands */
-#define COUNTER     (0x20)     // Counter Value
-#define MEMORY      (0x30)     // Read/Write EEPROM
-#define MEM_ADDRESS (0x31)     // EEPROM read/write address value
-#define STATUS      (0x40)     // Read device status
-#define BLINK_LED   (0x41)     // Causes LED to blink
-#define RESET       (0x42)     // Reset device
-#define TRIGGER_CFG (0x43)     // External trigger configuration
-#define CAL_CONFIG  (0x44)     // Calibration configuration
-#define TEMPERATURE (0x45)     // Read internal temperature
-#define SERIAL      (0x48)     // Read/Write USB Serial Number
-
-/* Code Update Commands */
-#define UPDATE_MODE      (0x50) // Put device into update mode
-#define UPDATE_ADDRESS   (0x51) // Update address
-#define UPDATE_DATA      (0x52) // Update data
-#define UPDATE_VERSION   (0x53) // Update code version
-#define UPDATE_CHECKSUM  (0x54) // Read/reset code update checksum
-
 #define EXT_TRIG_FAILING_EDGE 0;
 #define EXT_TRIG_RAISING_EDGE 1;
 

@@ -29,49 +29,6 @@ extern "C" {
 #define USB1208HS_2AO_PID (0x00c5)
 #define USB1208HS_4AO_PID (0x00c6)
 
-/* Commands and USB Report ID for USB 1208HS  */
-/* Digital I/O Commands */
-#define DTRISTATE            (0x00) // Read/write digital tristate register
-#define DPORT                (0x01) // Read digital port pins
-#define DLATCH               (0x02) // Read/write digital port output latch register
-
-/* Analog Input Commands */
-#define AIN                  (0x10) // Read analog input channel
-#define AIN_SCAN_START       (0x12) // Start analog input scan
-#define AIN_SCAN_STOP        (0x13) // Stop analog input scan
-#define AIN_CONFIG           (0x14) // Analog input configuration
-
-/* Analog Output Commands */
-#define AOUT                 (0x18) // Read/write analog output channel
-#define AOUT_SCAN_START      (0x1a) // Start analog output scan
-#define AOUT_SCAN_STOP       (0x1b) // Stop analog output scan
-#define AOUT_CLEAR_FIFO      (0x1c) // Clear data in analog ouptut FIFO
-
-/* Counter/Timer Commands */
-#define COUNTER              (0x20) // Read/reset event counter
-#define TIMER_CONTROL        (0x28) // Read/write timer control register
-#define TIMER_PERIOD         (0x29) // Read/write timer period register
-#define TIMER_PULSE_WIDTH    (0x2a) // Read/write timer pulse width register
-#define TIMER_COUNT          (0x2b) // Read/write timer count register
-#define TIMER_START_DELAY    (0x2c) // Read/write timer start delay register
-#define TIMER_PARAMETERS     (0x2d) // Read/write timer parameters
-
-/* Memory Commands */
-#define MEMORY               (0x30) // Read/write EEPROM
-#define MEM_ADDRESS          (0x31) // Read/write EEPROM address value
-#define MEM_WRITE_ENABLE     (0x32) // Enable writes to firmware area
-
-/* Miscellaneous Commands */
-#define STATUS               (0x40) // Device Status
-#define BLINK_LED            (0x41) // Blink the LED
-#define RESET                (0x42) // Reset the device
-#define TRIGGER_CONFIG       (0x43) // External trigger configuration
-#define TEMPERATURE          (0x45) // Read internal temperature
-#define SERIAL               (0x48) // Read/write USB serial number
-#define FPGA_CONFIG          (0x50) // Start FPGA configuration
-#define FPGA_DATA            (0x51) // Write FPGA configuration data
-#define FPGA_VERSION         (0x52) // Read FPGA version
-
 /* Status bit values */
 #define AIN_SCAN_RUNNING   (0x1 << 1)
 #define AIN_SCAN_OVERRUN   (0x1 << 2)

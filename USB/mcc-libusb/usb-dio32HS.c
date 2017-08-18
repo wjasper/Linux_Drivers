@@ -29,6 +29,38 @@
 #include "usb-dio32HS.h"
 #include "usb-dio32HS.rbf"
 
+/* Commands and Codes for USB-DIO32HS reports */
+  // DIO Commands
+#define DTRISTATE            (0x00)  // Read/Write Tristate register
+#define DPORT                (0x01)  // Read digital port pins
+#define DLATCH               (0x02)  // Read/Write Digital port output latch register
+  // Register Commands
+#define READ_REG             (0x10)  // Read the specified register
+#define WRITE_REG            (0x11)  // Write the specified register
+  // Acquisition Commands
+#define IN_SCAN_START        (0x20)  // Start input scan
+#define IN_SCAN_STOP         (0x21)  // Stop input scan
+#define IN_SCAN_CLEAR_FIFO   (0x22)  // Clear data in the input FIFO
+#define IN_BULK_FLUSH        (0x23)  // Flush the input Bulk pipe
+#define OUT_SCAN_START       (0x24)  // Start output scan
+#define OUT_SCAN_STOP        (0x25)  // Stop output scan
+#define OUT_SCAN_CLEAR_FIFO  (0x26)  // Clear data in the output FIFO
+  // Memory Commands
+#define MEMORY               (0x30)  // Read/Write EEPROM
+#define MEM_ADDRESS          (0x31)  // EEPROM read/write address value
+#define MEM_WRITE_ENABLE     (0x32)  // Enable writes to firmware area
+  //Miscellaneojus Commands
+#define STATUS               (0x40)  // Device status
+#define BLINK_LED            (0x41)  // Blink the LED
+#define RESET                (0x42)  // Reset the device
+#define TRIGGER_CONFIG       (0x43)  // External trigger configuration
+#define PATTERN_DETECT       (0x44)  // Pattern Detection trigger configuration
+#define SERIAL               (0x48)  // Read/write USB serial number
+  // FPGA Commands
+#define FPGA_CONFIG          (0x50)  // Start FPGA configuration
+#define FPGA_DATA            (0x51)  // Write FPGA configuration data
+#define FPGA_VERSION         (0x52)  // Read FPGA version
+
 #define HS_DELAY 1000
 
 static int wMaxPacketSize;  // will be the same for all devices of this type so

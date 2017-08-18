@@ -27,6 +27,39 @@
 #include "pmd.h"
 #include "usb-1408FS.h"
 
+/* Commands and HID Report ID for USB 1408FS */
+#define DCONFIG          (0x01) // Configure digital port
+#define DIN              (0x03) // Read digital port
+#define DOUT             (0x04) // Write digital port
+
+#define AIN              (0x10) // Read analog input channel
+#define AIN_SCAN         (0x11) // Scan analog channels
+#define AIN_STOP         (0x12) // Stop input scan
+#define ALOAD_QUEUE      (0x13) // Load the channel/gain queue
+
+#define AOUT             (0x14) // Write analog output channel
+#define AOUT_SCAN        (0x15) // Output values to a range of output channels
+#define AOUT_STOP        (0x16) // Stop output scan
+
+#define CINIT            (0x20) // Initialize counter
+#define CIN              (0x21) // Read Counter
+
+#define MEM_READ         (0x30) // Read Memory
+#define MEM_WRITE        (0x31) // Write Memory
+
+#define BLINK_LED        (0x40) // Causes LED to blink
+#define RESET            (0x41) // Reset USB interface
+#define SET_TRIGGER      (0x42) // Configure external trigger
+#define SET_SYNC         (0x43) // Configure sync input/output
+#define GET_STATUS       (0x44) // Get device status
+#define SET_CAL          (0x45) // Set calibaration output
+#define GET_ALL          (0x46) // Get all analog and digital input values
+
+#define PREPARE_DOWNLOAD (0x50) // Prepare for program memory download
+#define WRITE_CODE       (0x51) // Write program memory
+#define WRITE_SERIAL     (0x53) // Write a new serial number to device
+#define READ_CODE        (0x55) // Read program memory
+
 #define FS_DELAY 2000
 
 enum Mode {Differential, SingleEnded};

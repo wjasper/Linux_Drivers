@@ -24,6 +24,7 @@
 
 #include "pmd.h"
 #include "usb-temp.h"
+#include "usb-1024LS.h"
 
 #define MAX_STR 255
 

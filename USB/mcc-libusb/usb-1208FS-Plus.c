@@ -28,11 +28,49 @@
 #include "pmd.h"
 #include "usb-1208FS-Plus.h"
 
+/* Commands and USB Report ID for USB 1208FS-Plus and USB 1408FS-Plus */
+/* Digital I/O Commands */
+#define DTRISTATE       (0x00) // Read/Write Tristate register
+#define DPORT           (0x01) // Read digital port pins
+#define DLATCH          (0x02) // Read/Write Digital port output latch register
+
+/* Analog Input Commands */
+#define AIN             (0x10) // Read analog input channel
+#define AIN_SCAN_START  (0x11) // Start analog input scan
+#define AIN_SCAN_STOP   (0x12) // Stop analog input scan
+#define AIN_CONFIG      (0x14) // Analog input channel configuration
+#define AIN_CLR_FIFO    (0x15) // Clear the analog input scan FIFO
+#define AIN_BULK_FLUSH  (0x16) // Flush the bulk IN endpoint with empty packets
+
+/* Analog Output Commands */
+#define AOUT            (0x18) // Read/Write analog output channel
+#define AOUT_SCAN_START (0x1A) // Start analog output scan
+#define AOUT_SCAN_STOP  (0x1B) // Stop analog output scan
+#define AOUT_CLR_FIFO   (0x1C) // Clear the analog output scan FIFO
+
+/* Counter/Timer Commands */
+#define COUNTER         (0x20)  // Read/reset event counter
+
+/* Memory Commands */
+#define CAL_MEMORY      (0x30)  // Read/Write Calibration Memory
+#define USER_MEMORY     (0x31)  // Read/Write User Memory
+#define MBD_MEMORY      (0x32)  // Read/Write MBD Memory
+
+/* Miscellaneous Commands */  
+#define BLINK_LED       (0x41)  // Causes LED to blink
+#define RESET           (0x42)  // Reset device
+#define STATUS          (0x44)  // Read device status
+#define SERIAL          (0x48)  // Read/Write serial number
+#define DFU             (0x50)  // Enter device firmware upgrade mode
+
+/* MBD */
+#define MBD_COMMAND     (0x80) // Text-based MBD command / response
+#define MBD_RAW         (0x81) // Raw MBD response
+
 #define HS_DELAY 2000
 
 static int wMaxPacketSize;    // will be the same for all devices of this type so
                               // no need to be reentrant.
-
 static int nBits(uint8_t num)
 {
   int count = 0;

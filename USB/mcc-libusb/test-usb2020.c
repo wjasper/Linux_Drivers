@@ -60,11 +60,11 @@ int main (int argc, char **argv)
   uint8_t options;
   char serial[9];
   uint16_t version;
-
+  uint16_t status;
   uint16_t value;
   uint16_t dataAIn[512*20];  // holds 16 bit unsigned analog input data, must be multiple of 256.
+  uint16_t *dataAInBurst;    // pointer for BURSTIO data
   uint8_t mode, gain, channel;
-
 
   ret = libusb_init(NULL);
   if (ret < 0) {
@@ -97,6 +97,7 @@ int main (int argc, char **argv)
     printf("\nUSB 2020 Testing\n");
     printf("----------------\n");
     printf("Hit 'b' to blink\n");
+    printf("Hit 'B' for BURSTIO unsing onboard DDR RAM\n");
     printf("Hit 'd' to test digital IO\n");
     printf("Hit 'i' to test Analog Input\n");
     printf("Hit 'I' to test Analog Input Scan\n");
@@ -202,6 +203,48 @@ int main (int argc, char **argv)
 	usbAInScanStop_USB2020(device.udev);
 	usbAInScanClearFIFO_USB2020(device.udev);
         break;
+      case 'B':
+	printf("Testing USB-2020 Analog Input Scan BURSTIO mode.\n");
+	usbAInScanStop_USB2020(device.udev);
+	usbAInScanClearFIFO_USB2020(device.udev);
+        printf("Enter number of samples (less than 64 MB): ");
+        scanf("%d", &nSamples);
+	dataAInBurst = malloc(2*nSamples);
+	printf("Input channel [0-1]: ");
+        scanf("%hhd", &channel);
+	printf("Gain Range for channel %d: 1 = +/-10V  2 = +/- 5V  3 = +/- 2V  4 = +/- 1V: ",channel);
+	while((ch = getchar()) == '\0' || ch == '\n');
+	switch(ch) {
+	  case '1': gain = BP_10V; break;
+  	  case '2': gain = BP_5V; break;
+	  case '3': gain = BP_2V; break;
+	  case '4': gain = BP_1V; break;
+	  default:  gain = BP_10V; break;
+	}
+	mode = (LAST_CHANNEL | SINGLE_ENDED);
+        device.list[0].range = gain;
+        device.list[0].mode = mode;
+        device.list[0].channel = channel;
+	usbAInConfig_USB2020(device.udev, device.list);
+        printf("Enter sampling frequency [Hz]: ");
+	scanf("%lf", &frequency);
+        options = DDR_RAM;
+        for (i = 0; i < nSamples; i++) {
+          dataAInBurst[i] = 0xbeef;
+	}
+	usbAInScanStart_USB2020(device.udev, nSamples, 0, frequency, nSamples-1, options);
+	ret = usbAInScanRead_USB2020(device.udev, nSamples, 1, &dataAInBurst[0], 2000, options);
+	printf("Number samples read = %d\n", ret/2);
+	for (i = 0; i < nSamples; i++) {
+          dataAInBurst[i] &= 0xfff;
+	  dataAInBurst[i] = rint(dataAInBurst[i]*device.table_AIn[gain][0] + device.table_AIn[gain][1]);
+	  printf("Channel %d  Mode = %d  Gain = %d Sample[%d] = %#x Volts = %lf\n", channel,
+		 mode, gain, i, dataAInBurst[i], volts_USB2020(gain, dataAInBurst[i]));
+	}
+	usbAInScanStop_USB2020(device.udev);
+	usbAInScanClearFIFO_USB2020(device.udev);
+	free(dataAInBurst);
+        break;
       case 'C':
 	printf("Testing USB-2020 Analog Input Scan in continuous mode.\n");
         printf("Hit any key to exit\n");
@@ -241,7 +284,13 @@ int main (int argc, char **argv)
         printf("Serial number = %s\n", serial);
         break;
       case 'S':
-        printf("Status = %#x\n", usbStatus_USB2020(device.udev));
+	status = usbStatus_USB2020(device.udev);
+        printf("Status = %#x\n", status);
+	if (status & AIN_SCAN_RUNNING) printf("AIn pacer running.\n");
+	if (status & AIN_SCAN_OVERRUN) printf("AIn scan overrun.\n");
+	if (status & AIN_SCAN_DONE)    printf("AIn scan done.\n");
+	if (status & FPGA_CONFIGURED)  printf("FPGA is configured.\n");
+	if (status & FPGA_CONFIG_MODE) printf("In FPGA config mode.\n");
 	break;
       case 'T':
         usbTemperature_USB2020(device.udev, &temperature);

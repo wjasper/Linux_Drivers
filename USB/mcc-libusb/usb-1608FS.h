@@ -27,39 +27,6 @@ extern "C" {
 #define DIO_DIR_IN  (0x01)
 #define DIO_DIR_OUT (0x00)
 
-/* Commands and HID Report ID for USB 1608FS  */
-#define DCONFIG     (0x01)     // Configure digital port
-#define DCONFIG_BIT (0x02)     // Configure individual digital port bits
-#define DIN         (0x03)     // Read digital port
-#define DOUT        (0x04)     // Write digital port
-#define DBIT_IN     (0x05)     // Read digital port bit
-#define DBIT_OUT    (0x06)     // Write digital port bit
-
-#define AIN         (0x10)     // Read analog input channel
-#define AIN_SCAN    (0x11)     // Scan analog channels
-#define AIN_STOP    (0x12)     // Stop input scan
-#define ALOAD_QUEUE (0x13)     // Load the channel/gain queue
-
-#define CINIT       (0x20)     // Initialize counter
-#define CIN         (0x21)     // Read Counter
-
-#define MEM_READ    (0x30)     // Read Memory
-#define MEM_WRITE   (0x31)     // Write Memory
-
-#define BLINK_LED   (0x40)     // Causes LED to blink
-#define RESET       (0x41)     // Reset USB interface
-#define SET_TRIGGER (0x42)     // Configure external trigger
-#define SET_SYNC    (0x43)     // Configure sync input/output
-#define GET_STATUS  (0x44)     // Get device status
-#define SET_CAL     (0x45)     // Set calibaration output
-#define GET_ALL     (0x46)     // Get all analog and digital input values
-
-#define PREPARE_DOWNLOAD (0x50) // Prepare for program memory download
-#define WRITE_CODE       (0x51) // Write program memory
-#define READ_CHECKSUM    (0x52) // Return program memory checksum
-#define WRITE_SERIAL     (0x53) // Write a new serial number to device
-#define READ_CODE        (0x55) // Read program memory
-
 #define EXT_TRIG_FAILING_EDGE 0;
 #define EXT_TRIG_RAISING_EDGE 1;
 #define SYNC_MASTER 0
@@ -113,8 +80,8 @@ typedef struct Calibration_AIN_t {
   The device must be set to be a sync slave with the usbSetSync
   command prior to using this mode.  Data will be acquired on all
   specified channels when the sync edge is detected.
-    
 */
+
 #define AIN_EXECUTION     0x1  // 1 = single execution, 0 = continuous execution
 #define AIN_BURST_MODE    0x2  // 1 = burst I/O mode,   0 = normal I/O mode
 #define AIN_TRANSFER_MODE 0x4  // 1 = Immediate Transfer mode  0 = block transfer mode

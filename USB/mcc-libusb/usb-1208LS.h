@@ -35,32 +35,6 @@ extern "C" {
 #define MINILAB_CLOCK (6000000L)  // 6 MHz clock
 #define LS_DELAY (1500)
 
-/* Commands and Codes for USB 1208-LS HID reports */
-#define DCONFIG     (0x0D)     // Configure digital port
-#define DIN         (0x00)     // Read digital port
-#define DOUT        (0x01)     // Write digital port
-#define DBIT_IN     (0x02)     // Read digital port bit
-#define DBIT_OUT    (0x03)     // Write digital port bit
-
-#define AIN         (0x06)     // Read analog input channel
-#define AIN_SCAN    (0x0E)     // Scan analog channels
-#define AIN_STOP    (0x10)     // Stop scan
-#define ALOAD_QUEUE (0x07)     // Load the channel/gain queue
-
-#define AOUT        (0x08)     // Write analog output channel
-
-#define CINIT       (0x05)     // Initialize counter
-#define CIN         (0x04)     // Read Counter
-
-#define MEM_READ    (0x09)     // Read Memory
-#define MEM_WRITE   (0x0A)     // Write Memory
-
-#define BLINK_LED   (0x0B)     // Causes LED to blink
-#define RESET       (0x11)     // Reset USB interface
-#define SET_TRIGGER (0x14)     // Configure external trigger
-#define SET_ID      (0x0C)     // Set the user ID
-#define GET_ID      (0x0F)     // Get the user ID
-
 #define OFFSET_ADJUSTMENT  (0x1F00)   // Offset Adjustment for the A/D        0x1F00 - 0x1F4F
 #define SE_GAIN_ADJUSTMENT (0x1F50)   // Single Ended Gain Adjustment for A/D 0x1F50 - 0x1F5F
 #define DE_GAIN_ADJUSTMENT (0x1F60)   // Differential Gain Adjustment for A/D 0x1F60 - 0x1F67
@@ -70,7 +44,6 @@ extern "C" {
 #define EXT_TRIG_RAISING_EDGE 1;
 
 // Gain Ranges
-
 #define SE_10_00V  (0x8)           // Single Ended +/- 10.0 V
 
 #define BP_20_00V  (0x00)           // Differential +/- 20.0 V

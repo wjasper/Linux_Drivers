@@ -27,46 +27,6 @@ extern "C" {
 
 #define USB7204_PID    (0x00f0)
 
-/* Commands and USB Report ID for USB-7204 */
-
-/* MBD Control Transfers */
-#define STRING_MESSAGE (0x80)  // Send string messages to the device
-#define RAW_DATA       (0x81)  // Return RAW data from the device
-
-/* UL Control TRansfers */
-    // Digital I/O Commands
-#define DCONFIG_PORT    (0x0)   // Configure digital port
-#define DPORT           (0x2)   // Read/Write digital port
-    // Analog Input Commands
-#define AIN             (0x10)  // Read analog input channel
-#define AIN_SCAN        (0x11)  // Scan analog input channels
-#define AIN_STOP        (0x12)  // Stop ananlog input scan
-#define ALOAD_QUEUE     (0x13)  // Load the channel/gain queue
-    // Analog Output Commands
-#define AOUT            (0x14)  // Write analog output channel
-#define AOUT_SCAN       (0x15)  // Scan analog output
-#define AOUT_STOP       (0x16)  // Stop output scan
-#define AOUT_RESET      (0x17)  // Clear USB Buffer, FIFO and Status/Error Flags
-    // Counter Commands
-#define COUNTER         (0x20)  // Read/initialize counter
-    // Memory Commands
-#define MEMORY          (0x30)  // Read/Write memory
-#define MEMORY_ADDR     (0x31)  // Read/Write memory address
-    // Miscellaneous Commands
-#define BLINK_LED       (0x40)  // Cause LED to blink
-#define RESET           (0x41)  // Force a device reset
-#define TRIGGER_CONFIG  (0x42)  // Configure external trigger
-#define SYNC_CONFIG     (0x43)  // Configure sync input/output
-#define STATUS          (0x44)  // Retrieve device status
-#define CAL_CONFIG      (0x45)  // Control CAL MUX
-#define SERIAL          (0x48)  // Read/Write serial number
-      // Code Update Commands
-#define UPDATE_MODE     (0x50)  // Put device into code update mode
-#define UPDATE_ADDR     (0x51)  // Set code download address
-#define UPDATE_DATA     (0x52)  // Download code image
-#define UPDATE_CHECKSUM (0x53)  // Read/download checksum
-#define UPDATE_VERSION  (0x5a)  // Read the downloader version
-
 #define NCHAN_USB7204     8  // max number of ADC channels
 #define NGAINS_USB7204    8  // max number of gain levels
 

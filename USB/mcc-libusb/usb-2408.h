@@ -28,51 +28,6 @@ extern "C" {
 #define USB2408_PID      (0x00fd)
 #define USB2408_2AO_PID  (0x00fe)
 
-/* Commands and HID Report ID for USB 2408  */
-/* Digital I/O Commands */
-#define DIN              (0x00)     // Read digital port
-#define DOUT             (0x01)     // Read/Write digital port drive register
-
-/* Analog Input Commands */
-#define AIN              (0x10)     // Read analog input channel
-#define AIN_SCAN_START   (0x11)     // Start analog input scan
-#define AIN_SCAN_STOP    (0x12)     // Stop analog input scan
-#define AIN_SCAN_STATUS  (0x13)     // Read analog input scan status
-#define AIN_SCAN_QUEUE   (0x14)     // Read/Write analog input channel gain queue
-#define SETTLING_SCAN    (0x16)     // Front end settling test
-
-/* Analog Output Commands */
-#define AOUT             (0x18)     // Write analog output channel
-#define AOUT_SCAN_START  (0x19)     // Analog output scan start
-#define AOUT_SCAN_STOP   (0x1A)     // Analog output scan stop
-#define AOUT_SCAN_STATUS (0x1B)     // Analog output scan status
-
-/* Counter Commands */
-#define COUNTER          (0x20)     // Read/reset event counter
-
-/* Memory Commands */
-#define MEMORY           (0x30)     // Read/Write EEPROM
-
-/* Miscellaneous Commands */
-#define RESET            (0x40)     // Reset the device
-#define BLINK_LED        (0x41)     // Causes LED to blink
-#define CJC              (0x42)     // Read CJC sensor values
-#define CAL_CONFIG       (0x43)     // Configure calibration source
-#define GET_STATUS       (0x44)     // Read device status
-#define ADCAL            (0x45)     // Perform A/D self-calibration
-#define TC_CAL           (0x46)     // Measure TC calibration source
-#define SERIAL           (0x48)     // Read/Write USB Serial Number
-#define VERSION          (0x49)     // Read micro firmware versions
-
-/* Firmware Update */
-#define UPDATE_MODE      (0x50)     // Put device into firmware update mode
-#define UPDATE_ADDRESS   (0x51)     // Read/Write the firmware address
-#define UPDATE_DATA      (0x52)     // Read/Write the firmware data
-#define UPDATE_VERSION   (0x53)     // Read the firmware update code version
-#define UPDATE_ERASE     (0x54)     // Erase the firmware
-#define MBD_COMMAND      (0x80)     // Text-baseed MBD command
-#define MBD_RAW          (0x81)     // Raw MBD response
-
 //  Modes
 #define DIFFERENTIAL     (0x0)      // Voltage - differential
 #define SE_HIGH          (0x1)      // Voltage - single-ended high channel

@@ -30,53 +30,6 @@ extern "C" {
 #define USB2633_PID (0x0118)
 #define USB2637_PID (0x0119)
 
-/* Commands and HID Report ID for USB 2600  */
-/* Digital I/O Commands */
-#define DTRISTATE        (0x00)   // Read/Write Tristate register
-#define DPORT            (0x01)   // Read digital port pins
-#define DLATCH           (0x02)   // Read/Write Digital port output latch register
-
-/* Analog Input Commands */
-#define AIN              (0x10)  // Read analog input channel
-#define AIN_SCAN_START   (0x12)  // Start input scan
-#define AIN_SCAN_STOP    (0x13)  // Stop input scan
-#define AIN_CONFIG       (0x14)  // Analog input channel configuration
-#define AIN_CLR_FIFO     (0x15)  // Clear firmware analog input FIFO
-
-/* Analog Output Commands  USB-2600X-2A0 only*/
-#define AOUT             (0x18)   // Read/Write analog output channel
-#define AOUT_SCAN_START  (0x1A)   // Start analog ouput scan
-#define AOUT_SCAN_STOP   (0x1B)   // Stop analog output scan
-#define AOUT_CLEAR_FIFO  (0x1C)   // Clear data in analog output FIFO
-
-/* Counter/Timer Commands */
-#define COUNTER           (0x20)  // Read/reset event counter
-#define TIMER_CONTROL     (0x28)  // Read/write timer control register
-#define TIMER_PERIOD      (0x29)  // Read/write timer period register
-#define TIMER_PULSE_WIDTH (0x2A)  // Read/write timer pulse width register
-#define TIMER_COUNT       (0x2B)  // Read/write timer counter register
-#define TIMER_START_DELAY (0x2C)  // Read/write timer start delay register
-#define TIMER_PARAMETERS  (0x2D)  // Read/write timer parameters
-
-/* Memory Commands */
-#define MEMORY            (0x30)  // Read/Write EEPROM
-#define MEM_ADDRESS       (0x31)  // EEPROM read/write address value
-#define MEM_WRITE_ENABLE  (0x32)  // Enable writes to firmware area
-
-/* Miscellaneous Commands */  
-#define STATUS            (0x40)  // Read device status
-#define BLINK_LED         (0x41)  // Causes LED to blink
-#define RESET             (0x42)  // Reset device
-#define TRIGGER_CONFIG    (0x43)  // External trigger configuration
-#define CAL_CONFIG        (0x44)  // Calibration configuration
-#define TEMPERATURE       (0x45)  // Read internal temperature
-#define SERIAL            (0x48)  // Read/Write USB Serial Number
-
-/* FPGA Configuration Commands */
-#define FPGA_CONFIG       (0x50) // Start FPGA configuration
-#define FPGA_DATA         (0x51) // Write FPGA configuration data
-#define FPGA_VERSION      (0x52) // Read FPGA version
-
 /* Counter Timer */
 #define COUNTER0         0x0     // Counter 0
 #define COUNTER1         0x1     // Counter 1

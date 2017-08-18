@@ -26,6 +26,57 @@
 #include "pmd.h"
 #include "usb-5200.h"
 
+/* Commands and Report ID for USB 5201 and USB 5203 */
+// Digital I/O Commands
+#define DCONFIG            (0x01) // Configure digital port
+#define DCONFIG_BIT        (0x02) // Configure individual digital port bits
+#define DIN                (0x03) // Read digital port
+#define DOUT               (0x04) // Write digital port
+#define DBIT_IN            (0x05) // Read digital port bit
+#define DBIT_OUT           (0x06) // Write digital port bit
+
+#define TIN                (0x18) // Read input channel
+#define TIN_SCAN           (0x19) // Read multiple input channels
+
+// Memory Commands
+#define MEM_READ           (0x30) // Read Memory
+#define MEM_WRITE          (0x31) // Write Memory
+
+// Miscellaneous Commands
+#define BLINK_LED          (0x40) // Causes LED to blink
+#define RESET              (0x41) // Reset USB interface
+#define GET_STATUS         (0x44) // Get device status
+#define SET_ITEM           (0x49) // Set a configuration item
+#define GET_ITEM           (0x4A) // Get a configuration item
+#define CALIBRATE          (0x4B) // Perform a channel calibration
+#define GET_BURNOUT_STATUS (0x4C) // Get thermocouple burnout detection status
+
+// Code Update Commands
+#define PREPARE_DOWNLOAD   (0x50) // Prepare for program memory download
+#define WRITE_CODE         (0x51) // Write program memory
+#define WRITE_SERIAL       (0x53) // Write a new serial number to device
+#define READ_CODE          (0x55) // Read program memory
+
+// Data Logging Commands (only valid for USB-5201 and USB-5203)
+#define FORMAT_CARD        (0x60) // Format memory card for logging use
+#define READ_CLOCK         (0x61) // Read time from device
+#define SET_CLOCK          (0x62) // Set device time
+#define GET_FIRST_FILE     (0x63) // Get info on first file on volume
+#define GET_NEXT_FILE      (0x64) // Get info on next file
+#define GET_FILE_INFO      (0x65) // Get info on specified file
+#define GET_DISK_INFO      (0x66) // Get information on memory card
+#define READ_FILE          (0x67) // Read file from volume
+#define DELETE_FILE        (0x68) // Delete File from volume
+#define CONFIGURE_LOGGING  (0x69) // Configure data logging feature
+#define GET_LOGGING_CONFIG (0x6a) // Read data logging configuration
+#define GET_FILE_HEADER    (0x6d) // Read log file header
+#define READ_FILE_ACK      (0x6e) // Acknowledge ReadFile data
+#define READ_FILE_ABORT    (0x6f) // Abort ReadFile
+
+// Alarm Commands
+#define CONFIGURE_ALARM    (0x6b) // Configure temperature alarm
+#define GET_ALARM_CONFIG   (0x6c) // Read current temperature alarm configuration
+
 #define FS_DELAY 10000
 
 /* configures digital port */

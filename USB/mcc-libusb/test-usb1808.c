@@ -68,7 +68,6 @@ int main (int argc, char **argv)
   uint32_t count, period;
   uint16_t version;
   uint16_t status;
-  int usb1808X = FALSE;
   int flag;
   int transferred;            // number of bytes transferred
   uint32_t value[8], data;
@@ -94,7 +93,6 @@ int main (int argc, char **argv)
   } else if ((udev = usb_device_find_USB_MCC(USB1808X_PID, NULL))) {
     printf("Success, found a USB 1808X!\n");
     usbInit_1808(udev);
-    usb1808X = TRUE;
   } else {
     printf("Failure, did not find a USB 1808 series device!\n");
     return 0;

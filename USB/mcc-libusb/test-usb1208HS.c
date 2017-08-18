@@ -58,7 +58,6 @@ int main (int argc, char **argv)
   int usb1208HS_4AO = FALSE;
   libusb_device_handle *udev = NULL;
   int i, j;
-  int transferred;
   int temp, input;
   uint8_t gain, mode, channel, option;
   int ch;
@@ -113,7 +112,7 @@ int main (int argc, char **argv)
     channel = 0;
     usbAOutScanStop_USB1208HS(udev);
     usbAOutScanStart_USB1208HS(udev, 0, 100, 100,  AO_CHAN0);
-    transferred = usbAOutScanWrite_USB1208HS(udev, 100*2, sdataOut);
+    usbAOutScanWrite_USB1208HS(udev, 100*2, sdataOut);
     usbAOutScanStop_USB1208HS(udev);
     usbAOut_USB1208HS(udev, 0, 0.0, table_AO);
   }
@@ -320,7 +319,7 @@ int main (int argc, char **argv)
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
 	do {
-	  transferred = usbAOutScanWrite_USB1208HS(udev, sizeof(sdataOut), sdataOut);
+	  usbAOutScanWrite_USB1208HS(udev, sizeof(sdataOut), sdataOut);
 	} while (!isalpha(getchar()));
 	fcntl(fileno(stdin), F_SETFL, flag);
 	usbAOutScanStop_USB1208HS(udev);

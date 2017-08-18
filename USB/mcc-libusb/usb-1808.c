@@ -30,6 +30,57 @@
 #include "usb-1808.h"
 #include "usb-1808.rbf"
 
+/* Commands and USB Report ID for USB 1808  */
+/* Digital I/O Commands */
+#define DTRISTATE         (0x00) // Read/Write digital port tristate register
+#define DPORT             (0x01) // Read digital port pins
+#define DLATCH            (0x02) // Read/Write Digital port output latch register
+
+/* Analog Input Commands */
+#define AIN               (0x10) // Asynchronously read analog input channel
+#define ADC_SETUP         (0x11) // Read/Write setup registers on the ADC
+#define AIN_SCAN_START    (0x12) // Start input scan
+#define AIN_SCAN_STOP     (0x13) // Stop input scan
+#define AIN_CONFIG        (0x14) // Read/Write input scan queue
+#define AIN_CLR_FIFO      (0x15) // Clear data in the input FIFO
+#define AIN_BULK_FLUSH    (0x16) // Flush the input Bulk pipe
+
+/* Analog Output Commands  */
+#define AOUT              (0x18) // Asynchronously write analog output channel
+#define AOUT_SCAN_CONFIG  (0x19) // Read/write output scan queue 
+#define AOUT_SCAN_START   (0x1A) // Start analog ouput scan
+#define AOUT_SCAN_STOP    (0x1B) // Stop analog output scan
+#define AOUT_CLEAR_FIFO   (0x1C) // Clear data in analog output FIFO
+
+/* Counter Commands (Encoders are Counters 2 & 3) */
+#define COUNTER           (0x20) // Read/reset event counter
+#define COUNTER_OPTIONS   (0x21) // Read/set the counter's options
+#define COUNTER_LIMITS    (0x22) // Read/set the counter's range limits
+#define COUNTER_MODE      (0x23) // Read/set the counter's mode
+#define COUNTER_PARAM     (0x24) // Read/set the counter's mode and options
+
+/* Timer Commands */
+#define TIMER_CONTROL     (0x28) // Read/write timer control register
+#define TIMER_PARAMETERS  (0x2D) // Read/write timer parameters
+
+/* Memory Commands */
+#define MEMORY            (0x30) // Read/Write EEPROM
+#define MEM_ADDRESS       (0x31) // EEPROM read/write address value
+#define MEM_WRITE_ENABLE  (0x32) // Enable writes to firmware area
+
+/* Miscellaneous Commands */  
+#define STATUS            (0x40) // Read device status
+#define BLINK_LED         (0x41) // Causes LED to blink
+#define RESET             (0x42) // Reset the device
+#define TRIGGER_CONFIG    (0x43) // External trigger configuration
+#define PATTERN_DETECT    (0x44) // Pattern Detection trigger configuration
+#define SERIAL            (0x48) // Read/Write USB Serial Number
+
+/* FPGA Configuration Commands */
+#define FPGA_CONFIG       (0x50) // Start FPGA configuration
+#define FPGA_DATA         (0x51) // Write FPGA configuration data
+#define FPGA_VERSION      (0x52) // Read FPGA version
+
 #define HS_DELAY 2000
 
 static int wMaxPacketSize = 0;         // will be the same for all devices of this type so

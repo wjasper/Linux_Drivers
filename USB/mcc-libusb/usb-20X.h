@@ -47,41 +47,6 @@ extern "C" {
 #define OTHER_RECIPIENT     (0x3)
 #define RESERVED_RECIPIENT  (0x4) 
 
-/* Commands and HID Report ID for USB 1208HS  */
-/* Digital I/O Commands */
-#define DTRISTATE            (0x00) // Read/write digital tristate register
-#define DPORT                (0x01) // Read digital port pins
-#define DLATCH               (0x02) // Read/write digital port output latch register
-
-/* Analog Input Commands */
-#define AIN                  (0x10) // Read analog input channel
-#define AIN_SCAN_START       (0x11) // Start analog input scan
-#define AIN_SCAN_STOP        (0x12) // Stop analog input scan
-#define AIN_SCAN_CLR_FIFO    (0x15) // Clear the analog input scan FIFO
-#define AIN_BULK_FLUSH       (0x16) // Flush the bulk endpoint with empty packets
-
-/* Analog Output Commands (USB-202/205 only) */
-#define AOUT                 (0x18) // Read/Write analog output channel
-
-/* Counter Commands */
-#define COUNTER              (0x20) // Read/reset event counter
-
-/* Memory Commands */
-#define CAL_MEMORY           (0x30) // Read/write calibration memory
-#define USER_MEMORY          (0x31) // Read/write user memory
-#define MBD_MEMORY           (0x32) // Read/write MBD memory
-  
- /* Miscellaneous Commands */
-#define BLINK_LED            (0x41) // Blink the LED
-#define RESET                (0x42) // Reset the device
-#define STATUS               (0x44) // Device Status
-#define SERIAL               (0x48) // Read/write USB serial number
-#define DFU                  (0x50) // Enter device firmware upgrade mode
-
-/* MBD */
-#define MBD_COMMAND          (0x80) // Text-based MBD command/response
-#define MBD_RAW              (0x81) // Raw MBD response
-
 /* Analog Input Scan Options */
 #define IMMEDIATE_TRANSFER_MODE (0x1)
 #define BLOCK_TRANSFER_MODE     (0x0)
