@@ -25,7 +25,7 @@
 #include "pmd.h"
 #include "usb-temp.h"
 
-/* Commands and Codes for the USB-TEMP reports*/
+/* Commands and HID Report ID for the USB TEMP */
 // Digital I/O Commands
 #define DCONFIG            (0x01) // Configure digital port
 #define DCONFIG_BIT        (0x02) // Configure individual digital port bits

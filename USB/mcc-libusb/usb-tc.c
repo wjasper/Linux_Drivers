@@ -25,6 +25,37 @@
 #include "pmd.h"
 #include "usb-tc.h"
 
+/* Commands and HID Report ID for the USB TC */
+// Digital I/O Commands
+#define DCONFIG     (0x01)     // Configure digital port
+#define DCONFIG_BIT (0x02)     // Configure individual digital port bits
+#define DIN         (0x03)     // Read digital port
+#define DOUT        (0x04)     // Write digital port
+#define DBIT_IN     (0x05)     // Read digital port bit
+#define DBIT_OUT    (0x06)     // Write digital port bit
+
+#define TIN         (0x18)     // Read input channel
+#define TIN_SCAN    (0x19)     // Read multiple input channels
+
+// Memory Commands
+#define MEM_READ    (0x30)     // Read Memory
+#define MEM_WRITE   (0x31)     // Write Memory
+
+// Miscellaneous Commands
+#define BLINK_LED          (0x40) // Causes LED to blink
+#define RESET              (0x41) // Reset USB interface
+#define GET_STATUS         (0x44) // Get device status
+#define SET_ITEM           (0x49) // Set a configuration item
+#define GET_ITEM           (0x4A) // Get a configuration item
+#define CALIBRATE          (0x4B) // Perform a channel calibration
+#define GET_BURNOUT_STATUS (0x4C) // Get thermocouple burnout detection status
+
+// Code Update Commands
+#define PREPARE_DOWNLOAD   (0x50) // Prepare for program memory download
+#define WRITE_CODE         (0x51) // Write program memory
+#define WRITE_SERIAL       (0x53) // Write a new serial number to device
+#define READ_CODE          (0x55) // Read program memory
+
 #define FS_DELAY 10000
 
 /* configures digital port */

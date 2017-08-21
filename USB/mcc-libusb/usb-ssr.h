@@ -32,26 +32,6 @@ extern "C" {
 #define DIO_PORT0C_LOW (0x2)
 #define DIO_PORT0C_HI  (0x3)
 
-/* Commands and Codes for USB SSR24 and SSR 08  HID reports */
-#define DIN              (0x03) // Read digital port
-#define DOUT             (0x04) // Write digital port
-#define DBIT_IN          (0x05) // Read Digital port bit
-#define DBIT_OUT         (0x06) // Write Digital port bit
-
-#define MEM_READ         (0x30) // Read Memory
-#define MEM_WRITE        (0x31) // Write Memory
-
-#define BLINK_LED        (0x40) // Causes LED to blink
-#define RESET            (0x41) // Reset USB interface
-#define GET_STATUS       (0x44) // Retrieve device status
-#define GET_ALL          (0x46) // Retrieve all digital input values
-
-#define PREPARE_DOWNLOAD (0x50) // Prepare for program memory download
-#define WRITE_CODE       (0x51) // Write program memory
-#define WRITE_SERIAL     (0x53) // Write new serial number to device
-#define READ_CODE        (0x55) // Read program memory
-
-
 /* function prototypes for the USB-SSR */
 void usbDConfigPort_USBSSR(hid_device *hid, uint8_t port, uint8_t direction);
 uint8_t usbDIn_USBSSR(hid_device *hid, uint8_t port);

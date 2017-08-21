@@ -26,51 +26,6 @@ extern "C" {
 
 #define USB_TC32_PID (0x0131)
 
-/* Commands and Report ID for USB TC-32  */
-// Digital I/O Commands
-
-#define DIN             (0x00)  // Read digital input
-#define DOUT            (0x02)  // Read/Write digital output
-
-// Temperature Input Commands
-#define TIN             (0x10)  // Read single thermocouple channel
-#define CJC             (0x11)  // Read single CJC sensor
-#define TIN_MULTIPLE    (0x12)  // Read multiple thermocouple channels
-#define CJC_MULTIPLE    (0x13)  // Read multiple CJC sensors
-#define TIN_CONFIG      (0x14)  // Read/write temperature channel configuration
-#define TIN_STATUS      (0x16)  // Read temperature channel data status
-#define OTD_STATUS      (0x17)  // Read open thermocouple detect data status
-#define MEASURE_CONFIG  (0x18)  // Read/write measurement configuration
-#define MEASURE_MODE    (0x1a)  // Read/write measurement mode
-
-// Alarm Commands
-#define ALARM_CONFIG    (0x20)  // Read/write alarm configuration
-#define ALARM_STATUS    (0x22)  // Read/clear temperature alarm status
-
-// Memory Commands
-#define USER_MEMORY     (0x30) // Read/write user memory
-#define SETTINGS_MEMORY (0x32) // Read/write network settings memory
-#define CONFIG_MEMORY   (0x34) // Read/write device configuration memory
-#define FACTORY_COEF    (0x36) // Read/write factory calibration coefficients
-#define FIELD_COEF      (0x38) // Read/write field calibration coefficients
-#define CAL_DATE        (0x3a) // Read/write factory calibration coefficients
-#define GAIN_VOLTAGE    (0x3c) // Read/write gain reference voltages
-
-// Miscellaneous Commands
-#define BLINK_LED       (0x40) // Blink the LED
-#define RESET           (0x41) // Reset the device
-#define STATUS          (0x42) // Read device status
-#define VERSION         (0x43) // Read firmware versions
-#define AD_CAL          (0x44) // Run the A/D offset calibration
-#define NETWORK_CONFIG  (0x45) // Read the current network configuration
-#define LAST_RESULT     (0x46) // Read the result code for the last command
-
-// Firmware Upgrade Commands
-#define FIRMWARE_UPGRADE (0x50) // Enter firmware upgrade mode
-#define BLMEMORY_COMMS   (0x51) // Enter firmware upgrade mode
-#define BLMEMORY_BASE    (0x52) // Read/write comms micro bootloader memory
-#define BLMEMORY_EXP     (0x53) // Read/write EXP measurement micro bootloader memory
-
 // Channel type
 #define CHAN_DISABLE 0
 #define TC_TYPE_J    1  // Type J thermocouple

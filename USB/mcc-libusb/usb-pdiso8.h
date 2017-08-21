@@ -32,19 +32,7 @@ extern "C" {
 #define DEBUG_PORT      (0x3)
 #define DAC_PORT        (0x4)
 
-/* Commands and Codes for USB PDISO8 HID reports */
-#define DIN              (0x03) // Read digital port
-#define DOUT             (0x04) // Write digital port
-#define DBIT_IN          (0x05) // Read Digital port bit
-#define DBIT_OUT         (0x06) // Write Digital port bit
-
-#define MEM_READ         (0x30) // Read Memory
-#define MEM_WRITE        (0x31) // Write Memory
-#define BLINK_LED        (0x40) // Causes LED to blink
-#define WRITE_SERIAL     (0x53) // Write new serial number to device
-
-
-/* function prototypes for the USB-SSR */
+/* function prototypes for the USB-PDIS08 */
 uint8_t usbDIn_USBPDISO8(hid_device *hid, uint8_t port);
 void usbDOut_USBPDISO8(hid_device *hid, uint8_t port, uint8_t value);
 uint8_t usbDBitIn_USBPDISO8(hid_device *hid, uint8_t port, uint8_t bit);

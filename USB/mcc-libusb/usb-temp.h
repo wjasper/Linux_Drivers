@@ -27,7 +27,6 @@ extern "C" {
 #define DIO_DIR_IN  (0x01)
 #define DIO_DIR_OUT (0x00)
 
-/* Commands and HID Report ID for USB TEMP  */
 
 // Channels
 #define CH0  (0x0)  // Channel 0
