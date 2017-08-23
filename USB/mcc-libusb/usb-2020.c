@@ -328,6 +328,25 @@ void usbAInScanStart_USB2020(libusb_device_handle *udev, uint32_t count, uint32_
   if (packet_size > wMaxPacketSize/2 - 1) packet_size = wMaxPacketSize/2 - 1;
   AInScan.packet_size = (uint8_t) packet_size;
   AInScan.options = options;
+  if (options & DDR_RAM) {
+    /* If using the onboard DDR RAM (BURSTIO Mode), there are 3 constraints:
+       1. The total count must be greater than or equal to 256
+       2. The total count must be less than 64 MB
+       3. The total count must be a multiple of 256
+    */
+    if (count < 256) {
+      printf("usbAInScanStart_USB2020: count must be greater than or equal to 256.\n");
+      return;
+    }
+    if (count > 64*1024*1024) {
+      printf("usbAInScanStart_USB2020: count must be less than 64MB.\n");
+      return;
+    }
+    if (count % 256 ) {
+      printf("usbAInScanStart_USB2020: count must be a multiple of 256.\n");
+      return;
+    }
+  }
 
   status = usbStatus_USB2020(udev);
   if (!(status & AIN_SCAN_DONE)) {

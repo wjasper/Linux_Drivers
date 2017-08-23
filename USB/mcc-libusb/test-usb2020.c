@@ -207,7 +207,7 @@ int main (int argc, char **argv)
 	printf("Testing USB-2020 Analog Input Scan BURSTIO mode.\n");
 	usbAInScanStop_USB2020(device.udev);
 	usbAInScanClearFIFO_USB2020(device.udev);
-        printf("Enter number of samples (less than 64 MB): ");
+        printf("Enter number of samples (greater than or equal to 256, less than 64 MB and a multiple of 256): ");
         scanf("%d", &nSamples);
 	dataAInBurst = malloc(2*nSamples);
 	printf("Input channel [0-1]: ");
