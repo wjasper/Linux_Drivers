@@ -26,8 +26,6 @@ extern "C" {
 #define USBDIO24_PID  (0x0093)
 #define USBDIO24H_PID (0x0094)
 
-#define LS_DELAY (3000)
-
 #define DIO_PORTA (0x01)
 #define DIO_PORTB (0x04)
 #define DIO_PORTC_LOW (0x08)

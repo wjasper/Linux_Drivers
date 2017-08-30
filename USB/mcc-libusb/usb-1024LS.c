@@ -46,6 +46,8 @@
 #define SET_ID      (0x0C)     // Set the user ID
 #define GET_ID      (0x0F)     // Get the user ID
 
+#define LS_DELAY (1500)
+
 static uint8_t PortC = 0;
 
 /* configures digital port */

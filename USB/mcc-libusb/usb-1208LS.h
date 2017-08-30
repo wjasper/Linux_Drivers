@@ -33,7 +33,6 @@ extern "C" {
 #define DIO_DIR_OUT (0x00)
 
 #define MINILAB_CLOCK (6000000L)  // 6 MHz clock
-#define LS_DELAY (1500)
 
 #define OFFSET_ADJUSTMENT  (0x1F00)   // Offset Adjustment for the A/D        0x1F00 - 0x1F4F
 #define SE_GAIN_ADJUSTMENT (0x1F50)   // Single Ended Gain Adjustment for A/D 0x1F50 - 0x1F5F

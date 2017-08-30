@@ -26,8 +26,6 @@ extern "C" {
 #define USB1024LS_PID  (0x0076)
 #define USB1024HLS_PID (0x007F)
 
-#define LS_DELAY (1500)
-
 #define DIO_PORTA (0x01)
 #define DIO_PORTB (0x04)
 #define DIO_PORTC_LOW (0x08)
