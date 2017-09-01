@@ -56,7 +56,7 @@
 #define WRITE_SERIAL       (0x53) // Write a new serial number to device
 #define READ_CODE          (0x55) // Read program memory
 
-#define FS_DELAY 10000
+#define FS_DELAY 1000
 
 /* configures digital port */
 void usbDConfigPort_USBTEMP(hid_device *hid, uint8_t direction)
