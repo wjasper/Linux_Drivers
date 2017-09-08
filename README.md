@@ -18,7 +18,7 @@ http://www.measurementcomputing.com
 
 If you don't see a driver for a card you want or have, or if there is
 a feature that you want but are having problems implementing, please
-write me (wjasper@tx.ncsu.edu) about it.
+write me (wjasper@ncsu.edu) about it.
 
 **Note:** There have been many changes to the 2.6 kernel API.  All the
 drivers have been tested with the 2.6.22 kernel.  There are backward
