@@ -6,7 +6,7 @@
 
 This repository contains Linux drivers for data acquisition boards from
 Measurement Computing Corp., MCC (aka ComputerBoards).  All these drivers are
-maintained by Warren J. Jasper (wjasper@tx.ncsu.edu).  Please send any
+maintained by Warren J. Jasper (wjasper@ncsu.edu).  Please send any
 comments, suggestions, or questions to me.  All drivers are licensed
 under the Gnu Public License except the mcc-libusb drivers which are
 licensed under the Lesser Gnu Public License or LGPL.  Most drivers
