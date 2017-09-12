@@ -1,4 +1,4 @@
-#Measurement Computing (MCC) Linux Drivers
+# Measurement Computing (MCC) Linux Drivers
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](http://www.gnu.org/licenses/lgpl-3.0)
@@ -81,7 +81,7 @@ I have written drivers for the following boards:
 **New**:heavy_exclamation_mark: USB-DIO32HS, E-1608, E-DIO24, USB-1808
 
 ====================================================================
-##FAQ:  Here are some questions that I sometimes get that might help.
+## FAQ:  Here are some questions that I sometimes get that might help.
 
 1. Q: Should Plug-And-Play be set in the BIOS  
    A: You should disable/Turn off Plug-And-Play in the BIOS.
