@@ -5,7 +5,7 @@
 #	test-ctr20HD:   Program to test adc module
 #
 #        Copyright (C) 2013
-#        Written by:  Warren J. Jasper <wjasper@tx.ncsu.edu>
+#        Written by:  Warren J. Jasper <wjasper@ncsu.edu>
 #                     North Carolina State Univerisity
 #
 #

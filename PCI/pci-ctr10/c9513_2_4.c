@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 2003  Warren J. Jasper <wjasper@tx.ncsu.edu>
+ Copyright (C) 2003  Warren J. Jasper <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-CTR10, is free software; you can redistribute it
@@ -75,7 +75,7 @@ static void ctr10_Interrupt(int irq, void *dev_id, struct pt_regs *regs);
 module_init(ctr10_init);
 module_exit(ctr10_exit);
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCI-CTR10 module");
 MODULE_LICENSE("GPL");
 
@@ -226,7 +226,7 @@ static int __devinit ctr10_init_one(struct pci_dev *pdev, const struct pci_devic
   }
 
   printk("%s: address=%#x IRQ=%d.", ADAPTER_ID, BoardData[NumBoards][0].base2, BoardData[NumBoards][0].irq);
-  printk(" 4/30/04 wjasper@tx.ncsu.edu\n");
+  printk(" 4/30/04 wjasper@ncsu.edu\n");
 
   NumBoards++;
   return 0;

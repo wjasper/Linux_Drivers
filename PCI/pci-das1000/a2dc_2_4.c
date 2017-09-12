@@ -132,7 +132,7 @@ static u8 get_pci_das1000_nVRam( u16 addr, u32 base0 );
 static void write_pci_das1000_8800( u8 addr, u8 value, u32 base1 );
 static void write_pci_das1000_7376( u8 value, u32 base1 );
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCI-DAS1000 module");
 #ifdef MODULE_LICENSE
 MODULE_LICENSE("GPL");
@@ -333,7 +333,7 @@ static int __devinit das1000_init_one(struct pci_dev *pdev, const struct pci_dev
   
   printk("%s: BADR0=%#x BADR1=%#x BADR2=%#x BADR3=%#x\n",
           ADAPTER_ID, base0, base1, base2, base3);
-  printk("%s: IRQ=%d 9/24/2003 wjasper@tx.ncsu.edu\n", ADAPTER_ID, BoardData[NumBoards].irq);
+  printk("%s: IRQ=%d 9/24/2003 wjasper@ncsu.edu\n", ADAPTER_ID, BoardData[NumBoards].irq);
 
   NumBoards++;
   return 0;

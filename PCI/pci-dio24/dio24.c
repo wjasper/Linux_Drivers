@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 1999 - 2015  Warren J. Jasper <wjasper@tx.ncsu.edu>
+ Copyright (C) 1999 - 2015  Warren J. Jasper <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-DIO24, is free software; you can redistribute it

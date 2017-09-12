@@ -5,7 +5,7 @@
 #		test-das1002:   Program to test adc module
 #
 #               Copyright (C) 2003-2009
-#               Written by:  Warren J. Jasper <wjasper@tx.ncsu.edu>
+#               Written by:  Warren J. Jasper <wjasper@ncsu.edu>
 #                            North Carolina State Univerisity
 #
 # This program, PCI-DAS1002, is free software; you can redistribute it

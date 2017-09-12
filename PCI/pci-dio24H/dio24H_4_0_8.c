@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 2014-2015  Warren J. Jasper <wjasper@tx.ncsu.edu>
+ Copyright (C) 2014-2015  Warren J. Jasper <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-DIO24H, is free software; you can redistribute it
@@ -80,7 +80,7 @@ static int dio24H_close(struct inode *iNode, struct file *filePtr);
 static long dio24H_ioctl(struct file *filePtr, unsigned int cmd, unsigned long arg);
 static irqreturn_t dio24H_Interrupt(int irq, void *dev_id);
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCI-DIO24H  module");
 MODULE_LICENSE("GPL");
 
@@ -235,7 +235,7 @@ static int dio24H_init_one(struct pci_dev *pdev, const struct pci_device_id *ent
 
   printk("%s: BADR1=%#x  BADR2=%#x  IRQ=%d.",ADAPTER_ID,
 	 BoardData[NumBoards].base1, BoardData[NumBoards].base2,  BoardData[NumBoards].irq);
-  printk(" 8/8/2015 wjasper@tx.ncsu.edu\n");
+  printk(" 8/8/2015 wjasper@ncsu.edu\n");
 
   /* Set all channel structures to show nothing active/open */
 

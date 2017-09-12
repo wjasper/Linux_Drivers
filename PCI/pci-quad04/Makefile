@@ -5,7 +5,7 @@
 #	test-quad04:  Program to test quadrature encoder
 #
 #        Copyright (C) 2012
-#        Written by:  Warren J. Jasper <wjasper@tx.ncsu.edu>
+#        Written by:  Warren J. Jasper <wjasper@ncsu.edu>
 #                     North Carolina State Univerisity
 #
 #

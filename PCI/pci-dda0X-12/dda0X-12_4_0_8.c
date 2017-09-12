@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 2007-2015  Warren J. Jasper <wjasper@tx.ncsu.edu>
+ Copyright (C) 2007-2015  Warren J. Jasper <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-DDA0X-12, is free software; you can redistribute it
@@ -76,7 +76,7 @@ static int dda0X_12_open(struct inode *iNode, struct file *filePtr);
 static int dda0X_12_close(struct inode *iNode, struct file *filePtr);
 static long dda0X_12_ioctl(struct file *filePtr, unsigned int cmd, unsigned long arg);
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCI-DDA0X_12  module");
 MODULE_LICENSE("GPL");
 
@@ -229,7 +229,7 @@ static int dda0X_12_init_one(struct pci_dev *pdev, const struct pci_device_id *e
 
   printk("%s: VendorID = %#x  BADR2=%#x  BADR3=%#x ",ADAPTER_ID,
 	 BoardData[NumBoards].device, BoardData[NumBoards].base2, BoardData[NumBoards].base3);
-  printk(" 8/8/2015 wjasper@tx.ncsu.edu\n");
+  printk(" 8/8/2015 wjasper@ncsu.edu\n");
 
   /* Set all channel structures to show nothing active/open */
 

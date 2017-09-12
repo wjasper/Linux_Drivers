@@ -14,10 +14,10 @@ NOTE:   kernel 4.0.8   driver is called:  c9513_4_0_8.c
 Introduction:
 -------------
 This driver was written by Warren J. Jasper at North Carolina State
-University (wjasper@tx.ncsu.edu).  It is a driver for the
+University (wjasper@ncsu.edu).  It is a driver for the
 Measurement Computing PCI-CTR20HD Counter Timer board.
 
-Please send comments and bug fixes to wjasper@tx.ncsu.edu.  The source for the
+Please send comments and bug fixes to wjasper@ncsu.edu.  The source for the
 driver is located at https://github.com/wjasper/Linux_Drivers
 
 
@@ -109,7 +109,7 @@ There are 2 ways you can do this:
 #
 # rc.local	This does local customization.
 #
-# Author:	Warren Jasper <wjasper@tx.ncsu.edu>
+# Author:	Warren Jasper <wjasper@ncsu.edu>
 #
 
 echo -n "Local customization:"

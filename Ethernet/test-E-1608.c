@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015 Warren J. Jasper <wjasper@tx.ncsu.edu>
+ *  Copyright (c) 2015 Warren J. Jasper <wjasper@ncsu.edu>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

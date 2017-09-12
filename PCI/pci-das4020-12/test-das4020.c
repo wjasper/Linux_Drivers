@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002  Warren Jasper <wjasper@tx.ncsu.edu>
+ * Copyright (C) 2002  Warren Jasper <wjasper@ncsu.edu>
  * All rights reserved.
  *
  */

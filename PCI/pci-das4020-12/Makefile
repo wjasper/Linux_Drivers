@@ -5,7 +5,7 @@
 #	test-das4020:     Program to test adc module
 #
 #        Copyright (C) 2004
-#        Written by:  Warren J. Jasper <wjasper@tx.ncsu.edu>
+#        Written by:  Warren J. Jasper <wjasper@ncsu.edu>
 #                     North Carolina State Univerisity
 #
 #

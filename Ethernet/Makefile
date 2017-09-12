@@ -8,6 +8,7 @@
 #                                                                           #
 #               Copyright (C)  2015                                         #
 #               Written by:  Warren J. Jasper                               #
+#                            wjasper@ncsu.edu                               #
 #                            North Carolina State Univerisity               #
 #                                                                           #
 #############################################################################

@@ -77,7 +77,7 @@ static int das08_ioctl(struct inode *iNode, struct file *filePtr, unsigned int c
 static void das08_ReadInterrupt(int irq, void *dev_id, struct pt_regs *fp);
 static void das08_TimerHandler(LONG);
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCI-DAS08  module");
 #ifdef MODULE_LICENSE
   MODULE_LICENSE("GPL");
@@ -221,7 +221,7 @@ static int __init das08_init(void)
   BoardData.status = 0;
 
   printk("%s: BASR0=%#x BADR1=%#x IRQ=%d.",ADAPTER_ID, base1, base2, BoardData.irq);
-  printk(" 5/1/01 wjasper@tx.ncsu.edu\n");
+  printk(" 5/1/01 wjasper@ncsu.edu\n");
 
   return 0;
 }

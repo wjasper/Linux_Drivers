@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 2007-2012  Warren Jasper <wjasper@tx.ncsu.edu>
+ Copyright (C) 2007-2012  Warren Jasper <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-DAS08, is free software; you can redistribute it
@@ -98,7 +98,7 @@ static long das08_ioctl(struct file *filePtr, unsigned int cmd, unsigned long ar
 static irqreturn_t das08_ReadInterrupt(int irq, void *dev_id);
 static void das08_TimerHandler(unsigned long dev_id);
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCI-DAS08  module");
 MODULE_LICENSE("GPL");
 
@@ -295,7 +295,7 @@ static int __devinit das08_init_one(struct pci_dev *pdev, const struct pci_devic
   BoardData[NumBoards].das08_timer.data = (unsigned long) &BoardData[NumBoards];
 
   printk("%s: BASR0=%#x BADR1=%#x IRQ=%d.",ADAPTER_ID, base1, base2, BoardData[NumBoards].irq);
-  printk(" 8/3/2012 wjasper@tx.ncsu.edu\n");
+  printk(" 8/3/2012 wjasper@ncsu.edu\n");
 
   NumBoards++;
   return 0;

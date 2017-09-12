@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 2005-2007  Warren J. Jasper <wjasper@tx.ncsu.edu>
+ Copyright (C) 2005-2007  Warren J. Jasper <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-DIO96, is free software; you can redistribute it
@@ -85,7 +85,7 @@ static int dio96_close(struct inode *iNode, struct file *filePtr);
 static int dio96_ioctl(struct inode *iNode, struct file *filePtr, unsigned int cmd, unsigned long arg);
 static irqreturn_t dio96_Interrupt(int irq, void *dev_id);
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCI-DIO96  module");
 MODULE_LICENSE("GPL");
 
@@ -250,7 +250,7 @@ static int __devinit dio96_init_one(struct pci_dev *pdev, const struct pci_devic
 
   printk("%s: BADR1=%#x  BADR3=%#x  IRQ=%d.",ADAPTER_ID,
 	 BoardData[NumBoards].base1, BoardData[NumBoards].base3,  BoardData[NumBoards].irq);
-  printk(" 08/31/2007 wjasper@tx.ncsu.edu\n");
+  printk(" 08/31/2007 wjasper@ncsu.edu\n");
 
   /* Set all channel structures to show nothing active/open */
 

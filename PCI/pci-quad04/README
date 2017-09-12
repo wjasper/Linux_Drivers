@@ -12,10 +12,10 @@ NOTE:        kernel 2.3.30  driver is called:  LS7266R1_2_6_30.c
 Introduction:
 -------------
 This driver was written by Warren J. Jasper at North Carolina State
-University (wjasper@tx.ncsu.edu).  It is a driver for the
+University (wjasper@ncsu.edu).  It is a driver for the
 Measurement Computing PCI-QUAD04 Quadrature Encoder Input Board.
 
-Please send comments and bug fixes to wjasper@tx.ncsu.edu.  The source for the
+Please send comments and bug fixes to wjasper@ncsu.edu.  The source for the
 driver is located at https://github.com/wjasper/Linux_Drivers
 
 

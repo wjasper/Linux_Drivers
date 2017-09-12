@@ -6,7 +6,7 @@
 #		test-dio24:   Program to test dio24 module
 #
 #               Copyright (C) 2004 - 2015
-#               Written by:  Warren J. Jasper <wjasper@tx.ncsu.edu>
+#               Written by:  Warren J. Jasper <wjasper@ncsu.edu>
 #                            North Carolina State Univerisity
 #
 #

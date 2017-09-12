@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 2014-2015  Warren J. Jasper <wjasper@tx.ncsu.edu>
+ Copyright (C) 2014-2015  Warren J. Jasper <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-DIO48H, is free software; you can redistribute it
@@ -80,7 +80,7 @@ static int dio48H_open(struct inode *iNode, struct file *filePtr);
 static int dio48H_close(struct inode *iNode, struct file *filePtr);
 static long dio48H_ioctl(struct file *filePtr, unsigned int cmd, unsigned long arg);
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCI-DIO48H  module");
 MODULE_LICENSE("GPL");
 
@@ -212,7 +212,7 @@ static int dio48H_init_one(struct pci_dev *pdev, const struct pci_device_id *ent
     goto err_out_0;
 
   printk("%s: BADR2=%#x ",ADAPTER_ID, BoardData[NumBoards].base2);
-  printk(" 8/8/2015 wjasper@tx.ncsu.edu\n");
+  printk(" 8/8/2015 wjasper@ncsu.edu\n");
 
   BoardData[NumBoards].dio48H_reg_0 = 0x80;
   BoardData[NumBoards].dio48H_reg_1 = 0x80;

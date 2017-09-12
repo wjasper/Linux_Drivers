@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 2002-2015  Warren Jasper <wjasper@tx.ncsu.edu>
+ Copyright (C) 2002-2015  Warren Jasper <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-DAS08, is free software; you can redistribute it

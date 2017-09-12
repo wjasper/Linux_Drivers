@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 2013-2015  Warren J. Jasper <wjasper@tx.ncsu.edu>
+ Copyright (C) 2013-2015  Warren J. Jasper <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-QUAD04, is free software; you can redistribute it
@@ -87,7 +87,7 @@ static long quad04_ioctl(struct file *filePtr, unsigned int cmd, unsigned long a
 module_init(quad04_init);
 module_exit(quad04_exit);
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCI-QUAD04 module");
 MODULE_LICENSE("GPL");
 
@@ -307,7 +307,7 @@ static int quad04_init_one(struct pci_dev *pdev, const struct pci_device_id *ent
   }
 
   printk("%s: address=%#x IRQ=%d.",ADAPTER_ID, BoardData[NumBoards].base2, BoardData[NumBoards].irq);
-  printk(" 8/8/2015 wjasper@tx.ncsu.edu\n");
+  printk(" 8/8/2015 wjasper@ncsu.edu\n");
 
   NumBoards++;
   return 0;

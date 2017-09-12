@@ -5,7 +5,7 @@
 #	test-ctr05:     Program to test adc module
 #
 #        Copyright (C) 2003 - 2012
-#        Written by:  Warren J. Jasper <wjasper@tx.ncsu.edu>
+#        Written by:  Warren J. Jasper <wjasper@ncsu.edu>
 #                     North Carolina State Univerisity
 #
 #

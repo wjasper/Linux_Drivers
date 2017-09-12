@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 1997 - 2012  Warren J. Jasper    <wjasper@tx.ncsu.edu>
+ Copyright (C) 1997 - 2012  Warren J. Jasper    <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-DAS1602-16, is free software; you can redistribute it
@@ -133,7 +133,7 @@ static void write_pci_das1602_8800 (u8 addr, u8 value);
 static void write_pci_das1602_8402 (u8 addr, u8 value);
 static void write_pci_das1602_dac08 (u8 value);
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCI DAS 1602/16 module");
 MODULE_LICENSE("GPL");
 
@@ -415,7 +415,7 @@ static int __devinit das1602_init_one(struct pci_dev *pdev, const struct pci_dev
 
   printk("%s: BADR0=%#x BADR1=%#x BADR2=%#x BADR3=%#x BADR4=%#x\n",
           ADAPTER_ID, base0, base1, base2, base3, base4);
-  printk("%s: IRQ=%d 8/3/2012 wjasper@tx.ncsu.edu\n", ADAPTER_ID, BoardData.irq);
+  printk("%s: IRQ=%d 8/3/2012 wjasper@ncsu.edu\n", ADAPTER_ID, BoardData.irq);
 
   NumBoards++;
   return 0;

@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 2003-2013  Warren J. Jasper <wjasper@tx.ncsu.edu>
+ Copyright (C) 2003-2013  Warren J. Jasper <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-CTR20HD, is free software; you can redistribute it
@@ -77,7 +77,7 @@ static irqreturn_t ctr20HD_Interrupt(int irq, void *dev_id);
 module_init(ctr20HD_init);
 module_exit(ctr20HD_exit);
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCI-CTR20HD module");
 MODULE_LICENSE("GPL");
 
@@ -277,7 +277,7 @@ static int ctr20HD_init_one(struct pci_dev *pdev, const struct pci_device_id *en
   }
   
   printk("%s: address=%#x IRQ=%d.", ADAPTER_ID, BoardData[NumBoards].base2, pdev->irq);
-  printk(" 8/3/2012 wjasper@tx.ncsu.edu\n");
+  printk(" 8/3/2012 wjasper@ncsu.edu\n");
 
   NumBoards++;
   return 0;

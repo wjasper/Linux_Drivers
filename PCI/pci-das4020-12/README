@@ -16,7 +16,7 @@ I would like to acknowledge the help and assistance of Eric Blossom.
 Parts of this driver are based off of his code that can be found at
 http://www.gnu.org/software/gnuradio.
 
-Please send comments and bug fixes to wjasper@tx.ncsu.edu.  The source
+Please send comments and bug fixes to wjasper@ncsu.edu.  The source
 for the driver is located at https://github.com/wjasper/Linux_Drivers
 
 Distribution contents:
@@ -122,7 +122,7 @@ There are 2 ways you can do this:
 #
 # rc.local	This does local customization.
 #
-# Author:	Warren Jasper <wjasper@tx.ncsu.edu>
+# Author:	Warren Jasper <wjasper@ncsu.edu>
 #
 echo -n "Local customization:"
 

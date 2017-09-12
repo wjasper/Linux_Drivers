@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 2008  Warren J. Jasper <wjasper@tx.ncsu.edu>
+ Copyright (C) 2008  Warren J. Jasper <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-CTR20HD, is free software; you can redistribute it

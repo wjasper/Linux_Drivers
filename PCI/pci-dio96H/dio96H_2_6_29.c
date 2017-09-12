@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 2007-2009  Warren J. Jasper <wjasper@tx.ncsu.edu>
+ Copyright (C) 2007-2009  Warren J. Jasper <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-DIO96H, is free software; you can redistribute it
@@ -76,7 +76,7 @@ static int dio96H_open(struct inode *iNode, struct file *filePtr);
 static int dio96H_close(struct inode *iNode, struct file *filePtr);
 static int dio96H_ioctl(struct inode *iNode, struct file *filePtr, unsigned int cmd, unsigned long arg);
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCI-DIO96H  module");
 MODULE_LICENSE("GPL");
 
@@ -219,7 +219,7 @@ static int __devinit dio96H_init_one(struct pci_dev *pdev, const struct pci_devi
   BoardData[NumBoards].dio96H_reg_3 = 0x80;
 
   printk("%s: BADR2=%#x ",ADAPTER_ID, BoardData[NumBoards].base2);
-  printk(" 2/16/2010 wjasper@tx.ncsu.edu\n");
+  printk(" 2/16/2010 wjasper@ncsu.edu\n");
 
   /* Set all channel structures to show nothing active/open */
 

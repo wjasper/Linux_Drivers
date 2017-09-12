@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 2004-2013  Warren J. Jasper <wjasper@tx.ncsu.edu>
+ Copyright (C) 2004-2013  Warren J. Jasper <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-DIO48H, is free software; you can redistribute it

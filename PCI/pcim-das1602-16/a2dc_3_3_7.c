@@ -116,7 +116,7 @@ static unsigned int das1602_poll(struct file *filePtr, poll_table *wait);
 static int das1602_fault(struct vm_area_struct *vma, struct vm_fault *vmf);
 static irqreturn_t das1602_Interrupt(int irq, void *dev_id);
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCIM-DAS1602/16 module");
 MODULE_LICENSE("GPL")
 ;

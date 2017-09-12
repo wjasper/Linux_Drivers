@@ -98,7 +98,7 @@ static int dma_read( ADC_ChanRec *chanRec, struct file *readfile, BoardRec *boar
 module_init( das4020_init );
 module_exit( das4020_exit );
 
-MODULE_AUTHOR("Warren J. Jasper <wjasper@tx.ncsu.edu>, Vimal Reddy <vimalreddy@yahoo.com>, Shobhit Kanaujia <sokanauj@yahoo.com>");
+MODULE_AUTHOR("Warren J. Jasper <wjasper@ncsu.edu>, Vimal Reddy <vimalreddy@yahoo.com>, Shobhit Kanaujia <sokanauj@yahoo.com>");
 MODULE_DESCRIPTION("Driver for the PCI-DAS4020/12 module");
 MODULE_LICENSE("GPL");
 
@@ -467,7 +467,7 @@ static int das4020_init_one( struct pci_dev *pdev, const struct pci_device_id *e
 
   printk("%s: Board #%d BADR0 = 0x%p, BADR2 = 0x%p, BADR3 = 0x%p \n", ADAPTER_ID, NumBoards,
 	 BoardData[NumBoards].base0, BoardData[NumBoards].base2, BoardData[NumBoards].base3);
-  printk("%s: IRQ=%d 8/3/2012 Warren J. Jasper <wjasper@tx.ncsu.edu>\n",
+  printk("%s: IRQ=%d 8/3/2012 Warren J. Jasper <wjasper@ncsu.edu>\n",
 	 ADAPTER_ID, BoardData[NumBoards].irq);
 
   NumBoards++;

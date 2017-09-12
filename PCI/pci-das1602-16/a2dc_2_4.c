@@ -133,7 +133,7 @@ static void write_pci_das1602_8402 ( u8 addr, u8 value );
 static void write_pci_das1602_dac08 ( u8 value );
 static int config_region( unsigned int pci_ioaddr, int size, u16 *base );
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCI DAS 1602/16 module");
 #ifdef MODULE_LICENSE
 MODULE_LICENSE("GPL");
@@ -433,7 +433,7 @@ static int __init das1602_init(void)
 
   printk("%s: BADR0=%#x BADR1=%#x BADR2=%#x BADR3=%#x BADR4=%#x\n",
           ADAPTER_ID, base0, base1, base2, base3, base4);
-  printk("%s: IRQ=%d 10/3/97 wjasper@tx.ncsu.edu\n", ADAPTER_ID, BoardData.irq);
+  printk("%s: IRQ=%d 10/3/97 wjasper@ncsu.edu\n", ADAPTER_ID, BoardData.irq);
 
   return 0;
 }

@@ -5,7 +5,7 @@
 #		test-das1602:   Program to test adc module
 #
 #               Copyright (C) 1997 - 2012
-#               Written by:  Warren J. Jasper <wjasper@tx.ncsu.edu>
+#               Written by:  Warren J. Jasper <wjasper@ncsu.edu>
 #                            North Carolina State Univerisity
 #
 # This program, PCI-DAS1602-16, is free software; you can redistribute it

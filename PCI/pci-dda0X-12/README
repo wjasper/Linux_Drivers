@@ -16,7 +16,7 @@ This driver was written by Warren J. Jasper at North Carolina State
 University.  It is a driver for the Measurement Computing PCI-DDA0X-12
 adapter.  
 
-Please send comments and bug fixes to wjasper@tx.ncsu.edu.  The source for the
+Please send comments and bug fixes to wjasper@ncsu.edu.  The source for the
 driver is located at https://github.com/wjasper/Linux_Drivers
 
 
@@ -101,7 +101,7 @@ There are 2 ways to do this:
 #
 # rc.local	This does local customization.
 #
-# Author:	Warren Jasper <wjasper@tx.ncsu.edu>
+# Author:	Warren Jasper <wjasper@ncsu.edu>
 #
 echo -n "Local customization:"
 

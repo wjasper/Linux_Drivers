@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 2007-2012  Warren J. Jasper    <wjasper@tx.ncsu.edu>
+ Copyright (C) 2007-2012  Warren J. Jasper    <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-DAS1002, is free software; you can redistribute it
@@ -140,7 +140,7 @@ static u8 get_pci_das1002_nVRam( u16 addr, u32 base0 );
 static void write_pci_das1002_8800( u8 addr, u8 value, u32 base1 );
 static void write_pci_das1002_7376( u8 value, u32 base1 );
 
-MODULE_AUTHOR("Warren J. Jasper  <wjasper@tx.ncsu.edu>");
+MODULE_AUTHOR("Warren J. Jasper  <wjasper@ncsu.edu>");
 MODULE_DESCRIPTION("Driver for the PCI-DAS1002 module");
 MODULE_LICENSE("GPL");
 
@@ -408,7 +408,7 @@ static int __devinit das1002_init_one(struct pci_dev *pdev, const struct pci_dev
   
   printk("%s: BADR0=%#x BADR1=%#x BADR2=%#x BADR3=%#x BADR4=%#x\n",
           ADAPTER_ID, base0, base1, base2, base3, base4);
-  printk("%s: IRQ=%d 8/3/2012 wjasper@tx.ncsu.edu\n", ADAPTER_ID, BoardData[NumBoards].irq);
+  printk("%s: IRQ=%d 8/3/2012 wjasper@ncsu.edu\n", ADAPTER_ID, BoardData[NumBoards].irq);
 
   NumBoards++;
   return 0;
