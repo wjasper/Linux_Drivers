@@ -73,7 +73,7 @@ test-dda0X-12:	test-dda0X-12.c
 clean:
 	rm -f *.o *~ \#* .pci-dda0X-12.*.cmd pci-dda0X-12.mod.c .dda0X-12.*.cmd $(TARGETS)
 	rm -rf .tmp_versions
-	$(MAKE) -C $(KDIR) M=$(PWD) modules
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
 
 dist:	
 	make clean
