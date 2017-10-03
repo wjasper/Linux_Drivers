@@ -281,7 +281,7 @@ int main (int argc, char **argv)
               gain = list[j].range;
 	      k = i*nchan + j;
 	      data = rint(sdataIn[k]*table_AIN[j][gain].slope + table_AIN[j][gain].offset);
-	      printf(", %8.4lf", volts_USB1808(gain, data));
+	      printf(", %#x, %#x, %8.4lf", sdataIn[k], data, volts_USB1808(gain, data));
 	    }
 	    printf("\n");
 	  }
