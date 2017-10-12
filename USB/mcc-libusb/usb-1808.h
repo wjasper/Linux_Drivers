@@ -155,7 +155,7 @@ uint16_t usbStatus_USB1808(libusb_device_handle *udev);
 int usbInit_1808(libusb_device_handle *udev);
 void usbMemoryR_USB1808(libusb_device_handle *udev, uint8_t *data, uint16_t length);
 void usbMemoryW_USB1808(libusb_device_handle *udev, uint8_t *data, uint16_t length);
-void usbMemAddressR_USB1808(libusb_device_handle *udev, uint16_t address);
+void usbMemAddressR_USB1808(libusb_device_handle *udev, uint16_t *address);
 void usbMemAddressW_USB1808(libusb_device_handle *udev, uint16_t address);
 void usbMemWriteEnable_USB1808(libusb_device_handle *udev);
 void usbReset_USB1808(libusb_device_handle *udev);
