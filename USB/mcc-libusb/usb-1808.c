@@ -1276,7 +1276,7 @@ void usbMemoryW_USB1808(libusb_device_handle *udev, uint8_t *data, uint16_t leng
   libusb_control_transfer(udev, requesttype, MEMORY, 0x0, 0x0, (unsigned char *) data, length, HS_DELAY);
 }
 
-void usbMemAddressR_USB1808(libusb_device_handle *udev, uint16_t address)
+void usbMemAddressR_USB1808(libusb_device_handle *udev, uint16_t *address)
 {
   /*
     This command reads or writes the address used for memory accesses.
@@ -1296,7 +1296,7 @@ void usbMemAddressR_USB1808(libusb_device_handle *udev, uint16_t address)
   */
 
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
-  libusb_control_transfer(udev, requesttype, MEM_ADDRESS, 0x0, 0x0, (unsigned char *) &address, sizeof(address), HS_DELAY);
+  libusb_control_transfer(udev, requesttype, MEM_ADDRESS, 0x0, 0x0, (unsigned char *) address, sizeof(address), HS_DELAY);
 }
 
 void usbMemAddressW_USB1808(libusb_device_handle *udev, uint16_t address)
