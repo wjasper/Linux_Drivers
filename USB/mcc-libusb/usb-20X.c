@@ -294,27 +294,27 @@ void usbAInScanStart_USB20X(libusb_device_handle *udev, uint32_t count, double f
 
 int usbAInScanRead_USB20X(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, uint8_t options, unsigned int timeout)
 {
-  char value[MAX_PACKET_SIZE];
   int i;
   int ret = -1;
   int nbytes = nScan*nChan*2;    // number of bytes to read in 64 bit chunks
   int transferred;               // number of bytes actually transferred
-  uint16_t status;
+  uint16_t status = 0;
+  char value[MAX_PACKET_SIZE];
 
   if (options & IMMEDIATE_TRANSFER_MODE) {  // data returned after each scan
     for (i = 0; i < nbytes/2; i++) {
       ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|1, (unsigned char *) &data[i], 2*nChan, &transferred, timeout);
       if (ret < 0) {
-	perror("usbAInScanRead_USB20X: error in usb_bulk_transfer.");
+	perror("usbAInScanRead_USB20X: error in usb_bulk_transfer. (immediate transfer mode)");
       }
-      if (transferred != 2*nChan) {
+      if (transferred != 2) {
 	fprintf(stderr, "usbAInScanRead_USB20X: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
       }
     }
   } else { 
     ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|1, (unsigned char *) data, nbytes, &transferred, timeout);
     if (ret < 0) {
-      perror("usbAInScanRead_USB20X: error in usb_bulk_transfer.");
+      perror("usbAInScanRead_USB20X: error in usb_bulk_transfer (bulk transfer mode).");
     }
     if (transferred != nbytes) {
       fprintf(stderr, "usbAInScanRead_USB20X: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);

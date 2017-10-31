@@ -223,7 +223,7 @@ start:
 	  channel |= (0x1 << i);
 	}
 	usbAInScanStop_USB20X(udev);
-	count = 256;          // number of scans
+	count = 128;          // number of scans
         usbAInScanStop_USB20X(udev);
 	usbAInScanClearFIFO_USB20X(udev);
 	// The total number of bytes returned is 2*nchan*count
@@ -237,7 +237,7 @@ start:
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
 	do {
-	  ret = usbAInScanRead_USB20X(udev, count, nchan, sdataIn, options | CONTINUOUS, 2000);
+	  ret = usbAInScanRead_USB20X(udev, count, nchan, sdataIn, options | CONTINUOUS, 5000);
 	  for (scan = 0; scan < count; scan++) {    // for each scan 
 	    for (chan = 0; chan < nchan; chan++) {  // for each channel in a scan
 	      dataC[scan][chan] = rint(sdataIn[scan*nchan+chan]*table_AIN[chan][0] + table_AIN[chan][1]);
