@@ -193,7 +193,7 @@ void usbAOut_USB1408FS(libusb_device_handle *udev, uint8_t channel, uint16_t val
   uint16_t wIndex = 0;                    // Interface
 
   aout.reportID = AOUT;
-  aout.channel = channel;                          // 0 or 1
+  aout.channel = channel;                             // 0 or 1
   aout.value[0] = (uint8_t) (value & 0xf0);           // low byte
   aout.value[1] = (uint8_t) ((value >> 0x8) & 0xff);  // high byte
 
@@ -814,15 +814,19 @@ uint16_t usbGetStatus_USB1408FS(libusb_device_handle *udev)
   ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &statusReport, sizeof(statusReport), 5000);
   if (ret < 0) {
     perror("Error in usbGetStatus_USB1408FS: libusb_control_transfer error");
+    return -1;
   }
+  do {
+    statusReport.reportID = 0;
+    ret = libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_IN | 1, (unsigned char *) &statusReport, sizeof(statusReport), &transferred, FS_DELAY);
+    if (ret < 0) {
+      perror("Error in usbGetStatus_USB1408FS: libusb_interrupt_transfer error");
+      return -1;
+    }
+  } while (statusReport.reportID != GET_STATUS);
 
-  statusReport.reportID = 0;
-  ret = libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_IN | 1, (unsigned char *) &statusReport, sizeof(statusReport), &transferred, FS_DELAY);
-
-  if (ret < 0) {
-    perror("Error in usbGetStatus_USB1408FS: libusb_interrupt_transfer error");
-  }
   status = (uint16_t) (statusReport.status[0] | (statusReport.status[1] << 8));
+  status &= 0x000f;                                    // mask off top 12 bits
 
   return status;
 }
