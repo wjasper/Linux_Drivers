@@ -357,7 +357,7 @@ void usbAInScanStart_USB2600(libusb_device_handle *udev, uint32_t count, uint32_
   libusb_control_transfer(udev, requesttype, AIN_SCAN_START, 0x0, 0x0, (unsigned char *) &AInScan, 14, HS_DELAY);
 }
 
-int usbAInScanRead_USB2600(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data)
+int usbAInScanRead_USB2600(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, unsigned int timeout, int options)
 {
   char value[MAX_PACKET_SIZE_HS];
   int ret = -1;
@@ -365,15 +365,24 @@ int usbAInScanRead_USB2600(libusb_device_handle *udev, int nScan, int nChan, uin
   int transferred;
   uint8_t status;
 
-  ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) data, nbytes, &transferred, HS_DELAY);
+  ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) data, nbytes, &transferred, timeout);
   if (ret < 0) {
     perror("usbAInScanRead_USB2600: error in libusb_bulk_transfer.");
   }
   if (transferred != nbytes) {
     fprintf(stderr, "usbAInScanRead_USB2600: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
+    status = usbStatus_USB2600(udev);
+    if ((status & AIN_SCAN_OVERRUN)) {
+      fprintf(stderr, "usbAInScanRead: Analog In scan overrun.\n");
+      usbAInScanStop_USB2600(udev);
+      usbAInScanClearFIFO_USB2600(udev);
+    }
+    return ret;
   }
 
+  if (options & CONTINUOUS) return transferred;
   status = usbStatus_USB2600(udev);
+
   // if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
   if ((nbytes%wMaxPacketSize) == 0 && !(status & AIN_SCAN_RUNNING)) {
     libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) value, 2, &transferred, 100);

@@ -45,6 +45,7 @@ extern "C" {
 #define CALIBRATION    1
 #define LAST_CHANNEL   (0x80)
 #define PACKET_SIZE    512       // max bulk transfer size in bytes
+#define CONTINUOUS     1         // continuous input mode
   
 /* Ranges */
 #define BP_10V 0x0    // +/- 10 V
@@ -132,7 +133,7 @@ uint16_t usbAIn_USB2600(libusb_device_handle *udev, uint16_t channel);
 void usbAInScanStart_USB2600(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, double frequency,
 			      uint8_t packet_size, uint8_t options);
 void usbAInScanStop_USB2600(libusb_device_handle *udev);
-int usbAInScanRead_USB2600(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data);
+int usbAInScanRead_USB2600(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, unsigned int timeout, int options);
 void usbAInConfig_USB2600(libusb_device_handle *udev, ScanList scanList[NCHAN_2600]);
 void usbAInConfigR_USB2600(libusb_device_handle *udev, ScanList *scanList);
 void usbAInScanClearFIFO_USB2600(libusb_device_handle *udev);

@@ -52,6 +52,8 @@ int main (int argc, char **argv)
   float table_AIN[NGAINS_2600][2];
   float table_AOUT[NCHAN_AO_26X7][2];
   ScanList list[NCHAN_2600];  // scan list used to configure the A/D channels.
+  int nread, nchan;
+  int nScans = 0;
   int usb26X7 = FALSE;
   int ch;
   int i, flag;
@@ -65,6 +67,7 @@ int main (int argc, char **argv)
   uint16_t version;
 
   uint16_t value;
+  uint16_t *dataIn;      // holds 16 bit unsigned analog input data
   uint16_t dataAIn[512];  // holds 16 bit unsigned analog input data
   uint16_t dataAOut[512]; // holds 16 bit unsigned analog output data
 
@@ -115,6 +118,7 @@ int main (int argc, char **argv)
     printf("----------------\n");
     printf("Hit 'b' to blink\n");
     printf("Hit 'c' to test counter\n");
+    printf("Hit 'C' to test continuous sampling at 1000 Hz.\n");
     printf("Hit 'd' to test digital IO\n");
     printf("Hit 'i' to test Analog Input\n");
     printf("Hit 'I' to test Analog Input Scan\n");
@@ -263,13 +267,61 @@ int main (int argc, char **argv)
         printf("Enter sampling frequency [Hz]: ");
 	scanf("%lf", &frequency);
 	usbAInScanStart_USB2600(udev, nSamples, 0, frequency, 0xff, 0);
-	ret = usbAInScanRead_USB2600(udev, nSamples, 1, dataAIn);
+	ret = usbAInScanRead_USB2600(udev, nSamples, 1, dataAIn, 20000, 0);
 	printf("Number samples read = %d\n", ret/2);
 	for (i = 0; i < nSamples; i++) {
 	  dataAIn[i] = rint(dataAIn[i]*table_AIN[gain][0] + table_AIN[gain][1]);
 	  printf("Channel %d  Mode = %d  Gain = %d Sample[%d] = %#x Volts = %lf\n", channel,
 		 mode, gain, i, dataAIn[i], volts_USB2600(gain, dataAIn[i]));
 	}
+        break;
+      case 'C':
+	printf("Testing USB-2600 Analog Input Scan in Continuous mode 8 channels\n");
+	printf("Hit any key to exit\n");
+	usbAInScanStop_USB2600(udev);
+	usbAInScanClearFIFO_USB2600(udev);
+	nScans = 0;         // for continuous mode
+	printf("Enter sampling frequency [Hz]: ");
+	scanf("%lf", &frequency);
+	printf("Enter number of channels [1-8]: ");
+	scanf("%d", &nchan);
+	printf("Gain Range for channels: 1 = +/-10V  2 = +/- 5V  3 = +/- 2V  4 = +/- 1V: ");
+	while((ch = getchar()) == '\0' || ch == '\n');
+	switch(ch) {
+	  case '1': gain = BP_10V; break;
+  	  case '2': gain = BP_5V; break;
+	  case '3': gain = BP_2V; break;
+	  case '4': gain = BP_1V; break;
+	  default:  gain = BP_10V; break;
+	}
+	mode =  SINGLE_ENDED;
+	for (channel = 0; channel < nchan; channel++) {
+	  list[channel].range = gain;
+	  list[channel].mode = mode;
+	  list[channel].channel = channel;
+	}
+	list[nchan-1].mode |= LAST_CHANNEL;
+	usbAInConfig_USB2600(udev, list);
+	nread = 256;
+	if ((dataIn = malloc(2*nchan*nread)) == NULL) {
+	  perror("Can not allocate memory for dataIn");
+	  break;
+	}
+	sleep(1);
+        i = 0;
+        usbAInScanStart_USB2600(udev, nScans, 0, frequency, 0xff, 0x1);
+	flag = fcntl(fileno(stdin), F_GETFL);
+	fcntl(0, F_SETFL, flag | O_NONBLOCK);
+	do {
+	  usbAInScanRead_USB2600(udev, nread, nchan, dataIn, 2000, CONTINUOUS);
+	  if (i%100 == 0) {
+	    printf("Scan = %d\n", i);
+	  }
+          i++;
+	} while (!isalpha(getchar()));
+	fcntl(fileno(stdin), F_SETFL, flag);
+        usbAInScanStop_USB2600(udev);
+        sleep(2); // let things settle down.
         break;
       case 'r':
 	usbReset_USB2600(udev);
