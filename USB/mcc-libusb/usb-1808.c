@@ -410,6 +410,10 @@ int usbAInScanStart_USB1808(libusb_device_handle *udev, uint32_t count, uint32_t
      the specified rate.  No messages will be sent until the trigger
      is detected.
 
+     Pattern detection is used with the PatternDetectConfig command
+     to set up a specified number of bits to watch, and then trigger
+     when those bits reach the specified value.
+
      The retrigger mode option and the retrig_count parameter are only
      used if trigger is used.  This option will cause the trigger to
      be rearmed after retrig_count samples are acquired, with a total

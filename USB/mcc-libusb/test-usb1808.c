@@ -130,7 +130,7 @@ int main (int argc, char **argv)
     printf("----------------\n");
     printf("Hit 'b' to blink\n");
     printf("Hit 'c' to test counter\n");
-    printf("Hit 'C' to test continuous sampling at 1000 Hz.\n");
+    printf("Hit 'C' to test continuous sampling greater than 1000 Hz.\n");
     printf("Hit 'd' to test digital IO\n");
     printf("Hit 'i' to test Analog Input\n");
     printf("Hit 'I' to test Analog Input Scan\n");
@@ -304,8 +304,10 @@ int main (int argc, char **argv)
         for (channel = 0; channel < nchan; channel++) {
 	  list[channel].range = gain;
 	  list[channel].mode = mode;
+	  scanQueueAIn[channel] = channel;
 	}
 	usbADCSetupW_USB1808(udev, list);
+	usbAInScanConfigW_USB1808(udev, scanQueueAIn, nchan);
 
 	nread = 128;
 	if ((sdataIn = malloc(4*nchan*nread)) == NULL) {
@@ -327,8 +329,8 @@ int main (int argc, char **argv)
 	fcntl(fileno(stdin), F_SETFL, flag);
         usbAInScanStop_USB1808(udev);
 	usbAInScanClearFIFO_USB1808(udev);
+	usbAInBulkFlush_USB1808(udev, 5);
 	free(sdataIn);
-        sleep(2); // let things settle down.
         break;
     case 'o':
         printf("Enter voltage for channel 0: ");
@@ -371,7 +373,7 @@ int main (int argc, char **argv)
 	usbAOutScanStop_USB1808(udev);
 	break;
       case 'e':
-	usbDLatchW_USB1808(udev, 0x0);                  // zero out the DIO
+	// usbDLatchW_USB1808(udev, 0x0);                  // zero out the DIO
 	usbAOutScanStop_USB1808(udev);
 	usbAOut_USB1808(udev, 0, 0x0, table_AO);
 	usbAOut_USB1808(udev, 1, 0x0, table_AO);
