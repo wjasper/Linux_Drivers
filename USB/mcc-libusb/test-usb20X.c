@@ -62,6 +62,7 @@ int main (int argc, char **argv)
   uint16_t dataC[1024][8];  // corrected data
   int aOutEnabled = 0;
   int flag;
+  unsigned int timeout;  // in milliseconds
 
 start:
   udev = NULL;
@@ -188,13 +189,18 @@ start:
 	}
         usbAInScanStop_USB20X(udev);
 	usbAInScanClearFIFO_USB20X(udev);
-	channel = 0;
+	channel = 0x0;
 	// Set one bit for each active channel
 	for (i = 0; i < nchan; i++) {
 	  channel |= (0x1 << i);
 	}
+	timeout = 400000*frequency/(count) + 1000;
 	usbAInScanStart_USB20X(udev, count, frequency, channel,  options, 0, 0);
-	ret = usbAInScanRead_USB20X(udev, count, nchan, sdataIn, options, 20000);
+	ret = usbAInScanRead_USB20X(udev, count, nchan, sdataIn, options, timeout);
+	if (ret < 0) {
+	  printf("try increasing timeout.\n");
+	  break;
+	}
 	printf("Number samples read = %d\n", ret/2);
 	for (i = 0; i < count; i++) { // scan count
 	  for (chan = 0; chan < nchan; chan++) { // channel count

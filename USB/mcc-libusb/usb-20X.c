@@ -247,10 +247,10 @@ void usbAInScanStart_USB20X(libusb_device_handle *udev, uint32_t count, double f
      will occur if the rate is too high.
 
      Overruns are indicated by the device stalling the bulk endpoint
-     during the scan.  The host may read the status to verify and ust
+     during the scan.  The host may read the status to verify and must
      clear the stall condition before further scan can be performed.
-     
   */
+
   struct AInScan_t {
     uint32_t count;         // The total number of scans to perform (0 for continuous scan)
     uint32_t pacer_period;  // The pacer timer period value. (0 for external clock PACER_IN).
@@ -265,11 +265,10 @@ void usbAInScanStart_USB20X(libusb_device_handle *udev, uint32_t count, double f
 			       bit 6:  Reserved
 			       bit 7:  0 = stall on overrun, 1 = inhibit stall
 		            */
-    uint8_t trigger_source; // 0 = no trigger, 1 = digital trigger
+    uint8_t trigger_source; // 0 = no trigger,  1 = digital trigger
     uint8_t trigger_mode;   // 0 = Edge/rising, 1 = Edge/falling, 2 = Level/high 3 = Level/low
   } AInScan;
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
-
 
   if (frequency > 0 && frequency < 500000.) {
       AInScan.pacer_period = rint((70.E6 / frequency) - 1);
@@ -288,6 +287,7 @@ void usbAInScanStart_USB20X(libusb_device_handle *udev, uint32_t count, double f
 
   usbAInScanStop_USB20X(udev);
   usbAInScanClearFIFO_USB20X(udev);
+
   /* Pack the data into 12 bytes */
   libusb_control_transfer(udev, requesttype, AIN_SCAN_START, 0x0, 0x0, (unsigned char *) &AInScan, 12, HS_DELAY);
 }
