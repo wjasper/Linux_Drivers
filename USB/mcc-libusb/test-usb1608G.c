@@ -228,7 +228,7 @@ int main (int argc, char **argv)
 	  case '1': gain = BP_10V; break;
   	  case '2': gain = BP_5V; break;
 	  case '3': gain = BP_2V; break;
-	  case '4': gain = BP_1V; break;
+	  case  '4': gain = BP_1V; break;
 	  default:  gain = BP_10V; break;
 	}
 	mode |= LAST_CHANNEL ; 
@@ -238,7 +238,13 @@ int main (int argc, char **argv)
 	usbAInConfig_USB1608G(udev, list);
 	for (i = 0; i < 20; i++) {
 	  value = usbAIn_USB1608G(udev, channel);
-	  value = rint(value*table_AIN[gain][0] + table_AIN[gain][1]);
+	  if (value >=  0xfffd) {
+	    printf("DAC is saturated at +FS\n");
+	  } else if  (value <= 0x60) {
+	    printf("DAC is saturated at -FS\n");
+	  } else {
+	    value = rint(value*table_AIN[gain][0] + table_AIN[gain][1]);
+	  }
 	  printf("Channel %d  Mode = %#x  Gain = %d Sample[%d] = %#x Volts = %lf\n",
 		 list[0].channel, list[0].mode, list[0].range, i, value, volts_USB1608G(gain, value));
 	  usleep(50000);	  
@@ -298,7 +304,13 @@ int main (int argc, char **argv)
 	    for (j = 0; j < nchan; j++) {
               gain = list[j].range;
 	      k = i*nchan + j;
-	      data = rint(sdataIn[k]*table_AIN[gain][0] + table_AIN[gain][1]);
+	      if (sdataIn[k] >= 0xfffd) {
+		printf("DAC is saturated at +FS\n");
+	      } else if (sdataIn[k] <= 0x60) {
+		printf("DAC is saturated at -FS\n");
+	      } else {
+		data = rint(sdataIn[k]*table_AIN[gain][0] + table_AIN[gain][1]);
+	      }
 	      printf(", %8.4lf", volts_USB1608G(gain, data));
 	    }
 	    printf("\n");
