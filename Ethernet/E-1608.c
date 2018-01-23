@@ -526,6 +526,7 @@ bool AInScanStart_E1608(DeviceInfo_E1608 *device_info, uint32_t count, double fr
   // set up the send address to the scan port
   memcpy(&sendaddr, &device_info->device.Address, sizeof(struct sockaddr_in));
   sendaddr.sin_port = htons(SCAN_PORT);
+  sendaddr.sin_family = AF_INET;                // should already be there
 
   // create a tcp connection
   if ((connect(scan_sock, (const struct sockaddr*) &sendaddr, sizeof(sendaddr))) < 0) {
