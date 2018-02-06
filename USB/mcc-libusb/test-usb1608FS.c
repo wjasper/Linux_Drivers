@@ -57,15 +57,15 @@ int main (int argc, char **argv)
   libusb_device_handle *udev = NULL;
   int ret;
   Calibration_AIN table_AIN[NGAINS_USB1608FS][NCHAN_USB1608FS];
-  
-start:  
-  udev = 0;
+
   ret = libusb_init(NULL);
   if (ret < 0) {
     perror("libusb_init: Failed to initialize libusb");
     exit(1);
   }
 
+ start:  
+  udev = 0;
   if ((udev = usb_device_find_USB_MCC(USB1608FS_PID, NULL))) {
     printf("USB-1608FS Device is found!\n");
   } else {
@@ -171,7 +171,7 @@ start:
       usbAInLoadQueue_USB1608FS(udev, gainArray);
 
       // configure options
-      //options = AIN_EXECUTION | AIN_DEBUG_MODE;
+      // options = AIN_EXECUTION | AIN_DEBUG_MODE;
       // options = AIN_EXECUTION | AIN_TRANSFER_MODE;
       options = AIN_EXECUTION;
 
@@ -274,13 +274,11 @@ start:
 	break;
       case 'r':
         usbReset_USB1608FS(udev);
-        for (i = 2; i <= 6; i++ ) {
-  	  libusb_clear_halt(udev, LIBUSB_ENDPOINT_IN | i);
-        }
         for (i = 0; i <= 6; i++) {
           libusb_release_interface(udev, i);
 	}
-        libusb_close(udev);
+	libusb_reset_device(udev);
+	sleep(1);
   	goto start;
 	break;
     case 'e':

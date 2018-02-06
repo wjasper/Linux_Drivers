@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdint.h>
+#include <math.h>
 
 #include "pmd.h"
 #include "usb-1608FS.h"
@@ -663,7 +664,7 @@ int usbAInScan_USB1608FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
   int transferred;
   int timeout = FS_DELAY;
 
-  struct data_t{
+  struct data_t {
     uint16_t value[31];        // 31 16-bit samples
     uint16_t scan_index;       //  1 16 bit scan count
   } data;
@@ -728,6 +729,13 @@ int usbAInScan_USB1608FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
   if (arg.prescale == 9 || preload == 0) {
     printf("usbAInScan_USB1608FS: frequency out of range.\n");
     return -1;
+  }
+
+  if (*frequency < 150.) {
+    arg.options |= AIN_TRANSFER_MODE;
+    if (timeout < floor(1000./(*frequency))) {
+	timeout = floor(1000./(*frequency)) + FS_DELAY;
+    }
   }
 
   *frequency = 1.0e7/(preload*(1<<arg.prescale));
@@ -854,9 +862,9 @@ int usbReset_USB1608FS(libusb_device_handle *udev)
   int ret;
   uint8_t reportID = RESET;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
-  uint8_t request = 0x9;                  // HID Set_Report
+  uint8_t request = 0x9;                // HID Set_Report
   uint16_t wValue = (2 << 8) | RESET;   // HID ouptut
-  uint16_t wIndex = 0;                    // Interface
+  uint16_t wIndex = 0;                  // Interface
 
   ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &reportID, sizeof(reportID), 5000);
   if (ret < 0) {
