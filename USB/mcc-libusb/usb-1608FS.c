@@ -732,10 +732,7 @@ int usbAInScan_USB1608FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
   }
 
   if (*frequency < 150.) {
-    arg.options |= AIN_TRANSFER_MODE;
-    if (timeout < floor(1000./(*frequency))) {
-	timeout = floor(1000./(*frequency)) + FS_DELAY;
-    }
+    timeout = floor(32*1000./(*frequency)) + FS_DELAY;
   }
 
   *frequency = 1.0e7/(preload*(1<<arg.prescale));
