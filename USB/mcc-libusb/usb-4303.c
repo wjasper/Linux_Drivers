@@ -263,7 +263,7 @@ void usbSetToggle_USB4303(hid_device *hid, uint8_t chip, uint8_t counter, uint8_
 {
   /*
     This function sets or clears the selected counter output if the counter output is set
-    to toggle on terminal count. There is no effect for other ouptut modes.
+    to toggle on terminal count. There is no effect for other output modes.
   */
   struct setToggle_t {
     uint8_t reportID;

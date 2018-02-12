@@ -45,7 +45,7 @@
 #define AOUT                 (0x18) // Read/write analog output channel
 #define AOUT_SCAN_START      (0x1a) // Start analog output scan
 #define AOUT_SCAN_STOP       (0x1b) // Stop analog output scan
-#define AOUT_CLEAR_FIFO      (0x1c) // Clear data in analog ouptut FIFO
+#define AOUT_CLEAR_FIFO      (0x1c) // Clear data in analog output FIFO
 
 /* Counter/Timer Commands */
 #define COUNTER              (0x20) // Read/reset event counter

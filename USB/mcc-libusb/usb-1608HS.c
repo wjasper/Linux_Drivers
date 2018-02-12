@@ -491,7 +491,7 @@ void usbAOutScanConfig_USB1608HS(libusb_device_handle *udev, uint32_t nscans, fl
     ...
     low channel sample n [high channel sample n]
 
-    The ouptut data is written to a 512-sample FIFO in the device.  The bulk endpoint
+    The output data is written to a 512-sample FIFO in the device.  The bulk endpoint
     data is only accepted if there is room in the FIFO.  Output data may be sent to
     the FIFO before the start of a scan, and the FIFO is cleared when the
     AOutScanConfig or AOutScanStop commands are received.  The scan will not

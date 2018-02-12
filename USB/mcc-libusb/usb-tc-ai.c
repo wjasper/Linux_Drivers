@@ -770,7 +770,7 @@ void usbConfigAlarm_USBTC_AI(hid_device *hid, uint8_t number, uint8_t in_options
     uint8_t reportID;
     uint8_t number;       // alarm number to configure
     uint8_t in_options;   // input options
-    uint8_t out_options;  // ouptut options
+    uint8_t out_options;  // output options
     uint8_t value_1[4];   // threashold value 1 for the alarm
     uint8_t value_2[4];   // threashold value 2 for the alarm
   } configAlarm;
@@ -795,7 +795,7 @@ void usbGetAlarmConfig_USBTC_AI(hid_device *hid, uint8_t number, uint8_t *in_opt
   struct alarmConfig_t {
     uint8_t reportID;
     uint8_t in_options;   // input options
-    uint8_t out_options;  // ouptut options
+    uint8_t out_options;  // output options
     uint8_t value_1[4];   // threashold value 1 for the alarm
     uint8_t value_2[4];   // threashold value 2 for the alarm
   } alarmConfig;

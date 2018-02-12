@@ -94,7 +94,7 @@ int main (int argc, char **argv)
     config_array[i] = GROUND;  
   }
   usbAInConfig_USB1608HS(udev, config_array);
-  usbDOut_USB1608HS(udev, 0x0);    // clear all ouptuts.
+  usbDOut_USB1608HS(udev, 0x0);    // clear all outputs.
   usbAInConfigRead_USB1608HS(udev, config_array);
   for (i = 0; i < 8; i++) {
     printf("Channel %d Config = %#x\n", i, config_array[i]);
@@ -288,7 +288,7 @@ int main (int argc, char **argv)
 	  usbAOut_USB1608HS(udev, data);
 	  usbAOut_USB1608HS(udev, data);
 	}
-	usbDOut_USB1608HS(udev, 0x0);    // clear all ouptuts.
+	usbDOut_USB1608HS(udev, 0x0);    // clear all outputs.
         cleanup_USB1608HS(udev);
         return 0;
       case 'o':

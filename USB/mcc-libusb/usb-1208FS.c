@@ -118,7 +118,7 @@ int usbDConfigPort_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t d
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                  // HID Set_Report
-  uint16_t wValue = (2 << 8) | DCONFIG;   // HID ouptut
+  uint16_t wValue = (2 << 8) | DCONFIG;   // HID output
   uint16_t wIndex = 0;                    // Interface
 
   config_port.reportID = DCONFIG;
@@ -148,7 +148,7 @@ int usbDIn_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t* din_valu
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;             // HID Set_Report
-  uint16_t wValue = (2 << 8) | DIN;  // HID ouptut
+  uint16_t wValue = (2 << 8) | DIN;  // HID output
   uint16_t wIndex = 0;               // Interface
 
   ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &reportID, sizeof(reportID), 5000);
@@ -187,7 +187,7 @@ void usbDOut_USB1208FS(libusb_device_handle *udev, uint8_t port, uint8_t value)
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;              // HID Set_Report
-  uint16_t wValue = (2 << 8) | DOUT;  // HID ouptut
+  uint16_t wValue = (2 << 8) | DOUT;  // HID output
   uint16_t wIndex = 0;                // Interface
 
   write_port.reportID = DOUT;
@@ -228,7 +228,7 @@ void usbAOut_USB1208FS(libusb_device_handle *udev, uint8_t channel, uint16_t val
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                  // HID Set_Report
-  uint16_t wValue = (2 << 8) | AOUT;      // HID ouptut
+  uint16_t wValue = (2 << 8) | AOUT;      // HID output
   uint16_t wIndex = 0;                    // Interface
 
   aout.reportID = AOUT;
@@ -309,7 +309,7 @@ int usbAOutScan_USB1208FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                  // HID Set_Report
-  uint16_t wValue = (2 << 8) | AOUT_SCAN; // HID ouptut
+  uint16_t wValue = (2 << 8) | AOUT_SCAN; // HID output
   uint16_t wIndex = 0;                    // Interface
 
   if (highchannel > 1) {
@@ -390,7 +390,7 @@ void usbAOutStop_USB1208FS(libusb_device_handle *udev)
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                   // HID Set_Report
-  uint16_t wValue = (2 << 8) | AOUT_STOP;  // HID ouptut
+  uint16_t wValue = (2 << 8) | AOUT_STOP;  // HID output
   uint16_t wIndex = 0;                     // Interface
 
   ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &reportID, sizeof(reportID), 5000);
@@ -426,7 +426,7 @@ signed short usbAIn_USB1208FS(libusb_device_handle *udev, uint8_t channel, uint8
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;              // HID Set_Report
-  uint16_t wValue = (2 << 8) | AIN;   // HID ouptut
+  uint16_t wValue = (2 << 8) | AIN;   // HID output
   uint16_t wIndex = 0;                // Interface
 
   if (channel > 7) {
@@ -480,7 +480,7 @@ void usbAInStop_USB1208FS(libusb_device_handle *udev)
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                  // HID Set_Report
-  uint16_t wValue = (2 << 8) | AIN_STOP;  // HID ouptut
+  uint16_t wValue = (2 << 8) | AIN_STOP;  // HID output
   uint16_t wIndex = 0;                    // Interface
 
   ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &reportID, sizeof(reportID), 5000);
@@ -570,7 +570,7 @@ int usbAInScan_USB1208FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
   int timeout = FS_DELAY;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                  // HID Set_Report
-  uint16_t wValue = (2 << 8) | AIN_SCAN;  // HID ouptut
+  uint16_t wValue = (2 << 8) | AIN_SCAN;  // HID output
   uint16_t wIndex = 0;                    // Interface
 
   if (highchannel > 7) {
@@ -687,7 +687,7 @@ int usbAInScan_USB1208FS_SE(libusb_device_handle *udev, uint8_t lowchannel, uint
   int timeout = FS_DELAY;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                  // HID Set_Report
-  uint16_t wValue = (2 << 8) | AIN_SCAN;  // HID ouptut
+  uint16_t wValue = (2 << 8) | AIN_SCAN;  // HID output
   uint16_t wIndex = 0;                    // Interface
 
   if (highchannel > 7) {
@@ -825,7 +825,7 @@ void usbALoadQueue_USB1208FS(libusb_device_handle *udev, uint8_t num, uint8_t ch
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                    // HID Set_Report
-  uint16_t wValue = (2 << 8) | ALOAD_QUEUE; // HID ouptut
+  uint16_t wValue = (2 << 8) | ALOAD_QUEUE; // HID output
   uint16_t wIndex = 0;                      // Interface
 
   num = (num <= 8) ? num : 8;
@@ -856,7 +856,7 @@ void usbInitCounter_USB1208FS(libusb_device_handle *udev)
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;               // HID Set_Report
-  uint16_t wValue = (2 << 8) | CINIT;  // HID ouptut
+  uint16_t wValue = (2 << 8) | CINIT;  // HID output
   uint16_t wIndex = 0;                 // Interface
 
   ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &reportID, sizeof(reportID), 5000);
@@ -883,7 +883,7 @@ uint32_t usbReadCounter_USB1208FS(libusb_device_handle *udev)
   int transferred;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;             // HID Set_Report
-  uint16_t wValue = (2 << 8) | CIN;  // HID ouptut
+  uint16_t wValue = (2 << 8) | CIN;  // HID output
   uint16_t wIndex = 0;               // Interface
 
   counter.reportID = CIN;
@@ -908,7 +908,7 @@ void usbBlink_USB1208FS(libusb_device_handle *udev)
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                  // HID Set_Report
-  uint16_t wValue = (2 << 8) | BLINK_LED; // HID ouptut
+  uint16_t wValue = (2 << 8) | BLINK_LED; // HID output
   uint16_t wIndex = 0;                    // Interface
 
   ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &reportID, sizeof(reportID), 5000);
@@ -926,7 +926,7 @@ int usbReset_USB1208FS(libusb_device_handle *udev)
   uint8_t reportID = RESET;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                // HID Set_Report
-  uint16_t wValue = (2 << 8) | RESET;   // HID ouptut
+  uint16_t wValue = (2 << 8) | RESET;   // HID output
   uint16_t wIndex = 0;                  // Interface
 
   ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &reportID, sizeof(reportID), 5000);
@@ -953,7 +953,7 @@ void usbSetTrigger_USB1208FS(libusb_device_handle *udev, uint8_t type)
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                    // HID Set_Report
-  uint16_t wValue = (2 << 8) | SET_TRIGGER; // HID ouptut
+  uint16_t wValue = (2 << 8) | SET_TRIGGER; // HID output
   uint16_t wIndex = 0;                      // Interface
   
   cmd[0] = SET_TRIGGER;
@@ -994,7 +994,7 @@ void usbSetSync_USB1208FS(libusb_device_handle *udev, uint8_t type)
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                  // HID Set_Report
-  uint16_t wValue = (2 << 8) | SET_SYNC;  // HID ouptut
+  uint16_t wValue = (2 << 8) | SET_SYNC;  // HID output
   uint16_t wIndex = 0;                    // Interface
 
   cmd[0] = SET_SYNC;
@@ -1021,7 +1021,7 @@ uint16_t usbGetStatus_USB1208FS(libusb_device_handle *udev)
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                   // HID Set_Report
-  uint16_t wValue = (2 << 8) | GET_STATUS; // HID ouptut
+  uint16_t wValue = (2 << 8) | GET_STATUS; // HID output
   uint16_t wIndex = 0;                     // Interface
     
   statusReport.reportID = GET_STATUS;
@@ -1073,7 +1073,7 @@ void usbReadMemory_USB1208FS( libusb_device_handle *udev, uint16_t address, uint
   int transferred;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                  // HID Set_Report
-  uint16_t wValue = (2 << 8) | MEM_READ;  // HID ouptut
+  uint16_t wValue = (2 << 8) | MEM_READ;  // HID output
   uint16_t wIndex = 0;                    // Interface
 
   if (count > 62) count = 62;
@@ -1123,7 +1123,7 @@ int usbWriteMemory_USB1208FS(libusb_device_handle *udev, uint16_t address, uint8
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                  // HID Set_Report
-  uint16_t wValue = (2 << 8) | MEM_WRITE; // HID ouptut
+  uint16_t wValue = (2 << 8) | MEM_WRITE; // HID output
   uint16_t wIndex = 0;                    // Interface
 
   if (address <=0x7f) return -1;
@@ -1168,7 +1168,7 @@ void usbGetAll_USB1208FS(libusb_device_handle *udev, uint8_t data[])
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                 // HID Set_Report
-  uint16_t wValue = (2 << 8) | GET_ALL;  // HID ouptut
+  uint16_t wValue = (2 << 8) | GET_ALL;  // HID output
   uint16_t wIndex = 0;                   // Interface
 
   getAll.reportID = GET_ALL;

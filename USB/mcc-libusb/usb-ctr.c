@@ -427,7 +427,7 @@ void usbCounterOutValuesR_USB_CTR(libusb_device_handle *udev, uint8_t counter, u
 {
   /*
     This command reads or sets the counter's output values.  These values determine
-    when the ouptut changes state.  The output will change state when the counter
+    when the output changes state.  The output will change state when the counter
     reaches value0, and then change back when the counter reaches value1.  If both
     values are set to the same count, the output will only change state once - at that value.
   */
