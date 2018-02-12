@@ -809,6 +809,6 @@ void usbGetAlarmConfig_USBTC_AI(hid_device *hid, uint8_t number, uint8_t *in_opt
 
   *in_options = alarmConfig.in_options;
   *out_options = alarmConfig.out_options;
-  memcpy((char *) value_1, &alarmConfig.value_1, sizeof(value_1));
-  memcpy((char *) value_2, &alarmConfig.value_2, sizeof(value_2));
+  memcpy((char *) value_1, &alarmConfig.value_1, 4);  // 32 bit float
+  memcpy((char *) value_2, &alarmConfig.value_2, 4);  // 32 bit float
 }
