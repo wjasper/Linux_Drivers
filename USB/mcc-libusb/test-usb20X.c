@@ -77,6 +77,7 @@ start:
     printf("Success, found a USB 201!\n");
   } else if ((udev = usb_device_find_USB_MCC(USB202_PID, NULL))) {
     printf("Success, found a USB 202!\n");
+    aOutEnabled = 1;
   } else if ((udev = usb_device_find_USB_MCC(USB204_PID, NULL))) {
     printf("Success, found a USB 204!\n");
   } else if ((udev = usb_device_find_USB_MCC(USB205_PID, NULL))) {
