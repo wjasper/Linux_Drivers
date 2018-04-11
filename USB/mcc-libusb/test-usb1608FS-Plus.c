@@ -276,6 +276,7 @@ start:
         printf ("channels: %02X   count:%d\n", channels, count);
         // Always use BP_10V to make it easy (BP_10V is 0...)
         memset(ranges, 0, sizeof(ranges));
+	range = 0;
         usbAInScanConfig_USB1608FS_Plus(udev, ranges);
         // Run a loop for the specified number of repeats and
         // show the results...
