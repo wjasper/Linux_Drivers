@@ -25,6 +25,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include "pmd.h"
 
 #define USB201_PID   (0x0113)
 #define USB202_PID   (0x012b)
