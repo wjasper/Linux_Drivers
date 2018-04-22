@@ -59,7 +59,7 @@ int main (int argc, char **argv)
   uint8_t channel, channels;
   uint8_t range;
   uint8_t ranges[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-  uint16_t value;
+  int value;
   uint32_t count;
   double frequency;
   int ret;
@@ -171,8 +171,10 @@ start:
         printf("Input range [0-7]: ");
 	scanf("%hhd", &range);
 	for (i = 0; i < 20; i++) {
-	  value = usbAIn_USB1608FS_Plus(udev, channel, range);
+	  value = (int) usbAIn_USB1608FS_Plus(udev, channel, range);
 	  value = rint(value*table_AIN[range][channel][0] + table_AIN[range][channel][1]);
+	  if (value > 0xffff) value = 0xffff;    // check for overflow
+	  if (value < 0) value = 0x0;            // check for underflow
 	  printf("Range %d  Channel %d   Sample[%d] = %#x Volts = %lf\n",
 		 range, channel,  i, value, volts_USB1608FS_Plus(value, range));
 	  usleep(50000);	  
@@ -208,7 +210,10 @@ start:
 	ret = usbAInScanRead_USB1608FS_Plus(udev, count, 1, sdataIn, options);
 	printf("Number samples read = %d\n", ret/2);
 	for (i = 0; i < count; i++) {
-	  sdataIn[i] = rint(sdataIn[i]*table_AIN[range][channel][0] + table_AIN[range][channel][1]);
+	  value = rint(sdataIn[i]*table_AIN[range][channel][0] + table_AIN[range][channel][1]);
+	  if (value > 0xffff) value = 0xffff;   // check for overflow
+	  if (value < 0) value = 0;             // check for underflow
+	  sdataIn[i] = (uint16_t) value;
 	  printf("Range %d Channel %d  Sample[%d] = %#x Volts = %lf\n", range, channel,
 		 i, sdataIn[i], volts_USB1608FS_Plus(sdataIn[i], range));
 	}
