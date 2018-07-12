@@ -77,6 +77,9 @@ SUBSYSTEM=="usb", ATTR{idVendor}=="10c4", ATTR{idProduct}=="0002", MODE="0666"
 # Enable non-root access to HID devices
 KERNEL=="hiddev*", NAME="hiddev%n", MODE="0666"
 
+# Enable non-root access to HID devices
+KERNEL=="hidraw*", NAME="hidraw%n", MODE="0666"
+
 #Enable non-root access to pci devices
 SUBSYSTEM=="dda0x-12",   KERNEL=="dda0x-12/da[0-9]_[0-7]",   MODE="0666"
 SUBSYSTEM=="dda0x-12",   KERNEL=="dda0x-12/dio[0-9]_*",      MODE="0666"
