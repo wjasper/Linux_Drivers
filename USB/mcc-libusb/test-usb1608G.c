@@ -384,9 +384,8 @@ int main (int argc, char **argv)
 	printf("Enter desired frequency of sine wave [Hz]: ");
 	scanf("%lf", &frequency);
         frequency *= 512.;
-
-	for (i = 0; i < 512; i ++) {
-	  voltage = 10*sin(2.*M_PI*i/512.);
+	for (i = 0; i < 512; i++) {
+	  voltage = 10.*sin(2.*M_PI*i/512.);
           voltage = (voltage/10.*32768. + 32768.);
 	  sdataOut[i] = voltage*table_AO[channel][0] + table_AO[channel][1];
 	}
