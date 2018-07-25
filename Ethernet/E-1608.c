@@ -1559,6 +1559,50 @@ bool SettingsMemoryR_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint
   }
   return result;
 }
+
+bool SetNetworkW_E1608(DeviceInfo_E1608 *device_info, uint8_t *data, uint16_t count){
+
+  if (SettingsMemoryW_E1608(device_info, 0, count, data)){
+
+    int timeout = device_info->timeout;
+    unsigned char buffer[7];
+    unsigned char replyBuffer[7];
+    buffer[MSG_INDEX_START]          = MSG_START;
+    buffer[MSG_INDEX_COMMAND]        = CMD_RESET;
+    buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;
+    buffer[MSG_INDEX_STATUS]         = 0;
+    buffer[MSG_INDEX_COUNT_LOW]      = 0;
+    buffer[MSG_INDEX_COUNT_HIGH]     = 0;
+    buffer[MSG_INDEX_DATA]           = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA);
+
+    if(send(device_info->device.sock, buffer, 7, 0) <= 0){
+      printf("Error setting network config! (Sending)\n");
+    }else{
+      receiveMessage(device_info->device.sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE, timeout);
+      if(replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY) && replyBuffer[MSG_INDEX_FRAME] == buffer[2]){
+
+        close(device_info->device.sock);
+        close(device_info->device.scan_sock);
+
+        usleep(5000000); // device boot time
+
+        device_info->device.connectCode = 0x0;   // default connect code
+        device_info->device.frameID = 0;         // zero out the frameID
+        device_info->queue[0] = 0;               // set count in gain queue to zero
+  
+        discoverDevice(&device_info->device, E1608_PID);
+        device_info->device.sock = openDevice(inet_addr(inet_ntoa(device_info->device.Address.sin_addr)), device_info->device.connectCode);
+
+        return true;
+      }
+    }
+    return false;
+  }
+  else{
+    printf("Error setting network config!\n");
+    return false;
+  }
+}
   
 bool SettingsMemoryW_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint16_t count, uint8_t *data)
 {
