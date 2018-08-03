@@ -66,6 +66,7 @@ I have written drivers for the following boards:
 2. E-DIO24  (C)
 3. E-TC     (C)
 4. E-TC32   (C)
+
 **New**:heavy_exclamation_mark: E-1608.py
 
 **Bluetooth**
