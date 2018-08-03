@@ -13,13 +13,16 @@ under the Gnu Public License except the mcc-libusb drivers which are
 licensed under the Lesser Gnu Public License or LGPL.  Most drivers
 will run under the Linux 2.6, 3.X and 4.X kernels.
 
-
 For more information on these cards, go to 
 http://www.measurementcomputing.com
 
 If you don't see a driver for a card you want or have, or if there is
 a feature that you want but are having problems implementing, please
 write me (wjasper@ncsu.edu) about it.
+
+There have been many requests for Python drivers, which I have put off
+for many reasons.  However, I am beginning the process starting with the
+E-1608.py (Ethernet devices). Please send me comments and feedback.
 
 **Note:** There have been many changes to the 2.6 kernel API.  All the
 drivers have been tested with the 2.6.22 kernel.  There are backward
@@ -29,10 +32,11 @@ or upgrade to the 2.6.22 or later kernel.  Around 2.6.29, the kernel
 API changed enough that I started a new version of the modules. I do
 not have a new version of the moduls for each version of the kernel.
 If you notice problems that are kernel version related, use a later
-version or email me.  The pci drivers should also work on the 3.X and 4.X kernels.
+version or email me.  The pci drivers should also work on the 3.X and
+4.X kernels.
 
 I have divided the drivers into categories by bus type.  Thus, all the
-USB drivers are in the USB directory, etc.  
+USB drivers are in the USB directory, etc. 
 
 I have written drivers for the following boards:
 
@@ -58,10 +62,11 @@ I have written drivers for the following boards:
 19. PCIM-DAS16Jr/16
 
 **Ethernet**
-1. E-1608 
-2. E-DIO24
-3. E-TC 
-4. E-TC32
+1. E-1608   (C/Python)
+2. E-DIO24  (C)
+3. E-TC     (C)
+4. E-TC32   (C)
+**New**:heavy_exclamation_mark: E-1608.py
 
 **Bluetooth**
 1. BTH-1208LS
@@ -181,7 +186,7 @@ I have written drivers for the following boards:
 9. Q: Under Raspian on the Raspberry Pi, I can not run the test program except as root.  
    A: Go to /etc/udev/rules.d and rename the file 61-mcc.rules to 99-mcc.rules and reboot.
    
-10. Q: I can not get AInScan to work for the USB-1208LS or the minilab-1008 devies.   
+10. Q: I can not get AInScan to work for the USB-1208LS or the minilab-1008 devices.   
     A: These two USB HID devices use feature reports to download data due to limitation in
     the HID spec and the way the device was implemented.  Unfortunately, feature reports don't
     work well under hidapi.  

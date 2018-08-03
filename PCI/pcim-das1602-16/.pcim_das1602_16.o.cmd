@@ -1,0 +1,1 @@
+cmd_/home/wjj/Linux_Drivers/PCI/pcim-das1602-16/pcim_das1602_16.o := ld -m elf_x86_64 -z max-page-size=0x200000   -r -o /home/wjj/Linux_Drivers/PCI/pcim-das1602-16/pcim_das1602_16.o /home/wjj/Linux_Drivers/PCI/pcim-das1602-16/a2dc.o 

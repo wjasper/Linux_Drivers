@@ -1830,10 +1830,10 @@ double volts_E1608(uint16_t value, uint8_t range)
 
 uint16_t valueAOut_E1608(double volts)
 {
-  // convertrs volts to a 16 bit raw value for +/-10V output
+  // converts volts to a 16 bit raw value for +/-10V output
   if (volts >= 10.0) {
     return 0xffff;
-  } else  if (volts <= -10.00) {
+  } else  if (volts <= -10.0) {
     return 0x0;
   } else {
     return (uint16_t) (volts*32768/10. + 0x8000);
