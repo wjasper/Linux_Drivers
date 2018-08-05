@@ -35,9 +35,6 @@ for i in range(NCHAN_AOUT):
   print('Calibration Table (Analog Output): Channel = ', i, ' Slope = ', e1608.table_AOut[i].slope, \
         ' Intercept = ', e1608.table_AOut[i].intercept)
   
-result, value = e1608.AIn(0,BP_10V)
-print('AIn: value = ', hex(value))
-
 while True:
     print("\nE-1608 Testing")
     print("----------------")
