@@ -20,7 +20,11 @@ import time
 
 # Find a E-1608 device on the subnet
 device = mccEthernetDevice(0x012F)
-device.printDeviceInfo()
+if device.nfound == 0:
+  print('No devices found')
+  exit(0)
+else:
+  device.printDeviceInfo()
 sock = device.mccOpenDevice(0x0)
 e1608 = E_1608(device)
 

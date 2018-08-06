@@ -1322,7 +1322,7 @@ bool CalMemoryW_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint16_t 
      memory is 512 bytes (address 0 - 0xff) The cal memory should
      only be written during factory calibration and setup and has an
      additional lock mechanism to prevent inadvertent writes.  To
-     enable srites to the cal memory, first write the unlock code
+     enable writes to the cal memory, first write the unlock code
      0xAA55 to address 0x200.  Writes to the entire memory range are
      then possible.  Write any other value to address 0x200 to lock the
      memory after writing.  The amount of data to be written is

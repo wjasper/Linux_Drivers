@@ -1036,7 +1036,7 @@ class E_1608:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            data = unpack_from('III', r_buffer, MSG_INDEX_DATA)
-           value = (socket.inet_ntoa(pack('!L', data[0])), socket.inet_ntoa(pack('!L', data[1])), socket.inet_ntoa(pack('!L', data[2])))
+           value = (socket.inet_ntoa(pack('L', data[0])), socket.inet_ntoa(pack('L', data[1])), socket.inet_ntoa(pack('L', data[2])))
     if (result == False):
       print('Error in networkConfig E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
     return result, value
@@ -1216,6 +1216,372 @@ class E_1608:
            value = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
     if (result == False):
       print('Error in CalMemory_R E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
+    return value
+
+  def CalMemory_W(self, address, count, data):
+    # This command writes the nonvolatile calibration memory.  The cal
+    # memory is 512 bytes (address 0 - 0xff).  The cal memory should
+    # only be written during factory calibration and setup and has an
+    # additional lock mechanism to prevent inadvertent writes.  To
+    # enable writes to the cal memory, first write the unlock code
+    # 0xAA55 to address 0x200.  Writes to the entire memory range are
+    # then possible.  Write any other value to address 0x200 to lock
+    # the mamory after writing.  The amount of data to be written is
+    # inferred from the frame count -2.
+    if (count > 512):
+      return False
+
+    dataCount = count + 2
+    replyCount = 0
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = CMD_CAL_MEM_W
+    s_buffer[MSG_INDEX_DATA]           = address & 0xff
+    s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
+    for i in range(count):
+      s_buffer[MSG_INDEX_DATA+2+i] = data[i]
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID += 1                                      # increment frame ID with every send
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
+    s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    self.device.sock.settimeout(.1)
+    self.device.sock.send(s_buffer)
+
+    try:
+      r_buffer = self.device.sock.recv(1024)
+    except socket.timeout:
+      raise
+      print('CalMemory_W: timeout error.\n')
+      return
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT_LOW] == replyCount & 0xff                     and \
+         r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+           result = True
+    if (result == False):
+      print('Error in CalMemory_W E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
+    return value
+
+  def UserMemory_R(self, address, count):
+    # This command reads the nonvolatile user memory.  The user memory is
+    # 1024 bytes (address 0 - 0x3ff)
+    # address: the start address for reading (0-0x3ff)
+    # count:   the number of bytes to read (max 512 due to protocol)
+
+    if (count > 512):
+      return False
+
+    dataCount = 4
+    replyCount = count
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = CMD_USR_MEM_R
+    s_buffer[MSG_INDEX_DATA]           = address & 0xff
+    s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
+    s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
+    s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID += 1                                      # increment frame ID with every send
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
+    s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    self.device.sock.settimeout(.1)
+    self.device.sock.send(s_buffer)
+
+    try:
+      r_buffer = self.device.sock.recv(1024)
+    except socket.timeout:
+      raise
+      print('UserMemory_R: timeout error.\n')
+      return
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT_LOW] == replyCount & 0xff                     and \
+         r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+           result = True
+           value = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
+    if (result == False):
+      print('Error in UserMemory_R E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
+    return value
+
+  def UserMemory_W(self, address, count, data):
+    # This command writes to the nonvolatile user memory.  The user memory
+    # is 1024 bytes (address 0 - 0x3ff).  The amount of data to be
+    # written is inferred from the frame count  - 2.  The maximum that
+    # can be written in one transfer is 512 bytes.
+    if (count > 512):
+      return False
+
+    dataCount = count + 2
+    replyCount = 0
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = CMD_USR_MEM_W
+    s_buffer[MSG_INDEX_DATA]           = address & 0xff
+    s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
+    for i in range(count):
+      s_buffer[MSG_INDEX_DATA+2+i] = data[i]
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID += 1                                      # increment frame ID with every send
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
+    s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    self.device.sock.settimeout(.1)
+    self.device.sock.send(s_buffer)
+
+    try:
+      r_buffer = self.device.sock.recv(1024)
+    except socket.timeout:
+      raise
+      print('UserMemory_W: timeout error.\n')
+      return
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT_LOW] == replyCount & 0xff                     and \
+         r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+           result = True
+    if (result == False):
+      print('Error in UserMemory_W E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
+    return value
+
+  def SettingsMemory_R(self, address, count):
+    # This command reads the nonvolatile settings memory.  The settings memory is
+    # 512 bytes (address 0 - 0x1ff)
+    # address: the start address for reading (0-0x1ff)
+    # count:   the number of bytes to read (max 512 due to protocol)
+
+    if (count > 512):
+      return False
+
+    dataCount = 4
+    replyCount = count
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = CMD_SET_MEM_R
+    s_buffer[MSG_INDEX_DATA]           = address & 0xff
+    s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
+    s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
+    s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID += 1                                      # increment frame ID with every send
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
+    s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    self.device.sock.settimeout(.1)
+    self.device.sock.send(s_buffer)
+
+    try:
+      r_buffer = self.device.sock.recv(1024)
+    except socket.timeout:
+      raise
+      print('SettingsMemory_R: timeout error.\n')
+      return
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT_LOW] == replyCount & 0xff                     and \
+         r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+           result = True
+           value = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
+    if (result == False):
+      print('Error in SettingsMemory_R E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
+    return value
+
+  def SettingsMemory_W(self, address, count, data):
+    # This command writes to the nonvolatile user memory.  The user memory
+    # is 512 bytes (address 0 - 0x1ff).  The amount of data to be
+    # written is inferred from the frame count  - 2.  The maximum that
+    # can be written in one transfer is 512 bytes.  The settings will
+    # be implemented after a device reset.
+    if (count > 512):
+      return False
+
+    dataCount = count + 2
+    replyCount = 0
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = CMD_SET_MEM_W
+    s_buffer[MSG_INDEX_DATA]           = address & 0xff
+    s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
+    for i in range(count):
+      s_buffer[MSG_INDEX_DATA+2+i] = data[i]
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID += 1                                      # increment frame ID with every send
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
+    s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    self.device.sock.settimeout(.1)
+    self.device.sock.send(s_buffer)
+
+    try:
+      r_buffer = self.device.sock.recv(1024)
+    except socket.timeout:
+      raise
+      print('SettingsMemory_W: timeout error.\n')
+      return
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT_LOW] == replyCount & 0xff                     and \
+         r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+           result = True
+    if (result == False):
+      print('Error in SettingsMemory_W E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
+    return value
+
+  def BootloaderMemory_R(self, address, count):
+    # This command reads the bootloader stored in nonvolatile FLASH
+    # memory.  The bootloader is located in program FLASH memory in two
+    # physical address ranges: 0x1D000000 - 0x1D007FFF for bootloader
+    # code and 0x1FC00000 - 0x1FC01FFF for C startup code and
+    # interrupts.  Reads may be performed at any time.
+    #
+    # address: the start address for reading (see above)
+    # count:   the number of bytes to read (max 512)
+
+    if (count > 512):
+      return False
+
+    dataCount = 4
+    replyCount = count
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = CMD_BOOT_MEM_R
+    s_buffer[MSG_INDEX_DATA]           = address & 0xff
+    s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
+    s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
+    s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID += 1                                      # increment frame ID with every send
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
+    s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    self.device.sock.settimeout(.1)
+    self.device.sock.send(s_buffer)
+
+    try:
+      r_buffer = self.device.sock.recv(1024)
+    except socket.timeout:
+      raise
+      print('BootloaderMemory_R: timeout error.\n')
+      return
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT_LOW] == replyCount & 0xff                     and \
+         r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+           result = True
+           value = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
+    if (result == False):
+      print('Error in BootloaderMemory_R E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
+    return value
+
+  def BootloaderMemory_W(self, address, count, data):
+    # This command writes the bootloader stored in nonvolatile FLASH
+    # memory.  The bootloader is located in program FLASH memory in two
+    # physical address ranges: 0x1D000000 - 0x1D007FFF for bootloader
+    # code and 0x1FC00000 - 0x1FC01FFF for C startup code and
+    # interrupts.  Writes outside these ranges are ignored.  The
+    # bootloader memory is write protected and must be unlocked in
+    # order to write the memory.  The unlock proceedure is to write the
+    # unlock code 0xAA55 to address 0xFFFFFFFE.  Writes to the entire
+    # memory range are then possible.  Write any other value to address
+    # 0xFFFFFFFE to lock the memory after writing.
+    #
+    # The FLASH memory must be erased prior to programming.  A bulk
+    # erase is perfomred by writing 0xAA55 to address 0x80000000 after
+    # unlocking the memory for write.  The bulk erase will require
+    # approximately 150ms to complete.  Once the erase is complete, the
+    # memory may be written; however, the device will not be able to
+    # boot unless it has a valid bootloader so the device shold not be
+    # reset until the bootloader is completely written and verified
+    # using readBootloaderMemory_E1608().
+    #
+    # The writes are perfomred on 4-byte boundaries internally and it
+    # is recommended that the output data be sent in the same manner.
+    # The amount of data to be written is inferred frolm the frame
+    # count - 2.
+
+    if (count > 512):
+      return False
+
+    dataCount = count + 2
+    replyCount = 0
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = CMD_BOOT_MEM_W
+    s_buffer[MSG_INDEX_DATA]           = address & 0xff
+    s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
+    for i in range(count):
+      s_buffer[MSG_INDEX_DATA+2+i] = data[i]
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID += 1                                      # increment frame ID with every send
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
+    s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    self.device.sock.settimeout(.1)
+    self.device.sock.send(s_buffer)
+
+    try:
+      r_buffer = self.device.sock.recv(1024)
+    except socket.timeout:
+      raise
+      print('BootloaderMemory_W: timeout error.\n')
+      return
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT_LOW] == replyCount & 0xff                     and \
+         r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+           result = True
+    if (result == False):
+      print('Error in BootloaderMemory_W E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
     return value
 
   def getMFGCAL(self):
