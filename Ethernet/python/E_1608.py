@@ -919,10 +919,6 @@ class E_1608:
 
   def reset(self):
     # This command resets the device
-    #   bit 0:     1 = data socket is open, 0 = data socket is closed
-    #   bit 1:     1 = AIn scan running
-    #   bit 2:     1 = AIn scan overrun
-    #   bits 3-15: Reserved
     
     dataCount = 0
     replyCount = 0
@@ -962,6 +958,11 @@ class E_1608:
 
   def status(self):
     # This command reads the device status
+    #   bit 0:     1 = data socket is open, 0 = data socket is closed
+    #   bit 1:     1 = AIn scan running
+    #   bit 2:     1 = AIn scan overrun
+    #   bits 3-15: Reserved
+
     dataCount = 0
     replyCount = 2
     result = False

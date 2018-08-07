@@ -78,7 +78,7 @@ class mccEthernetDevice:
     print('  Firmware version:', str(self.firmwareVersion>>8)+'.'+str(self.firmwareVersion&0xff))
     print('')
 
-  def mccOpenDevice(self, connectCode):
+  def mccOpenDevice(self, connectCode=0):
     # open the UDP socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)     # create the socket
     try:
@@ -123,9 +123,13 @@ class mccEthernetDevice:
 
     # create connection with TCP socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((self.address, COMMAND_PORT))
-    self.sock = s
-    return s
+    try:
+      s.connect((self.address, COMMAND_PORT))
+      self.sock = s
+      return
+    except:
+      print('Error connecting to E-1608')
+      return
 
   def calcChecksum(self, buf, length):
     checksum = 0
