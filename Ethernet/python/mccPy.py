@@ -49,39 +49,22 @@ MSG_START =            0xDB
 class mccEthernetDevice:
 
   def __init__(self, productID=None, device_address=None):
-    self.nfound = 0                                          # number of devices found
     self.commandPort = 54211
-    
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)     # create the socket
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)  # set the broadcast option
-    s.settimeout(1.0)                                        # set noblocking 1 second timeout
-    s.bind(('', DISCOVER_PORT))                              # bind the socket for receive
-    msg = 'D'
-    #send a broadcast discover datagram
-    s.sendto(msg.encode(), ('<broadcast>', DISCOVER_PORT)) 
-    while True:
-      try:
-        msg, address = s.recvfrom(1024)
-        if (len(msg) == 64):
-          self.address = address[0]
-          self.MAC = 0x0
-          for i in range(1,7):
-            self.MAC += (msg[i]<<((6-i)*8))
-          self.NetBIOS = msg[11:26].decode()
-          self.productID = msg[7] + (msg[8]<<8)
-          self.firmwareVersion = msg[9] + (msg[10]<<8)
-          self.bootloadVersion = msg[39] +( msg[40]<<8)
-          if (self.productID == productID):
-            self.nfound += 1
-            self.frameID = 0
-            self.connectCode = 0x0
-      except:
-        s.close()
-        return 
+    if (device_address != None):
+      self.address = device_address
+    else:
+      self.address = ''
+    self.frameID = 0
+    self.MAC = 0x0
+    self.productID = productID
+    self.NetBIOS = ''
+    self.firmwareVersion = 0x0
+    self.bootloadVersion = 0x0
+    self.connectCode = 0x0
+    return
 
   def printDeviceInfo(self):
-    print('Number devices found =', self.nfound)
-    print('  Found device: ', self.NetBIOS)
+    print('  Device Name: ', self.NetBIOS)
     print('  IP address:', self.address)
     print('  Product ID:', hex(self.productID))
     print('  Command Port:', self.commandPort)
@@ -89,10 +72,11 @@ class mccEthernetDevice:
           hex(self.MAC>>32&0xff)[2:]+':'+\
           hex(self.MAC>>24&0xff)[2:]+':'+\
           hex(self.MAC>>16&0xff)[2:]+':'+\
-          hex(self.MAC>>8&0xff)[2:]+':'+\
+         hex(self.MAC>>8&0xff)[2:]+':'+\
           hex(self.MAC&0xff)[2:])
     print('  Boot version:', str(self.bootloadVersion>>8)+'.'+str(self.bootloadVersion&0xff))
     print('  Firmware version:', str(self.firmwareVersion>>8)+'.'+str(self.firmwareVersion&0xff))
+    print('')
 
   def mccOpenDevice(self, connectCode):
     # open the UDP socket
@@ -148,3 +132,36 @@ class mccEthernetDevice:
     for i in range(length):
       checksum += buf[i]
     return (checksum & 0xff)
+
+def mccDiscover(productID=None):
+  devices = []
+  nfound = 0
+  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)     # create the socket
+  s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)  # set the broadcast option
+  s.settimeout(1.0)                                        # set noblocking 1 second timeout
+  s.bind(('', DISCOVER_PORT))                              # bind the socket for receive
+  msg = 'D'
+  #send a broadcast discover datagram
+  s.sendto(msg.encode(), ('<broadcast>', DISCOVER_PORT))
+  while True:
+    try:
+      msg, address = s.recvfrom(1024)
+      if (len(msg) == 64):
+        id = msg[7] + (msg[8]<<8)
+        if (id == productID or productID == None):
+          devices.append(mccEthernetDevice())
+          devices[nfound].address = address[0]
+          devices[nfound].MAC = 0x0
+          for i in range(1,7):
+            devices[nfound].MAC += (msg[i]<<((6-i)*8))
+          devices[nfound].NetBIOS = msg[11:26].decode()
+          devices[nfound].productID = msg[7] + (msg[8]<<8)
+          devices[nfound].firmwareVersion = msg[9] + (msg[10]<<8)
+          devices[nfound].bootloadVersion = msg[39] +( msg[40]<<8)
+          devices[nfound].frameID = 0
+          devices[nfound].ConnectCode = 0x0
+          nfound += 1
+    except socket.timeout:
+      s.close()
+      return devices
+

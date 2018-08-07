@@ -19,14 +19,20 @@ from E_1608 import *
 import time
 
 # Find a E-1608 device on the subnet
-device = mccEthernetDevice(0x012F)
-if device.nfound == 0:
-  print('No devices found')
-  exit(0)
+
+device = mccDiscover(0x12f)
+#device = []
+#device.append(mccEthernetDevice(0x12f, '192.168.0.101'))
+
+print('Number of devices found = ', len(device))
+if (len(device) > 0):
+  for i in range(len(device)):
+    device[i].printDeviceInfo()
 else:
-  device.printDeviceInfo()
-sock = device.mccOpenDevice(0x0)
-e1608 = E_1608(device)
+  exit(0)
+
+sock = device[0].mccOpenDevice(0x0)
+e1608 = E_1608(device[0])
 
 #print out the calibration tables
 for i in range(NGAINS):
