@@ -652,7 +652,8 @@ bool FirmwareUpgrade_DIO24(EthernetDeviceInfo *device_info)
 
 bool ConfigMemoryR_DIO24(EthernetDeviceInfo *device_info, uint16_t address, uint16_t count, uint8_t *data)
 {
-  // This command reads the nonvolatile configuration memory.  The cal memory is 16 bytes (address 0 - 0xf)
+  // This command reads the nonvolatile configuration memory.  The configuration
+  // memory is 16 bytes (address 0 - 0xf)
 
   int sock = device_info->sock;
   unsigned char buffer[64];
