@@ -70,9 +70,11 @@ double TypeKReverseExtra[3];
 static int expansion_board = 0;
 
 /* for USB-2416 Only.  Later modes store these values in memory */
-static const double CJCGradients[16] =
-  { 1.310,  0.940,  0.0566,  0.256,  1.014,  0.880,  0.850,  0.870,
-    0.880,  1.036,  1.282,  1.506,   0.188,   0.530, 0.934,  1.136
+static const double CJCGradients[32] =
+  { 1.310, 0.940, 0.0566, 0.256, 1.014, 0.880, 0.850, 0.870,
+    0.880, 1.036, 1.282,  1.506, 0.188, 0.530, 0.934, 1.136,
+    1.310, 0.940, 0.0566, 0.256, 1.014, 0.880, 0.850, 0.870,
+    0.880, 1.036, 1.282,  1.506, 0.188, 0.530, 0.934, 1.136
   };
 
 void usbBuildGainTable_USB2416(libusb_device_handle *udev, double table[NGAINS_2416][2])
