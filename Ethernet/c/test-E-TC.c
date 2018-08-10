@@ -16,6 +16,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
@@ -62,6 +63,10 @@ int main(int argc, char**argv)
   uint8_t buf[32];
   in_addr_t address;
 
+  #define MAX_DEVICES 100
+  EthernetDeviceInfo **devices;
+  int nDevices = 0;
+
  start:
   device_info.device.connectCode = 0x0;   // default connect code
   device_info.device.frameID = 0;         // zero out the frameID
@@ -79,6 +84,35 @@ int main(int argc, char**argv)
     printf("No device found.\n");
     return -1;
   }
+
+  /* if you have more than one device, this is one way to manage them */
+  // Build up a structure of devices
+  devices = malloc(MAX_DEVICES*sizeof(devices));
+  for (i = 0; i < MAX_DEVICES; i++) {
+    devices[i] = malloc(sizeof(EthernetDeviceInfo));
+  }
+  nDevices = discoverDevices(devices, ETC_PID, MAX_DEVICES);
+
+  if (nDevices <= 0) {
+    printf("No device found.\n");
+    return -1;
+  } else {
+    printf("%d E-TC devices found!\n", nDevices);
+  }
+
+  /* Do check here, manage MAC address, etc. */
+  for (i = 0; i < nDevices; i++) {
+    printDeviceInfo(devices[i]);
+  }
+
+  // cleanup
+  for (i = 0; i < MAX_DEVICES; i++) {
+    free(devices[i]);
+  }
+  free(devices);
+
+  device_info.device.connectCode = 0x0;   // default connect code
+  device_info.device.frameID = 0;         // zero out the frameID
 
   if ((device_info.device.sock = openDevice(inet_addr(inet_ntoa(device_info.device.Address.sin_addr)),
 					    device_info.device.connectCode)) < 0) {
