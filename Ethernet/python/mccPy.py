@@ -151,7 +151,7 @@ def mccDiscover(productID=None):
     try:
       msg, address = s.recvfrom(1024)
       if (len(msg) == 64):
-        id = msg[7] + (msg[8]<<8)
+        id = (msg[7] | (msg[8]<<8))
         if (id == productID or productID == None):
           devices.append(mccEthernetDevice())
           devices[nfound].address = address[0]
@@ -160,8 +160,8 @@ def mccDiscover(productID=None):
             devices[nfound].MAC += (msg[i]<<((6-i)*8))
           devices[nfound].NetBIOS = msg[11:26].decode()
           devices[nfound].productID = msg[7] + (msg[8]<<8)
-          devices[nfound].firmwareVersion = msg[9] + (msg[10]<<8)
-          devices[nfound].bootloadVersion = msg[39] +( msg[40]<<8)
+          devices[nfound].firmwareVersion = (msg[9] | (msg[10]<<8))
+          devices[nfound].bootloadVersion = (msg[39] | ( msg[40]<<8))
           devices[nfound].frameID = 0
           devices[nfound].ConnectCode = 0x0
           nfound += 1
