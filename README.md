@@ -174,6 +174,7 @@ I have written drivers for the following boards:
       
       ```bash
       blacklist 8255_pci (or whatever the name of the kernel module is)
+      update-initramfs -u
       ```
       
       Then run 
@@ -182,7 +183,8 @@ I have written drivers for the following boards:
       $ depmod -a 
      ```
      
-     and reboot. 
+     and reboot.  After reboot, use lsmod is see if the drivers are gone. If not, seach the web blacklisting
+     kernel modules.
 
 9. Q: Under Raspian on the Raspberry Pi, I can not run the test program except as root.  
    A: Go to /etc/udev/rules.d and rename the file 61-mcc.rules to 99-mcc.rules and reboot.
