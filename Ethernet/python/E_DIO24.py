@@ -65,6 +65,7 @@ class E_DIO24:
     # state, and a 1 indicates a high state.
     dataCount = 0
     replyCount = 3
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -95,9 +96,13 @@ class E_DIO24:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = r_buffer[MSG_INDEX_DATA] | (r_buffer[MSG_INDEX_DATA+1]<<8) | (r_buffer[MSG_INDEX_DATA+2]<<16)
-    if (result == False):
-      print('Error in DIn E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result, value
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in DIn E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+    return value
     
   def DOut_R(self):
     # This command reads the DIO output latch value.  The factory power
@@ -106,6 +111,7 @@ class E_DIO24:
     
     dataCount = 0
     replyCount = 3
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -136,9 +142,14 @@ class E_DIO24:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = r_buffer[MSG_INDEX_DATA] | r_buffer[MSG_INDEX_DATA+1]<<8 | r_buffer[MSG_INDEX_DATA+2]<<16
-    if (result == False):
-      print('Error in DOut_R E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result, value
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in DOut_R E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
+    return value
 
   def DOut(self, mask, value):
     # This command writes the DIO latch value.  The factory power on
@@ -148,6 +159,7 @@ class E_DIO24:
     
     dataCount = 6
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -183,9 +195,11 @@ class E_DIO24:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in DOut E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+        if (result == False):
+          raise ResultError
+    except ResultError:
+      print('Error in DOut E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def DConfig_R(self):
     # This command reads the DIO configuration value.  A 1 in a bit
@@ -194,6 +208,7 @@ class E_DIO24:
     
     dataCount = 0
     replyCount = 3
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -224,9 +239,14 @@ class E_DIO24:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = int(r_buffer[MSG_INDEX_DATA] | r_buffer[MSG_INDEX_DATA+1]<<8 | r_buffer[MSG_INDEX_DATA+2]<<16)
-    if (result == False):
-      print('Error in DConfig_R E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result, value
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in DConfig_R E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
+    return value
 
   def DConfig_W(self, mask, value):
     # This command writes the configuration value.  A 1 in a bit
@@ -236,6 +256,7 @@ class E_DIO24:
     
     dataCount = 6
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -271,9 +292,12 @@ class E_DIO24:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in DConfig_W E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in DConfig_W E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
 
   #################################
   #       Counter Commands        #
@@ -287,6 +311,7 @@ class E_DIO24:
 
     dataCount = 0
     replyCount = 4
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -317,9 +342,14 @@ class E_DIO24:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value ,= unpack_from('I', r_buffer, MSG_INDEX_DATA)
-    if (result == False):
-      print('Error in counter E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result, value
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in counter E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
+    return value
   
   def resetCounter(self):
     # This command resets the event counter.  On a write, the
@@ -327,6 +357,7 @@ class E_DIO24:
     
     dataCount = 0
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -356,14 +387,17 @@ class E_DIO24:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in restCounter_R E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in restCounter E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
   
   #################################
   #     Miscellaneous Commands    #
   #################################
-  def blink(self, count=1):
+  def Blink(self, count=1):
     # This command will blink the device power LED "count" times
 
     dataCount = 1
@@ -399,11 +433,13 @@ class E_DIO24:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in blink E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in blink E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
-  def reset(self):
+  def Reset(self):
     # The command resets the device.
     dataCount = 0
     replyCount = 0
@@ -437,11 +473,13 @@ class E_DIO24:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in reset E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in reset E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
-  def status(self):
+  def Status(self):
     # This command reads the device status
     # bits 0-15   Reserved
 
@@ -477,12 +515,17 @@ class E_DIO24:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-           self.status = r_buffer[MSG_INDEX_DATA] | (r_buffer[MSG_INDEX_DATA+1]<<8 & 0xff)
-    if (result == False):
-      print('Error in status E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result, self.status
+           status = r_buffer[MSG_INDEX_DATA] | (r_buffer[MSG_INDEX_DATA+1]<<8 & 0xff)
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in status E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
 
-  def networkConfig(self):
+    return status
+
+  def NetworkConfig(self):
     # This command reads the current network configuration.  Returns tuple
     #  (ip_address, subnet_mask, gateway_address)
     #  
@@ -520,11 +563,16 @@ class E_DIO24:
            result = True
            data = unpack_from('III', r_buffer, MSG_INDEX_DATA)
            value = (socket.inet_ntoa(pack('L', data[0])), socket.inet_ntoa(pack('L', data[1])), socket.inet_ntoa(pack('L', data[2])))
-    if (result == False):
-      print('Error in networkConfig E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result, value
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in networkConfig E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
 
-  def firmwareUpgrade(self):
+    return value
+
+  def FirmwareUpgrade(self):
     # This command causes the device to reset and enter the bootloader
     # for a firmware upgrade.  It erases a portion of the program memory so
     # the device must have firmware downloaded through the bootloder before
@@ -564,9 +612,12 @@ class E_DIO24:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in firmwareUpgrade E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in firmwareUpgrade E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
 
   #################################
   #       Memory  Commands        #
@@ -581,6 +632,7 @@ class E_DIO24:
 
     dataCount = 4
     replyCount = count
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -615,8 +667,13 @@ class E_DIO24:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = int.from_bytes(r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount], byteorder = 'little')
-    if (result == False):
-      print('Error in configMemory_R E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in configMemory_R E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
     return value
 
   def configMemory_W(self, address, count, data):
@@ -633,13 +690,14 @@ class E_DIO24:
      # address: the start address for writing (0-0xf)
      # data:    the data to be written (frame count -2)
 
-    if (count > 16):
-      return False
-
     dataCount = count + 2
     replyCount = 0
+    result = False    
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    if (count > 16):
+      return False
 
     s_buffer[MSG_INDEX_COMMAND]        = CMD_CONF_MEM_W
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
@@ -671,9 +729,11 @@ class E_DIO24:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in configMemory_W E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in configMemory_W E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def UserMemory_R(self, address, count):
     # This command reads the nonvolatile user memory.  The user memory is
@@ -687,6 +747,7 @@ class E_DIO24:
 
     dataCount = 4
     replyCount = count
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -721,8 +782,13 @@ class E_DIO24:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = int.from_bytes(r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount], byteorder='little')
-    if (result == False):
-      print('Error in UserMemory_R E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in UserMemory_R E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
     return value
 
   def UserMemory_W(self, address, count, data):
@@ -736,6 +802,7 @@ class E_DIO24:
 
     dataCount = count + 2
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -769,9 +836,11 @@ class E_DIO24:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in UserMemory_W E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in UserMemory_W E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def SettingsMemory_R(self, address, count):
     # This command reads the nonvolatile settings memory.  The settings memory is
@@ -785,6 +854,7 @@ class E_DIO24:
 
     dataCount = 4
     replyCount = count
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -819,8 +889,13 @@ class E_DIO24:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = int.from_bytes(r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount], byteorder='little')
-    if (result == False):
-      print('Error in SettingsMemory_R E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in SettingsMemory_R E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
     return value
 
   def SettingsMemory_W(self, address, count, data):
@@ -835,6 +910,7 @@ class E_DIO24:
 
     dataCount = count + 2
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -868,9 +944,11 @@ class E_DIO24:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in SettingsMemory_W E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in SettingsMemory_W E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def BootloaderMemory_R(self, address, count):
     # This command reads the bootloader stored in nonvolatile FLASH
@@ -887,6 +965,7 @@ class E_DIO24:
 
     dataCount = 4
     replyCount = count
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -921,8 +1000,13 @@ class E_DIO24:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = int.from_bytes(r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount], byteorder='little')
-    if (result == False):
-      print('Error in BootloaderMemory_R E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in BootloaderMemory_R E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
     return value
 
   def BootloaderMemory_W(self, address, count, data):
@@ -944,7 +1028,7 @@ class E_DIO24:
     # memory may be written; however, the device will not be able to
     # boot unless it has a valid bootloader so the device shold not be
     # reset until the bootloader is completely written and verified
-    # using readBootloaderMemory_E1608().
+    # using BootloaderMemory_R().
     #
     # The writes are perfomred on 4-byte boundaries internally and it
     # is recommended that the output data be sent in the same manner.
@@ -956,6 +1040,7 @@ class E_DIO24:
 
     dataCount = count + 2
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -989,7 +1074,10 @@ class E_DIO24:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in BootloaderMemory_W E-DIO24.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in BootloaderMemory_W E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
 

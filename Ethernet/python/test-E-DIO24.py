@@ -53,7 +53,7 @@ while True:
   ch = input('\n')
   if ch == 'b':
     count = input('Enter number of times to blink: ')
-    result = edio24.blink(int(count))
+    edio24.Blink(int(count))
   elif ch == 'c':
     print('Testing Counter on E-DIO24')
     print('connect P2D6 to P2D7')
@@ -65,7 +65,7 @@ while True:
       time.sleep(.05)
       edio24.DOut(mask, 0x000000)    # set P2D6 LOW
       time.sleep(.05)
-      resutl, count = edio24.counter()
+      count = edio24.counter()
       print('Counter = ', count)
   elif ch == 'C':
     mask = int(input('Enter mask (which bits to configure): '),16)
@@ -79,29 +79,28 @@ while True:
     val = 0x00f0f0
     if (edio24.DConfig_W(mask, val) == False):
       print('error in edio24.config_W')
-    result, val2 = edio24.DConfig_R() 
-    val2 &=  0xffffff
+    val2 = edio24.DConfig_R() & 0xffffff
     print('Digital Port tristate Register = ', hex(val2))
     value = int(input('Enter a number [0-0xff] '),16)
     value = (value & 0xf) | ((value << 4) & 0xf00)
     edio24.DOut(0xf0f, value)
-    result, out = edio24.DOut_R()
+    out = edio24.DOut_R() 
     out = (out & 0xf) | ((out >> 4) & 0xf0)
-    result, inpt = edio24.DIn()
+    inpt = edio24.DIn()
     inpt = (inpt & 0xf) | ((inpt >> 4) & 0xf0)
     print('The number you entered = ', hex(inpt), '  Latched value = ', hex(out))
   elif ch == 'r':
-    edio24.reset()
+    edio24.Reset()
   elif ch == 'R':
     print('Reading Settings Memory.')
     for i in range(0x1f):
       value = edio24.SettingsMemory_R(i, 1)
       print('address: ',hex(i), '    value =', value)
   elif ch == 's':
-    result,status = edio24.status()
+    status = edio24.Status()
     print('status = ', hex(status))
   elif ch == 'n':
-    resut,value = edio24.networkConfig()
+    value = edio24.NetworkConfig()
     print('Network configuration values: ')
     print('  IP address = ', value[0])
     print('  subnet mask = ', value[1])

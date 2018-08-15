@@ -150,11 +150,6 @@ Note: The settings do not take effect until after device is reset or power cycle
 |=================================================================|
 '''
 
-class table:
-  def __init__(self):
-    self.slope = 0.0
-    self.intercept = 0.0
-
 class E_1608:
 
   def __init__(self, device):
@@ -210,8 +205,10 @@ class E_1608:
     
     dataCount = 0
     replyCount = 1
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
 
     s_buffer[MSG_INDEX_COMMAND]        = CMD_DIN_R
     s_buffer[MSG_INDEX_START]          = MSG_START
@@ -240,9 +237,14 @@ class E_1608:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = r_buffer[MSG_INDEX_DATA]
-    if (result == False):
-      print('Error in DIn E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result, value
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in DOut_R E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
+    return value
     
   def DOut_R(self):
     # This command reads the DIO output latch value.  The factory power
@@ -251,6 +253,7 @@ class E_1608:
     
     dataCount = 0
     replyCount = 1
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -281,9 +284,14 @@ class E_1608:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = r_buffer[MSG_INDEX_DATA]
-    if (result == False):
-      print('Error in DOut_R E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result, value
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in DOut_R E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
+    return value
 
   def DOut(self, value):
     # This command writes the DIO latch value.  The factory power on
@@ -292,6 +300,7 @@ class E_1608:
     
     dataCount = 1
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -322,9 +331,12 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in DOut E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in DOut E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
 
   def DConfig_R(self):
     # This command reads the DIO configuration value.  A 1 in a bit
@@ -333,6 +345,7 @@ class E_1608:
     
     dataCount = 0
     replyCount = 1
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -363,9 +376,14 @@ class E_1608:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = r_buffer[MSG_INDEX_DATA]
-    if (result == False):
-      print('Error in DConfig_R E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result, value
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in DConfig_R E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
+    return value
 
   def DConfig_W(self, value):
     # This command writes the configuration value.  A 1 in a bit
@@ -374,6 +392,7 @@ class E_1608:
     
     dataCount = 1
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -404,9 +423,12 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in DConfig_W E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in DConfig_W E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
       
   #################################
   #     Analog Input Commands     #
@@ -421,6 +443,7 @@ class E_1608:
 
     dataCount = 2
     replyCount = 2
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -453,8 +476,12 @@ class E_1608:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = (r_buffer[MSG_INDEX_DATA] | (r_buffer[MSG_INDEX_DATA+1]<<8))
-    if (result == False):
-      print('Error in AIn E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AIn E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return
 
     if channel < DF:    # single ended
       data = round(float(value)*self.table_AInSE[gain].slope + self.table_AInSE[gain].intercept)
@@ -467,7 +494,7 @@ class E_1608:
     else:
       value = data
 
-    return result, value
+    return value
 
   def AInScanStart(self, count, frequency, options):
   #
@@ -535,6 +562,7 @@ class E_1608:
 
     dataCount = 9
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -590,17 +618,17 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in AInScanStart E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-      return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AInScanStart E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return 
 
     # send ACK to start scan
-    if (result == True):
-      data = bytearray(1)
-      data[0] = 0x0
-      self.device.sock.send(data)  # send a single byte
-
-    return result
+    data = bytearray(1)
+    data[0] = 0x0
+    self.device.sock.send(data)  # send a single byte
 
   def AInScanRead(self, nScan, nChan):
     count = nScan*nChan   # total number of 2-byte samples
@@ -645,6 +673,7 @@ class E_1608:
 
     dataCount = 0
     replyCount = 2*self.queue[0]+1
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -676,9 +705,11 @@ class E_1608:
            result = True
            for i in range(replyCount):
              self.queue[i] = r_buffer[MSG_INDEX_DATA+i]
-    if (result == False):
-      print('Error in AInQueue_R E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AInQueue_R E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def AInQueue_W(self):
     # This command writes the analog input scan channel gain queue
@@ -691,6 +722,7 @@ class E_1608:
 
     dataCount = 2*self.queue[0]+1
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -725,10 +757,11 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in AInQueue_W E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AInQueue_W E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def AInScanStop(self, close_socket=0):
     #
@@ -770,10 +803,13 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in AInScanStop E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AInScanStop E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
+  
   ########################
   #     Analog Output    #
   ########################
@@ -785,6 +821,7 @@ class E_1608:
     # value[1]   the current value for analog output channel 1
     dataCount = 0
     replyCount = 4
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
     value = []
@@ -815,15 +852,18 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in AOut_R E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-      return result, -1
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AOut_R E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return
 
     data = unpack_from('H'*2, r_buffer, MSG_INDEX_DATA)
     value[0] = round(data[0]*self.table_AOut[0].slope + self.table_AOut[0].intercept)
     value[1] = round(data[1]*self.table_AOut[1].slope + self.table_AOut[1].intercept)
   
-    return result, value
+    return value
 
   def AOut(self, channel, value):
     # This command writes the value of the analog output channel.
@@ -833,6 +873,7 @@ class E_1608:
 
     dataCount = 3
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -867,17 +908,18 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in AOut E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AOut E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
 
   #################################
   #     Miscellaneous Commands    #
   #################################
 
-  def blink(self, count=1):
+  def Blink(self, count=1):
     # This command will blink the device power LED "count" times
 
     dataCount = 1
@@ -913,11 +955,13 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in blink E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in blink E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
-  def reset(self):
+  def Reset(self):
     # This command resets the device
     
     dataCount = 0
@@ -952,11 +996,13 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in reset E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in reset E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
-  def status(self):
+  def Status(self):
     # This command reads the device status
     #   bit 0:     1 = data socket is open, 0 = data socket is closed
     #   bit 1:     1 = AIn scan running
@@ -995,12 +1041,16 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-           self.status = r_buffer[MSG_INDEX_DATA] + (r_buffer[MSG_INDEX_DATA+1]<<8 & 0xff)
-    if (result == False):
-      print('Error in status E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result, self.status
+           status = r_buffer[MSG_INDEX_DATA] | (r_buffer[MSG_INDEX_DATA+1]<<8 & 0xff)  # status
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in status E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
-  def networkConfig(self):
+    return status
+
+  def NetworkConfig(self):
     # This command reads the current network configuration.  Returns tuple
     #  (ip_address, subnet_mask, gateway_address)
     #  
@@ -1038,11 +1088,15 @@ class E_1608:
            result = True
            data = unpack_from('III', r_buffer, MSG_INDEX_DATA)
            value = (socket.inet_ntoa(pack('L', data[0])), socket.inet_ntoa(pack('L', data[1])), socket.inet_ntoa(pack('L', data[2])))
-    if (result == False):
-      print('Error in networkConfig E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result, value
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in networkConfig E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
+    return value
   
-  def firmwareUpgrade(self):
+  def FirmwareUpgrade(self):
     # This command causes the device to reset and enter the bootloader
     # for a firmware upgrade.  It erases a portion of the program memory so
     # the device must have firmware downloaded through the bootloder before
@@ -1082,9 +1136,12 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in firmwareUpgrade E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in firmwareUpgrade E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
 
   #################################
   #       Counter Commands        #
@@ -1094,6 +1151,7 @@ class E_1608:
 
     dataCount = 0
     replyCount = 4
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -1124,9 +1182,14 @@ class E_1608:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value ,= unpack_from('I', r_buffer, MSG_INDEX_DATA)
-    if (result == False):
-      print('Error in counter E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result, value
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in counter E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
+    return value
   
   def resetCounter(self):
     # This command resets the event counter.  On a write, the
@@ -1134,6 +1197,7 @@ class E_1608:
     
     dataCount = 0
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -1163,10 +1227,12 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in restCounter_R E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
-  
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in restCounter_R E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
 
   #################################
   #       Memory  Commands        #
@@ -1181,6 +1247,7 @@ class E_1608:
 
     dataCount = 4
     replyCount = count
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -1215,8 +1282,13 @@ class E_1608:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
-    if (result == False):
-      print('Error in CalMemory_R E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in CalMemory_R E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
     return value
 
   def CalMemory_W(self, address, count, data):
@@ -1235,6 +1307,7 @@ class E_1608:
 
     dataCount = count + 2
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -1268,9 +1341,11 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in CalMemory_W E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in CalMemory_W E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def UserMemory_R(self, address, count):
     # This command reads the nonvolatile user memory.  The user memory is
@@ -1284,6 +1359,7 @@ class E_1608:
 
     dataCount = 4
     replyCount = count
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -1318,8 +1394,13 @@ class E_1608:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = int.from_bytes(r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount], byteorder='little')
-    if (result == False):
-      print('Error in UserMemory_R E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in UserMemory_R E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
     return value
 
   def UserMemory_W(self, address, count, data):
@@ -1333,6 +1414,7 @@ class E_1608:
 
     dataCount = count + 2
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -1366,9 +1448,11 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in UserMemory_W E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in UserMemory_W E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def SettingsMemory_R(self, address, count):
     # This command reads the nonvolatile settings memory.  The settings memory is
@@ -1382,6 +1466,7 @@ class E_1608:
 
     dataCount = 4
     replyCount = count
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -1416,8 +1501,13 @@ class E_1608:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = int.from_bytes(r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount], byteorder='little')
-    if (result == False):
-      print('Error in SettingsMemory_R E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in SettingsMemory_R E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
     return value
 
   def SettingsMemory_W(self, address, count, data):
@@ -1432,6 +1522,7 @@ class E_1608:
 
     dataCount = count + 2
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -1465,9 +1556,12 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in SettingsMemory_W E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in SettingsMemory_W E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
 
   def BootloaderMemory_R(self, address, count):
     # This command reads the bootloader stored in nonvolatile FLASH
@@ -1484,6 +1578,7 @@ class E_1608:
 
     dataCount = 4
     replyCount = count
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -1518,8 +1613,13 @@ class E_1608:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
            value = int.from_bytes(r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount], byteorder='little')
-    if (result == False):
-      print('Error in BootloaderMemory_R E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in BootloaderMemory_R E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
     return value
 
   def BootloaderMemory_W(self, address, count, data):
@@ -1541,7 +1641,7 @@ class E_1608:
     # memory may be written; however, the device will not be able to
     # boot unless it has a valid bootloader so the device shold not be
     # reset until the bootloader is completely written and verified
-    # using readBootloaderMemory_E1608().
+    # using BootloaderMemory_R().
     #
     # The writes are perfomred on 4-byte boundaries internally and it
     # is recommended that the output data be sent in the same manner.
@@ -1553,6 +1653,7 @@ class E_1608:
 
     dataCount = count + 2
     replyCount = 0
+    result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
@@ -1586,9 +1687,12 @@ class E_1608:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-    if (result == False):
-      print('Error in BootloaderMemory_W E-1608.  Status =', r_buffer[MSG_INDEX_STATUS])
-    return result
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in BootloaderMemory_W E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
 
   def getMFGCAL(self):
     # get the manufacturers calibration data (timestamp) from the Calibration memory

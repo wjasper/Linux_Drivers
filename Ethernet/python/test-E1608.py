@@ -20,7 +20,7 @@ import time
 
 # Find a E-1608 device on the subnet
 
-device = mccDiscover(0x12f)
+device = mccDiscover(E1608_PID)
 #device = []
 #device.append(mccEthernetDevice(0x12f, '192.168.0.101'))
 
@@ -64,7 +64,7 @@ while True:
   ch = input('\n')
   if ch == 'b':
     count = input('Enter number of times to blink: ')
-    result = e1608.blink(int(count))
+    e1608.Blink(int(count))
   elif ch == 'c':
     print('Connect DIO0 to CTR')
     e1608.DConfig_W(0xf0)
@@ -74,25 +74,24 @@ while True:
         time.sleep(0.1)
         e1608.DOut(0x0)
         time.sleep(0.1)
-        result, count = e1608.counter()
+        count = e1608.counter()
         print('Counter = ', count)
   elif ch == 'd':
     print("\n Testing Digital I/O ...")
     print("connect pins DIO[0-3] <---> DIO[4-7]")
     e1608.DConfig_W(0xf0)  # write to pins 0-3
-    result, value = e1608.DConfig_R()
+    value = e1608.DConfig_R()
     print('Digital Port Tristate Register = ',hex(value))
     value = int(input('Enter a number [0-0xf]: '),16)
     e1608.DOut(value)
-    result, value1 = e1608.DIn()
-    value1  = (value1>>4) & 0xf
-    result, value2 = e1608.DOut_R()
+    value1 = (e1608.DIn()>>4) & 0xf
+    value2 = e1608.DOut_R()
     print('The number you entered = ',hex(value1), '  Latched value = ', hex(value2))
   elif ch == 'i':
     chan = int(input('Input channel [0-11]: '))
     gain = int(input('Input range [0-3]: '))
     for i in range(20):
-      reslut,value = e1608.AIn(chan,gain)
+      value = e1608.AIn(chan,gain)
       print('Channel = ', chan, '  Range = ',gain, ' Sample[',i,'] = ',hex(value), '  Volts = ',e1608.volts(value, gain))
   elif ch == 'e':
     e1608.device.sock.close()
@@ -134,15 +133,15 @@ while True:
     print('AOut: channel = ',chan, ' value = ', hex(value))
     e1608.AOut(chan, value)
   elif ch == 'r':
-    e1608.reset()
+    e1608.Reset()
   elif ch == 's':
     # Print the calibration data and status
-    result,status = e1608.status()
+    status = e1608.Status()
     print('status = ', hex(status))
     mdate = e1608.getMFGCAL()
     print('Last Calibration date: ', mdate)
   elif ch == 'n':
-    resut,value = e1608.networkConfig()
+    value = e1608.NetworkConfig()
     print('Network configuration values: ')
     print('  IP address = ', value[0])
     print('  subnet mask = ', value[1])

@@ -45,7 +45,22 @@ MSG_INDEX_DATA =       6
 MSG_REPLY =            0x80
 MSG_START =            0xDB
 
+# Base class for lookup tables of calibration coefficients (slope and offset)
+class table:
+  def __init__(self):
+    self.slope = 0.0
+    self.intercept = 0.0
 
+# Error Handling
+class Error(Exception):
+  ''' Base class for other exceptions.'''
+  pass
+
+class ResultError(Error):
+  ''' Raised when return TCP packet fails'''
+  pass
+
+# Definitions for basic MCC Ethernet Device class
 class mccEthernetDevice:
 
   def __init__(self, productID=None, device_address=None):
@@ -88,10 +103,10 @@ class mccEthernetDevice:
     # send the connect message
     msg = bytearray(5)
     msg[0] = ord('C')
-    msg[1] = connectCode>>24&0xff
-    msg[2] = connectCode>>16&0xff
-    msg[3] = connectCode>>8&0xff
-    msg[4] = connectCode&0xff
+    msg[1] = (connectCode>>24) & 0xff
+    msg[2] = (connectCode>>16) & 0xff
+    msg[3] = (connectCode>>8)  & 0xff
+    msg[4] = connectCode       & 0xff
 
     s.settimeout(1)          # set noblocking 1 second timeout
     s.send(msg)
@@ -128,7 +143,7 @@ class mccEthernetDevice:
       self.sock = s
       return
     except:
-      print('Error connecting to E-1608')
+      print('Error connecting to Ethernet Device')
       return
 
   def calcChecksum(self, buf, length):
@@ -136,6 +151,8 @@ class mccEthernetDevice:
     for i in range(length):
       checksum += buf[i]
     return (checksum & 0xff)
+
+###############  end class defition ##########################
 
 def mccDiscover(productID=None):
   devices = []
@@ -159,7 +176,7 @@ def mccDiscover(productID=None):
           for i in range(1,7):
             devices[nfound].MAC += (msg[i]<<((6-i)*8))
           devices[nfound].NetBIOS = msg[11:26].decode()
-          devices[nfound].productID = msg[7] + (msg[8]<<8)
+          devices[nfound].productID = msg[7] | (msg[8]<<8)
           devices[nfound].firmwareVersion = (msg[9] | (msg[10]<<8))
           devices[nfound].bootloadVersion = (msg[39] | ( msg[40]<<8))
           devices[nfound].frameID = 0
@@ -169,3 +186,23 @@ def mccDiscover(productID=None):
       s.close()
       return devices
 
+
+# Structures for Temperature */
+##################################################
+# NIST Thermocouple coefficients
+#
+# The following types are supported:
+#
+#    J, K, R, S, T, N, E, B
+#
+# Define the types of Thermocouples supported */
+
+CHAN_DISABLE  = 0
+TC_TYPE_J     = 1   # Type J thermocouple
+TC_TYPE_K     = 2   # Type K thermocouple
+TC_TYPE_T     = 3   # Type T thermocouple
+TC_TYPE_E     = 4   # Type E thermocouple
+TC_TYPE_R     = 5   # Type R thermocouple
+TC_TYPE_S     = 6   # Type S thermocouple
+TC_TYPE_B     = 7   # Type B thermocouple
+TC_TYPE_N     = 8   # Type N thermocouple
