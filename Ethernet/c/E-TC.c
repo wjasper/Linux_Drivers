@@ -728,7 +728,7 @@ bool MeasureConfigR_E_TC(DeviceInfo_TC *device_info)
 
 bool MeasureConfigW_E_TC(DeviceInfo_TC *device_info)
 {
-  /* This command reads the measurement configuration. 
+  /* This command writes the measurement configuration. 
 
      bit 0:    0 - OTD enable,    1 - OTD disabled
      bit 1:    0 - factory coef.  1 - field coef.
@@ -1991,7 +1991,7 @@ bool UserMemoryR_E_TC(DeviceInfo_TC *device_info, uint16_t address, uint16_t cou
     --------------------------------------------
     0x0000 - 0x0DFF     Available for UL use
 
-    address: the start address for reading
+    address: the start address for reading (max value 3583)
     count:   the number of bytes to read (max 1024 due to protocol)
   */
 
@@ -2007,7 +2007,7 @@ bool UserMemoryR_E_TC(DeviceInfo_TC *device_info, uint16_t address, uint16_t cou
     return false;
   }
 
-  if (count > 1024) {
+  if (count > 1024 || address > 0xdff) {
     printf("UserMemoryR_E_TC: max value of count is 1024.\n");
     return false;
   }
@@ -2066,8 +2066,8 @@ bool UserMemoryW_E_TC(DeviceInfo_TC *device_info, uint16_t address, uint16_t cou
     return false;
   }
 
-  if (count > 1022) {
-    printf("UserMemoryW_E_TC: max value of count is 1022\n");
+  if (count > 0xdff) {
+    printf("UserMemoryW_E_TC: max value of count is 0xdff\n");
     return false;
   }
 

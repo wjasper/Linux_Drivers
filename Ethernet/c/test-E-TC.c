@@ -138,8 +138,8 @@ int main(int argc, char**argv)
     printf("Hit 'r' to reset the device.\n");
     printf("Hit 'n' to get networking information.\n");
     printf("Hit 's' for thermocouple status\n");
-    printf("hit 'R' to read System Memory Map\n");
-    printf("hit 'W' to write System Memory Map\n");
+    printf("Hit 'R' to read System Memory Map\n");
+    printf("Hit 'W' to write System Memory Map\n");
     printf("Hit 't' for temperature.\n");
     printf("Hit 'v' for version and calibration date.\n");
 
@@ -307,14 +307,12 @@ int main(int argc, char**argv)
 	printf("Enter new Network options (0-3): ");
 	scanf("%hhd", buf);
 	SettingsMemoryW_E_TC(&device_info, 0x0, 1, buf);
-
 	printf("Reset or powercycle for changes to take effect.\n");
-	
+
         break;
-	
       case 'v':
 	FactoryCalDateR_E_TC(&device_info, &date);
-	printf("Factory Calibration date = %s\n", asctime(&date));
+	printf("Factory Calibration date = %s", asctime(&date));
 	FieldCalDateR_E_TC(&device_info, &date);
 	printf("Field Calibration date = %s\n", asctime(&date));
 	break;
