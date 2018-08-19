@@ -63,11 +63,11 @@ I have written drivers for the following boards:
 
 **Ethernet**
 1. E-1608   (C/Python)
-2. E-DIO24  (C)
-3. E-TC     (C)
+2. E-DIO24  (C/Python)
+3. E-TC     (C/Python)
 4. E-TC32   (C)
 
-**New**:heavy_exclamation_mark: E-1608.py, E-DIO24.py
+**New**:heavy_exclamation_mark: E-1608.py, E-DIO24.py E-TC
 
 **Bluetooth**
 1. BTH-1208LS
