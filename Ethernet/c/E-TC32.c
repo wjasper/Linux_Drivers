@@ -956,7 +956,7 @@ bool AlarmConfigR_E_TC32(DeviceInfo_TC32 *device_info)
             10 - Only an open thermocouple or common-mode voltage will set the alarm,
                  termperature is ignored.
             11 - invalid.
-      bit 7: reserveed.
+      bit 7: reserved.
   */
 
   int sock = device_info->device.sock;
@@ -1037,7 +1037,7 @@ bool AlarmConfigW_E_TC32(DeviceInfo_TC32 *device_info)
             10 - Only an open thermocouple or common-mode voltage will set the alarm,
                  termperature is ignored.
             11 - invalid.
-      bit 7: reserveed.
+      bit 7: reserved.
   */
 
   int sock = device_info->device.sock;
@@ -1045,7 +1045,7 @@ bool AlarmConfigW_E_TC32(DeviceInfo_TC32 *device_info)
   unsigned char replyBuffer[16];
   bool result = false;
   int length;
-  int dataCount = 0;
+  int dataCount = 576;
   int replyCount;
 
   if (sock < 0) {

@@ -1515,7 +1515,10 @@ bool AlarmConfigR_E_TC(DeviceInfo_TC *device_info)
             10 - Only an open thermocouple or common-mode voltage will set the alarm,
                  termperature is ignored.
             11 - invalid.
-      bit 7: reserveed.
+      bit 7: reserved.
+
+    threshold_1  float[8] the current alarm threshold 1 values in Celsius
+    threshold_2  float[8] the current alarm threshold 2 values in Celsius
   */
 
   int sock = device_info->device.sock;
@@ -1593,7 +1596,10 @@ bool AlarmConfigW_E_TC(DeviceInfo_TC *device_info)
             10 - Only an open thermocouple or common-mode voltage will set the alarm,
                  termperature is ignored.
             11 - invalid.
-      bit 7: reserveed.
+      bit 7: reserved.
+
+    threshold_1  float[8] the current alarm threshold 1 values in Celsius
+    threshold_2  float[8] the current alarm threshold 2 values in Celsius
   */
 
   int sock = device_info->device.sock;
@@ -1651,7 +1657,7 @@ bool AlarmStatusR_E_TC(DeviceInfo_TC *device_info)
      on the corresponding channel. If the alarm is configured for
      latching then the status will not clear when the alarm condition
      is no longer present. It must be cleared by writing a 1 to the
-     corresponding bit using the AlarmStatusW comman.
+     corresponding bit using the AlarmStatusW command.
   */
 
   int sock = device_info->device.sock;
