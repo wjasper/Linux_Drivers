@@ -795,7 +795,7 @@ class E_DIO24:
     # This command writes the nonvolatile user memory.  The user memory
     # is 3824 bytes (address 0 - 0xeef). The amount of data to be
     # written is inferred from the frame count - 2.  The maximum that
-    # can be writtenin one transfer is 1024 bytes.
+    # can be written in one transfer is 1024 bytes.
 
     if (count > 512 or address > 0xeef):
       return False

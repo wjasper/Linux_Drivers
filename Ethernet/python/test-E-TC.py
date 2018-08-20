@@ -52,7 +52,6 @@ while True:
   print("Hit 'n' to get networking information.");
   print("Hit 's' for thermocouple status");
   print("Hit 'R' to read System Memory Map");
-  print("Hit 'W' to write System Memory Map");
   print("Hit 't' for temperature.");
   print("Hit 'v' for version and calibration date.");
 
@@ -93,7 +92,7 @@ while True:
   elif ch == 'r':  
     etc.Reset()
   elif ch == 'R':
-    print('Reding Settings Memory.')
+    print('Reading Settings Memory.')
     for i in range(0x1f):
       value = etc.SettingsMemory_R(i, 1)
       print('address: ',hex(i), '    value =', value)
