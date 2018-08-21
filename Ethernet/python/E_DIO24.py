@@ -21,35 +21,35 @@ from mccPy import *
 
 EDIO24_PID = 0x0137  # Product code for the MCC E-DIO24
 
-# Digital I/O Commands
-CMD_DIN_R          = 0x00  # Read DIO pins
-CMD_DOUT_R         = 0x02  # Read DIO latch value
-CMD_DOUT_W         = 0x03  # Write DIO latch value
-CMD_DCONF_R        = 0x04  # Read DIO configuration value
-CMD_DCONF_W        = 0x05  # Write DIO Configuration value
-
-# Counter Commands
-CMD_COUNTER_R      = 0x30  # Read event counter
-CMD_COUNTER_W      = 0x31  # Reset event counter
-
-# Memory Commands
-CMD_CONF_MEM_R     = 0x40  # Read configuration memeory
-CMD_CONF_MEM_W     = 0x41  # Write configuration memory
-CMD_USR_MEM_R      = 0x42  # Read user memory  
-CMD_USR_MEM_W      = 0x43  # Write user memory
-CMD_SET_MEM_R      = 0x44  # Read settings memory
-CMD_SET_MEM_W      = 0x45  # Write settings memory
-CMD_BOOT_MEM_R     = 0x46  # Read bootloader memory
-CMD_BOOT_MEM_W     = 0x47  # Write bootloader memory
-
-# Miscellaneous Commands
-CMD_BLINKLED       = 0x50  # Blink the LED
-CMD_RESET          = 0x51  # Reset the device
-CMD_STATUS         = 0x52  # Read the device status
-CMD_NETWORK_CONF   = 0x54  # Read device network configuration
-CMD_FIRMWARE       = 0x60  # Enter bootloader for firmware upgrade
 
 class E_DIO24:
+  # Digital I/O Commands
+  CMD_DIN_R             = 0x00  # Read DIO pins
+  CMD_DOUT_R            = 0x02  # Read DIO latch value
+  CMD_DOUT_W            = 0x03  # Write DIO latch value
+  CMD_DCONF_R           = 0x04  # Read DIO configuration value
+  CMD_DCONF_W           = 0x05  # Write DIO Configuration value
+
+  # Counter Commands
+  CMD_COUNTER_R         = 0x30  # Read event counter
+  CMD_COUNTER_W         = 0x31  # Reset event counter
+
+  # Memory Commands
+  CMD_CONFIG_MEMORY_R   = 0x40  # Read configuration memeory
+  CMD_CONIGF_MEMORY_W   = 0x41  # Write configuration memory
+  CMD_USER_MEMORY_R     = 0x42  # Read user memory  
+  CMD_USER_MEMORY_W     = 0x43  # Write user memory
+  CMD_SETTINGS_MEMORY_R = 0x44  # Read settings memory
+  CMD_SETTINGS_MEMORY_W = 0x45  # Write settings memory
+  CMD_BOOT_MEMORY_R     = 0x46  # Read bootloader memory
+  CMD_BOOT_MEMORY_W     = 0x47  # Write bootloader memory
+
+  # Miscellaneous Commands
+  CMD_BLINKLED          = 0x50  # Blink the LED
+  CMD_RESET             = 0x51  # Reset the device
+  CMD_STATUS            = 0x52  # Read the device status
+  CMD_NETWORK_CONF      = 0x54  # Read device network configuration
+  CMD_FIRMWARE          = 0x60  # Enter bootloader for firmware upgrade
     
   def __init__(self, device):
     self.device = device        # inherit values from mccEthernetDevice
@@ -69,7 +69,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_DIN_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DIN_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -115,7 +115,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_DOUT_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DOUT_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -163,7 +163,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_DOUT_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DOUT_W
     s_buffer[MSG_INDEX_DATA]           = mask & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (mask>>8)  & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = (mask>>16) & 0xff
@@ -212,7 +212,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_DCONF_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DCONF_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -260,7 +260,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_DCONF_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DCONF_W
     s_buffer[MSG_INDEX_DATA]           = mask & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (mask>>8)  & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = (mask>>16) & 0xff
@@ -315,7 +315,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_COUNTER_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_COUNTER_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -361,7 +361,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_COUNTER_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_COUNTER_W
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -406,7 +406,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
     
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_BLINKLED
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_BLINKLED
     s_buffer[MSG_INDEX_DATA]           = count
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
@@ -447,7 +447,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
     
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_RESET
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_RESET
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -489,7 +489,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
     
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_STATUS
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_STATUS
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -535,7 +535,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
     
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_NETWORK_CONF
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_NETWORK_CONF
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -584,7 +584,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
     
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_FIRMWARE
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FIRMWARE
     s_buffer[MSG_INDEX_DATA]           = 0xad                     # key
     s_buffer[MSG_INDEX_DATA+1]         = 0xad                     # key
     s_buffer[MSG_INDEX_START]          = MSG_START
@@ -636,7 +636,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_CONFIG_MEM_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CONFIG_MEMORY_R
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
@@ -699,7 +699,7 @@ class E_DIO24:
     if (count > 16):
       return False
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_CONF_MEM_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CONFIG_MEMORY_W
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     for i in range(count):
@@ -751,7 +751,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_USR_MEM_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_USER_MEMORY_R
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
@@ -806,7 +806,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_USR_MEM_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_USER_MEMORY_W
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     for i in range(count):
@@ -858,7 +858,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_SET_MEM_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_SETTINGS_MEMORY_R
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
@@ -914,7 +914,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_SET_MEM_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_SETTINGS_MEMORY_W
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     for i in range(count):
@@ -969,7 +969,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_BOOT_MEM_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_BOOT_MEMORY_R
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
@@ -1044,7 +1044,7 @@ class E_DIO24:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_BOOT_MEM_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_BOOT_MEMORY_W
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     for i in range(count):

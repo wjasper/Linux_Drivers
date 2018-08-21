@@ -148,11 +148,11 @@ while True:
     print('  gateway = ', value[2])
     print('  MAC:', \
           hex(e1608.device.MAC>>40&0xff)[2:].zfill(2)+':'+\
-          hex(e1608.device.MAC>>32&0xff)[2:]+':'+\
-          hex(e1608.device.MAC>>24&0xff)[2:]+':'+\
-          hex(e1608.device.MAC>>16&0xff)[2:]+':'+\
-          hex(e1608.device.MAC>>8&0xff)[2:]+':'+\
-          hex(e1608.device.MAC&0xff)[2:])
+          hex(e1608.device.MAC>>32&0xff)[2:].zfill(2)+':'+\
+          hex(e1608.device.MAC>>24&0xff)[2:].zfill(2)+':'+\
+          hex(e1608.device.MAC>>16&0xff)[2:].zfill(2)+':'+\
+          hex(e1608.device.MAC>>8&0xff)[2:].zfill(2)+':'+\
+          hex(e1608.device.MAC&0xff)[2:].zfill(2))
   else:
     pass
 

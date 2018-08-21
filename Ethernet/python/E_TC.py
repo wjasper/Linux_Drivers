@@ -72,68 +72,67 @@ Note: The settings do not take effect until after device is reset or power cycle
 
 ETC_PID = 0x0138  # Product code for the MCC E-TC
 
-# Digital I/O Commands
-CMD_DIN                 = 0x00  # Read DIO pins
-CMD_DOUT_R              = 0x02  # Read DIO latch value
-CMD_DOUT_W              = 0x03  # Write DIO latch value
-CMD_DCONF_R             = 0x04  # Read DIO configuration value
-CMD_DCONF_W             = 0x05  # Write DIO configuration value
-
-# Temperature Input Commands
-CMD_TIN                 = 0x10  # Read single thermocouple channel
-CMD_CJC                 = 0x11  # Read single CJC sensor
-CMD_TIN_CONFIG_R        = 0x12  # Read temperature channel configuration
-CMD_TIN_CONFIG_W        = 0x13  # Write temperature channel configuration
-CMD_TIN_STATUS          = 0x14  # Read temperature channel data status
-CMD_OTD_STATUS          = 0x15  # Read open thermocouple detect data status
-CMD_MEASURE_CONFIG_R    = 0x16  # Read measurement configuration
-CMD_MEASURE_CONFIG_W    = 0x17  # Write measurement configuration
-CMD_MEASURE_MODE_R      = 0x18  # Read measurement mode
-CMD_MEASURE_MODE_W      = 0x19  # Write measurement mode
-CMD_FACTORY_COEF_R      = 0x1A  # Write factory calibration coefficients
-CMD_FACTORY_COEF_W      = 0x1B  # Write factory calibration coefficients
-CMD_FIELD_COEF_R        = 0x1C  # Read field calibration coefficients
-CMD_FIELD_COEF_W        = 0x1D  # Write field calibration coefficients
-CMD_FACTORY_CAL_DATE_R  = 0x1E  # Read factory calibration date
-CMD_FACTORY_CAL_DATE_W  = 0x1F  # Write factory calibration date
-CMD_FIELD_CAL_DATE_R    = 0x20  # Read field calibration date
-CMD_FIELD_CAL_DATE_W    = 0x21  # Write field calibration date
-CMD_AD_CAL              = 0x22  # Run the A/D offset calibration
-CMD_CJC_OFFSET_R        = 0x24  # Read user CJC offset values
-CMD_CJC_OFFSET_W        = 0x25  # Write user CJC offset values
-  
-# Alarm Commands
-CMD_ALARM_CONFIG_R      = 0x28  # Read temperature alarm configuration
-CMD_ALARM_CONFIG_W      = 0x29  # Write temperature alarm configuration
-CMD_ALARM_STATUS_R      = 0x2A  # Read temperature alarm status
-CMD_ALARM_STATUS_W      = 0x2B  # Clear temperature alarm status
-
-# Counter Commands
-CMD_COUNTER_R           = 0x30  # Read event counter
-CMD_COUNTER_W           = 0x31  # Write event counter
-
-# Memory Commands
-CMD_CONF_MEM_R          = 0x40 # Read device configuration memory
-CMD_CONF_MEM_W          = 0x41 # Write device configuration memory
-CMD_USR_MEM_R           = 0x42 # Read user memory
-CMD_USR_MEM_W           = 0x43 # Write user memory
-CDM_SETTINGS_MEM_R      = 0x44 # Read network settings memory
-CMD_SETTINGS_MEM_W      = 0x45 # Write network settings memory
-CMD_BOOT_MEM_R          = 0x46 # Read bootloader memory
-CDM_BOOT_MEM_W          = 0x47 # Write bootloader memory
-
-# Miscellaneous Commands
-CMD_BLINK_LED           = 0x50 # Blink the LED
-CMD_RESET               = 0x51 # Reset the device
-CMD_STATUS              = 0x52 # Read device status
-CMD_NETWORK_CONFIG      = 0x54 # Read the current network configuration
-CMD_FIRMWARE_UPGRADE    = 0x60 # Enter firmware upgrade mode
-
 CELSIUS      = 0x0 # read in Celsius
 VOLTAGE      = 0x1 # read in Voltage
 ADC_CODE     = 0x2 # uncalibraded
 
 class E_TC:
+  # Digital I/O Commands
+  CMD_DIN                 = 0x00  # Read DIO pins
+  CMD_DOUT_R              = 0x02  # Read DIO latch value
+  CMD_DOUT_W              = 0x03  # Write DIO latch value
+  CMD_DCONF_R             = 0x04  # Read DIO configuration value
+  CMD_DCONF_W             = 0x05  # Write DIO configuration value
+
+  # Temperature Input Commands
+  CMD_TIN                 = 0x10  # Read single thermocouple channel
+  CMD_CJC                 = 0x11  # Read single CJC sensor
+  CMD_TIN_CONFIG_R        = 0x12  # Read temperature channel configuration
+  CMD_TIN_CONFIG_W        = 0x13  # Write temperature channel configuration
+  CMD_TIN_STATUS          = 0x14  # Read temperature channel data status
+  CMD_OTD_STATUS          = 0x15  # Read open thermocouple detect data status
+  CMD_MEASURE_CONFIG_R    = 0x16  # Read measurement configuration
+  CMD_MEASURE_CONFIG_W    = 0x17  # Write measurement configuration
+  CMD_MEASURE_MODE_R      = 0x18  # Read measurement mode
+  CMD_MEASURE_MODE_W      = 0x19  # Write measurement mode
+  CMD_FACTORY_COEF_R      = 0x1A  # Write factory calibration coefficients
+  CMD_FACTORY_COEF_W      = 0x1B  # Write factory calibration coefficients
+  CMD_FIELD_COEF_R        = 0x1C  # Read field calibration coefficients
+  CMD_FIELD_COEF_W        = 0x1D  # Write field calibration coefficients
+  CMD_FACTORY_CAL_DATE_R  = 0x1E  # Read factory calibration date
+  CMD_FACTORY_CAL_DATE_W  = 0x1F  # Write factory calibration date
+  CMD_FIELD_CAL_DATE_R    = 0x20  # Read field calibration date
+  CMD_FIELD_CAL_DATE_W    = 0x21  # Write field calibration date
+  CMD_AD_CAL              = 0x22  # Run the A/D offset calibration
+  CMD_CJC_OFFSET_R        = 0x24  # Read user CJC offset values
+  CMD_CJC_OFFSET_W        = 0x25  # Write user CJC offset values
+  
+  # Alarm Commands
+  CMD_ALARM_CONFIG_R      = 0x28  # Read temperature alarm configuration
+  CMD_ALARM_CONFIG_W      = 0x29  # Write temperature alarm configuration
+  CMD_ALARM_STATUS_R      = 0x2A  # Read temperature alarm status
+  CMD_ALARM_STATUS_W      = 0x2B  # Clear temperature alarm status
+
+  # Counter Commands
+  CMD_COUNTER_R           = 0x30  # Read event counter
+  CMD_COUNTER_W           = 0x31  # Write event counter
+
+  # Memory Commands
+  CMD_CONF_MEM_R          = 0x40 # Read device configuration memory
+  CMD_CONF_MEM_W          = 0x41 # Write device configuration memory
+  CMD_USR_MEM_R           = 0x42 # Read user memory
+  CMD_USR_MEM_W           = 0x43 # Write user memory
+  CDM_SETTINGS_MEM_R      = 0x44 # Read network settings memory
+  CMD_SETTINGS_MEM_W      = 0x45 # Write network settings memory
+  CMD_BOOT_MEM_R          = 0x46 # Read bootloader memory
+  CDM_BOOT_MEM_W          = 0x47 # Write bootloader memory
+
+  # Miscellaneous Commands
+  CMD_BLINK_LED           = 0x50 # Blink the LED
+  CMD_RESET               = 0x51 # Reset the device
+  CMD_STATUS              = 0x52 # Read device status
+  CMD_NETWORK_CONFIG      = 0x54 # Read the current network configuration
+  CMD_FIRMWARE_UPGRADE    = 0x60 # Enter firmware upgrade mode
 
   def __init__(self, device):
     self.device = device                     # inherit values from mccEthernetDevice
@@ -171,7 +170,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_DIN
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DIN
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -217,7 +216,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_DOUT_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DOUT_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -263,7 +262,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_DOUT_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DOUT_W
     s_buffer[MSG_INDEX_DATA]           = value
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
@@ -307,7 +306,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_DCONF_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DCONF_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -355,7 +354,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_DCONF_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DCONF_W
     s_buffer[MSG_INDEX_DATA]           = value
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
@@ -430,12 +429,12 @@ class E_TC:
     # wait:           0 - return current value, 1 - wait for new readings before returning
 
     dataCount = 3
-    replyCount = 4*nBits8(channel_mask)
+    replyCount = 4*self.nBits8(channel_mask)
     result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_TIN
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_TIN
     s_buffer[MSG_INDEX_DATA]           = channel_mask & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = units & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = wait & 0xff
@@ -464,7 +463,7 @@ class E_TC:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-           value = list(unpack_from('f'*nBits8(channel_mask), r_buffer, MSG_INDEX_DATA))
+           value = list(unpack_from('f'*self.nBits8(channel_mask), r_buffer, MSG_INDEX_DATA))
     try:
       if (result == False):
         raise ResultError
@@ -481,7 +480,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_CJC
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CJC
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -537,7 +536,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_TIN_CONFIG_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_TIN_CONFIG_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -593,7 +592,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_TIN_CONFIG_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_TIN_CONFIG_W
     s_buffer[MSG_INDEX_START]          = MSG_START
     for i in range(8):
       s_buffer[MSG_INDEX_DATA+i] = self.config_values[i]
@@ -638,7 +637,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_TIN_STATUS
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_TIN_STATUS
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -685,7 +684,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_OTD_STATUS
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_OTD_STATUS
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -733,7 +732,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_MEASURE_CONFIG_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_MEASURE_CONFIG_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -781,7 +780,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_MEASURE_CONFIG_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_MEASURE_CONFIG_W
     s_buffer[MSG_INDEX_DATA]           = self.config_measure 
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
@@ -828,7 +827,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_MEASURE_MODE_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_MEASURE_MODE_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -877,7 +876,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_MEASURE_MODE_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_MEASURE_MODE_W
     s_buffer[MSG_INDEX_DATA]           = self.mode_measure
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
@@ -924,7 +923,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_FACTORY_COEF_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FACTORY_COEF_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -972,7 +971,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_FACTORY_COEF_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FACTORY_COEF_W
     pack_into('ffff', s_buffer, MSG_INDEX_DATA, self.calCoefFactory[0].slope, self.calCoefFactory[1].slope, \
               self.calCoefFactory[0].intercept, self.calCoefFactory[1].intercept)
     s_buffer[MSG_INDEX_START]          = MSG_START
@@ -1019,7 +1018,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_FIELD_COEF_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FIELD_COEF_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -1064,7 +1063,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_FIELD_COEF_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FIELD_COEF_W
     pack_into('ffff', s_buffer, MSG_INDEX_DATA, self.calCoefField[0].slope, self.calCoefField[1].slope, \
               self.calCoefField[0].intercept, self.calCoefField[1].intercept)
     s_buffer[MSG_INDEX_START]          = MSG_START
@@ -1108,7 +1107,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_FACTORY_CAL_DATE_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FACTORY_CAL_DATE_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -1158,7 +1157,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_FACTORY_CAL_DATE_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FACTORY_CAL_DATE_W
     s_buffer[MSG_INDEX_DATA]           = mdate.year - 2000
     s_buffer[MSG_INDEX_DATA+1]         = mdate.month
     s_buffer[MSG_INDEX_DATA+2]         = mdate.day
@@ -1205,7 +1204,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_FIELD_CAL_DATE_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FIELD_CAL_DATE_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -1255,7 +1254,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_FACTORY_CAL_DATE_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FACTORY_CAL_DATE_W
     s_buffer[MSG_INDEX_DATA]           = mdate.year - 2000
     s_buffer[MSG_INDEX_DATA+1]         = mdate.month
     s_buffer[MSG_INDEX_DATA+2]         = mdate.day
@@ -1307,7 +1306,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_AD_CAL
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_AD_CAL
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -1351,7 +1350,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_CJC_OFFSET_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CJC_OFFSET_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -1396,7 +1395,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_CJC_OFFSET_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CJC_OFFSET_W
     for i in range(8):
       pack_into('f', s_buffer, MSG_INDEX_DATA+i, self.CJCOffset[i])
     s_buffer[MSG_INDEX_START]          = MSG_START
@@ -1474,7 +1473,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_ALARM_CONFIG_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_ALARM_CONFIG_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -1547,7 +1546,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_ALARM_CONFIG_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_ALARM_CONFIG_W
     for i in range(8):
       pack_into('B', s_buffer, MSG_INDEX_DATA+i, self.alarm_config[i])
     for i in range(8):
@@ -1599,7 +1598,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_ALARM_STATUS_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_ALARM_STATUS_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -1644,7 +1643,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_ALARM_STATUS_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_ALARM_STATUS_W
     s_buffer[MSG_INDEX_DATA]           = self.alarm_status
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
@@ -1691,7 +1690,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_COUNTER_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_COUNTER_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -1736,7 +1735,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_COUNTER_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_COUNTER_W
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -1781,7 +1780,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
     
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_BLINK_LED
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_BLINK_LED
     s_buffer[MSG_INDEX_DATA]           = count
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
@@ -1824,7 +1823,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
     
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_RESET
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_RESET
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -1866,7 +1865,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
     
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_STATUS
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_STATUS
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -1910,7 +1909,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
     
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_NETWORK_CONFIG
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_NETWORK_CONFIG
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -1957,59 +1956,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
     
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_FIRMWARE
-    s_buffer[MSG_INDEX_DATA]           = 0xad                     # key
-    s_buffer[MSG_INDEX_DATA+1]         = 0xad                     # key
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
-    s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
-
-    self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
-    try:
-      r_buffer = self.device.sock.recv(64)
-    except socket.timeout:
-      raise
-      print('firmwareUpgrade: timout error.\n')
-      return
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT_LOW] == replyCount & 0xff                     and \
-         r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
-           result = True
-    try:
-      if (result == False):
-        raise ResultError
-    except ResultError:
-      print('Error in firmwareUpgrade E-TC.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
-
-
-  #################################
-  #       Memory  Commands        #
-  #################################
-
-  def configMemory_R(self, address, count):
-    # This command reads the nonvolatile configuration memory.  The configuration memory is
-    # 16 bytes (address 0 - 0x0f)
-
-    if (count > 16 or address > 0xf):
-      return False
-
-    dataCount = 4
-    replyCount = count
-    result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
-
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_CONF_MEM_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CONF_MEM_R
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
@@ -2064,7 +2011,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_CONF_MEM_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CONF_MEM_W
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     for i in range(count):
@@ -2116,7 +2063,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_USER_MEM_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_USER_MEM_R
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
@@ -2170,7 +2117,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_USER_MEM_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_USER_MEM_W
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     for i in range(count):
@@ -2277,7 +2224,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_SETTINGS_MEM_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_SETTINGS_MEM_W
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     for i in range(count):
@@ -2335,7 +2282,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_BOOT_MEM_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_BOOT_MEM_R
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
@@ -2411,7 +2358,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CMD_BOOT_MEM_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_BOOT_MEM_W
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     for i in range(count):
@@ -2447,7 +2394,8 @@ class E_TC:
     except ResultError:
       print('Error in BootloaderMemory_W E-TC.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
-def nBits8(num):
+  @staticmethod
+  def nBits8(num):
   # counts the number of bits in a number
   count = 0
   for i in range(8):

@@ -42,6 +42,7 @@ etc32.wait = 0x0
 while(True):
   print("\nE-TC32 Testing")
   print("----------------")
+  print("Hit 'a' to print alarm status")
   print("Hit 'b' to blink")
   print("Hit 'C' for A/D system calibration.")
   print("Hit 'd' to test digitial IO.")
@@ -59,6 +60,12 @@ while(True):
   if ch == 'b':
     count = input('Enter number of times to blink: ')
     etc32.Blink(int(count))
+  elif ch == 'a':
+    print('Alarm Status:',etc32.alarm_status)
+    etc32.ClearAlarmStatus(0xffffffff)
+    print('Alarm Configuration:', etc32.alarm_config)
+    print('Alarm threshold1:', etc32.alarm_threshold1)
+    print('Alarm threshold2:', etc32.alarm_threshold2)
   elif ch == 'd':
     print("\n Testing Digital I/O ...")
     value = int(input('Enter a number [0-0xf]: '),16)
@@ -102,6 +109,10 @@ while(True):
     for i in range(32):
       temperature = etc32.CJC(i)
       print('Channel =',i,'  Temperature = ',format(temperature,'.2f'),'C   ', format(temperature*9./5.+32., '.2f'),'F')
+    print('\nReading Multiple CJC sensor values:')
+    value = etc32.CJCMultiple(0xffffffff)
+    for i in range(32):
+      print('Channel =',i,'  Temperature = ',format(value[i],'.2f'),'C   ', format(value[i]*9./5.+32., '.2f'),'F')
   elif ch == 't':
     chan = int(input('Enter channel number [0-31]: '))
     ttype = input('Enter thermocouple type [J,K,R,S,T,N,E,B]: ')
