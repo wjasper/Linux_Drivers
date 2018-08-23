@@ -118,14 +118,14 @@ class E_TC:
   CMD_COUNTER_W           = 0x31  # Write event counter
 
   # Memory Commands
-  CMD_CONF_MEM_R          = 0x40 # Read device configuration memory
-  CMD_CONF_MEM_W          = 0x41 # Write device configuration memory
-  CMD_USR_MEM_R           = 0x42 # Read user memory
-  CMD_USR_MEM_W           = 0x43 # Write user memory
-  CDM_SETTINGS_MEM_R      = 0x44 # Read network settings memory
-  CMD_SETTINGS_MEM_W      = 0x45 # Write network settings memory
-  CMD_BOOT_MEM_R          = 0x46 # Read bootloader memory
-  CDM_BOOT_MEM_W          = 0x47 # Write bootloader memory
+  CMD_CONF_MEMORY_R       = 0x40 # Read device configuration memory
+  CMD_CONF_MEMORY_W       = 0x41 # Write device configuration memory
+  CMD_USER_MEMORY_R       = 0x42 # Read user memory
+  CMD_USER_MEMORY_W       = 0x43 # Write user memory
+  CDM_SETTINGS_MEMORY_R   = 0x44 # Read network settings memory
+  CMD_SETTINGS_MEMORY_W   = 0x45 # Write network settings memory
+  CMD_BOOT_MEMORY_R       = 0x46 # Read bootloader memory
+  CDM_BOOT_MEMORY_W       = 0x47 # Write bootloader memory
 
   # Miscellaneous Commands
   CMD_BLINK_LED           = 0x50 # Blink the LED
@@ -1956,7 +1956,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
     
-    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CONF_MEM_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CONF_MEMORY_R
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
@@ -2011,7 +2011,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CONF_MEM_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CONF_MEMORY_W
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     for i in range(count):
@@ -2063,7 +2063,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_USER_MEM_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_USER_MEMORY_R
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
@@ -2117,7 +2117,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_USER_MEM_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_USER_MEMORY_W
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     for i in range(count):
@@ -2169,7 +2169,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = CDM_SETTINGS_MEM_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CDM_SETTINGS_MEMORY_R
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
@@ -2224,7 +2224,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_SETTINGS_MEM_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_SETTINGS_MEMORY_W
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     for i in range(count):
@@ -2282,7 +2282,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_BOOT_MEM_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_BOOT_MEMORY_R
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
@@ -2358,7 +2358,7 @@ class E_TC:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_BOOT_MEM_W
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_BOOT_MEMORY_W
     s_buffer[MSG_INDEX_DATA]           = address & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
     for i in range(count):
@@ -2396,10 +2396,10 @@ class E_TC:
 
   @staticmethod
   def nBits8(num):
-  # counts the number of bits in a number
-  count = 0
-  for i in range(8):
-    if ((num & 0x1) == 0x1):
-      count += 1
-    num >>= 0x1
-  return count
+    # counts the number of bits in a number
+    count = 0
+    for i in range(8):
+      if ((num & 0x1) == 0x1):
+        count += 1
+      num >>= 0x1
+    return count
