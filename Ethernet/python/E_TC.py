@@ -153,6 +153,7 @@ class E_TC:
     self.alarm_threshold2 = []               # the alarm threshold 2 values in Celsius
     self.calCoefFactory = [table(), table()] # the factory calibration coefficients (slope and offset).
     self.calCoefField = [table(), table()]   # the field calibration coefficients (slope and offset).
+    self.MACaddress()                        # get the MAC address
     return
 
   #################################
@@ -1944,14 +1945,19 @@ class E_TC:
       print('Error in networkConfig E-TC.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
     return value
 
-  def FirmwareUpgrade(self):
-    # This command causes the device to reset and enter the bootloader
-    # for a firmware upgrade.  It erases a portion of the program memory so
-    # the device must have firmware downloaded through the bootloder before
-    # it can be used again.
-    
-    dataCount = 2
-    replyCount = 0
+
+  #################################
+  #       Memory  Commands        #
+  #################################
+  
+  def ConfigMemory_R(self, address, count):
+    # This command reads the nonvolatile configuration memory.  The configuration memory is
+
+    if (count > 16 or address > 0xf):
+      return False
+
+    dataCount = 4
+    replyCount = count
     result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
@@ -1975,7 +1981,7 @@ class E_TC:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
       raise
-      print('configMemory_R: timeout error.\n')
+      print('ConfigMemory_R: timeout error.\n')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1986,15 +1992,15 @@ class E_TC:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-           value = int.from_bytes(r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount], byteorder = 'little')
+           value = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in configMemory_R E-TC.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in ConfigMemory_R E-TC.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
     return value
 
-  def configMemory_W(self, address, count, data):
+  def ConfigMemory_W(self, address, count, data):
      # This command writes the nonvolatile configuration memory.  The
      # config memory is 16 bytes (address 0 - 0xf) The config memory
      # should only be written during factory setup.
@@ -2393,6 +2399,14 @@ class E_TC:
         raise ResultError
     except ResultError:
       print('Error in BootloaderMemory_W E-TC.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
+  def MACaddress(self):
+    # Gets the MAC address
+    
+    address = 0x0a
+    value =  self.ConfigMemory_R(address, 6)
+    self.device.MAC = (value[0]<<40) + (value[1]<<32) + (value[2]<<24) + (value[3]<<16) + (value[4]<<8) + value[5]
+    return self.device.MAC
 
   @staticmethod
   def nBits8(num):

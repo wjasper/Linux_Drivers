@@ -22,7 +22,7 @@ import sys
 def main():
   if len(sys.argv) == 2:
     device = []
-    device.append(mccEthernetDevice(E1608_PID,sys.argv[1]))  
+    device.append(mccEthernetDevice(E1608_PID,sys.argv[1]))
   else:
     # Find a E-1608 device on the subnet
     device = mccDiscover(E1608_PID)

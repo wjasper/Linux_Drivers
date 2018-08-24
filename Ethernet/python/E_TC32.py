@@ -177,6 +177,8 @@ class E_TC32:
     self.MeasureMode_R()
     self.AlarmConfig_R()
     self.AlarmStatus()
+    self.MACaddress()                          # get the MAC address
+    
 
   #################################
   #     Digital I/O Commands      #
@@ -1478,7 +1480,7 @@ class E_TC32:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-           value = int.from_bytes(r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount], byteorder = 'little')
+           value = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
     try:
       if (result == False):
         raise ResultError
@@ -2272,6 +2274,14 @@ class E_TC32:
         raise ResultError
     except ResultError:
         print('Error in ADCal E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
+  def MACaddress(self):
+    # Gets the MAC address
+    
+    address = 0x0a
+    value =  self.ConfigMemory_R(address, 6)
+    self.device.MAC = (value[0]<<40) + (value[1]<<32) + (value[2]<<24) + (value[3]<<16) + (value[4]<<8) + value[5]
+    return self.device.MAC
 
   @staticmethod
   def nBits(num):

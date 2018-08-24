@@ -192,6 +192,9 @@ class E_1608:
     # create the gain queue
     self.queue = bytearray(17)
 
+    # get the MAC address
+    self.MACaddress()
+
     return
 
   #################################
@@ -1240,9 +1243,9 @@ class E_1608:
 
   def CalMemory_R(self, address, count):
     # This command reads the nonvolatile calibration memory.  The cal memory is
-    # 512 byes (address 0 - 0xff)
+    # 512 byes (address 0 - 0x1ff)
 
-    if (count > 512 or address > 0xff):
+    if (count > 512 or address > 0x1ff):
       return False
 
     dataCount = 4
@@ -1724,6 +1727,15 @@ class E_1608:
     mdate = datetime(year, month, day, hour, minute, second)
 
     return mdate
+
+  def MACaddress(self):
+    # Gets the MAC address
+
+    # get lowest thress byes of MAC address
+    address = 0x1fd
+    value =  self.CalMemory_R(address, 3)
+    self.device.MAC = ((0x00802f) << 24) + (value[0]<<16) + (value[1]<<8) + value[2]
+    return self.device.MAC
 
   @staticmethod
   def volts(value, gain):

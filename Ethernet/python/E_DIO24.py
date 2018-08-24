@@ -53,7 +53,7 @@ class E_DIO24:
     
   def __init__(self, device):
     self.device = device        # inherit values from mccEthernetDevice
-
+    self.MACaddress()           # get the MAC address
 
   #################################
   #     Digital I/O Commands      #
@@ -623,7 +623,7 @@ class E_DIO24:
   #       Memory  Commands        #
   #################################
 
-  def configMemory_R(self, address, count):
+  def ConfigMemory_R(self, address, count):
     # This command reads the nonvolatile configuration memory.  The configuration memory is
     # 16 bytes (address 0 - 0xff)
 
@@ -655,7 +655,7 @@ class E_DIO24:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
       raise
-      print('configMemory_R: timeout error.\n')
+      print('ConfigMemory_R: timeout error.\n')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -666,17 +666,17 @@ class E_DIO24:
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
-           value = int.from_bytes(r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount], byteorder = 'little')
+           value = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in configMemory_R E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in ConfigMemory_R E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
       return -1
 
     return value
 
-  def configMemory_W(self, address, count, data):
+  def ConfigMemory_W(self, address, count, data):
      # This command writes the nonvolatile configuration memory.  The
      # config memory is 16 bytes (address 0 - 0xf) The config memory
      # should only be written during factory setup and has an additional
@@ -1081,3 +1081,10 @@ class E_DIO24:
       print('Error in BootloaderMemory_W E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
 
+  def MACaddress(self):
+    # Gets the MAC address
+    
+    address = 0x0a
+    value =  self.ConfigMemory_R(address, 6)
+    self.device.MAC = (value[0]<<40) + (value[1]<<32) + (value[2]<<24) + (value[3]<<16) + (value[4]<<8) + value[5]
+    return self.device.MAC
