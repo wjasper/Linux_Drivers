@@ -8,9 +8,9 @@
 This repository contains Linux drivers for data acquisition boards from
 Measurement Computing Corp., MCC (aka ComputerBoards).  All these drivers are
 maintained by Warren J. Jasper (wjasper@ncsu.edu).  Please send any
-comments, suggestions, or questions to me.  All drivers are licensed
-under the Gnu Public License except the mcc-libusb drivers which are
-licensed under the Lesser Gnu Public License or LGPL.  Most drivers
+comments, suggestions, or questions to me.  All the PCI drivers are licensed
+under the Gnu Public License while the USB, Ethernet, and Bluetooth drivers are
+licensed under the Lesser Gnu Public License or LGPL.  Most PCI drivers
 will run under the Linux 2.6, 3.X and 4.X kernels.
 
 For more information on these cards, go to 
@@ -67,7 +67,7 @@ I have written drivers for the following boards:
 3. E-TC     (C/Python)
 4. E-TC32   (C/Python)
 
-**New**:heavy_exclamation_mark: E-1608, E-DIO24, E-TC, E-TC32
+**New**:heavy_exclamation_mark: Python drivers for E-1608, E-DIO24, E-TC, E-TC32
 
 **Bluetooth**
 1. BTH-1208LS
