@@ -1901,7 +1901,7 @@ class E_TC32:
     except ResultError:
       print('Error in FactoryCalDate_W E-TC.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
-    def FieldCalDate_R(self):
+  def FieldCalDate_R(self):
     # This command reads the field calibration dates.
       
     dataCount = 0
