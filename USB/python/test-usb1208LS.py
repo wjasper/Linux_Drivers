@@ -148,16 +148,16 @@ def main():
           break
     elif ch == 'n':
       print('Test Analog Input Scan')
-      nQueue = 8    # depth of the queue: must be 1, 2, 4 or 8
+      nQueue = 4    # depth of the queue: must be 1, 2, 4 or 8
       chanQueue = [0, 1, 2, 3, 0, 1, 2, 3]
       gain = usb1208LS.BP_10_00V
       gainQueue = [gain, gain, gain, gain, gain, gain, gain, gain]
       frequency = 150   # 150 Hz
-      count = 64        # 64 samples
-      options = usb1208LS.AIN_EXECUTION
+      count = 96        # must be an even number
+      options = usb1208LS.AIN_EXECUTION | usb1208LS.AIN_BURST_MODE
       value = usb1208LS.AInScan(count, frequency, nQueue, chanQueue, gainQueue, options)
-      print('number of samples = ', len(value))
-      for i in range(16):
+      print('Total number of samples = ', len(value))
+      for i in range(int(count/4)):
         print('scan ',i, end=' ')
         for j in range(4):
           print(format(usb1208LS.volts(gain,value[4*i+j]),'.2f'),end=' ')

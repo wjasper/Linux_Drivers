@@ -19,6 +19,20 @@ import hid
 import time
 from struct import *
 
+# Error Handling
+class Error(Exception):
+  ''' Base class for other exceptions.'''
+  pass
+
+class OverrunError(Error):
+  ''' Raised when overrun on AInScan'''
+  pass
+
+class UnderrunError(Error):
+  ''' Raised when underrun on AInScan'''
+  pass
+
+
 class usb_1208LS:
 
   DIO_PORTA     = 0x01
@@ -87,6 +101,8 @@ class usb_1208LS:
   SET_TRIGGER = 0x14     # Configure external trigger
   SET_ID      = 0x0C     # Set the user ID
   GET_ID      = 0x0F     # Get the user ID
+
+  scanIdx     = 0        # scan index
 
   def __init__(self, serial=None):
     try:
@@ -278,33 +294,54 @@ class usb_1208LS:
 
     buf = [0, 0, 0, 0, 0, 0, 0, 0]
     if (options & self.AIN_TRIGGER):
-      while (buf[0] != 0xc3):   # wait until external trigger received
+      while (len(buf) > 0 and buf[0] != 0xc3):   # wait until external trigger received
         buf[0] = 0
-        buf = self.h.read(8)
+        buf = self.h.read(8,1000)
 
     # If in burst mode, wait for end of block acquisition flag (0xa5)
     buf[0] = 0
     if (options & self.AIN_BURST_MODE):
-      while (buf[0] != 0xa5):
+      while (len(buf) > 0 and buf[0] != 0xa5):
         buf[0] = 0
-        buf = self.h.read(8)
+        buf = self.h.read(8,1000)
 
     # use get_feature_report to collect the data buffer.  Each buffer will be 105
     # bytes long.  The first byte will contain the record number and can be ignored.
     # The following 96 byes will reqpresent 64 samples of data.
-    data = self.h.get_feature_report(0,105)
     idx = 0
     buffer = [0]*count
-    for i in range(0,96,3):
-      value = ((data[i+1])  | (data[i+2]<<0x4) & 0x0f00)
-      if (value & 0x800):
-        value |= 0xf000
-      buffer[idx] ,= unpack('h',pack('H',value))
-      value = (data[i+3]  | ((data[i+2]<<0x8) & 0x0f00))
-      if (value & 0x800):
-        value |= 0xf000
-      buffer[idx+1] ,= unpack('h',pack('H',value))
-      idx += 2
+    self.scanIdx = 0
+
+    while (count > 0):
+      data = self.h.get_feature_report(0,105)  # get 64 samples
+      self.scanIdx += 1
+      scanIndex = data[102] | (data[103]<<8)
+      try:
+        if (scanIndex > self.scanIdx):
+          raise OverRunError
+      except OverRunError:
+        print('AInScan: Overrun Error')
+        return
+      try:
+        if (scanIndex < self.scanIdx):
+          raise UnderRunError
+      except UnderRunError:
+        print('AInScan: Underrun Error')
+        return
+      # 12 bit signed data packed 2 samples in 3 bytes
+      for i in range(0,96,3):
+        value = ((data[i+1])  | (data[i+2]<<4) & 0x0f00)
+        if (value & 0x800):
+            value |= 0xf000
+        buffer[idx] ,= unpack('h',pack('H',value))
+        value = (data[i+3]  | ((data[i+2]<<8) & 0x0f00))
+        if (value & 0x800):
+          value |= 0xf000
+        buffer[idx+1] ,= unpack('h',pack('H',value))
+        idx += 2
+        count -= 2
+        if (count == 0):  # check to see if finished
+          return buffer
     return buffer
 
   def AInStop():
@@ -316,9 +353,9 @@ class usb_1208LS:
     if (count == 1 or count == 2 or count == 4 or count == 8):
       self.h.write([self.ALOAD_QUEUE, count, chanQueue[0] & 0x7 | gainQueue[0] | 0x80, \
                                              chanQueue[1] & 0x7 | gainQueue[1] | 0x80, \
-                                             chanQueue[2] & 0x7 | gainQueue[3] | 0x80, \
-                                             chanQueue[3] & 0x7 | gainQueue[4] | 0x80, \
-                                             chanQueue[4] & 0x7 | gainQueue[5] | 0x80, \
+                                             chanQueue[2] & 0x7 | gainQueue[2] | 0x80, \
+                                             chanQueue[3] & 0x7 | gainQueue[3] | 0x80, \
+                                             chanQueue[4] & 0x7 | gainQueue[4] | 0x80, \
                                              chanQueue[5] & 0x7 | gainQueue[5] | 0x80])
 
     if (count == 8): # configure the rest of the channels (channel 6 and 7)

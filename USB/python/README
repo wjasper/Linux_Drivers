@@ -1,0 +1,19 @@
+			Warren J. Jasper
+			wjasper@ncsu.edu
+			August 30 2, 2017
+
+This file will hopefully guide you on using the mcc-libusb package
+that will interface to the Measurement Computing data acquisition
+devices.  This package uses libusb-1.0 (not libusb-0.1 which is not
+backward compatible).  This is a complete rewrite in python of the C
+drivers found in ../USB/mcc-libusb. It also uses the python hidapi
+package.
+
+Go to https://github.com/trezor/cython-hidapi and install the python wrapper for the hidapi.
+The instructions on how to install it.  Just run the test-usb*.py file in Python 3.
+
+Good luck
+
+Warren Jasper PhD, PE
+North Carolina State University
+wjasper@ncsu.edu
