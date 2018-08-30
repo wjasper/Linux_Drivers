@@ -131,10 +131,10 @@ class E_TC32:
   CMD_FACTORY_COEF_W     = 0x37  # Write factory calibration coefficients
   CMD_FIELD_COEF_R       = 0x38  # Read field calibration coefficients
   CMD_FIELD_COEF_W       = 0x39  # Write field calibration coefficients
-  CMD_CAL_DATE_R         = 0x3a  # Read factory calibration coefficients
-  CMD_CAL_DATE_W         = 0x3b  # Write factory calibration coefficients
-  CMD_GAIN_VOLTAGE_R     = 0x3c  # Read gain reference voltages
-  CMD_GAIN_VOLTAGE_W     = 0x3d  # Write gain reference voltages
+  CMD_FACTORY_CAL_DATE_R = 0x3a  # Read factory calibration date
+  CMD_FACTORY_CAL_DATE_W = 0x3b  # Write factory calibration date
+  CMD_FIELD_CAL_DATE_R   = 0x3c  # Read field calibration date
+  CMD_FIELD_CAL_DATE_W   = 0x3d  # Write field calibration date
 
   # Miscellaneous Commands
   CMD_BLINK_LED          = 0x50  # Blink the LED
@@ -1789,8 +1789,8 @@ class E_TC32:
     except ResultError:
       print('Error in FieldCoef_W E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
-  def CalDate_R(self):
-    # This command reads the calibration date
+  def FactoryCalDate_R(self):
+    # This command reads the factory calibration dates.
       
     dataCount = 0
     replyCount = 12
@@ -1798,7 +1798,7 @@ class E_TC32:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CAL_DATE_R
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FACTORY_CAL_DATE_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -1813,7 +1813,7 @@ class E_TC32:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
       raise
-      print('CalDate_R: timeout error.\n')
+      print('FactoryCalDate_R: timeout error.\n')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1845,13 +1845,13 @@ class E_TC32:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in CalDate_R E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in FactoryCalDate_R E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
     if (self.status == 1): # EXP detected
       return (date_base, date_exp)
     else:
       return date_base
 
-  def CalDate_W(self, mdate, index=0):
+  def FactoryCalDate_W(self, mdate, index=0):
     # This command writes the factory calibration date
     #
     # index:  the device to write  0 - base unit,  1 - EXP
@@ -1901,75 +1901,16 @@ class E_TC32:
     except ResultError:
       print('Error in FactoryCalDate_W E-TC.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
-  def GainVoltage_R(self):
-    # This command reads the gain calibration voltage reference values.
-    #
-    #   voltage_0_base: the measured gain calibration voltage for ADC0, 60 Hz for the base unit (float)
-    #   voltage_1_base: the measured gain calibration voltage for ADC0, 50 Hz for the base unit (float)
-    #   voltage_2_base: the measured gain calibration voltage for ADC1, 60 Hz for the base unit (float)
-    #   voltage_3_base: the measured gain calibration voltage for ADC1, 50 Hz for the base unit (float)
-    #   voltage_0_exp:  the measured gain calibration voltage for ADC0, 60 Hz for the EXP unit (float)
-    #   voltage_1_exp:  the measured gain calibration voltage for ADC0, 50 Hz for the EXP unit (float)
-    #   voltage_2_exp:  the measured gain calibration voltage for ADC1, 60 Hz for the EXP unit (float)
-    #   voltage_3_exp:  the measured gain calibration voltage for ADC1, 50 Hz for the EXP unit (float)
-
+    def FieldCalDate_R(self):
+    # This command reads the field calibration dates.
+      
     dataCount = 0
-    replyCount = 32
+    replyCount = 12
     result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_GAIN_VOLTAGE_R
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
-    s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
-
-    self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
-    try:
-      r_buffer = self.device.sock.recv(512)
-    except socket.timeout:
-      raise
-      print('GainVoltage_R: timeout error.\n')
-      return
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT_LOW] == replyCount & 0xff                     and \
-         r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
-        result = True
-        self.gain_voltages = list(unpack_from('f'*8, r_buffer, MSG_INDEX_DATA))
-    try:
-      if (result == False):
-        raise ResultError
-    except ResultError:
-      print('Error in GainVoltage_R E-TC.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
-
-  def GainVoltage_W(self, index, voltages):
-    # This command writes the gain calibration voltage reference values.  These values
-    # should only be written during manufacturing setup.
-    #
-    #   index:          the device to write   0 - base unit,  1 - EXP
-    #   voltage_0: the measured gain calibration voltage for ADC0, 60 Hz (float)
-    #   voltage_1: the measured gain calibration voltage for ADC0, 50 Hz (float)
-    #   voltage_2: the measured gain calibration voltage for ADC1, 60 Hz (float)
-    #   voltage_3: the measured gain calibration voltage for ADC1, 50 Hz (float)
-
-    dataCount = 17
-    replyCount = 0
-    result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
-
-    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_GAIN_VOLTAGE_W
-    pack_into('Bffff', s_buffer, MSG_INDEX_COMMAND, index, voltages[0:4])
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FIELD_CAL_DATE_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID += 1                                      # increment frame ID with every send
@@ -1984,7 +1925,78 @@ class E_TC32:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
       raise
-      print('GainVoltage_W: timeout error.\n')
+      print('FieldCalDate_R: timeout error.\n')
+      return
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT_LOW] == replyCount & 0xff                     and \
+         r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+           result = True
+           year ,= unpack_from('B', r_buffer, MSG_INDEX_DATA)
+           year += 2000
+           month ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+1)
+           day ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+2)
+           hour ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+3)
+           minute ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+4)
+           second ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+5)
+           date_base = datetime(year, month, day, hour, minute, second)
+           if (self.status == 1): # EXP detected
+             year ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+6)
+             year += 2000
+             month ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+7)
+             day ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+8)
+             hour ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+9)
+             minute ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+10)
+             second ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+11)
+             date_exp = datetime(year, month, day, hour, minute, second)           
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in FieldCalDate_R E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+    if (self.status == 1): # EXP detected
+      return (date_base, date_exp)
+    else:
+      return date_base
+
+  def FieldCalDate_W(self, mdate, index=0):
+    # This command writes the field calibration date
+    #
+    # index:  the device to write  0 - base unit,  1 - EXP
+      
+    dataCount = 7
+    replyCount = 0
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CAL_DATE_W
+    s_buffer[MSG_INDEX_DATA]           = index
+    s_buffer[MSG_INDEX_DATA+1]         = mdate.year - 2000
+    s_buffer[MSG_INDEX_DATA+2]         = mdate.month
+    s_buffer[MSG_INDEX_DATA+3]         = mdate.day
+    s_buffer[MSG_INDEX_DATA+5]         = mdate.hour
+    s_buffer[MSG_INDEX_DATA+6]         = mdate.minute
+    s_buffer[MSG_INDEX_DATA+7]         = mdate.second
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID += 1                                      # increment frame ID with every send
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
+    s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sock.settimeout(.1)
+    self.device.sock.send(s_buffer)
+    try:
+      r_buffer = self.device.sock.recv(64)
+    except socket.timeout:
+      raise
+      print('FieldCalDate_W: timeout error.\n')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1999,8 +2011,8 @@ class E_TC32:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in GainVoltage_W E-TC.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
-    return self.gain_voltages
+      print('Error in FieldCalDate_W E-TC.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
 
   #################################
   #     Miscellaneous Commands    #
