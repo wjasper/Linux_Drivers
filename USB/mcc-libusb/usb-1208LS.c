@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdint.h>
+#include <unistd.h>
 
 #include "pmd.h"
 #include "usb-1208LS.h"
@@ -249,13 +250,13 @@ void usbAInScan_USB1208LS(hid_device *hid, uint16_t count, int rate, uint8_t low
 {
   int i, idx;
   int scans;
+  int ret;
   uint16_t scan_index;
   uint16_t actual_scan_index;
   uint8_t chanCount;
   uint8_t chanLoadQueue[8];
   
   struct out_t{
-    uint8_t report_id;
     uint8_t cmd;
     uint8_t lo_count;
     uint8_t hi_count;
@@ -282,8 +283,6 @@ void usbAInScan_USB1208LS(hid_device *hid, uint16_t count, int rate, uint8_t low
   uint8_t prescale;
   uint8_t preload;
   uint8_t setupTime;
-
-  usbAInStop_USB1208LS(hid);   // just to make sure.
 
   if ((100 <= rate) && (rate < 200)) {       // Select 256:1 prescaler
     prescale = 7;
@@ -317,12 +316,14 @@ void usbAInScan_USB1208LS(hid_device *hid, uint16_t count, int rate, uint8_t low
 
   /* set up gain queue */
   chanCount = high_channel - low_channel + 1;
+  for ( i = 0; i < 8; i++ ) {
+    chanLoadQueue[i] = 0;
+  }
   for ( i = 0; i < chanCount; i++ ) {
     chanLoadQueue[i] = low_channel + i;
   }
   usbAInLoadQueue_USB1208LS(hid, chanCount, chanLoadQueue, gainLoadQueue);
-
-  out.report_id = 0;
+  
   out.cmd = AIN_SCAN;
   out.lo_count = count & 0xff;
   out.hi_count = (count >> 8) & 0xff;
@@ -330,8 +331,11 @@ void usbAInScan_USB1208LS(hid_device *hid, uint16_t count, int rate, uint8_t low
   out.timer_prescale = prescale;
   out.options = options;
 
+  printf("%#x,%#x,%#x,%#x,%#x,%#x,\n", out.cmd, out.lo_count, out.hi_count, out.timer_preload,
+  	out.timer_prescale, out.options);
+  
   PMD_SendOutputReport(hid, (uint8_t*) &out, sizeof(out));
-
+  usleep(10000);
   /*
      If in external trigger mode, then wait for the device to send back
      notice that the trigger has been received, then startup the acquisition
@@ -358,59 +362,70 @@ void usbAInScan_USB1208LS(hid_device *hid, uint16_t count, int rate, uint8_t low
   
   /*
     Retrieve the AInScan Response
-    GET HID Feature Report to collect the data buffer.  Each buffer will be 105
+    get_hid_feature_report to collect the data buffer.  Each buffer will be 105
     bytes long.  The first bye will contain the record number and can be ignored.
     The following 96 bytes will represent 64 samples of data.
   */
 
   feature_report.scanIndex[0] = 0xff;
   feature_report.scanIndex[1] = 0xff;
-  scan_index = 1;
+  scan_index = 0;
   idx = 0;
-  for (scans = 0; scans < count/65 + 1; scans++) {
-    memset(&feature_report, 0xbeef, sizeof(feature_report));
-    do {
-      PMD_GetFeatureReport(hid, (uint8_t *) &feature_report, sizeof(feature_report));
-      actual_scan_index = (uint16_t) (feature_report.scanIndex[0] | feature_report.scanIndex[1] << 8);
-    } while (scan_index != actual_scan_index);
+  hid_set_nonblocking(hid, 1);
+  printf("size of feature report =%ld\n", sizeof(feature_report));
+
+  while (count > 0) {
+    //      PMD_GetFeatureReport(hid, (uint8_t *) &feature_report, sizeof(feature_report));
+    usleep(1000);
+    ret = hid_get_feature_report(hid, (unsigned char *) &feature_report, sizeof(feature_report));
     scan_index++;
-    printf("Completed scan %d  error = %d\n", scan_index, feature_report.error);
+    actual_scan_index = (uint16_t) (feature_report.scanIndex[0] | feature_report.scanIndex[1] << 8);
+    printf("Completed scan %d  error = %d\n", actual_scan_index, feature_report.error);
     for (i = 0; i < 96; i += 3, idx += 2) {
       //printf("data[%d] = %#x  data[%d] = %#x\n", i, feature_report.data[i], i+1, feature_report.data[i+1]);
       value[idx] = feature_report.data[i] | ((feature_report.data[i+1]<<4) & 0x0f00);
       if (value[idx] & 0x800) (*((uint16_t *)(&(value[idx])))) |= 0xf000;
-      value[idx + 1] = feature_report.data[i+2] | ((feature_report.data[i+1]<< 8) & 0x0f00);
+      value[idx + 1] = feature_report.data[i+2] | ((feature_report.data[i+1]<<8) & 0x0f00);
       if (value[idx+1] & 0x800) (*((uint16_t *)(&(value[idx+1])))) |= 0xf000;
+      count -= 2;
+      if (count == 0) {
+        usbAInStop_USB1208LS(hid);   // just to make sure.
+	return;
+      }
     }
   }
 }
 
-void usbAInLoadQueue_USB1208LS(hid_device *hid, uint8_t chanCount, uint8_t chanLoadQueue[], uint8_t gainLoadQueue[])
+void usbAInLoadQueue_USB1208LS(hid_device *hid, uint8_t chanCount, uint8_t chanLoadQueue[8], uint8_t gainLoadQueue[8])
 {
   int i;   
   struct report_t {
-    uint8_t report_id;
     uint8_t cmd;
     uint8_t count;
     uint8_t gains[6];
   } report;
 
-  report.report_id = 0;
   report.cmd = ALOAD_QUEUE;
   report.count = chanCount;   // can be 1, 2, 4, or 8
-  chanCount = (chanCount == 8) ? 6 : chanCount;
-  for (i = 0; i < chanCount; i++) {
-    report.gains[i] = (chanLoadQueue[i] & 0x7) | gainLoadQueue[i] | 0x80;
-  }
-  PMD_SendOutputReport(hid, (uint8_t*) &report, sizeof(report));
+  if ((chanCount == 1) || (chanCount == 2) || (chanCount == 4) || (chanCount == 8)) {
 
+    for (i = 0; i < 6; i++) {
+      report.gains[i] = ((chanLoadQueue[i] & 0x7) | gainLoadQueue[i] | 0x80);
+    }
+  }
+
+  printf("%d, %#x, %#x, %#x, %#x, %#x, %#x \n", report.count,
+	 report.gains[0], report.gains[1], report.gains[2], report.gains[3], report.gains[4], report.gains[5]);
+  PMD_SendOutputReport(hid, (uint8_t*) &report, sizeof(report));
+  usleep(1000);
+  
   // Configure the rest of the channels (channel 6 and 7 )
   if (report.count == 8) {
-    report.count = 0x2;
-    for (i = 6; i <= 7; i++) {
-      report.gains[i-6] = (chanLoadQueue[i] & 0x7) | gainLoadQueue[i] | 0x80;  
-    }
+    report.count = 2;
+    report.gains[0] = (chanLoadQueue[6] & 0x7) | gainLoadQueue[6] | 0x80;
+    report.gains[1] = (chanLoadQueue[7] & 0x7) | gainLoadQueue[7] | 0x80;  
     PMD_SendOutputReport(hid, (uint8_t*) &report, sizeof(report));
+    usleep(1000);
   }
 }
 
@@ -495,12 +510,10 @@ void usbReadMemory_USB1208LS(hid_device *hid, uint16_t address, uint8_t *buffer,
 void usbBlink_USB1208LS(hid_device *hid)
 {
   struct report {
-    uint8_t report_id;
     uint8_t cmd;
     uint8_t pad[7];
   } report;
 
-  report.report_id = 0;
   report.cmd = BLINK_LED;
   PMD_SendOutputReport(hid, (uint8_t*) &report, sizeof(report));
 }
@@ -509,12 +522,10 @@ void usbBlink_USB1208LS(hid_device *hid)
 void usbReset_USB1208LS(hid_device *hid)
 {
   struct report {
-    uint8_t report_id;
     uint8_t cmd;
     uint8_t pad[7];
   } report;
 
-  report.report_id = 0;
   report.cmd = RESET;
   PMD_SendOutputReport(hid, (uint8_t*) &report, sizeof(report));
 }

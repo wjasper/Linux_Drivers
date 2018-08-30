@@ -43,7 +43,7 @@ int main (int argc, char **argv)
 {
   int flag;
   signed short svalue;
-  int temp, i;
+  int temp, i, j;
   int ch;
   int rate;
   int16_t sdata[1024];
@@ -57,6 +57,8 @@ int main (int argc, char **argv)
   int ret;
   wchar_t serial[64];
   wchar_t wstr[MAX_STR];
+
+ start:
 
   ret = hid_init();
   if (ret < 0) {
@@ -75,7 +77,6 @@ int main (int argc, char **argv)
   usbDConfigPort_USB1208LS(hid, DIO_PORTB, DIO_DIR_IN);
   usbDConfigPort_USB1208LS(hid, DIO_PORTA, DIO_DIR_OUT);
   usbDOut_USB1208LS(hid, DIO_PORTA, 0x0);
-  usbDOut_USB1208LS(hid, DIO_PORTA, 0x0);
   
   while(1) {
     printf("\nUSB 1208LS Testing\n");
@@ -90,7 +91,8 @@ int main (int argc, char **argv)
     printf("Hit 't' to test digital bit I/O.\n");
     printf("Hit 'o' to test analog output.\n");
     printf("Hit 'i' to test analog input.\n");
-    printf("Hin 'n' to test analog input scan.\n");
+    printf("Hit 'n' to test analog input scan.\n");
+    printf("Hit 'r' to reset the device.\n");
     printf("Hit 'e' to exit.\n");
 
     while((ch = getchar()) == '\0' || ch == '\n');
@@ -148,7 +150,7 @@ int main (int argc, char **argv)
       printf("\nTesting Digital I/O....\n");
       printf("connect pins 21 through 28 <=> 32 through 39\n");
       do {
-        printf("Enter a byte number [0-0xff]: " );
+        printf("Enter a byte number [0-0xff]: ");
         scanf("%x", &temp);
         usbDOut_USB1208LS(hid, DIO_PORTA, (uint8_t)temp);
         usbDIn_USB1208LS(hid, DIO_PORTB, &input);
@@ -159,10 +161,10 @@ int main (int argc, char **argv)
       //reset the pin values
       usbDOut_USB1208LS(hid, DIO_PORTA, 0x0);
       printf("\nTesting Bit  I/O....\n");
-      printf("Enter a bit value for output (0 | 1) : ");
+      printf("Enter a bit value for output (0 | 1): ");
       scanf("%d", &temp);
       input = (uint8_t) temp;
-      printf("Select the Pin in port A [0-7] :");
+      printf("Select the Pin in port A [0-7]: ");
       scanf("%d", &temp);
       pin = (uint8_t) temp;
       usbDBitOut_USB1208LS(hid, DIO_PORTA, pin, input);
@@ -200,14 +202,23 @@ int main (int argc, char **argv)
         default:
                 break;
       }
-      printf("Select sampling rate [Hz]: ");
-      scanf("%d", &rate);
-      printf("Select number of samples: ");
-      scanf("%hd", &count);
+      for (i = 1; i < 8; i++) {
+	gains[i] = gains[0];
+      }
+      //      printf("Select sampling rate [Hz]: ");
+      //      scanf("%d", &rate);
+      //      printf("Select number of samples: ");
+      //      scanf("%hd", &count);
+      rate = 100;
+      count = 64;
       options = AIN_EXECUTION;
-      usbAInScan_USB1208LS(hid, count, rate, 0, 0, options, sdata, gains);
-      for ( i = 0; i < count; i++ ) {
-	printf("sdata[%d] = %#hx, %.2fV\n", i, sdata[i], volts_LS(gain, sdata[i]));
+      usbAInScan_USB1208LS(hid, count, rate, 0, 3, options, sdata, gains);
+      for ( i = 0; i < count/4; i++ ) {
+	printf("scan %d: ", i);
+	for (j = 0; j < 4; j++) {
+	  printf("%.2fV ", volts_LS(gain, sdata[4*i+j]));
+	}
+	printf("\n");
       }
       break;
     case 'i':
@@ -255,6 +266,11 @@ int main (int argc, char **argv)
       } while (!isalpha(getchar()));
       fcntl(fileno(stdin), F_SETFL, flag);
       break;
+    case 'r':
+      usbReset_USB1208LS(hid);
+      sleep(2);
+      hid_close(hid);
+      goto start;       
     case 'e':
       hid_close(hid);
       hid_exit();
