@@ -84,7 +84,7 @@ I have written drivers for the following boards:
    USB-1608FS-Plus, USB-2633, USB-2637, USB-201, USB-204, USB-205, USB-CTR8, USB-1208FS-Plus,
    USB-1408FS-Plus, USB-2020 USB-2001TC USB-2408 USB-7202 USB-7204 USB-DIO32HS USB-1808
 
-**New**:heavy_exclamation_mark: USB-DIO32HS, E-1608, E-DIO24, USB-1808
+**New Python**:heavy_exclamation_mark: USB-1208.py
 
 ====================================================================
 ## FAQ:  Here are some questions that I sometimes get that might help.
@@ -189,7 +189,3 @@ I have written drivers for the following boards:
 9. Q: Under Raspian on the Raspberry Pi, I can not run the test program except as root.  
    A: Go to /etc/udev/rules.d and rename the file 61-mcc.rules to 99-mcc.rules and reboot.
    
-10. Q: I can not get AInScan to work for the USB-1208LS or the minilab-1008 devices.   
-    A: These two USB HID devices use feature reports to download data due to limitation in
-    the HID spec and the way the device was implemented.  Unfortunately, feature reports don't
-    work well under hidapi.  
