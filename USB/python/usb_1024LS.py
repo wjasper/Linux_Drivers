@@ -60,22 +60,28 @@ class usb_1024LS:
       print('USB-1024LS: Error creating hid device')
 
     try:
-      self.h.open(0x09db, 0x0076, serial)         # MCC USB-1024LS
+      self.h.open(0x09db, 0x0076, serial)           # MCC USB-1024LS
     except:
       try:
-        self.h.open(0x09db, 0x007f, serial)       # MCC USB-1024HLS
+        self.h.open(0x09db, 0x007f, serial)         # MCC USB-1024HLS
       except:
-        print('Can not open USB-1024LS or USB-1024HLS device')
-        return
+        try:
+          self.h.open(0x09db, 0x0093, serial)       # MCC USB-DIO24
+        except:
+          try:
+            self.h.open(0x09db, 0x0094, serial)     # MCC USB-DIO24H
+          except:
+            print('Can not open USB-1024LS or USB-1024HLS device')
+            return
 
     # enable non-blocking mode
     self.h.set_nonblocking(1)
     
     self.DConfig(self.DIO_PORTA, self.DIO_DIR_OUT)     # Port A output
     self.DConfig(self.DIO_PORTB, self.DIO_DIR_IN)      # Port B input
-    self.DOut(self.DIO_PORTA, 0x0)
+    self.DOut(self.DIO_PORTA, 0x0)                     # zero out the port
     self.DConfig(self.DIO_PORTC_LOW, self.DIO_DIR_OUT) # Port C Low output
-    self.DConfig(self.DIO_PORTC_HI, self.DIO_DIR_IN)   # Port C Low output
+    self.DConfig(self.DIO_PORTC_HI, self.DIO_DIR_IN)   # Port C Hi  input
 
   #################################
   #     Digital I/O  Commands     #
@@ -96,7 +102,10 @@ class usb_1024LS:
       print('DIn: error in reading.')
 
     if port == self.DIO_PORTC_HI :
-      value[0] >> 4  # value of uppper nibble
+      value[0] >>= 4    # value of uppper nibble
+
+    if port == self.DIO_PORTC_LOW :
+      value[0] &= 0xf    # value of lower nibble
 
     return value[0]
 
