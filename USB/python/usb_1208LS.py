@@ -457,7 +457,7 @@ class usb_1208LS:
     #    data:  the data to be written (4 bytes max)
 
     if (count > 4):
-      print('MemRead: max count is 4')
+      print('MemWrite: max count is 4')
       return
     self.h.write([self.MEM_Write, address, count, data[0:count]] + [0]*(5-count))
 

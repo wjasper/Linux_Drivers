@@ -32,19 +32,19 @@ def main():
 
   while True:
     print("\nUSB-1208LS Testing")
-    print("----------------");
+    print("----------------")
     print("Hit 'b' to blink.")
-    print("Hit 's' to set user id.");
-    print("Hit 'g' to get user id.");
-    print("Hit 'f' to get serial number.");
-    print("Hit 'j' for information.");
-    print("Hit 'c' to test counter. ");
-    print("Hit 'd' to test digital I/O.");
-    print("Hit 't' to test digital bit I/O.");
-    print("Hit 'o' to test analog output.");
-    print("Hit 'i' to test analog input.");
-    print("Hin 'n' to test analog input scan.");
-    print("Hit 'e' to exit.");
+    print("Hit 's' to set user id.")
+    print("Hit 'g' to get user id.")
+    print("Hit 'f' to get serial number.")
+    print("Hit 'j' for information.")
+    print("Hit 'c' to test counter. ")
+    print("Hit 'd' to test digital I/O.")
+    print("Hit 't' to test digital bit I/O.")
+    print("Hit 'o' to test analog output.")
+    print("Hit 'i' to test analog input.")
+    print("Hin 'n' to test analog input scan.")
+    print("Hit 'e' to exit.")
 
     ch = input('\n')
 
