@@ -249,7 +249,6 @@ void usbAOut_USB1208LS(hid_device *hid, uint8_t channel, uint16_t value)
 void usbAInScan_USB1208LS(hid_device *hid, uint16_t count, int rate, uint8_t low_channel, uint8_t high_channel, uint8_t options, int16_t value[], uint8_t gainLoadQueue[])
 {
   int i, idx;
-  int scans;
   int ret;
   uint16_t scan_index;
   uint16_t actual_scan_index;
@@ -330,12 +329,8 @@ void usbAInScan_USB1208LS(hid_device *hid, uint16_t count, int rate, uint8_t low
   out.timer_preload = preload;
   out.timer_prescale = prescale;
   out.options = options;
-
-  printf("%#x,%#x,%#x,%#x,%#x,%#x,\n", out.cmd, out.lo_count, out.hi_count, out.timer_preload,
-  	out.timer_prescale, out.options);
   
   PMD_SendOutputReport(hid, (uint8_t*) &out, sizeof(out));
-  usleep(10000);
   /*
      If in external trigger mode, then wait for the device to send back
      notice that the trigger has been received, then startup the acquisition
@@ -372,17 +367,16 @@ void usbAInScan_USB1208LS(hid_device *hid, uint16_t count, int rate, uint8_t low
   scan_index = 0;
   idx = 0;
   hid_set_nonblocking(hid, 1);
-  printf("size of feature report =%ld\n", sizeof(feature_report));
 
   while (count > 0) {
     //      PMD_GetFeatureReport(hid, (uint8_t *) &feature_report, sizeof(feature_report));
-    usleep(1000);
     ret = hid_get_feature_report(hid, (unsigned char *) &feature_report, sizeof(feature_report));
     scan_index++;
     actual_scan_index = (uint16_t) (feature_report.scanIndex[0] | feature_report.scanIndex[1] << 8);
-    printf("Completed scan %d  error = %d\n", actual_scan_index, feature_report.error);
+    if (ret == -1){
+      printf("Completed scan %d  error = %d\n", actual_scan_index, feature_report.error);
+    }
     for (i = 0; i < 96; i += 3, idx += 2) {
-      //printf("data[%d] = %#x  data[%d] = %#x\n", i, feature_report.data[i], i+1, feature_report.data[i+1]);
       value[idx] = feature_report.data[i] | ((feature_report.data[i+1]<<4) & 0x0f00);
       if (value[idx] & 0x800) (*((uint16_t *)(&(value[idx])))) |= 0xf000;
       value[idx + 1] = feature_report.data[i+2] | ((feature_report.data[i+1]<<8) & 0x0f00);
@@ -413,9 +407,7 @@ void usbAInLoadQueue_USB1208LS(hid_device *hid, uint8_t chanCount, uint8_t chanL
       report.gains[i] = ((chanLoadQueue[i] & 0x7) | gainLoadQueue[i] | 0x80);
     }
   }
-
-  printf("%d, %#x, %#x, %#x, %#x, %#x, %#x \n", report.count,
-	 report.gains[0], report.gains[1], report.gains[2], report.gains[3], report.gains[4], report.gains[5]);
+  
   PMD_SendOutputReport(hid, (uint8_t*) &report, sizeof(report));
   usleep(1000);
   

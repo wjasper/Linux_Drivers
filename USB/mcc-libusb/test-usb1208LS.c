@@ -46,7 +46,7 @@ int main (int argc, char **argv)
   int temp, i, j;
   int ch;
   int rate;
-  int16_t sdata[1024];
+  int16_t *sdata;
   uint16_t value;
   uint16_t count;
   uint8_t gains[8];
@@ -212,6 +212,7 @@ int main (int argc, char **argv)
       rate = 100;
       count = 64;
       options = AIN_EXECUTION;
+      sdata = (short*) malloc(2048);
       usbAInScan_USB1208LS(hid, count, rate, 0, 3, options, sdata, gains);
       for ( i = 0; i < count/4; i++ ) {
 	printf("scan %d: ", i);
@@ -220,6 +221,7 @@ int main (int argc, char **argv)
 	}
 	printf("\n");
       }
+      free(sdata);
       break;
     case 'i':
       printf("Select channel [0-3]: ");
