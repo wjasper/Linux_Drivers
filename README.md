@@ -189,7 +189,3 @@ I have written drivers for the following boards:
 9. Q: Under Raspian on the Raspberry Pi, I can not run the test program except as root.  
    A: Go to /etc/udev/rules.d and rename the file 61-mcc.rules to 99-mcc.rules and reboot.
    
-10. Q: I can not get AInScan to work for the USB-1208LS or the minilab-1008 devices.   
-    A: These two USB HID devices use feature reports to download data due to limitation in
-    the HID spec and the way the device was implemented.  Unfortunately, feature reports don't
-    work well under hidapi.  
