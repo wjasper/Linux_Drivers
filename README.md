@@ -84,7 +84,7 @@ I have written drivers for the following boards:
    USB-1608FS-Plus, USB-2633, USB-2637, USB-201, USB-204, USB-205, USB-CTR8, USB-1208FS-Plus,
    USB-1408FS-Plus, USB-2020 USB-2001TC USB-2408 USB-7202 USB-7204 USB-DIO32HS USB-1808
 
-**New**:heavy_exclamation_mark: USB-DIO32HS, E-1608, E-DIO24, USB-1808
+**New Python**:heavy_exclamation_mark: USB-1208.py
 
 ====================================================================
 ## FAQ:  Here are some questions that I sometimes get that might help.
