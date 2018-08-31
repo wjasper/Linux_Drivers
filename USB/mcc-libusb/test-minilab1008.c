@@ -45,7 +45,7 @@ int main (int argc, char **argv)
   int temp, i, j;
   int ch;
   int rate;
-  int16_t sdata[1024];
+  int16_t *sdata;
   uint16_t value;
   uint16_t count;
   uint8_t gains[8];
@@ -59,6 +59,8 @@ int main (int argc, char **argv)
   //  hid_set_debug(HID_DEBUG_ALL);
   //  hid_set_debug_stream(stderr);
   //  hid_set_usb_debug(2);
+
+start:
   
   ret = hid_init();
   if (ret < 0) {
@@ -98,6 +100,7 @@ int main (int argc, char **argv)
     printf("Hit 'i' to test analog input (differential)\n");
     printf("Hit 'I' to test analog input (single ended)\n");
     printf("Hin 'n' to test analog input scan\n");
+    printf("Hit 'r' to reset the device.\n");
     printf("Hit 'e' to exit\n");
 
     while((ch = getchar()) == '\0' || ch == '\n');
@@ -212,21 +215,25 @@ int main (int argc, char **argv)
         default:
                 break;
       }
-      printf("Select sampling rate [Hz]: ");
-      ret = scanf("%d", &rate);
-      if (ret < 0) {
-	perror("Error in scanf.");
+      for (i = 1; i < 8; i++) {
+	gains[i] = gains[0];
       }
+      //      printf("Select sampling rate [Hz]: ");
+      //      ret = scanf("%d", &rate);
       printf("Select number of samples: ");
-      ret = scanf("%hd", &count);
-      if (ret < 0) {
-	perror("Error in scanf.");
-      }
+      scanf("%hd", &count);
+      rate = 100;
       options = AIN_EXECUTION;
-      usbAInScan_miniLAB1008(hid, count, rate, 0, 0, options, sdata, gains);
-      for ( i = 0; i < count; i++ ) {
-	printf("sdata[%d] = %#hx, %.2fV\n", i, sdata[i], volts_LS(gains[0], sdata[i]));
+      sdata = (short*) malloc(2048);
+      usbAInScan_miniLAB1008(hid, count, rate, 0, 3, options, sdata, gains);
+      for ( i = 0; i < count/4; i++ ) {
+	printf("scan %d: ", i);
+	for (j = 0; j < 4; j++) {
+	  printf("%.2fV ", volts_LS(gain, sdata[4*i+j]));
+	}
+	printf("\n");
       }
+      free(sdata);
       break;
     case 'i':
       printf("Select channel [0-3]: ");
@@ -280,6 +287,11 @@ int main (int argc, char **argv)
       } while (!isalpha(getchar()));
       fcntl(fileno(stdin), F_SETFL, flag);
       break;
+    case 'r':
+      usbReset_miniLAB1008(hid);
+      sleep(2);
+      hid_close(hid);
+      goto start;       
     case 'e':
       hid_close(hid);
       hid_exit();

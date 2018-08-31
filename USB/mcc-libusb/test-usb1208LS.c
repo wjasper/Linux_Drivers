@@ -46,7 +46,7 @@ int main (int argc, char **argv)
   int temp, i, j;
   int ch;
   int rate;
-  int16_t *sdata;
+  short *sdata;
   uint16_t value;
   uint16_t count;
   uint8_t gains[8];
