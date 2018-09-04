@@ -89,7 +89,7 @@ I have written drivers for the following boards:
   USB-SSR08
 
 **New Python**:heavy_exclamation_mark: USB-1208LS.py, USB-1024LS.py (also works for USB-1024HLS, 
-      USB-DIO24 and USB-DIO1024H), USB-ssr24, USB-ssr08
+      USB-DIO24 and USB-DIO1024H), USB-SSR24, USB-SSR08
 
 ====================================================================
 ## FAQ:  Here are some questions that I sometimes get that might help.
