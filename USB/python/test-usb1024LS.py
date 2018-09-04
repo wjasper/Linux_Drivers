@@ -15,7 +15,7 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-from usb_1024LS import *
+from usb_dio import *
 import time
 import sys
 
@@ -27,7 +27,10 @@ def toContinue():
     return False
   
 def main():
-  usb1024LS = usb_1024LS()
+# usb1024LS = usb_1024LS()
+# usb1024LS = usb_1024HLS()
+  usb1024LS = usb_DIO24()
+# usb1024LS = usb_DIO24H()
 
   while True :
     print("\nUSB 1024 Testing")

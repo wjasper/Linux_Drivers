@@ -32,13 +32,10 @@ class UnderrunError(Error):
   ''' Raised when underrun on AInScan'''
   pass
 
-
 class usb_1208LS:
 
   DIO_PORTA     = 0x01
   DIO_PORTB     = 0x04
-  DIO_AUXPORT   = 0x10
-
   DIO_DIR_IN    = 0x01
   DIO_DIR_OUT   = 0x00
 
@@ -69,7 +66,6 @@ class usb_1208LS:
   AIN_TRANSFER      = 0x4  # 1 = Block Transfer Mode
   AIN_TRIGGER       = 0x8  # 1 = Use External Trigger
 
-      
   # Commands and Codes for USB 1208-LS HID reports
   # Digital I/O Commands
   DCONFIG     = 0x0D     # Configure digital port
@@ -103,21 +99,28 @@ class usb_1208LS:
   GET_ID      = 0x0F     # Get the user ID
 
   scanIdx     = 0        # scan index
+  productID   = 0        # product ID
 
   def __init__(self, serial=None):
     try:
-        self.h = hid.device()
+      self.h = hid.device()
     except:
-      print('USB-1208LS: Error creating hid device')
+      print('Error creating hid device')
+
     try:
       self.h.open(0x09db, 0x007a, serial)       # MCC 1208LS
+      self.productID = 0x0007a
     except:
-      print('USB-1208LS: Error opening hid device.')
-      return
+      try:
+        self.h.open(0x09db, 0x0075, serial)      # MCC Minilab 1008
+        self.productID = 0x00075
+      except:
+        print('USB-1208LS, MiniLAB 1008: Error opening hid device.')
+        return
 
     # enable non-blocking mode
     self.h.set_nonblocking(1)
-    
+
     self.DConfig(self.DIO_PORTA, 0x00)  # Port A output
     self.DConfig(self.DIO_PORTB, 0xff)  # Port B input
     self.DOut(self.DIO_PORTA, 0x0)
@@ -136,6 +139,9 @@ class usb_1208LS:
     #                  Port B     =   0x04
     #
     #  bit_mask   bit value:  0 = output,  1 = input
+    #  Note: Bug in AUXPORT, take the one's complement
+    if self.productID == 0x0075 and port_number == self.DIO_AUXPORT:
+      bit_mask = ((bit_mask ^ 0xff) & 0xff)
     self.h.write([self.DCONFIG, port_number, bit_mask, 0, 0, 0, 0, 0])
 
   def DIn(self, port_number):
@@ -366,6 +372,7 @@ class usb_1208LS:
   #################################
   #   Analog Output  Commands     #
   #################################
+
   def AOut(self, channel, value):
     # This command sets the voltage output of the specified analog output channel
     #
@@ -537,3 +544,12 @@ class usb_1208LS:
       volt = num * 1.0 / 0x7ff
     
     return volt
+
+class usb_miniLAB(usb_1208LS):
+  DIO_AUXPORT   = 0x10          # MiniLAB only DIO0-DIO3
+  DIO_PORTCH    = 0x02          # MiniLAB only
+  DIO_PORTCL    = 0x08          # MiniLAB only
+
+  def __init__(self, serial=None):
+    usb_1208LS.__init__(self, serial)
+    self.DConfig(self.DIO_AUXPORT, 0x3) # default DIO0 and DIO1 to output
