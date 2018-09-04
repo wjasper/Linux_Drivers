@@ -25,15 +25,18 @@ def toContinue():
     return True
   else:
     return False
-  
+
+
 def main():
-# usb1024LS = usb_1024LS()
-# usb1024LS = usb_1024HLS()
-  usb1024LS = usb_DIO24()
-# usb1024LS = usb_DIO24H()
+# uncomment the one you have
+#
+  usbdio = usb_1024LS()       # USB-1024LS
+# usbdio = usb_1024HLS()      # USB-1024HLS
+# usbdio = usb_DIO24()        # USB-DIO24
+# usbdio = usb_DIO24H()       # USB-DIO24H
 
   while True :
-    print("\nUSB 1024 Testing")
+    print("\nUSB-1024 Testing")
     print("----------------")
     print("Hit 'b' to blink LED")
     print("Hit 's' to set user id")
@@ -49,42 +52,42 @@ def main():
     ch = input('\n')
 
     if ch == 'b':
-      usb1024LS.Blink()
+      usbdio.Blink()
     elif ch == 'e':
-      usb1024LS.h.close()
+      usbdio.h.close()
       exit(0)
     elif ch == 'c':
       print('Connect pin 1 and 20')
-      usb1024LS.CInit()                       # initialize the counter
+      usbdio.CInit()                       # initialize the counter
       for i in range(20):
-        usb1024LS.DOut(usb1024LS.DIO_PORTC_LOW, 1);
-        usb1024LS.DOut(usb1024LS.DIO_PORTC_LOW, 0);
-        print('Counter =', usb1024LS.CIn())   # read the current count
+        usbdio.DOut(usbdio.DIO_PORTC_LOW, 1);
+        usbdio.DOut(usbdio.DIO_PORTC_LOW, 0);
+        print('Counter =', usbdio.CIn())   # read the current count
     elif ch == 'n':
-      print("Serial No: %s" % usb1024LS.h.get_serial_number_string())
+      print("Serial No: %s" % usbdio.h.get_serial_number_string())
     elif ch == 'g':
-      print('User ID =', usb1024LS.GetID())
+      print('User ID =', usbdio.GetID())
     elif ch == 's':
       id = int(input('Enter a user id (0-255): '))
-      usb1024LS.SetID(id)
+      usbdio.SetID(id)
     elif ch == 'i':
-      print("Manufacturer: %s" % usb1024LS.h.get_manufacturer_string())
-      print("Product: %s" % usb1024LS.h.get_product_string())
-      print("Serial No: %s" % usb1024LS.h.get_serial_number_string())
+      print("Manufacturer: %s" % usbdio.h.get_manufacturer_string())
+      print("Product: %s" % usbdio.h.get_product_string())
+      print("Serial No: %s" % usbdio.h.get_serial_number_string())
     elif ch == 'd':
       print('Testing Digital I/O ...')
       print('Connect pins 21 through 28 <--> 32 through 39  (Port A to Port B)')
-      usb1024LS.DConfig(usb1024LS.DIO_PORTA, 0x0)   # Port A output
-      usb1024LS.DConfig(usb1024LS.DIO_PORTB, 0xff)  # Port B input
-      usb1024LS.DOut(usb1024LS.DIO_PORTA, 0x0)
+      usbdio.DConfig(usbdio.DIO_PORTA, 0x0)   # Port A output
+      usbdio.DConfig(usbdio.DIO_PORTB, 0xff)  # Port B input
+      usbdio.DOut(usbdio.DIO_PORTA, 0x0)
       while (True):
         try:
           num = int(input('Enter a byte number [0x0-0xff]: '),16)
-          usb1024LS.DOut(usb1024LS.DIO_PORTA, num)
-          value = usb1024LS.DIn(usb1024LS.DIO_PORTB)
+          usbdio.DOut(usbdio.DIO_PORTA, num)
+          value = usbdio.DIn(usbdio.DIO_PORTB)
           print('PortB: The number you entered =', hex(value))
           for i in range(8):
-            value = usb1024LS.DBitIn(usb1024LS.DIO_PORTB, i)
+            value = usbdio.DBitIn(usbdio.DIO_PORTB, i)
             print('Port B Bit',i,' =', hex(value))
         except:
           pass
@@ -94,11 +97,11 @@ def main():
       print('Testing Digital Bit I/O ...')
       print('Connect pins 21 through 28 <--> 32 through 39  (Port A to Port B)')
       while (True):
-        usb1024LS.DOut(usb1024LS.DIO_PORTA, 0x0)  # reset the pin values
+        usbdio.DOut(usbdio.DIO_PORTA, 0x0)  # reset the pin values
         bit = int(input('Enter a bit value for output (0 | 1): '),16)
         pin = int(input('Select a pin in port A [0-7]: '),16)
-        usb1024LS.DBitOut(usb1024LS.DIO_PORTA, pin, bit)
-        value = usb1024LS.DIn(usb1024LS.DIO_PORTB)
+        usbdio.DBitOut(usbdio.DIO_PORTA, pin, bit)
+        value = usbdio.DIn(usbdio.DIO_PORTB)
         print('The number you entered 2^',pin,'= ',hex(value))
 
         if (toContinue() != True):

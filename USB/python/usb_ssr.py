@@ -38,7 +38,6 @@ class usb_ssr:
   BLINK_LED        = 0x40 # Causes LED to blink
   RESET            = 0x41 # Reset USB interface
   GET_STATUS       = 0x44 # Retrieve device status
-  GET_ALL          = 0x46 # Retrieve all digital input values
 
   PREPARE_DOWNLOAD = 0x50 # Prepare for program memory download
   WRITE_CODE       = 0x51 # Write program memory
@@ -63,11 +62,11 @@ class usb_ssr:
 
     self.h.write([self.DIN, port])
     try:
-      value = self.h.read(8,100)
+      value = self.h.read(2,500)
     except:
       print('DIn: error in reading.')
 
-    return value[0]
+    return value[1]
 
   def DOut(self, port, value):
     # This command writes data to the DIO port.
@@ -77,10 +76,10 @@ class usb_ssr:
     # Reads digital port bit
     self.h.write([0, self.DBIT_IN, port, bit])
     try:
-      value = self.h.read(8,100)
+      value = self.h.read(2,100)
     except:
       print('DBitIn: error in reading.')
-    return value[0]
+    return value[1]
 
   def DBitOut(self, port, pin, value):
     # Writes digital port bit
@@ -95,15 +94,18 @@ class usb_ssr:
 
   def MemRead(self, address, count):
     # This command reads data from the configuration memeory (EEPROM).
+    # All of the memory may be read.  The USB hub chip EEPROM may be read
+    # and its address range is 0x0400-0x04FF.
+    #
     if (count > 62):
       print('MemRead: max count is 62')
       return
     self.h.write([self.MEM_READ, address&0xff, (address >>8)&0xff, 0, count])
     try:
-      value = self.h.read(count, 500)
+      value = self.h.read(count+1, 500)
     except:
       print('Error in reading memory, value =', value)
-    return(value[0:count])
+    return(value[1:count+1])
 
   def MemWrite(self, address, count, data):
     # This command writes data to the non-volatile EEPROM memory on the device.
@@ -134,6 +136,7 @@ class usb_ssr:
     self.h.write([self.RESET])
 
   def Status(self):
+    #      USB-SSR24 and USB-SSR08
     # Bit 0: Port A direction setting      (0 = output,    1 = input)
     # Bit 1: Port B direction setting      (0 = output,    1 = input)
     # Bit 2: Port C Low direction setting  (0 = output,    1 = input)
@@ -146,22 +149,21 @@ class usb_ssr:
     # Bit 9: Port B pull-up setting        (0 = pull down, 1 = pull up)
     # Bit 10: Port C Low  pull-up setting  (0 = pull down, 1 = pull up)
     # Bit 11: Port C High pull-up setting  (0 = pull down, 1 = pull up)
+    #
+    #      USB-ERB24 and USB-ERB08
+    # Bit 0: Port A polarity setting       (0 = inverted,  1 = normal)  (N/A on ERB08)
+    # Bit 1: Port B polarity setting       (0 = inverted,  1 = normal)  (N/A on ERB08)
+    # Bit 2: Port C Low polarity setting   (0 = inverted,  1 = normal)  (N/A on ERB08)
+    # Bit 3: Port C High polarity setting  (0 = inverted,  1 = normal)  (N/A on ERB08)
+    # Bit 4: Port A pull-up setting        (0 = pull down, 1 = pull up)
+    # Bit 5: Port B pull-up setting        (0 = pull down, 1 = pull up)
+    # Bit 6: Port C Low  pull-up setting   (0 = pull down, 1 = pull up)
+    # Bit 7: Port C High pull-up setting   (0 = pull down, 1 = pull up)
 
     self.h.write([self.GET_STATUS])
 
-    value = self.h.read(2, 1000)
-    return (value[0] | (value[1]<<8))
-
-  def GetALL(self):
-    # Reads value from all digital I/O's
-    # uint8_t Port_A
-    # uint8_t Port_B
-    # uint8_t Port_C_Low
-    # uint8_t Port_C_High
-
-    self.h.write([self.GET_ALL])
-    value = self.h.read(4, 500)
-    return (value[0:4])
+    value = self.h.read(3, 1000)
+    return (value[1] | (value[2]<<8))
 
   def PrepareDownload(self):
     # This command puts the device into code update mode.  The unlock code must be correct as a
@@ -214,30 +216,111 @@ class usb_ssr:
 class usb_ssr24(usb_ssr):
   DIO_PORTA      = 0x0
   DIO_PORTB      = 0x1
+  GET_ALL        = 0x46 # Retrieve all digital input values
 
   def __init__(self, serial=None):
+    self.productID = 0x0085                      #MCC USB-SSR24
     usb_ssr.__init__(self)
     try:
-      self.h.open(0x9db, 0x0085, serial)
+      self.h.open(0x9db, self.productID, serial)
     except:
       print('Can not open USB-SSR24')
       return
 
-    self.productID = 0x0085                      #MCC USB-SSR24
-
     # enable non-blocking mode
     self.h.set_nonblocking(1)
+    
+  def GetAll(self):
+    # Reads value from all digital I/O's
+    # uint8_t Port_A
+    # uint8_t Port_B
+    # uint8_t Port_C_Low
+    # uint8_t Port_C_High
+
+    self.h.write([self.GET_ALL])
+    value = self.h.read(5, 500)
+    return (value[1:5])
 
 class usb_ssr08(usb_ssr):
+  GET_ALL      = 0x46 # Retrieve all digital input values
+  
   def __init__(self, serial=None):
+    self.productID = 0x0086                      #MCC USB-SSR08
     usb_ssr.__init__(self)
     try:
-      self.h.open(0x9db, 0x0086, serial)
+      self.h.open(0x9db, self.productID, serial)
     except:
       print('Can not open USB-SSR08')
       return
 
-    self.productID = 0x0086                      #MCC USB-SSR08
+    # enable non-blocking mode
+    self.h.set_nonblocking(1)
+    
+  def GetAll(self):
+    # Reads value from all digital I/O's
+    # uint8_t Port_A
+    # uint8_t Port_B
+    # uint8_t Port_C_Low
+    # uint8_t Port_C_High
+
+    self.h.write([self.GET_ALL])
+    value = self.h.read(5, 500)
+    return (value[1:5])
+  
+class usb_erb24(usb_ssr):
+  DIO_PORTA      = 0x0
+  DIO_PORTB      = 0x1
+  GET_TEMP       = 0x47
+
+  def __init__(self, serial=None):
+    self.productID = 0x008a                      #MCC USB-ERB24
+    usb_ssr.__init__(self)
+    try:
+      self.h.open(0x9db, self.productID, serial)
+    except:
+      print('Can not open USB-ERB24')
+      return
+
+    # enable non-blocking mode
+    self.h.set_nonblocking(1)
+
+  def GetTemp(self):
+    # This command reads the temperature of the onboard sensor (N/A on ERB08)
+    # int16_t temperature in 0.1C units (25C is returned as 250, -10C as -100 etc.)
+    self.h.write([self.GET_TEMP])
+    value = self.h.read(3, 1000)
+    return (value[1] | value[2]<<8)/10.0
+
+class usb_erb08(usb_ssr):
+  def __init__(self, serial=None):
+    self.productID = 0x008b                      #MCC USB-ERB08
+    usb_ssr.__init__(self)
+    try:
+      self.h.open(0x9db, self.productID, serial)
+    except:
+      print('Can not open USB-ERB08')
+      return
+
+    # enable non-blocking mode
+    self.h.set_nonblocking(1)
+
+class usb_pdiso8(usb_ssr):
+  # USB-based Isolated Input and Relay Output
+  # Port Description and numbering
+  RELAY_PORT    = 0x0   # (output only)
+  ISO_PORT      = 0x1   # (input only)
+  FILTER_PORT   = 0x2
+  DEBUG_PORT    = 0x3
+  DAC_PORT      = 0x4
+  
+  def __init__(self, serial=None):
+    self.productID = 0x008c                      #MCC USB-PDISO8
+    usb_ssr.__init__(self)
+    try:
+      self.h.open(0x9db, self.productID, serial)
+    except:
+      print('Can not open USB-ERB08')
+      return
 
     # enable non-blocking mode
     self.h.set_nonblocking(1)

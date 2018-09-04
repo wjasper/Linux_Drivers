@@ -32,7 +32,7 @@ class UnderrunError(Error):
   ''' Raised when underrun on AInScan'''
   pass
 
-class usb_1208LS:
+class usb_1208:
 
   DIO_PORTA     = 0x01
   DIO_PORTB     = 0x04
@@ -101,31 +101,11 @@ class usb_1208LS:
   scanIdx     = 0        # scan index
   productID   = 0        # product ID
 
-  def __init__(self, serial=None):
+  def __init__(self):
     try:
       self.h = hid.device()
     except:
       print('Error creating hid device')
-
-    try:
-      self.h.open(0x09db, 0x007a, serial)       # MCC 1208LS
-      self.productID = 0x0007a
-    except:
-      try:
-        self.h.open(0x09db, 0x0075, serial)      # MCC Minilab 1008
-        self.productID = 0x00075
-      except:
-        print('USB-1208LS, MiniLAB 1008: Error opening hid device.')
-        return
-
-    # enable non-blocking mode
-    self.h.set_nonblocking(1)
-
-    self.DConfig(self.DIO_PORTA, 0x00)  # Port A output
-    self.DConfig(self.DIO_PORTB, 0xff)  # Port B input
-    self.DOut(self.DIO_PORTA, 0x0)
-    self.AOut(0,0x0)
-    self.AOut(1,0x0)
 
   #################################
   #     Digital I/O  Commands     #
@@ -155,7 +135,7 @@ class usb_1208LS:
     # Bug: need leading 0 in command string
     self.h.write([0x0, self.DIN, port_number, 0, 0, 0, 0, 0, 0])
     try:
-      value = self.h.read(8,100)
+      value = self.h.read(1,500)
     except:
       print('DIn: error in reading.')
     return(value[0])
@@ -180,7 +160,7 @@ class usb_1208LS:
     #  bit:            The bit to read (0-7)
     self.h.write([self.DBIT_IN, port_number, bit, 0, 0, 0, 0, 0])
     try:
-      value = self.h.read(8,100)
+      value = self.h.read(1,500)
     except:
       print('DBitIn: error in reading.')
     return(value[0])
@@ -225,7 +205,7 @@ class usb_1208LS:
 
     self.h.write([self.AIN, channel, gain, 0, 0, 0, 0, 0])
     try:
-      data = self.h.read(8, 100)
+      data = self.h.read(3, 100)
     except:
       print('AIn: error in reading A/D.')
 
@@ -396,7 +376,7 @@ class usb_1208LS:
     # the CTR pin (pin 20) on the screw terminal of the device.
     self.h.write([self.CIN, 0, 0, 0, 0, 0, 0, 0])
     try:
-      value = self.h.read(8,100)
+      value = self.h.read(4,100)
     except:
       print('Error in CIn.')
       return 0
@@ -435,7 +415,7 @@ class usb_1208LS:
       return
     self.h.write([self.MEM_READ, address, count, 0, 0, 0, 0, 0])
     try:
-      value = self.h.read(8, 100)
+      value = self.h.read(count, 100)
     except:
       print('Error in reading memory, value =', value)
     return(value[0:count])
@@ -545,11 +525,37 @@ class usb_1208LS:
     
     return volt
 
-class usb_miniLAB(usb_1208LS):
-  DIO_AUXPORT   = 0x10          # MiniLAB only DIO0-DIO3
-  DIO_PORTCH    = 0x02          # MiniLAB only
-  DIO_PORTCL    = 0x08          # MiniLAB only
+class usb_1208LS(usb_1208):
+  def __init__(self, serial=None):
+    self.productID = 0x0007a           # USB-1208LS
+    usb_1208.__init__(self)
+    try:
+      self.h.open(0x09db, self.productID, serial)
+    except:
+      print('Can not open USB-1208LS')
+      return
+
+    # enable non-blocking mode
+    self.h.set_nonblocking(1)
+
+    self.DConfig(self.DIO_PORTA, 0x00)  # Port A output
+    self.DConfig(self.DIO_PORTB, 0xff)  # Port B input
+    self.DOut(self.DIO_PORTA, 0x0)
+    self.AOut(0,0x0)
+    self.AOut(1,0x0)
+      
+class usb_miniLAB(usb_1208):
+  DIO_AUXPORT   = 0x10          # miniLAB only DIO0-DIO3
+  DIO_PORTCH    = 0x02          # miniLAB only
+  DIO_PORTCL    = 0x08          # miniLAB only
 
   def __init__(self, serial=None):
-    usb_1208LS.__init__(self, serial)
+    self.productID = 0x0075                      #MCC miniLAB 1008
+    usb_1208.__init__(self)
+    try:
+      self.h.open(0x9db, self.productID, serial)
+    except:
+      print('Can not open USB-MiniLAB1008')
+      return
+
     self.DConfig(self.DIO_AUXPORT, 0x3) # default DIO0 and DIO1 to output
