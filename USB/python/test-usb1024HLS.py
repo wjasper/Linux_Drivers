@@ -27,10 +27,11 @@ def toContinue():
     return False
 
 def main():
-  usbdio = usb_1024LS()       # USB-1024LS
+
+  usbdio = usb_1024HLS()      # USB-1024HLS
 
   while True :
-    print("\nUSB-1024LS Testing")
+    print("\nUSB-1024HLS Testing")
     print("----------------")
     print("Hit 'b' to blink LED")
     print("Hit 's' to set user id")
