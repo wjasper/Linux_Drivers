@@ -27,8 +27,7 @@ def toContinue():
     return False
   
 def main():
-#  usb1208LS = usb_1208LS()
-  usb1208HLS = usb_1208LS()
+  usb1208LS = usb_1208LS()
 
   while True:
     print("\nUSB-1208LS Testing")
