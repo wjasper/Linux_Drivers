@@ -109,12 +109,11 @@ int main (int argc, char **argv)
         printf("connect pin 20 and 39\n");
         usbDConfigPort_USB1408FS(udev, DIO_PORTB, DIO_DIR_OUT);
         usbInitCounter_USB1408FS(udev);
-        sleep(1);
         flag = fcntl(fileno(stdin), F_GETFL);
         fcntl(0, F_SETFL, flag | O_NONBLOCK);
         do {
           usbDOut_USB1408FS(udev, DIO_PORTB, 0x80);
-	  sleep(1);
+	  usleep(300000);
           usbDOut_USB1408FS(udev, DIO_PORTB, 0x0);
 	  printf("Counter = %d\n",usbReadCounter_USB1408FS(udev));
         } while (!isalpha(getchar()));

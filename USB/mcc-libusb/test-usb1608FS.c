@@ -53,6 +53,7 @@ int main (int argc, char **argv)
   int options;
   float freq;
   uint16_t wvalue;
+  int nSamples;
 
   libusb_device_handle *udev = NULL;
   int ret;
@@ -88,6 +89,7 @@ int main (int argc, char **argv)
     printf("----------------\n");
     printf("Hit 'b' to blink LED\n");
     printf("Hit 'c' to test counter\n");
+    printf("Hit 'C' for conitnuous sampling\n");
     printf("Hit 'd' to read digital word\n");
     printf("Hit 'e' to exit\n");
     printf("Hit 'g' to test analog input scan\n");    
@@ -105,13 +107,13 @@ int main (int argc, char **argv)
       usbBlink_USB1608FS(udev);
       break;
     case 'c':
-      printf("connect pin 38 and 21\n");
+      printf("connect pin 38 and 35\n");
       usbDConfigPort_USB1608FS(udev, DIO_DIR_OUT);
       usbInitCounter_USB1608FS(udev);
       flag = fcntl(fileno(stdin), F_GETFL);
       fcntl(0, F_SETFL, flag | O_NONBLOCK);
       do {
-	usbDOut_USB1608FS(udev, 1);
+	usbDOut_USB1608FS(udev, 0xff);
 	usleep(5000);
 	usbDOut_USB1608FS(udev, 0);
 	usleep(100000);
@@ -129,6 +131,31 @@ int main (int argc, char **argv)
       usbDConfigPort_USB1608FS(udev, DIO_DIR_IN);
       usbDIn_USB1608FS(udev, (uint8_t*) &wvalue);
       printf("Port = %#hx\n", wvalue);
+      break;
+    case 'C':
+      printf("USB-1608FS Continuous sampling.  Hit 's' to stop\n");
+      printf("Enter desired frequency [Hz]: ");
+      scanf("%f", &freq);
+      gain = BP_10_00V;
+      usbAInStop_USB1608FS(udev);
+      // Load the gain queue
+      gainArray[0] = gain;
+      usbAInLoadQueue_USB1608FS(udev, gainArray);
+      options = 0x0;  // continuous execution, block transfer mode
+      for ( i = 0; i < 2048; i++ ) {  // load data with known value
+	data[i] = 0xbeef;
+      }
+      channel= 0;
+      usbAInScan_USB1608FS(udev, channel, channel, count, &freq, options, data);
+      printf("Actual frequency = %f\n", freq);
+      flag = fcntl(fileno(stdin), F_GETFL);
+      fcntl(0, F_SETFL, flag | O_NONBLOCK);
+      do {
+	nSamples = usbAInRead_USB1608FS(udev, data);
+	printf("samples returned = %d\n", nSamples);
+      } while (!isalpha(getchar()));
+      fcntl(fileno(stdin), F_SETFL, flag);
+      usbAInStop_USB1608FS(udev);
       break;
     case 'g':
       printf("Enter desired frequency [Hz]: ");

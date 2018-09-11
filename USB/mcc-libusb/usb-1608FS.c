@@ -595,7 +595,7 @@ int usbAInScan_USB1608FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
       count:        the total number of scans to perform, used only in single execution and burst modes.
                     Note: the actual number of samples returned is count*(highchannel - lowchannel + 1)
       frequency:    sample frequency in Samples/second
-      options:      bit 0: 1 = single execution         0 = continusous execution 
+      options:      bit 0: 1 = single execution         0 = continuous execution 
                     bit 1: 1 = burst I/O mode,          0 = normal I/O mode
                     bit 2: 1 = immediate transfer mode, 0 = block transfer mode
                     bit 3: 1 = use external trigger
@@ -742,6 +742,10 @@ int usbAInScan_USB1608FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
     perror("Error in usbAInScan_USB1608FS: libusb_control_transfer error");
   }
 
+  if ((options & AIN_EXECUTION) == 0) { // continuous mode
+    return 0;
+  }
+
   pipe = 1;  // Initial Endpoint to receive data.
   for (i = 0; i < nScans; i++, pipe = (pipe)%6 + 1) {  //pipe should take the values 1-6
     ret = libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_IN |(pipe+2), (unsigned char *) &data, sizeof(data), &transferred, timeout);
@@ -765,11 +769,35 @@ int usbAInScan_USB1608FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
       nSamples -= 31;
     }
   }
-
   usbAInStop_USB1608FS(udev);
   return nscans;
 }
 
+int usbAInRead_USB1608FS(libusb_device_handle *udev, uint16_t sdata[])
+// Returns values when in continuous mode
+{
+  int pipe;
+  int transferred;
+  int ret;
+  int timeout = FS_DELAY;
+  int i;
+  struct data_t {
+    uint16_t value[31];        // 31 16-bit samples
+    uint16_t scan_index;       //  1 16 bit scan count
+  } data;
+
+  for (pipe = 1; pipe < 7; pipe++) {  //pipe should take the values 1-6
+    ret = libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_IN |(pipe+2),
+	  (unsigned char *) &data, sizeof(data), &transferred, timeout);
+    if (ret < 0) {
+      perror("usbAInRead_USB1608FS interrupt pipes");
+    }
+    for (i = 0; i < 31; i++) {
+      sdata[(pipe-1)*31 + i] = data.value[i];
+    }
+  }
+  return (int) 31*6;   // each scan is 31 samples (64 bytes)
+}
 
 void usbAInLoadQueue_USB1608FS(libusb_device_handle *udev, uint8_t gainArray[8])
 {
