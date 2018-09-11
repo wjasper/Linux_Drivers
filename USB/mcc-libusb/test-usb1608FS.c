@@ -133,7 +133,7 @@ int main (int argc, char **argv)
       printf("Port = %#hx\n", wvalue);
       break;
     case 'C':
-      printf("USB-1608FS Continuous sampling.  Hit 's' to stop\n");
+     printf("USB-1608FS Continuous sampling.  Hit 's' to stop\n");
       printf("Enter desired frequency [Hz]: ");
       scanf("%f", &freq);
       gain = BP_10_00V;
@@ -150,9 +150,20 @@ int main (int argc, char **argv)
       printf("Actual frequency = %f\n", freq);
       flag = fcntl(fileno(stdin), F_GETFL);
       fcntl(0, F_SETFL, flag | O_NONBLOCK);
+      j = 1;
       do {
 	nSamples = usbAInRead_USB1608FS(udev, data);
-	printf("samples returned = %d\n", nSamples);
+	// add corrections
+	for (i = 0; i < nSamples; i++) {
+	  sdata[i] = (int) (table_AIN[0][channel].slope*((float) data[i]) + table_AIN[0][channel].offset);
+	  if (sdata[i] >= 0x8000) {
+	  sdata[i] -=  0x8000;
+	  } else {
+	  sdata[i] = (0x8000 - sdata[i]);
+	  sdata[i] *= (-1);
+	  }
+	}
+	printf("%d: samples returned = %d\n", j++, nSamples);
       } while (!isalpha(getchar()));
       fcntl(fileno(stdin), F_SETFL, flag);
       usbAInStop_USB1608FS(udev);
