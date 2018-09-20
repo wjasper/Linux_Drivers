@@ -1029,7 +1029,7 @@ bool BootloaderMemoryR_DIO24(EthernetDeviceInfo *device_info, uint16_t address, 
   buffer[MSG_INDEX_DATA]           = (unsigned char) address & 0xff;
   buffer[MSG_INDEX_DATA+1]         = (unsigned char) (address >> 8) & 0xff;
   buffer[MSG_INDEX_DATA+2]         = (unsigned char) count & 0xff;
-  buffer[MSG_INDEX_DATA+3]         = (unsigned char) (count >> 8) 0x0ff;
+  buffer[MSG_INDEX_DATA+3]         = (unsigned char) (count >> 8) & 0x0ff;
   buffer[MSG_INDEX_START]          = MSG_START;
   buffer[MSG_INDEX_FRAME]          = device_info->frameID++;  // increment frame ID with every send
   buffer[MSG_INDEX_STATUS]         = 0;
