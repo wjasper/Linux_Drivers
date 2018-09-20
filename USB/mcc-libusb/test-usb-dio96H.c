@@ -130,7 +130,7 @@ int main (int argc, char **argv)
       printf("\nTesting Digital I/O....\n");
       printf("connect pins P1A0 through P1A7 <=> P1B0 through P1B7 and pins P1C0-P1C3 <==> P1C4-P1C7\n");
       do {
-        printf("Enter a byte number [0-0xff] : " );
+        printf("Enter a byte number [0-0xff]: " );
         scanf("%x", &temp);
         usbDOut_USBDIO96H(hid, DIO_PORT0A, (uint8_t)temp);
         input = usbDIn_USBDIO96H(hid, DIO_PORT0B);

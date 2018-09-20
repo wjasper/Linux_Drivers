@@ -345,7 +345,7 @@ int main (int argc, char **argv)
 	scanf("%lf", &frequency);
         frequency *= 128.;
 	for (i = 0; i < 512; i ++) {
-	  voltage = 10*sin(2.*M_PI*i/256.);
+	  voltage = 10.*sin(2.*M_PI*i/128.);
           voltage = (voltage/10.*32768. + 32768.);
 	  sdataOut[i] = voltage*table_AO[channel].slope + table_AO[channel].offset;
 	}

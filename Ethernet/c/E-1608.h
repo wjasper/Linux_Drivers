@@ -101,9 +101,9 @@ typedef struct DeviceInfo_E1608_t {
   Calibration_AIn table_AInSE[NGAINS];               // ADC gains single ended (slope and intercept)
   Calibration_AOut table_AOut[NCHAN_AOUT];           // DAC gain (slope and offset)
   uint8_t queue[17];                                 // gain queue
-  int timeout;                                       // timeout (in ms) for AIn Scan reads
+  int timeout;                                       // timeout (in ms) for commands
+  int scan_timeout;                                  // timeout (in ms) for AIn Scan reads
 } DeviceInfo_E1608;
-
     
 /* function prototypes for the E-1608 */
 bool DIn_E1608(DeviceInfo_E1608 *device_info, uint8_t *value);

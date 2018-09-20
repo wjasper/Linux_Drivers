@@ -183,9 +183,9 @@ bool DOut_DIO24(EthernetDeviceInfo *device_info, uint32_t mask, uint32_t value)
 bool DConfigR_DIO24(EthernetDeviceInfo *device_info, uint32_t *value)
 {
   /* This command reads the DIO configuration value.  A 1 in a bit
-      position indicates the corresponding pin is set to an input, a 0
-      indicates it is set to an output.  The power on default is all 1
-      (input).
+     position indicates the corresponding pin is set to an input, a 0
+     indicates it is set to an output.  The power on default is all 1
+     (input).
   */
 
   int sock = device_info->sock;
@@ -652,7 +652,8 @@ bool FirmwareUpgrade_DIO24(EthernetDeviceInfo *device_info)
 
 bool ConfigMemoryR_DIO24(EthernetDeviceInfo *device_info, uint16_t address, uint16_t count, uint8_t *data)
 {
-  // This command reads the nonvolatile configuration memory.  The cal memory is 16 bytes (address 0 - 0xf)
+  // This command reads the nonvolatile configuration memory.  The configuration
+  // memory is 16 bytes (address 0 - 0xf)
 
   int sock = device_info->sock;
   unsigned char buffer[64];
@@ -716,7 +717,7 @@ bool ConfigMemoryW_DIO24(EthernetDeviceInfo *device_info, uint16_t address, uint
      inferred from the frame count - 2.
 
      address: the start address for writing (0-0xf)
-     data     the data to be written (frame count -2)
+     data:    the data to be written (frame count -2)
   */
 
   int sock = device_info->sock;
@@ -730,7 +731,7 @@ bool ConfigMemoryW_DIO24(EthernetDeviceInfo *device_info, uint16_t address, uint
   if (sock < 0) {
     return false;
   }
-  if (count > 512) {
+  if (count > 16) {
     return false;
   }
 
@@ -773,6 +774,7 @@ bool ConfigMemoryW_DIO24(EthernetDeviceInfo *device_info, uint16_t address, uint
 bool UserMemoryR_DIO24(EthernetDeviceInfo *device_info, uint16_t address, uint16_t count, uint8_t *data)
 {
   /* This command reads the nonvolatile user memory.  The user memory is 3827 bytes (address 0 - 0xeef)
+
      address: the start address for reading (0-0xeef)
      count:   the number of bytes to read (max 1024 due to protocol)
   */
@@ -835,7 +837,7 @@ bool UserMemoryW_DIO24(EthernetDeviceInfo *device_info, uint16_t address, uint16
   /* This command writes the nonvolatile user memory.  The user memory
      is 3824 bytes (address 0 - 0xeef). The amount of data to be
      written is inferred from the frame count - 2.  The maximum that
-     can be writtenin one transfer is 1024 bytes.
+     can be written in one transfer is 1024 bytes.
   */
 
   int sock = device_info->sock;
@@ -1024,10 +1026,10 @@ bool BootloaderMemoryR_DIO24(EthernetDeviceInfo *device_info, uint16_t address, 
   }
 
   buffer[MSG_INDEX_COMMAND]        = CMD_BOOT_MEM_R;
-  buffer[MSG_INDEX_DATA]           = (unsigned char) address;
-  buffer[MSG_INDEX_DATA+1]         = (unsigned char) (address >> 8);
-  buffer[MSG_INDEX_DATA+2]         = (unsigned char) count;
-  buffer[MSG_INDEX_DATA+3]         = (unsigned char) (count >> 8);
+  buffer[MSG_INDEX_DATA]           = (unsigned char) address & 0xff;
+  buffer[MSG_INDEX_DATA+1]         = (unsigned char) (address >> 8) & 0xff;
+  buffer[MSG_INDEX_DATA+2]         = (unsigned char) count & 0xff;
+  buffer[MSG_INDEX_DATA+3]         = (unsigned char) (count >> 8) 0x0ff;
   buffer[MSG_INDEX_START]          = MSG_START;
   buffer[MSG_INDEX_FRAME]          = device_info->frameID++;  // increment frame ID with every send
   buffer[MSG_INDEX_STATUS]         = 0;
@@ -1102,8 +1104,8 @@ bool BootloaderMemory_DIO24(EthernetDeviceInfo *device_info, uint16_t address, u
 
   dataCount = count + 2;           // total size of the data frame
   buffer[MSG_INDEX_COMMAND]        = CMD_BOOT_MEM_W;
-  buffer[MSG_INDEX_DATA]           = (unsigned char) address;
-  buffer[MSG_INDEX_DATA+1]         = (unsigned char) (address >> 8);
+  buffer[MSG_INDEX_DATA]           = (unsigned char) address & 0xff;
+  buffer[MSG_INDEX_DATA+1]         = (unsigned char) (address >> 8) & 0xff;
   memcpy(&buffer[MSG_INDEX_DATA+2], data, count);
   buffer[MSG_INDEX_START]          = MSG_START;
   buffer[MSG_INDEX_FRAME]          = device_info->frameID++;  // increment frame ID with every send

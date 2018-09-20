@@ -417,7 +417,7 @@ bool AIn_E1608(DeviceInfo_E1608 *device_info, uint8_t channel, uint8_t range, ui
   return result;
 }
 
-bool AInScanStart_E1608(DeviceInfo_E1608 *device_info, uint32_t count, double frequency, uint8_t options)
+bool AInScanStart_E1608(DeviceInfo_E1608 *device_info, uint32_t nScan, double frequency, uint8_t options)
 {
   /* This command starts an analog input scan.  The channel ordering
      and number of channels per scan is set by the channel gain queue
@@ -466,7 +466,7 @@ bool AInScanStart_E1608(DeviceInfo_E1608 *device_info, uint32_t count, double fr
      detected then betgin sampling data at the specified rate.  No
      data will be available until the trigger is detected.
 
-     count:      The total number or scan to scquire, 0 for continuou8s scan
+     nScan:      The total number of scans to acquire, 0 for continuous scan
      frequency:  the sampling frequency.  Use 0 for external clock.
      options:    Bit field that controls scan options
                  bits 0-1:   Reserved
@@ -503,11 +503,11 @@ bool AInScanStart_E1608(DeviceInfo_E1608 *device_info, uint32_t count, double fr
     pacer_period = 0;
   } else {
     pacer_period = rint((80.E6 / frequency) - 1.0);
-    device_info->timeout = 1000*(1.0 + 1/frequency);
+    device_info->scan_timeout = (1000 + nScan/(1000*frequency));
   }
 
   buffer[MSG_INDEX_COMMAND]        = CMD_AIN_SCAN_START;
-  memcpy(&buffer[MSG_INDEX_DATA],   &count, 4);
+  memcpy(&buffer[MSG_INDEX_DATA],   &nScan, 4);
   memcpy(&buffer[MSG_INDEX_DATA+4], &pacer_period, 4);
   memcpy(&buffer[MSG_INDEX_DATA+8], &options, 1);
   buffer[MSG_INDEX_START]          = MSG_START;
@@ -564,20 +564,20 @@ bool AInScanStart_E1608(DeviceInfo_E1608 *device_info, uint32_t count, double fr
   return result;
 }
 
-int AInScanRead_E1608(DeviceInfo_E1608 *device_info, uint32_t count, uint8_t nChan, uint16_t *data)
+int AInScanRead_E1608(DeviceInfo_E1608 *device_info, uint32_t nScan, uint8_t nChan, uint16_t *data)
 {
   int sock = device_info->device.scan_sock;
   int length = 0;
   int replyCount;
   int index = 0;
   int bytesReceived = 0;
-  int timeout = device_info->timeout;
+  int timeout = device_info->scan_timeout;
 
   if (sock < 0) {
     return -1;
   }
  
-  replyCount = count*nChan*2;
+  replyCount = nScan*nChan*2;
 
   do {
     bytesReceived = receiveMessage(sock, &data[index], replyCount - length, timeout);
@@ -830,7 +830,7 @@ bool AOutR_E1608(DeviceInfo_E1608 *device_info, uint16_t value[2])
 
 bool AOut_E1608(DeviceInfo_E1608 *device_info, uint8_t channel, uint16_t value)
 {
-  /* The command writes the value of ananalog output channel.
+  /* The command writes the value of analog output channel.
 
      channel:  the channel to write (0-1)
      value     the value to write
@@ -952,7 +952,6 @@ bool Reset_E1608(DeviceInfo_E1608 *device_info)
   int dataCount = 0;  // no data for this command
   int replyCount;
   int timeout = device_info->timeout;
-
   if (sock < 0) {
     return false;
   }
@@ -991,8 +990,13 @@ bool Reset_E1608(DeviceInfo_E1608 *device_info)
 
 bool Status_E1608(DeviceInfo_E1608 *device_info, uint16_t *status)
 {
-  // The command reads the device status
-
+  /* This command reads the device status
+     bit 0:     1 = data socket is open, 0 = data socket is closed
+     bit 1:     1 = AIn scan running
+     bit 2:     1 = AIn scan overrun
+     bits 3-15: Reserved
+  */
+  
   int sock = device_info->device.sock;
   unsigned char buffer[64];
   unsigned char replyBuffer[64];
@@ -1060,7 +1064,7 @@ bool NetworkConfig_E1608(DeviceInfo_E1608 *device_info, struct in_addr network[3
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = CMD_NETWORK_CONF;;
+  buffer[MSG_INDEX_COMMAND]        = CMD_NETWORK_CONF;
   buffer[MSG_INDEX_START]          = MSG_START;
   buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
   buffer[MSG_INDEX_STATUS]         = 0;
@@ -1318,7 +1322,7 @@ bool CalMemoryW_E1608(DeviceInfo_E1608 *device_info, uint16_t address, uint16_t 
      memory is 512 bytes (address 0 - 0xff) The cal memory should
      only be written during factory calibration and setup and has an
      additional lock mechanism to prevent inadvertent writes.  To
-     enable srites to the cal memory, first write the unlock code
+     enable writes to the cal memory, first write the unlock code
      0xAA55 to address 0x200.  Writes to the entire memory range are
      then possible.  Write any other value to address 0x200 to lock the
      memory after writing.  The amount of data to be written is
@@ -1826,10 +1830,10 @@ double volts_E1608(uint16_t value, uint8_t range)
 
 uint16_t valueAOut_E1608(double volts)
 {
-  // convertrs volts to a 16 bit raw value for +/-10V output
+  // converts volts to a 16 bit raw value for +/-10V output
   if (volts >= 10.0) {
     return 0xffff;
-  } else  if (volts <= -10.00) {
+  } else  if (volts <= -10.0) {
     return 0x0;
   } else {
     return (uint16_t) (volts*32768/10. + 0x8000);

@@ -223,7 +223,7 @@ void usbAInScan_miniLAB1008(hid_device* hid, uint16_t count, int rate, uint8_t l
 {
 
   int i, idx;
-  int scans;
+  int ret;
   uint16_t scan_index;
   uint16_t actual_scan_index;
   uint8_t chanCount;
@@ -240,7 +240,7 @@ void usbAInScan_miniLAB1008(hid_device* hid, uint16_t count, int rate, uint8_t l
   } out;
 
   struct t_Feature_Report{
-  //    uint8_t reportID;
+    uint8_t recordNum;
     uint8_t data[96];
     uint8_t error;
     uint8_t readAddress[2];
@@ -256,8 +256,6 @@ void usbAInScan_miniLAB1008(hid_device* hid, uint16_t count, int rate, uint8_t l
   uint8_t prescale;
   uint8_t preload;
   uint8_t setupTime;
-
-  usbAInStop_miniLAB1008(hid);   // just to make sure.
 
   if ((100 <= rate) && (rate < 200)) {       // Select 256:1 prescaler
     prescale = 7;
@@ -291,6 +289,9 @@ void usbAInScan_miniLAB1008(hid_device* hid, uint16_t count, int rate, uint8_t l
 
   /* set up gain queue */
   chanCount = high_channel - low_channel + 1;
+  for ( i = 0; i < 8; i++ ) {
+    chanLoadQueue[i] = 0;
+  }
   for ( i = 0; i < chanCount; i++ ) {
     chanLoadQueue[i] = low_channel + i;
   }
@@ -340,18 +341,25 @@ void usbAInScan_miniLAB1008(hid_device* hid, uint16_t count, int rate, uint8_t l
   feature_report.scanIndex[1] = 0xff;
   scan_index = 0;
   idx = 0;
-  for ( scans = 0; scans < count/65 + 1; scans++ ) {
-    memset(&feature_report, 0xbeef, sizeof(feature_report));
-    do {
-      PMD_GetFeatureReport(hid, (uint8_t *) &feature_report, sizeof(feature_report));
-      actual_scan_index = (uint16_t) (feature_report.scanIndex[0] | feature_report.scanIndex[1] << 8);
-    } while ( scan_index != actual_scan_index );
+  hid_set_nonblocking(hid, 1);
+  while (count > 0) {
+    //      PMD_GetFeatureReport(hid, (uint8_t *) &feature_report, sizeof(feature_report));
+    ret = hid_get_feature_report(hid, (unsigned char *) &feature_report, sizeof(feature_report));
     scan_index++;
-    printf("Completed scan %d  error = %d\n", scan_index, feature_report.error);
-    for ( i = 0; i < 96; i += 3, idx += 2 ) {
-      printf("data[%d] = %#x  data[%d] = %#x\n", i, feature_report.data[i], i+1, feature_report.data[i+1]);
+    actual_scan_index = (uint16_t) (feature_report.scanIndex[0] | feature_report.scanIndex[1] << 8);
+    if (ret == -1){
+      printf("Completed scan %d  error = %d\n", actual_scan_index, feature_report.error);
+    }
+    for (i = 0; i < 96; i += 3, idx += 2) {
       value[idx] = feature_report.data[i] | ((feature_report.data[i+1]<<4) & 0x0f00);
-      value[idx + 1] = feature_report.data[i+2] | ((feature_report.data[i+1]<< 8) & 0x0f00);
+      if (value[idx] & 0x800) (*((uint16_t *)(&(value[idx])))) |= 0xf000;
+      value[idx + 1] = feature_report.data[i+2] | ((feature_report.data[i+1]<<8) & 0x0f00);
+      if (value[idx+1] & 0x800) (*((uint16_t *)(&(value[idx+1])))) |= 0xf000;
+      count -= 2;
+      if (count == 0) {
+        usbAInStop_miniLAB1008(hid);   // just to make sure.
+	return;
+      }
     }
   }
 }

@@ -65,6 +65,7 @@
 #include <linux/interrupt.h>
 #include <linux/spinlock.h>
 #include <linux/sched.h>
+#include <linux/uaccess.h>
 #include <asm/io.h>
 #include <asm/segment.h>
 #include <asm/uaccess.h>

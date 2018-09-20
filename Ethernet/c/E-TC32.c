@@ -329,14 +329,13 @@ bool CJC_E_TC32(DeviceInfo_TC32 *device_info, uint8_t channel, float *value)
 
 bool TinMultiple_E_TC32(DeviceInfo_TC32 *device_info)
 {
-    /* Ths command reads the value of multiple thermocouple channels 
-     The channels to
-     be read are passed as a bitmap when calling the command.  The
-     data will be returned in the order low channel number to high
-     channel number.  The number of floating point values returned
-     will be equal to the number of channels specified (max 64).  The
-     special return values listed in the TIn command also apply to
-     this command.
+  /* Ths command reads the value of multiple thermocouple channels.
+     The channels to be read are passed as a bitmap when calling the
+     command.  The data will be returned in the order low channel
+     number to high channel number.  The number of floating point
+     values returned will be equal to the number of channels specified
+     (max 64).  The special return values listed in the TIn command
+     also apply to this command.
 
      wait:             0 - return current value
                        1 - wait for new reading before returning
@@ -398,17 +397,17 @@ bool TinMultiple_E_TC32(DeviceInfo_TC32 *device_info)
 
 bool CJCMultiple_E_TC32(DeviceInfo_TC32 *device_info)
 {
-    /* This command reads the value of multiple CJC sensors.  The
-       sensors to be read are passed as a bitmap when calling the
-       command.  The data will be returned in the order low channel
-       number to high channel.  The number of floating point values
-       returned will be qqual to the number of channels specified (max
-       64).  The CJC values only update once per second so there is no
-       need to call this faster.  The value -9999.0 will be returned
-       if an EXO sensor is specified but no EXP is connected.
+  /* This command reads the value of multiple CJC sensors.  The
+     sensors to be read are passed as a bitmap when calling the
+     command.  The data will be returned in the order low channel
+     number to high channel.  The number of floating point values
+     returned will be equal to the number of channels specified (max
+     64).  The CJC values only update once per second so there is no
+     need to call this faster.  The value -9999.0 will be returned if
+     an EXO sensor is specified but no EXP is connected.
 
-    cjc_mask_base: the channel bitmask for the base unit (channel 0-31)
-    cjc_mask_exp:  the channel bitmask for the EXP unit (channel 32-63)
+     cjc_mask_base: the channel bitmask for the base unit (channel 0-31)
+     cjc_mask_exp:  the channel bitmask for the EXP unit (channel 32-63)
   */
 
   int sock = device_info->device.sock;
@@ -956,7 +955,7 @@ bool AlarmConfigR_E_TC32(DeviceInfo_TC32 *device_info)
             10 - Only an open thermocouple or common-mode voltage will set the alarm,
                  termperature is ignored.
             11 - invalid.
-      bit 7: reserveed.
+      bit 7: reserved.
   */
 
   int sock = device_info->device.sock;
@@ -1037,7 +1036,7 @@ bool AlarmConfigW_E_TC32(DeviceInfo_TC32 *device_info)
             10 - Only an open thermocouple or common-mode voltage will set the alarm,
                  termperature is ignored.
             11 - invalid.
-      bit 7: reserveed.
+      bit 7: reserved.
   */
 
   int sock = device_info->device.sock;
@@ -1045,7 +1044,7 @@ bool AlarmConfigW_E_TC32(DeviceInfo_TC32 *device_info)
   unsigned char replyBuffer[16];
   bool result = false;
   int length;
-  int dataCount = 0;
+  int dataCount = 576;
   int replyCount;
 
   if (sock < 0) {
