@@ -178,7 +178,7 @@ class usb_1208:
     self.h.write([self.DBIT_OUT, port_number, bit, value, 0, 0, 0, 0])
     
   #################################
-  #   Analog Input  Commands     #
+  #    Analog Input  Commands     #
   #################################
 
   def AIn(self, channel, gain):
@@ -446,7 +446,7 @@ class usb_1208:
     if (count > 4):
       print('MemWrite: max count is 4')
       return
-    self.h.write([self.MEM_Write, address, count, data[0:count]] + [0]*(5-count))
+    self.h.write([self.MEM_WRITE, address, count, data[0:count]] + [0]*(5-count))
 
 
   #################################
@@ -454,7 +454,7 @@ class usb_1208:
   #################################
 
   def Blink(self):
-    # This commands causes the LED to flash several times.
+    # This command causes the LED to flash several times.
     self.h.write([self.BLINK_LED, 0, 0, 0, 0, 0, 0, 0])
 
   def Reset(self):

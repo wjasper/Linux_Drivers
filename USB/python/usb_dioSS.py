@@ -39,6 +39,7 @@ class usb_dioSS:      # solid state relays
   RESET            = 0x41 # Reset USB interface
   GET_STATUS       = 0x44 # Retrieve device status
 
+  # Code Update Commands
   PREPARE_DOWNLOAD = 0x50 # Prepare for program memory download
   WRITE_CODE       = 0x51 # Write program memory
   WRITE_SERIAL     = 0x53 # Write new serial number to device
@@ -64,7 +65,6 @@ class usb_dioSS:      # solid state relays
       value = self.h.read(2,500)
     except:
       print('DIn: error in reading.')
-
     return value[1]
 
   def DOut(self, port, value):
@@ -161,18 +161,15 @@ class usb_dioSS:      # solid state relays
     #
     #    USB-DIO96HFS
     # Bit 16: 1 = program memory update mode
-    
     self.h.write([self.GET_STATUS])
-
     value = self.h.read(3, 1000)
     return (value[1] | (value[2]<<8))
 
   def PrepareDownload(self):
     # This command puts the device into code update mode.  The unlock code must be correct as a
-    # further safety device.  Call this once before sending code with usbWriteCode.  If not in
-    # code update mode, any usbWriteCode will be ignored.  A usbReset command must be issued at
+    # further safety device.  Call this once before sending code with WriteCode.  If not in
+    # code update mode, any WriteCode will be ignored.  A Reset command must be issued at
     # the end of the code download in order to return the device to operation with the new code.
-
     self.h.write([self.PREPARE_DOWNLOAD, 0xad])
 
   def WriteCode(self, address, count, data):
