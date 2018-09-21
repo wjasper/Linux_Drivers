@@ -52,8 +52,11 @@ int main (int argc, char **argv)
   int temp, i, j;
   int ch;
   float freq;
+  float *fvalue;
   time_t startTime, endTime;
   getAllValues allValue;
+  uint16_t address;
+  uint8_t memory[64];
 
   libusb_device_handle *udev = NULL;
   int ret;
@@ -94,6 +97,7 @@ int main (int argc, char **argv)
     printf("Hit 'i' to test analog input (differential mode).\n");
     printf("Hit 'j' to test analog input scan (single ended).\n");
     printf("Hit 'o' to test analog output.\n");
+    printf("Hit 'm' to read memory\n");
     printf("Hit 'r' to reset.\n");
     printf("Hit 'S' to get status.\n");
     printf("Hit 's' to get serial number\n");
@@ -150,6 +154,7 @@ int main (int argc, char **argv)
 	  }
 	  usbAOutScan_USB1408FS(udev, 0, 0, 512, &freq, out_data, 1);
 	}
+	usbAOutStop_USB1408FS(udev);
 	break;
       case 'g':
         printf("Enter desired frequency [Hz]: ");
@@ -319,6 +324,15 @@ int main (int argc, char **argv)
         usbReset_USB1408FS(udev);
         return 0;
 	break;
+      case 'm':
+	do {
+	  printf("Enter address [0x200 - 0x033c]: ");
+	  scanf("%hx", &address);
+	  usbReadMemory_USB1408FS(udev, address, 4, memory);
+	  fvalue = (float *) memory;
+	  printf("%#hx %#hx %#hx %#hx %f\n", memory[0], memory[1], memory[2], memory[3], *fvalue);
+	  
+        } while (toContinue());
       case 'e':
 	libusb_clear_halt(udev, LIBUSB_ENDPOINT_IN | 1);
 	libusb_clear_halt(udev, LIBUSB_ENDPOINT_OUT| 2);

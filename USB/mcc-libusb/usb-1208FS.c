@@ -373,12 +373,17 @@ int usbAOutScan_USB1208FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_
   if (ret < 0) {
     perror("Error in usbAOutScan_USB1208FS: libusb_control_transfer error");
   }
-  
   libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_IN | 1, (unsigned char *) byte, 2, &transferred, FS_DELAY);
-  byte[0] = AOUT_SCAN;
-  libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_OUT | 2, (unsigned char *) byte, 1, &transferred, FS_DELAY);
-  libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_OUT | 2, (unsigned char *) data, count, &transferred, FS_DELAY);
-
+  i = 0;
+  while (num_samples >= 32) {
+    libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_OUT | 2, (unsigned char *) &data[i], 64, &transferred, 1000);
+    libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_IN | 1, (unsigned char *) byte, 2, &transferred, 1000);
+    num_samples -= 32;
+    i += 32;
+  }
+  if (num_samples > 0) {
+    libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_OUT | 2, (unsigned char *) &data[i], num_samples*2, &transferred, 1000);
+  }
   return 0;
 }
 

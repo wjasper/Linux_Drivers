@@ -243,9 +243,8 @@ int usbAOutScan_USB1408FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_
     return -1;
   }
 
-
-  //  num_samples = count*(highchannel - lowchannel + 1);
-  num_samples = count;
+  num_samples = count*(highchannel - lowchannel + 1);
+  // num_samples = count;
 
   scanReport.reportID = AOUT_SCAN;
   scanReport.lowchannel = lowchannel;
@@ -291,12 +290,16 @@ int usbAOutScan_USB1408FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_
   if (ret < 0) {
     perror("Error in usbAOutScan_USB1408FS: libusb_control_transfer error");
   }
-  
-  libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_IN | 1, (unsigned char *) byte, 2, &transferred, FS_DELAY);
-  byte[0] = AOUT_SCAN;
-  libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_OUT | 2, (unsigned char *) byte, 1, &transferred, FS_DELAY);
-  libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_OUT | 2, (unsigned char *) data, count, &transferred, FS_DELAY);
-
+  i = 0;
+  while (num_samples >= 32) {
+    libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_OUT | 2, (unsigned char *) &data[i], 64, &transferred, 1000);
+    libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_IN | 1, (unsigned char *) byte, 2, &transferred, 1000);
+    num_samples -= 32;
+    i += 32;
+  }
+  if (num_samples > 0) {
+    libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_OUT | 2, (unsigned char *) &data[i], num_samples*2, &transferred, 1000);
+  }
   return 0;
 }
 
@@ -492,7 +495,7 @@ int usbAInScan_USB1408FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
       i += 31;
       break;
     }
-    pipe = (pipe)%3 + 1;  //pipe should take the values 1, 2 or 3
+    pipe = (pipe%3) + 1;  //pipe should take the values 1, 2 or 3
   }
 
   usbAInStop_USB1408FS(udev);
@@ -835,6 +838,11 @@ void usbReadMemory_USB1408FS( libusb_device_handle *udev, uint16_t address, uint
 {
   // Addresses 0x000 - 0x07F are reserved for firmware data
   // Addresses 0x080 - 0x3FF are available for use as calibraion or user data
+
+  int transferred;
+  uint8_t data[64];
+  int i;
+
   struct arg {
     uint8_t reportID;
     uint8_t address[2];
@@ -857,6 +865,10 @@ void usbReadMemory_USB1408FS( libusb_device_handle *udev, uint16_t address, uint
   ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &arg, sizeof(arg), 5000);
   if (ret < 0) {
     perror("Error in usbReadMemory_USB1408FS: libusb_control_transfer error");
+  }
+  libusb_interrupt_transfer(udev, LIBUSB_ENDPOINT_IN | 1, (unsigned char *) data, count+1, &transferred, FS_DELAY);
+  for (i = 0; i < count; i++) {
+    memory[i] = data[i+1];
   }
 }
 

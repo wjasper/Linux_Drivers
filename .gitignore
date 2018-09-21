@@ -8,6 +8,8 @@
 *.d
 *.so
 *.a
+*.pyc
+__pycache__
 
 # Compiled test programs #
 ##########################
