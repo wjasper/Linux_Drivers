@@ -1588,7 +1588,7 @@ bool FactoryCoefficientsR_E_TC32(DeviceInfo_TC32 *device_info)
 
   int sock = device_info->device.sock;
   unsigned char buffer[16];
-  unsigned char replyBuffer[49];
+  unsigned char replyBuffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+sizeof(calCoeff_TC32)];
   bool result = false;
   int length;
   int dataCount = 0;
@@ -1607,7 +1607,7 @@ bool FactoryCoefficientsR_E_TC32(DeviceInfo_TC32 *device_info)
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = sizeof(calCoeff);
+    replyCount = sizeof(calCoeff_TC32);
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
@@ -1619,7 +1619,7 @@ bool FactoryCoefficientsR_E_TC32(DeviceInfo_TC32 *device_info)
 	    (replyBuffer[MSG_INDEX_COUNT_HIGH] == (unsigned char) (replyCount >> 8))     &&
 	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-	  memcpy(&device_info->calCoeffFactory, &replyBuffer[MSG_INDEX_DATA], sizeof(calCoeff));
+	  memcpy(&device_info->calCoeffFactory, &replyBuffer[MSG_INDEX_DATA], sizeof(calCoeff_TC32));
 	}
       }
     }
@@ -1699,7 +1699,7 @@ bool FieldCoefficientsR_E_TC32(DeviceInfo_TC32 *device_info)
 
   int sock = device_info->device.sock;
   unsigned char buffer[16];
-  unsigned char replyBuffer[49];
+  unsigned char replyBuffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+sizeof(calCoeff_TC32)];
   bool result = false;
   int length;
   int dataCount = 0;
@@ -1718,7 +1718,7 @@ bool FieldCoefficientsR_E_TC32(DeviceInfo_TC32 *device_info)
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = sizeof(calCoeff);
+    replyCount = sizeof(calCoeff_TC32);
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
@@ -1730,7 +1730,7 @@ bool FieldCoefficientsR_E_TC32(DeviceInfo_TC32 *device_info)
 	    (replyBuffer[MSG_INDEX_COUNT_HIGH] == (unsigned char) (replyCount >> 8))     &&
 	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-	  memcpy(&device_info->calCoeffField, &replyBuffer[MSG_INDEX_DATA], sizeof(calCoeff));
+	  memcpy(&device_info->calCoeffField, &replyBuffer[MSG_INDEX_DATA], sizeof(calCoeff_TC32));
 	}
       }
     }
@@ -1926,7 +1926,7 @@ bool GainVoltageR_E_TC32(DeviceInfo_TC32 *device_info, gainVoltages *gain)
 
   int sock = device_info->device.sock;
   unsigned char buffer[16];
-  unsigned char replyBuffer[49];
+  unsigned char replyBuffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+sizeof(gainVoltages)];
   bool result = false;
   int length;
   int dataCount = 0;

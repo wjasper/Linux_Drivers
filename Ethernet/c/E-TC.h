@@ -37,7 +37,7 @@ extern "C" {
 
 // Temperature Input Commands
 #define TIN                 (0x10) // Read single thermocouple channel
-#define CJC                 (0x11) // Read single CJC sensor
+#define CMD_CJC             (0x11) // Read single CJC sensor
 #define TIN_CONFIG_R        (0x12) // Read temperature channel configuration
 #define TIN_CONFIG_W        (0x13) // Write temperature channel configuration
 #define TIN_STATUS          (0x14) // Read temperature channel data status
@@ -85,7 +85,7 @@ extern "C" {
 #define NETWORK_CONFIG      (0x54) // Read the current network configuration
 #define FIRMWARE_UPGRADE    (0x60) // Enter firmware upgrade mode
 
-#define CELSIUS             (0x0) // read in Celsius
+#define UNITS_CELSIUS       (0x0) // read in Celsius
 #define VOLTAGE             (0x1) // read in Voltage
 #define ADC_CODE            (0x2) // uncalibraded
 
@@ -131,7 +131,7 @@ bool TinConfigW_E_TC(DeviceInfo_TC *device_info);
 bool TinStatus_E_TC(DeviceInfo_TC *device_info);
 bool OTDStatus_E_TC(DeviceInfo_TC *device_info);
 bool MeasureConfigR_E_TC(DeviceInfo_TC *device_info);
-bool MeasureConfigW_E_TC32(DeviceInfo_TC *device_info);
+bool MeasureConfigW_E_TC(DeviceInfo_TC *device_info);
 bool MeasureModeR_E_TC(DeviceInfo_TC *device_info);
 bool MeasureModeW_E_TC(DeviceInfo_TC *device_info);
 bool FactoryCoefficientsR_E_TC(DeviceInfo_TC *device_info);
@@ -168,7 +168,7 @@ bool FirmwareUpgrade_E_TC(DeviceInfo_TC *device_info);
 #ifdef __cplusplus
 } /* closing brace for extern "C" */
 #endif
-#endif // E_TC32_H
+#endif // E_TC_H
 
 /* 
     Configuration memory map

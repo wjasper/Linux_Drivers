@@ -411,7 +411,7 @@ bool CJC_E_TC(DeviceInfo_TC *device_info)
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = CJC;
+  buffer[MSG_INDEX_COMMAND]        = CMD_CJC;
   buffer[MSG_INDEX_START]          = MSG_START;
   buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
   buffer[MSG_INDEX_STATUS]         = 0;

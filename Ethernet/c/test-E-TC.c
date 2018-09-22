@@ -120,7 +120,7 @@ int main(int argc, char**argv)
     return -1;
   }
 
-  device_info.units = CELSIUS;
+  device_info.units = UNITS_CELSIUS;
   device_info.wait = 0x0;
   for (i = 0; i< 8; i++) {
     device_info.config_values[i] = 0x0;   // disable all channels
@@ -254,7 +254,7 @@ int main(int argc, char**argv)
 	  channel |= 0x1 << i; // set bit to corresponding channel
 	}
 	TinConfigW_E_TC(&device_info);
-        Tin_E_TC(&device_info, channel, CELSIUS, 1, temperature);
+        Tin_E_TC(&device_info, channel, UNITS_CELSIUS, 1, temperature);
 	for (i = 0; i < nChannels; i++) {
 	  printf("Channel = %d   Temperature = %.2f C  %.2F\n", i, temperature[i], temperature[i]*9./5. + 32.);
 	}

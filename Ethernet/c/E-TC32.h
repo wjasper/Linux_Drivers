@@ -81,7 +81,7 @@ extern "C" {
 #define BASE                (0x1) // Base unit
 #define EXP                 (0x2) // expansion unit
 
-#define CELSIUS             (0x0) // read in Celsius
+#define UNITS_CELSIUS       (0x0) // read in Celsius
 #define VOLTAGE             (0x1) // read in Voltage
 #define ADC_CODE            (0x2) // uncalibraded
   
@@ -105,7 +105,7 @@ typedef struct gainVoltages_t {
   float voltage_3_exp;        // the measured gain calibration voltage for ADC 1, 50 Hz for the EXP unit
 } gainVoltages;
 
-typedef struct calCoeff_t {
+typedef struct calCoeff_TC32_t {
   float slope_60_base[2];     // 60Hz slope values for each ADC (base unit)
   float slope_50_base[2];     // 50Hz slope values for each ADC (base unit)
   float intercept_60_base[2]; // 60Hz intercept values for each ADC (base unit)
@@ -114,7 +114,7 @@ typedef struct calCoeff_t {
   float slope_50_exp[2];      // 50Hz slope values for each ADC (EXP unit)
   float intercept_60_exp[2];  // 60Hz intercept values for each ADC (EXP unit)
   float intercept_50_exp[2];  // 50Hz intercept values for each ADC (EXP unit)
-} calCoeff;
+} calCoeff_TC32;
   
 typedef struct DeviceInfo_TC32_t {
   EthernetDeviceInfo device;
@@ -135,8 +135,8 @@ typedef struct DeviceInfo_TC32_t {
   uint8_t alarm_config[64];   // the alarm configuration
   float alarm_threshold1[64]; // the alarm threshold 1 values in Celsius
   float alarm_threshold2[64]; // the alarm threshold 2 values in Celsius
-  calCoeff calCoeffFactory;   // the factory calibration coefficients (slope and offset).
-  calCoeff calCoeffField;     // the factory calibration coefficients (slope and offset).
+  calCoeff_TC32 calCoeffFactory; // the factory calibration coefficients (slope and offset).
+  calCoeff_TC32 calCoeffField;   // the factory calibration coefficients (slope and offset).
   uint16_t status;            // 1 - EXP detected, 0 - no EXP detected
 } DeviceInfo_TC32;
 
