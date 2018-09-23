@@ -45,8 +45,7 @@ def main():
     print("Hit 'd' to test digital I/O.")
     print("Hit 'e' to exit.")
     print("Hit 'f' to get all values")
-    print("Hit 'g' to test analog input scan (differential)")
-    print("Hit 'h' to test analog input scan (single ended)")
+    print("Hit 'g' to test analog input scan.")
     print("Hit 'i' to test analog input. (differential)")
     print("Hit 'j' to test analog input. (single ended)")
     print("Hit 'I' for information.")
@@ -150,6 +149,7 @@ def main():
       print("\t\t6. +/- 2.0V")
       print("\t\t7. +/- 1.25V")
       print("\t\t8. +/- 1.0V")
+      print("\t\t9. Single Ended +/- 10V")
       gain = int(input("Select gain [1-8]: "))
       if gain == 1:
         gain == usb1208FS.BP_20_00V
@@ -167,14 +167,11 @@ def main():
         gain == usb1208FS.BP_1_25V
       elif gain == 8:
         gain == usb1208FS.BP_1_00V
-      channels = [0]*8
       gains = [0]*8
       for i in range(8):
-        channels[i] = i
         gains[i] = gain
-      usb1208FS.ALoadQueue(1, channels, gains)
       options = usb1208FS.AIN_EXECUTION | usb1208FS.AIN_GAIN_QUEUE
-      data = usb1208FS.AInScan(chan,chan,count,freq,options)
+      data = usb1208FS.AInScan(chan,chan,gains,count,freq,options)
       for i in range(count):
         print('data[',i,'] = ', hex(data[i]),'\t',format(usb1208FS.volts(gain, data[i]),'.3f'),'V')
       usb1208FS.AInStop()

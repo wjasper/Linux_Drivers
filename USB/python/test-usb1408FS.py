@@ -34,11 +34,16 @@ def main():
   for chan in range(4):
     for gain in range(8):
       print('Calibration Table (Differential): Chan =',chan,' Range = ',gain, \
-        'Slope = ',usb1408FS.CalDF[chan][gain].slope,' Intercept = ',usb1408FS.CalDF[chan][gain].intercept)
+            'Slope = ',format(usb1408FS.CalDF[chan][gain].slope,'.5f'),\
+            'Intercept = ',format(usb1408FS.CalDF[chan][gain].intercept,'5f'))
 
+  gain = 1
   for chan in range(7):
     print('Calibration Table (Single Ended): Chan =',chan,' Range = ',gain, \
-          'Slope = ',usb1408FS.CalSE[chan].slope,' Intercept = ',usb1408FS.CalSE[chan].intercept)
+          'Slope = ',format(usb1408FS.CalSE[chan].slope,'.5f'),\
+          ' Intercept = ',format(usb1408FS.CalSE[chan].intercept, '.5f'))
+
+  print('wMaxPacketSize =', usb1408FS.wMaxPacketSize)
   
   usb1408FS.DConfig(usb1408FS.DIO_PORTA, usb1408FS.DIO_DIR_OUT)
   usb1408FS.DConfig(usb1408FS.DIO_PORTB, usb1408FS.DIO_DIR_IN)
@@ -55,8 +60,7 @@ def main():
     print("Hit 'd' to test digital I/O.")
     print("Hit 'e' to exit.")
     print("Hit 'f' to get all values")
-    print("Hit 'g' to test analog input scan (differential)")
-    print("Hit 'h' to test analog input scan (single ended)")
+    print("Hit 'g' to test analog input scan.")
     print("Hit 'i' to test analog input. (differential)")
     print("Hit 'j' to test analog input. (single ended)")
     print("Hit 'I' for information.")
@@ -160,7 +164,8 @@ def main():
       print("\t\t6. +/- 2.0V")
       print("\t\t7. +/- 1.25V")
       print("\t\t8. +/- 1.0V")
-      gain = int(input("Select gain [1-8]: "))
+      print("\t\t9. Single Ended +/- 10V")
+      gain = int(input("Select gain [1-9]: "))
       if gain == 1:
         gain == usb1408FS.BP_20_00V
       elif gain == 2:
@@ -177,18 +182,23 @@ def main():
         gain == usb1408FS.BP_1_25V
       elif gain == 8:
         gain == usb1408FS.BP_1_00V
-      channels = [0]*8
+      elif gain == 9:
+        gain == usb1408FS.SE_10_00V
       gains = [0]*8
       for i in range(8):
-        channels[i] = i
         gains[i] = gain
-      usb1408FS.ALoadQueue(1, channels, gains)
       options = usb1408FS.AIN_EXECUTION | usb1408FS.AIN_GAIN_QUEUE
-      data = usb1408FS.AInScan(chan,chan,count,freq,options)
+      raw_data = usb1408FS.AInScan(chan,chan,gains,count,freq,options)
+
+      data = [0]*len(raw_data)
       for i in range(count):
         # Apply correction
-        data[i] = int(usb1408FS.CalDF[chan][gain].slope*data[i] + usb1408FS.CalDF[chan][gain].intercept)
-        print('data[',i,'] = ', hex(data[i]),'\t',format(usb1408FS.volts(gain, data[i]),'.3f'),'V')
+        if gain == usb1408FS.SE_10_00V:
+          data[i] = int(usb1408FS.CalSE[chan].slope*raw_data[i] + usb1408FS.CalSE[chan].intercept)
+        else:
+          data[i] = int(usb1408FS.CalDF[chan][gain].slope*raw_data[i] + usb1408FS.CalDF[chan][gain].intercept)
+        print('raw_data[',i,'] = ', hex(raw_data[i]),'\t',format(usb1408FS.volts(gain, raw_data[i]),'.3f'),'V\t',\
+              'data[',i,'] = ', hex(data[i]),'\t',format(usb1408FS.volts(gain, data[i]),'.3f'),'V')
       usb1408FS.AInStop()
     elif ch == 'j':
       print('Testing Analog Input Single Ended Mode')

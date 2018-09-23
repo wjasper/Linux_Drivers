@@ -261,15 +261,16 @@ class usb_1408FS:
 
     return value
 
-  def AInScan(self, lowchannel, hichannel, count, frequency, options):
+  def AInScan(self, lowchannel, hichannel, gains, count, frequency, options):
     """
     This command scans a range of analog input channels and sends the
     readings in interrupt transfers. The gain ranges that are
     currently set on the desired channels will be used (these may be
     changed with AIn or ALoadQueue.
 
-        lowchannel:  the first channel of the scan (0 – 7)
-        hichannel: the last channel of the scan (0 – 7)
+        lowchannel:  the first channel of the scan (0–3 Differential, 0-7 Single Ended)
+        hichannel:   the last channel of the scan (0–3 Differential, 0-7 Single Ended)
+        gains:       array of integer ranges for the gain queue (See ALoadQueue)
         count:       the total number of samples to perform, used only in single execution mode
         options:     bit 0: 1 = single execution, 0 = continuous execution
                      bit 1: 1 = immediate transfer mode, 0 = block transfer mode
@@ -278,14 +279,16 @@ class usb_1408FS:
                      bit 4: 1 = use channel gain queue, 0 = use channel parameters specified
                      bit 5: 1 = retrigger mode, 0 = normal trigger
 
-    The values lowchannel and hichannel specify the channel range for the scan.  If lowchannel
-    is higher than hichannel, the scan will wrap (ie if lowchannel is 6 and high channel is 1, the
-    scan will return channels 6, 7, 0 and 1)
+    The values lowchannel and hichannel specify the channel range for
+    the scan.  If lowchannel is higher than hichannel, the scan will
+    wrap (ie if lowchannel is 6 and high channel is 1, the scan will
+    return channels 6, 7, 0 and 1)
     
     The sample rate is set by the internal 16-bit incrementing timer
     running at a base rate of 10MHz. The timer is controlled by
-    timer_prescale and timer_preload. These values are only used if the
-    device has been set to master the SYNC pin with the SetSync command.
+    timer_prescale and timer_preload. These values are only used if
+    the device has been set to master the SYNC pin with the SetSync
+    command.
 
     The timer will be reset and provide an internal interrupt with its
     value equals timer_preload.  This allows for a lowest rate of
@@ -356,6 +359,20 @@ class usb_1408FS:
       print('AInScan: frequency out of range')
       return
 
+    # Load the gain queue
+    nchan = (hichannel - lowchannel + 1)
+    channels = [0]*8
+    for i in range(nchan):
+      if gains[i] != self.SE_10_00V:
+        channels[i] = lowchannel + i
+      else:
+        # add 8 to channels for Single Ended
+        channels[i] = lowchannel + i + 8
+    self.ALoadQueue(nchan, channels, gains)
+
+    if gains[0] == self.SE_10_00V:
+      lowchannel += 8
+      hichannel += 8
     buf =  [self.AIN_SCAN, lowchannel, hichannel, count & 0xff, (count>>8) & 0xff, (count>>16) & 0xff, \
             (count>>24) & 0xff,  prescale, int(preload) & 0xff, (int(preload)>>8) & 0xff, options]
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, buf, timeout = 5000)
@@ -379,7 +396,9 @@ class usb_1408FS:
     return sdata
 
   def AInStop(self):
-    # This command stops the analog scan (if running)
+    """
+    This command stops the analog scan (if running)
+    """
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -973,4 +992,3 @@ class usb_1408FS:
       for device in context.getDeviceIterator(skip_on_error=True):
         if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
           return(device.getMaxPacketSize0())
-     

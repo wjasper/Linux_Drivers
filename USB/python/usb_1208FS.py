@@ -210,7 +210,6 @@ class usb_1208FS:
     if gain == self.SE_10_00V:
       # offset channels by 8
       # set range value to 0 (+/-10V)
-      print('Single Ended mode')
       ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.AIN, channel+8, 0x0], timeout = 100)
     else:
       ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.AIN, channel, gain], timeout = 100)
@@ -233,15 +232,16 @@ class usb_1208FS:
 
     return int(value)
 
-  def AInScan(self, lowchannel, hichannel, count, frequency, options):
+  def AInScan(self, lowchannel, hichannel, gains, count, frequency, options):
     """
     This command scans a range of analog input channels and sends the
     readings in interrupt transfers. The gain ranges that are
     currently set on the desired channels will be used (these may be
     changed with AIn or ALoadQueue.
 
-        lowchannel:  the first channel of the scan (0 – 7)
-        hichannel: the last channel of the scan (0 – 7)
+        lowchannel:  the first channel of the scan (0–3 Differential, 0-7 Single Ended)
+        hichannel:   the last channel of the scan (0–3 Differential, 0-7 Single Ended)
+        gains:       array of integer ranges for the gain queue (See ALoadQueue)
         count:       the total number of samples to perform, used only in single execution mode
         options:     bit 0: 1 = single execution, 0 = continuous execution
                      bit 1: 1 = immediate transfer mode, 0 = block transfer mode
@@ -332,6 +332,20 @@ class usb_1208FS:
       print('AInScan: frequency out of range')
       return
 
+    # Load the gain queue
+    nchan = (hichannel - lowchannel + 1)
+    channels = [0]*8
+    for i in range(nchan):
+      if gains[i] != self.SE_10_00V:
+        channels[i] = lowchannel + i
+      else:
+        # add 8 to channels for Single Ended
+        channels[i] = lowchannel + i + 8
+    self.ALoadQueue(nchan, channels, gains)
+
+    if gains[0] == self.SE_10_00V:
+      lowchannel += 8
+      hichannel += 8
     buf =  [self.AIN_SCAN, lowchannel, hichannel, count & 0xff, (count>>8) & 0xff, (count>>16) & 0xff, \
             (count>>24) & 0xff,  prescale, int(preload) & 0xff, (int(preload)>>8) & 0xff, options]
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, buf, timeout = 5000)
@@ -398,7 +412,6 @@ class usb_1208FS:
       buf[2+i] = gainQueue[i]
 
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, buf, timeout = 100)
-
 
   #################################
   #   Analog Output  Commands     #
