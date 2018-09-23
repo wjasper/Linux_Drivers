@@ -67,13 +67,16 @@ class usb_dioLS:   # HID LS dio devices
   #################################
 
   def DConfig(self, port, direction):
-    # This command sets the direction of the digital ports A, B and C
+    """
+    This command sets the direction of the digital ports A, B and C
+    """
     self.h.write([self.DCONFIG, port, direction, 0, 0, 0, 0, 0])
 
   def DIn(self, port):
-    # This command reads the digital port
-    # Bug: need leading 0 in command string
-    
+    """
+    This command reads the digital port
+    Bug: need leading 0 in command string
+    """
     self.h.write([0, self.DIN, port, 0, 0, 0, 0, 0, 0])
     try:
       value = self.h.read(8,100)
@@ -89,7 +92,9 @@ class usb_dioLS:   # HID LS dio devices
     return value[0]
 
   def DOut(self, port, value):
-    # This command writes data to the DIO port.
+    """
+    This command writes data to the DIO port.
+    """
     if port == self.DIO_PORTC_LOW :
       self.portC &= 0xf0
       self.portC |= (value & 0xf)
@@ -102,7 +107,9 @@ class usb_dioLS:   # HID LS dio devices
       self.h.write([self.DOUT, port, value, 0, 0, 0, 0, 0])
 
   def DBitIn(self, port, bit):
-    # Reads digital port bit
+    """
+    Reads digital port bit
+    """
     self.h.write([0, self.DBIT_IN, port, bit, 0, 0, 0, 0, 0])
     try:
       value = self.h.read(8,100)
@@ -111,7 +118,9 @@ class usb_dioLS:   # HID LS dio devices
     return value[0]
 
   def DBitOut(self, port, pin, value):
-    # Writes digital port bit
+    """
+    rites digital port bit
+    """
     try:
       self.h.write([self.DBIT_OUT, port, pin, value, 0, 0, 0, 0])
     except:
@@ -122,9 +131,11 @@ class usb_dioLS:   # HID LS dio devices
   #################################
 
   def CIn(self):
-    # This function reads the 32-bit event counter on the device.  This
-    # counter tallies the transitions of an external input attached to
-    # the CTR pin (pin 20) on the screw terminal of the device.
+    """
+    This function reads the 32-bit event counter on the device.  This
+    counter tallies the transitions of an external input attached to
+    the CTR pin (pin 20) on the screw terminal of the device.
+    """
     self.h.write([self.CIN, 0, 0, 0, 0, 0, 0, 0])
     try:
       value = self.h.read(8,100)
@@ -134,7 +145,9 @@ class usb_dioLS:   # HID LS dio devices
     return (value[0] | (value[1]<<8) | (value[2]<<16) | (value[3]<<24))
 
   def CInit(self):
-    # This command initializes the event counter and resets the count to zero
+    """
+    This command initializes the event counter and resets the count to zero
+    """
     self.h.write([self.CINIT, 0, 0, 0, 0, 0, 0, 0])
 
 
@@ -143,7 +156,9 @@ class usb_dioLS:   # HID LS dio devices
   #################################
 
   def MemRead(self, address, count):
-    # This command reads data from the configuration memeory (EEPROM).
+    """
+    This command reads data from the configuration memeory (EEPROM).
+    """
     if (count > 8):
       print('MemRead: max count is 8')
       return
@@ -155,11 +170,13 @@ class usb_dioLS:   # HID LS dio devices
     return(value[0:count])
 
   def MemWrite(self, address, count, data):
-    # This command writes data to the non-volatile EEPROM memory on the device.
-    # The non-volatile memory is used to store calibration coefficients, system
-    # information and user data.
-    #    count: the number of bytes to read (maximum 4)
-    #    data:  the data to be written (4 bytes max)
+    """
+    This command writes data to the non-volatile EEPROM memory on the device.
+    The non-volatile memory is used to store calibration coefficients, system
+    information and user data.
+       count: the number of bytes to read (maximum 4)
+       data:  the data to be written (4 bytes max)
+    """
 
     if (count > 4):
       print('MemWrite: max count is 4')
@@ -171,20 +188,26 @@ class usb_dioLS:   # HID LS dio devices
   #################################
 
   def Blink(self):
-    # This commands causes the LED to flash several times.
+    """
+    This commands causes the LED to flash several times.
+    """
     self.h.write([self.BLINK_LED, 0, 0, 0, 0, 0, 0, 0])
 
   def Reset(self):
-    # The command causes the device to perform a soft reset. The device
-    # simulates a disconnect from the USB bus which in turn causes the
-    # host computer to re-enumerate the device.
+    """
+    The command causes the device to perform a soft reset. The device
+    simulates a disconnect from the USB bus which in turn causes the
+    host computer to re-enumerate the device.
+    """
     self.h.write([self.RESET, 0, 0, 0, 0, 0, 0, 0])
 
   def SetID(self, id):
-    # This command stores an identifier on the unit.  Values of 0-255 are valid.  Note that 0
-    # is used to flag uninitialized units.
-    #
-    #  id: user id number (0-255)
+    """
+    This command stores an identifier on the unit.  Values of 0-255 are valid.  Note that 0
+    is used to flag uninitialized units.
+    
+    id: user id number (0-255)
+    """
 
     if id < 0 or id > 255:
       print('SetID: id out of range')
@@ -195,8 +218,10 @@ class usb_dioLS:   # HID LS dio devices
       print('Error in writing id')
       
   def GetID(self):
-    # This function retrieves the id number stored on the device.  Note that a value of 0
-    # is used to flag an uninitialized device.
+    """
+    This function retrieves the id number stored on the device.  Note that a value of 0
+    is used to flag an uninitialized device.
+    """
     try:
       self.h.write([self.GET_ID, 0, 0, 0, 0, 0, 0, 0])
     except:

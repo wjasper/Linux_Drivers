@@ -59,7 +59,9 @@ class usb_dioSS:      # solid state relays
   #################################
 
   def DIn(self, port):
-    # This command reads the digital port
+    """
+    This command reads the digital port
+    """
     self.h.write([self.DIN, port])
     try:
       value = self.h.read(2,500)
@@ -68,11 +70,17 @@ class usb_dioSS:      # solid state relays
     return value[1]
 
   def DOut(self, port, value):
-    # This command writes data to the DIO port.
+    """
+    This command writes data to the DIO port.
+      port:  The port to write to
+      value: The byte to write
+    """
     self.h.write([self.DOUT, port, value])
 
   def DBitIn(self, port, bit):
-    # Reads digital port bit
+    """
+    Reads digital port bit
+    """
     self.h.write([0, self.DBIT_IN, port, bit])
     try:
       value = self.h.read(2,100)
@@ -81,7 +89,9 @@ class usb_dioSS:      # solid state relays
     return value[1]
 
   def DBitOut(self, port, pin, value):
-    # Writes digital port bit
+    """
+    Writes digital port bit
+    """
     try:
       self.h.write([self.DBIT_OUT, port, pin, value])
     except:
@@ -92,10 +102,11 @@ class usb_dioSS:      # solid state relays
   #################################
 
   def MemRead(self, address, count):
-    # This command reads data from the configuration memeory (EEPROM).
-    # All of the memory may be read.  The USB hub chip EEPROM may be read
-    # and its address range is 0x0400-0x04FF.
-    #
+    """
+    This command reads data from the configuration memeory (EEPROM).
+    All of the memory may be read.  The USB hub chip EEPROM may be read
+    and its address range is 0x0400-0x04FF.
+    """
     if (count > 62):
       print('MemRead: max count is 62')
       return
@@ -107,11 +118,13 @@ class usb_dioSS:      # solid state relays
     return(value[1:count+1])
 
   def MemWrite(self, address, count, data):
-    # This command writes data to the non-volatile EEPROM memory on the device.
-    # The non-volatile memory is used to store calibration coefficients, system
-    # information and user data.
-    #    data:  the data to be written (59 bytes max)
-    # Locations 0x00-0x7F are reserved for firmware and my not be written.
+    """
+    This command writes data to the non-volatile EEPROM memory on the device.
+    The non-volatile memory is used to store calibration coefficients, system
+    information and user data.
+       data:  the data to be written (59 bytes max)
+    Locations 0x00-0x7F are reserved for firmware and my not be written.
+    """
 
     if (count > 59):
       print('MemWrite: max count is 59')
@@ -125,70 +138,80 @@ class usb_dioSS:      # solid state relays
   #################################
 
   def Blink(self):
-    # This commands causes the LED to flash several times.
+    """
+    This commands causes the LED to flash several times.
+    """
     self.h.write([self.BLINK_LED])
 
   def Reset(self):
-    # The command causes the device to perform a soft reset. The device
-    # simulates a disconnect from the USB bus which in turn causes the
-    # host computer to re-enumerate the device.
+    """
+    The command causes the device to perform a soft reset. The device
+    simulates a disconnect from the USB bus which in turn causes the
+    host computer to re-enumerate the device.
+    """
     self.h.write([self.RESET])
 
   def Status(self):
-    #      USB-SSR24 and USB-SSR08
-    # Bit 0: Port A direction setting      (0 = output,    1 = input)   (N/A on SSR08)
-    # Bit 1: Port B direction setting      (0 = output,    1 = input)   (N/A on SSR08)
-    # Bit 2: Port C Low direction setting  (0 = output,    1 = input)  
-    # Bit 3: Port C High direction setting (0 = output,    1 = input)
-    # Bit 4: Port A polarity setting       (0 = inverted,  1 = normal)  (N/A on SSR08)
-    # Bit 5: Port B polarity setting       (0 = inverted,  1 = normal)  (N/A on SSR08)
-    # Bit 6: Port C Low polarity setting   (0 = inverted,  1 = normal)
-    # Bit 7: Port C High polarity setting  (0 = inverted,  1 = normal)
-    # Bit 8: Port A pull-up setting        (0 = pull down, 1 = pull up) (N/A on SSR08)
-    # Bit 9: Port B pull-up setting        (0 = pull down, 1 = pull up) (N/A on SSR08)
-    # Bit 10: Port C Low  pull-up setting  (0 = pull down, 1 = pull up)
-    # Bit 11: Port C High pull-up setting  (0 = pull down, 1 = pull up)
-    #
-    #      USB-ERB24 and USB-ERB08
-    # Bit 0: Port A polarity setting       (0 = inverted,  1 = normal)  (N/A on ERB08)
-    # Bit 1: Port B polarity setting       (0 = inverted,  1 = normal)  (N/A on ERB08)
-    # Bit 2: Port C Low polarity setting   (0 = inverted,  1 = normal)  
-    # Bit 3: Port C High polarity setting  (0 = inverted,  1 = normal)  
-    # Bit 4: Port A pull-up setting        (0 = pull down, 1 = pull up) (N/A on ERB08)
-    # Bit 5: Port B pull-up setting        (0 = pull down, 1 = pull up) (N/A on ERB08)
-    # Bit 6: Port C Low  pull-up setting   (0 = pull down, 1 = pull up)
-    # Bit 7: Port C High pull-up setting   (0 = pull down, 1 = pull up)
-    #
-    #    USB-DIO96HFS
-    # Bit 16: 1 = program memory update mode
+    """
+         USB-SSR24 and USB-SSR08
+    Bit 0: Port A direction setting      (0 = output,    1 = input)   (N/A on SSR08)
+    Bit 1: Port B direction setting      (0 = output,    1 = input)   (N/A on SSR08)
+    Bit 2: Port C Low direction setting  (0 = output,    1 = input)  
+    Bit 3: Port C High direction setting (0 = output,    1 = input)
+    Bit 4: Port A polarity setting       (0 = inverted,  1 = normal)  (N/A on SSR08)
+    Bit 5: Port B polarity setting       (0 = inverted,  1 = normal)  (N/A on SSR08)
+    Bit 6: Port C Low polarity setting   (0 = inverted,  1 = normal)
+    Bit 7: Port C High polarity setting  (0 = inverted,  1 = normal)
+    Bit 8: Port A pull-up setting        (0 = pull down, 1 = pull up) (N/A on SSR08)
+    Bit 9: Port B pull-up setting        (0 = pull down, 1 = pull up) (N/A on SSR08)
+    Bit 10: Port C Low  pull-up setting  (0 = pull down, 1 = pull up)
+    Bit 11: Port C High pull-up setting  (0 = pull down, 1 = pull up)
+    
+         USB-ERB24 and USB-ERB08
+    Bit 0: Port A polarity setting       (0 = inverted,  1 = normal)  (N/A on ERB08)
+    Bit 1: Port B polarity setting       (0 = inverted,  1 = normal)  (N/A on ERB08)
+    Bit 2: Port C Low polarity setting   (0 = inverted,  1 = normal)  
+    Bit 3: Port C High polarity setting  (0 = inverted,  1 = normal)  
+    Bit 4: Port A pull-up setting        (0 = pull down, 1 = pull up) (N/A on ERB08)
+    Bit 5: Port B pull-up setting        (0 = pull down, 1 = pull up) (N/A on ERB08)
+    Bit 6: Port C Low  pull-up setting   (0 = pull down, 1 = pull up)
+    Bit 7: Port C High pull-up setting   (0 = pull down, 1 = pull up)
+    
+       USB-DIO96HFS
+     Bit 16: 1 = program memory update mode
+    """
     self.h.write([self.GET_STATUS])
     value = self.h.read(3, 1000)
     return (value[1] | (value[2]<<8))
 
   def PrepareDownload(self):
-    # This command puts the device into code update mode.  The unlock code must be correct as a
-    # further safety device.  Call this once before sending code with WriteCode.  If not in
-    # code update mode, any WriteCode will be ignored.  A Reset command must be issued at
-    # the end of the code download in order to return the device to operation with the new code.
+    """
+    This command puts the device into code update mode.  The unlock code must be correct as a
+    further safety device.  Call this once before sending code with WriteCode.  If not in
+    code update mode, any WriteCode will be ignored.  A Reset command must be issued at
+    the end of the code download in order to return the device to operation with the new code.
+    """
     self.h.write([self.PREPARE_DOWNLOAD, 0xad])
 
   def WriteCode(self, address, count, data):
-    # This command writes to the program memory in the device.  This command is not accepted
-    # unless the device is in update mode.  This command will normally be used when downloading
-    # a new hex file, so it supports memory ranges that may be found in the hex file.  
-    #
-    # The address ranges are:
-    #
-    # 0x000000 - 0x007AFF:  Microcontroller FLASH program memory
-    # 0x200000 - 0x200007:  ID memory (serial number is stored here on main micro)
-    # 0x300000 - 0x30000F:  CONFIG memory (processor configuration data)
-    # 0xF00000 - 0xF03FFF:  EEPROM memory
-    #
-    # FLASH program memory: The device must receive data in 64-byte segments that begin
-    # on a 64-byte boundary.  The data is sent in messages containing 32 bytes.  count
-    # must always equal 32.
-    #
-    # Other memory: Any number of bytes up to the maximum (32) may be sent.
+    """
+    This command writes to the program memory in the device.  This command is not accepted
+    unless the device is in update mode.  This command will normally be used when downloading
+    a new hex file, so it supports memory ranges that may be found in the hex file.  
+    
+    The address ranges are:
+    
+    0x000000 - 0x007AFF:  Microcontroller FLASH program memory
+    0x200000 - 0x200007:  ID memory (serial number is stored here on main micro)
+    0x300000 - 0x30000F:  CONFIG memory (processor configuration data)
+    0xF00000 - 0xF03FFF:  EEPROM memory
+    
+    FLASH program memory: The device must receive data in 64-byte segments that begin
+    on a 64-byte boundary.  The data is sent in messages containing 32 bytes.  count
+    must always equal 32.
+    
+    Other memory: Any number of bytes up to the maximum (32) may be sent.
+    """
 
     if (count > 32):
       print('WriteCode: count greater than 32')
@@ -205,9 +228,11 @@ class usb_dioSS:      # solid state relays
     return (value[1,count+1])
 
   def WriteSerial(self, serial):
-    # This command sends a new serial number to the device.  The serial number consists
-    # of 8 bytes, typically ASCII numberic or hexadecimal digits (i.e. "00000001").
-    # Note: The new serial number will be programmed but not used until hardware reset.
+    """
+    This command sends a new serial number to the device.  The serial number consists
+    of 8 bytes, typically ASCII numberic or hexadecimal digits (i.e. "00000001").
+    Note: The new serial number will be programmed but not used until hardware reset.
+    """
     self.h.write(self.WRITE_SERIAL,serial[0:8])
 
 ########################################################################################

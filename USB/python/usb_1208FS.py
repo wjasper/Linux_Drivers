@@ -39,19 +39,18 @@ class table:
     self.slope = 0.0
     self.intercept = 0.0
 
-
-class usb_1408FS:
+class usb_1208FS:
 
   # Gain Ranges
-  SE_10_00V   = 0x9         # Single Ended 0-10.0 V
-  BP_20_00V   = 0x0         # Differential +/- 20.0 V
-  BP_10_00V   = 0x1         # Differential +/- 10.0 V
-  BP_5_00V    = 0x2         # Differential +/- 5.00 V
-  BP_4_00V    = 0x3         # Differential +/- 4.00 V
-  BP_2_50V    = 0x4         # Differential +/- 2.50 V
-  BP_2_00V    = 0x5         # Differential +/- 2.00 V
-  BP_1_25V    = 0x6         # Differential +/- 1.25 V
-  BP_1_00V    = 0x7         # Differential +/- 1.00 V
+  SE_10_00V   = 0x9           # Single Ended 0-10.0 V
+  BP_20_00V   = 0x0           # Differential +/- 20.0 V
+  BP_10_00V   = 0x1           # Differential +/- 10.0 V
+  BP_5_00V    = 0x2           # Differential +/- 5.00 V
+  BP_4_00V    = 0x3           # Differential +/- 4.00 V
+  BP_2_50V    = 0x4           # Differential +/- 2.50 V
+  BP_2_00V    = 0x5           # Differential +/- 2.00 V
+  BP_1_25V    = 0x6           # Differential +/- 1.25 V
+  BP_1_00V    = 0x7           # Differential +/- 1.00 V
 
   # Status Bits
   SYNC               = 0x1  # 0 = Sync slave,             1 = Sync master
@@ -60,12 +59,12 @@ class usb_1408FS:
   UPDATE_MODE        = 0x8  # 1 = program memory update mode
 
   # Option values for AInScan
-  AIN_EXECUTION      = 0x1  # 1 = single execution, 0 = continuous execution
-  AIN_TRANSFER_MODE  = 0x2  # 1 = Immediate Transfer mode  0 = block transfer mode
-  AIN_TRIGGER        = 0x4  # 1 = Use External Trigger
-  AIN_DEBUG          = 0x8  # 1 = debug mode.
-  AIN_GAIN_QUEUE     = 0x10 # 1 = Use Channel Gain Queue, 0 = Use channnel parameters
-  AIN_RETRIGGER      = 0x20 # 1 = retrigger mode, 0 = normal trigger
+  AIN_EXECUTION      = 0x1    # 1 = single execution, 0 = continuous execution
+  AIN_TRANSFER_MODE  = 0x2    # 1 = Immediate Transfer mode  0 = block transfer mode
+  AIN_TRIGGER        = 0x4    # 1 = Use External Trigger
+  AIN_DEBUG          = 0x8    # 1 = debug mode.
+  AIN_GAIN_QUEUE     = 0x10   # 1 = Use Channel Gain Queue, 0 = Use channnel parameters
+  AIN_RETRIGGER      = 0x20   # 1 = retrigger mode, 0 = normal trigger
 
   DIO_PORTA       =  0
   DIO_PORTB       =  1
@@ -74,52 +73,52 @@ class usb_1408FS:
   
   # Commands and Codes for USB 1[2,4,6]08FS HID reports
   # Digital I/O Commands
-  DCONFIG          = 0x01   # Configure digital port
-  DIN              = 0x03   # Read digital port
-  DOUT             = 0x04   # Write digital port
+  DCONFIG          = 0x01     # Configure digital port
+  DIN              = 0x03     # Read digital port
+  DOUT             = 0x04     # Write digital port
 
   # Analog Input Commands
-  AIN              = 0x10   # Read analog input channel
-  AIN_SCAN         = 0x11   # Scan analog channels
-  AIN_STOP         = 0x12   # Stop input scan
-  ALOAD_QUEUE      = 0x13   # Load the channel/gain queue
+  AIN              = 0x10     # Read analog input channel
+  AIN_SCAN         = 0x11     # Scan analog channels
+  AIN_STOP         = 0x12     # Stop input scan
+  ALOAD_QUEUE      = 0x13     # Load the channel/gain queue
 
   # Analog Output Commands
-  AOUT             = 0x14   # Write analog output channel
-  AOUT_SCAN        = 0x15   # Output values to a range of output channels
-  AOUT_STOP        = 0x16   # Stop output scan
+  AOUT             = 0x14     # Write analog output channel
+  AOUT_SCAN        = 0x15     # Output values to a range of output channels
+  AOUT_STOP        = 0x16     # Stop output scan
 
   # Counter Commands
-  CINIT            = 0x20   # Initialize counter
-  CIN              = 0x21   # Read Counter
+  CINIT            = 0x20     # Initialize counter
+  CIN              = 0x21     # Read Counter
 
   # Memory Commands
-  MEM_READ         = 0x30   # Read Memory
-  MEM_WRITE        = 0x31   # Write Memory
+  MEM_READ         = 0x30     # Read Memory
+  MEM_WRITE        = 0x31     # Write Memory
 
   # Miscellaneous Commands
-  BLINK_LED        = 0x40   # Causes LED to blink
-  RESET            = 0x41   # Reset USB interface
-  SET_TRIGGER      = 0x42   # Configure external trigger
-  SET_SYNC         = 0x43   # Configure sync input/ouput
-  GET_STATUS       = 0x44   # Retrieve device status
-  SET_CAL          = 0x45   # Set CAL output
-  GET_ALL          = 0x46   # Retrieve all analog and digital input values
+  BLINK_LED        = 0x40     # Causes LED to blink
+  RESET            = 0x41     # Reset USB interface
+  SET_TRIGGER      = 0x42     # Configure external trigger
+  SET_SYNC         = 0x43     # Configure sync input/ouput
+  GET_STATUS       = 0x44     # Retrieve device status
+  SET_CAL          = 0x45     # Set CAL output
+  GET_ALL          = 0x46     # Retrieve all analog and digital input values
 
   # Code Update Commands
-  PREPARE_DOWNLOAD = 0x50   # Prepare for program memory download
-  WRITE_CODE       = 0x51   # Write program memory
-  WRITE_SERIAL     = 0x53   # Write new serial number to device
-  READ_CODE        = 0x55   # Read program memory
+  PREPARE_DOWNLOAD = 0x50 # Prepare for program memory download
+  WRITE_CODE       = 0x51 # Write program memory
+  WRITE_SERIAL     = 0x53 # Write new serial number to device
+  READ_CODE        = 0x55 # Read program memory
 
   productID        = 0
 
   def __init__(self, serial=None):
-    self.productID = 0x00a1                            # MCC USB-1408FS
+    self.productID = 0x0082                            # MCC USB-1208FS
     self.context = usb1.USBContext()
     self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
     if not self.udev:
-      raise IOError("MCC USB-1408FS not found")
+      raise IOError("MCC USB-1208FS not found")
     for i in range(4):
       if sys.platform.startswith('linux'):
         if self.udev.kernelDriverActive(i):
@@ -131,46 +130,15 @@ class usb_1408FS:
     self.wMaxPacketSize = self.getMaxPacketSize()
     print('wMaxPacketSize =', self.wMaxPacketSize)
 
-
-    # Build a lookup table of calibration coefficients to translate values into voltages:
-    # The calibration coefficients are stored in the onboard FLASH memory on the device in
-    # IEEE-754 4-byte floating point values.
-    #
-    #   calibrated code = code*slope + intercept
-    self.CalDF = [[table(), table(), table(), table(), table(), table(), table(), table()], \
-                  [table(), table(), table(), table(), table(), table(), table(), table()], \
-                  [table(), table(), table(), table(), table(), table(), table(), table()], \
-                  [table(), table(), table(), table(), table(), table(), table(), table()]]
-    self.CalSE = [table(), table(), table(), table(), table(), table(), table(), table()]
-
-  # Analog Input Calibration, differential 0x200 - 0x01C
-    address = 0x200
-    for chan in range(4):
-      for gain in range(8):
-        self.CalDF[chan][gain].slope ,= unpack('f',self.MemRead(address, 4))
-        address += 4
-        self.CalDF[chan][gain].intercept ,= unpack('f',self.MemRead(address, 4))
-        address += 4
-
-    # Analog Input Calibration, single ended 0x0300 - 0x033C
-    address = 0x300
-    for chan in range(8):
-      self.CalSE[chan].slope ,= unpack('f',self.MemRead(address, 4))
-      address += 4
-      self.CalSE[chan].intercept ,= unpack('f',self.MemRead(address, 4))
-      address += 4
-
     
   #################################
   #     Digital I/O  Commands     #
   #################################
 
   def DConfig(self, port, direction):
-    """
-    This command sets the direction of the DIO ports to input or output
-       port:       0 - Port A,   1 - Port B
-       direction:  0 - output,   1 - input
-    """
+    # This command sets the direction of the DIO ports to input or output
+    #    port:       0 - Port A,   1 - Port B
+    #    direction:  0 - output,   1 - input
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -181,11 +149,9 @@ class usb_1408FS:
                                     [self.DCONFIG, port, direction], timeout = 100)
 
   def DIn(self, port):
-    """
-    This command reads the current state of the digital port.  The return value will be
-    the value seen at the port pins.
-     port:  0 - Port A,   1 = Port B
-    """
+    # This command reads the current state of the digital port.  The return value will be
+    # the value seen at the port pins.
+    #  port:  0 - Port A,   1 = Port B
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -215,14 +181,13 @@ class usb_1408FS:
   #################################
 
   def AIn(self, channel, gain):
-    """
-    This command reads the value from an analog input channel, setting the
-    desired gain range first.  The returned value is a 2's complement signed
-    16-bit number.
-    
-      channel = the channel to read (0-7 differential, 8-15 single ended)
-      gain    = the gain range to select (0-7)
-    """
+    # This command reads the value from an analog input channel, setting the
+    # desired gain range first.  The returned value is a 2's complement signed
+    # 16-bit number.
+    #
+    #   channel = the channel to read (0-7 differential, 8-15 single ended)
+    #   gain    = the gain range to select (0-7)
+
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -243,23 +208,21 @@ class usb_1408FS:
     value = unpack('BBB',self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 3, timeout = 1000))    
     value = value[1] | (value[2] << 8)
     if gain == self.SE_10_00V:
-      # The data is 2's complement signed 13 bit number
-      if value > 0x7ffc:
+      # The data is 2's complement signed 11 bit number
+      if value > 0x7ff0:
         value = 0
-      elif value > 0x7ff8:
-        value = 0x3fff
+      elif value > 0x7fe0:
+        value = 0xfff
       else:
-        value >>= 1
-        value &= 0x3fff
-      value -= 0x2000
-      value = int(value*self.CalSE[channel].slope + self.CalSE[channel].intercept)
+        value >>= 3
+        value &= 0xfff
+      value -= 0x800
     else:
-      # The data is 2's complement signed 14 bit number
+      # The data is 2's complement signed 12 bit number
       value ,= unpack('h',pack('H',value))
-      value = value/4
-      value = int(value*self.CalDF[channel][gain].slope + self.CalDF[channel][gain].intercept)
+      value = value/(1<<4)
 
-    return value
+    return int(value)
 
   def AInScan(self, lowchannel, hichannel, count, frequency, options):
     """
@@ -367,15 +330,15 @@ class usb_1408FS:
       value = unpack('h'*32,self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | (pipe+2), 64, timeout = 1000))
       if nSamples > 31:
         for k in range(31):
-          sdata[i+k] = int(value[k]>>2)
+          sdata[i+k] = int(value[k]>>4)
         nSamples -= 31
       else:
         for k in range(nSamples):
-          sdata[i+k] = int(value[k]>>2)
+          sdata[i+k] = int(value[k]>>4)
         nSamples = 0
         break
       i += 31
-      pipe = (pipe%3) + 1   # pip should take on the values 1, 2 or 3
+      pipe = pipe%3 + 1   # pip should take on the values 1, 2 or 3
     return sdata
 
   def AInStop(self):
@@ -389,14 +352,12 @@ class usb_1408FS:
     value = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.AIN_STOP], timeout = 100)
 
   def ALoadQueue(self, num, chan, gain):
-    """
-    The device can scan analog channels with different gain settings.  This
-    function provides the mechanism for configuring each channel with a unique
-    range
-    
-    num:       the number of channel/gain pairs (max 8)
-    gainQueue: the  channel/gain pairs
-    """
+    # The device can scan analog channels with different gain settings.  This
+    # function provides the mechanism for configuring each channel with a unique
+    # range
+    #
+    #  num:       the number of channel/gain pairs (max 8)
+    #  gainQueue: the  channel/gain pairs
 
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
@@ -427,18 +388,17 @@ class usb_1408FS:
   #################################
 
   def AOut(self, channel, value):
-    """
-    This command writes the value to an analog output channel.
-    The value is a 16 bit unsigned value, but the DAC is a
-    12-bit DAC.  The lower 4 bits of the value are ignored by
-    the DAC.  The equation for the output voltage is:
-    
-         V_out = (k/2^16)* V_ref  where k is the value
-                                  written to the device
-         V_ref = 4.096V
-         channel: the channel to write (0-1)
-         value:   the value to write to the DAC
-    """
+    # This command writes the value to an analog output channel.
+    # The value is a 16 bit unsigned value, but the DAC is a
+    # 12-bit DAC.  The lower 4 bits of the value are ignored by
+    # the DAC.  The equation for the output voltage is:
+    #
+    #      V_out = (k/2^16)* V_ref  where k is the value
+    #                               written to the device
+    #      V_ref = 4.096V
+    #      channel: the channel to write (0-1)
+    #      value:   the value to write to the DAC
+    #
 
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
@@ -452,59 +412,57 @@ class usb_1408FS:
                                  [self.AOUT, channel, value & 0xff, (value >> 8) & 0xff], timeout = 100)
 
   def AOutScan(self, lowchannel, hichannel, count, frequency, data, options):
-    """
-    This command writes values to the analog output channels at a fixed rate.
-    The values lowchannel and hichannel specify the channel range for the
-    scan.  If lowchannel is higher than hichannel, the parameters will be
-    reversed in the device (lowchannel must be less than hichannel).
-    
-    The rate of data output is set by the internal 16-bit incrementing
-    timer running at a base rate of 10 MHz.  The timer is controlled
-    by timer_prescale and timer_preload.
-    
-    The timer will be reset and provide an internal interrupt when its
-    value equals timer_preload.  This allows for a lowest rate of 0.596 Hz
-    (1:256 prescale, preload = 0xFFFF).  It is preferable to keep the
-    prescaler to the lowest value that will achieve the desired rate.
-    
-         preload = 10 MHz / (frequency * prescaler)
-    
-    The data will be sent in packets untilizing the interrupt out
-    endpoint on interface 1.  The endpoint allows for 64 bytes of
-    data to be sent every millisecond, so the theroretical limit is:
-    
-       64 bytes/ms = 32,000 S/s
-    
-    The data will be in the format:
-    
-     lowchannel sample 0 : [hichannel sample 0]
-     lowchannel sample 1 : [hichannel sample 1]
-           ....
-     lowchannel sample n : [hichannel sample n]
-    
-    The external trigger may be used to start data output synchronously.
-    If the bit is set, the device will wait until an appropriate trigger
-    edge is detected, then begin outputting data at the specified rate.
-    
-    The data transfer is controlled by the USB-1408FS using data requests.
-    The USB-1408FS will send an input report on interface 0 with the report
-    ID AOUT_SCAN to request a new packet of data.  It will maintain its
-    internal FIFO by requesting new data when it is ready.  The first byte
-    of the report will be a status indicator; 0 = no errors, 1 = data underrrun,
-    2 = scan complete.
-    
-    The count parameter is only used in single execution mode.  In continuous
-    execution mode, data will be sent by the host indefinitely, with the host
-    sending an AOutStop() command to end the scan.
-    
-     lowchannel: the first channel of the scan [0-1]
-     count:      the number of scans to perform
-     hichannel:  the last chanel of the scan [0-1]
-     frequency:  output frequency in Hz.
-     options:    bit 0:   1 = single execution, 0 = continuous execution
-                 bit 1:   1 = use external trigger
-                 bits 2-7: not used
-    """
+    # This command writes values to the analog output channels at a fixed rate.
+    # The values lowchannel and hichannel specify the channel range for the
+    # scan.  If lowchannel is higher than hichannel, the parameters will be
+    # reversed in the device (lowchannel must be less than hichannel).
+    #
+    # The rate of data output is set by the internal 16-bit incrementing
+    # timer running at a base rate of 10 MHz.  The timer is controlled
+    # by timer_prescale and timer_preload.
+    #
+    # The timer will be reset and provide an internal interrupt when its
+    # value equals timer_preload.  This allows for a lowest rate of 0.596 Hz
+    # (1:256 prescale, preload = 0xFFFF).  It is preferable to keep the
+    # prescaler to the lowest value that will achieve the desired rate.
+    #
+    #      preload = 10 MHz / (frequency * prescaler)
+    #
+    # The data will be sent in packets untilizing the interrupt out
+    # endpoint on interface 1.  The endpoint allows for 64 bytes of
+    # data to be sent every millisecond, so the theroretical limit is:
+    #
+    #    64 bytes/ms = 32,000 S/s
+    #
+    # The data will be in the format:
+    #
+    #  lowchannel sample 0 : [hichannel sample 0]
+    #  lowchannel sample 1 : [hichannel sample 1]
+    #        ....
+    #  lowchannel sample n : [hichannel sample n]
+    #
+    # The external trigger may be used to start data output synchronously.
+    # If the bit is set, the device will wait until an appropriate trigger
+    # edge is detected, then begin outputting data at the specified rate.
+    #
+    # The data transfer is controlled by the USB-1208FS using data requests.
+    # The USB-1208FS will send an input report on interface 0 with the report
+    # ID AOUT_SCAN to request a new packet of data.  It will maintain its
+    # internal FIFO by requesting new data when it is ready.  The first byte
+    # of the report will be a status indicator; 0 = no errors, 1 = data underrrun,
+    # 2 = scan complete.
+    #
+    # The count parameter is only used in single execution mode.  In continuous
+    # execution mode, data will be sent by the host indefinitely, with the host
+    # sending an AOutStop() command to end the scan.
+    #
+    #  lowchannel: the first channel of the scan [0-1]
+    #  count:      the number of scans to perform
+    #  hichannel:  the last chanel of the scan [0-1]
+    #  frequency:  output frequency in Hz.
+    #  options:    bit 0:   1 = single execution, 0 = continuous execution
+    #              bit 1:   1 = use external trigger
+    #              bits 2-7: not used
 
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
@@ -569,9 +527,7 @@ class usb_1408FS:
         self.AOutStop()
     
   def AOutStop(self):
-    """
-    This command stops the analog output scan (if running).
-    """
+    # This command stops the analog output scan (if running).
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -586,10 +542,8 @@ class usb_1408FS:
   #################################
 
   def CInit(self):
-    """
-    This command initializes the event counter and resets
-    the count to zero
-    """
+    # This command initializes the event counter and resets
+    # the count to zero
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -599,11 +553,9 @@ class usb_1408FS:
     value = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.CINIT], timeout = 100)
 
   def CIn(self):
-    """
-    This function reads the 32-bit event counter on the device.  This
-    counter tallies the transitions of an external input attached to
-    the CTR pin on the screw terminal of the device.
-    """
+    # This function reads the 32-bit event counter on the device.  This
+    # counter tallies the transitions of an external input attached to
+    # the CTR pin on the screw terminal of the device.
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -619,13 +571,11 @@ class usb_1408FS:
   #################################
 
   def MemRead(self, address, count):
-    """
-    This command reads data from the configuration memeory (EEPROM).
-    All of the memory may be read
-    
-     address: the start addess for the read
-     count:   the number of byes to read (62 max)
-    """
+    # This command reads data from the configuration memeory (EEPROM).
+    # All of the memory may be read
+    #
+    #  address: the start addess for the read
+    #  count:   the number of byes to read (62 max)
 
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
@@ -651,22 +601,20 @@ class usb_1408FS:
     return value
 
   def MemWrite(self, address, count, data):
-    """
-    This command writes data to the non-volatile EEPROM memory on the device.
-    The non-volatile memory is used to store calibration coefficients, system
-    information and user data.
-    
-    Locations 0x200 - 0x3FF are reserved for calibration data nad require
-    the unlock sequence prior to writing
-    
-    Unlock sequence: Wrie 2 bytes with the value 0xAA55 to address 0x40 to
-    unlock.  The unlock status can be checked with GetStatus.  The unlock will
-    remain in effect until the device is powered off or reset.
-    
-     address: the start address for the write
-     count:   the number of bytes to write (59 max)
-     data:    the data to be written (59 bytes max)
-    """
+    # This command writes data to the non-volatile EEPROM memory on the device.
+    # The non-volatile memory is used to store calibration coefficients, system
+    # information and user data.
+    #
+    # Locations 0x200 - 0x3FF are reserved for calibration data nad require
+    # the unlock sequence prior to writing
+    #
+    # Unlock sequence: Wrie 2 bytes with the value 0xAA55 to address 0x40 to
+    # unlock.  The unlock status can be checked with GetStatus.  The unlock will
+    # remain in effect until the device is powered off or reset.
+    #
+    #  address: the start address for the write
+    #  count:   the number of bytes to write (59 max)
+    #  data:    the data to be written (59 bytes max)
 
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
@@ -685,9 +633,6 @@ class usb_1408FS:
   #     Miscellaneous Commands    #
   #################################
   def Blink(self):
-    """
-    This command causes the LED to blink.
-    """
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -697,10 +642,9 @@ class usb_1408FS:
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.BLINK_LED], timeout = 100)
     
   def Reset(self):
-    """
-    The command causes the device to perform a soft reset. The device
-    disconnect from the USB bus and resets its microcontroller.
-    """
+    # The command causes the device to perform a soft reset. The device
+    # disconnect from the USB bus and resets its microcontroller.
+    #
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -710,15 +654,13 @@ class usb_1408FS:
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.RESET], timeout = 100)
 
   def SetTrigger(self, type):
-    """
-    This command configures the external trigger for analog input.  The
-    trigger may be configured to activate with either a logic rising
-    edge or falling edge input.  Once the trigger is received, the analog
-    input will proceed as configured.  The EXTTRIG option must be used
-    in the AInScan command to utilize this feature.
-    
-      type:  the type of trigger  (0 = external trigger falling edge, 1 = external trigger rising edge)
-    """
+    # This command configures the external trigger for analog input.  The
+    # trigger may be configured to activate with either a logic rising
+    # edge or falling edge input.  Once the trigger is received, the analog
+    # input will proceed as configured.  The EXTTRIG option must be used
+    # in the AInScan command to utilize this feature.
+    #
+    #  type:  the type of trigger  (0 = external trigger falling edge, 1 = external trigger rising edge)
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -728,37 +670,35 @@ class usb_1408FS:
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.SET_TRIGGER], timeout = 100)
 
   def SetSync(self, type):
-    """
-    This command configures the sync signal. The sync signal may be
-    used to synchronize the analog input scan of multiple devices.
-    When multiple devices are to be used, one device is selected as
-    the master and the rest as slaves.  The sync signal of all
-    devices must be wired together.  The master will output a pulse
-    every sample, and all of the devices will acquire their samples
-    simultaneously.  This may also be used to pace one or more
-    devices from an external TTL/CMOS clock signal (max rate = 50
-    kHz) This may also be used with an external trigger; the
-    external trigger signal should be brought to the master device,
-    and all devices will begin sampling when the master is
-    triggered.  If a device is configred as a slave, it will not
-    acquire data when given an AInScan ommand until it detects a
-    pulse on the sync input.  If configured as a slave with a
-    continuous clock, an additional sync pulse is required to set up
-    the AInScan.  If configured as a slave with a gated clock, the
-    additional sync pulse is not required.  However, if a sync pulse
-    is receied while the AInScan setup is being performed by the
-    device, improper operation may result.  this is intennded for
-    use when synchronizing with another USB-1408FS, where the sync
-    signal will not be present until the master device has been
-    issued an AInScan command.
-    
-    The device will switch the SYNC pin to the appropriate
-    input/output state when this command is received.
-    
-     type:  0 = master,
-            1 = slave with continuous clock
-            2 = slave with gated clock
-    """
+    # This command configures the sync signal. The sync signal may be
+    # used to synchronize the analog input scan of multiple devices.
+    # When multiple devices are to be used, one device is selected as
+    # the master and the rest as slaves.  The sync signal of all
+    # devices must be wired together.  The master will output a pulse
+    # every sample, and all of the devices will acquire their samples
+    # simultaneously.  This may also be used to pace one or more
+    # devices from an external TTL/CMOS clock signal (max rate = 50
+    # kHz) This may also be used with an external trigger; the
+    # external trigger signal should be brought to the master device,
+    # and all devices will begin sampling when the master is
+    # triggered.  If a device is configred as a slave, it will not
+    # acquire data when given an AInScan ommand until it detects a
+    # pulse on the sync input.  If configured as a slave with a
+    # continuous clock, an additional sync pulse is required to set up
+    # the AInScan.  If configured as a slave with a gated clock, the
+    # additional sync pulse is not required.  However, if a sync pulse
+    # is receied while the AInScan setup is being performed by the
+    # device, improper operation may result.  this is intennded for
+    # use when synchronizing with another USB-1208FS, where the sync
+    # signal will not be present until the master device has been
+    # issued an AInScan command.
+    #
+    # The device will switch the SYNC pin to the appropriate
+    # input/output state when this command is received.
+    #
+    #  type:  0 = master,
+    #         1 = slave with continuous clock
+    #         2 = slave with gated clock
 
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
@@ -770,14 +710,12 @@ class usb_1408FS:
 
 
   def Status(self):
-    """
-    This command retrives the status of the device
-     Bit 0: 0 = Sync slave,               1 = sync master
-     Bit 1: 0 = Trigger falling edge,     1 = trigger rising edge
-     Bit 2: 0 = Normal sync (slave mode)  1 = gated sync
-     Bit 3: 0 = EEPROM cal memory locked  1 = cal memory unlocked
-     Bits 4-15 unused.
-    """
+    # This command retrives the status of the device
+    #  Bit 0: 0 = Sync slave,               1 = sync master
+    #  Bit 1: 0 = Trigger falling edge,     1 = trigger rising edge
+    #  Bit 2: 0 = Normal sync (slave mode)  1 = gated sync
+    #  Bit 3: 0 = EEPROM cal memory locked  1 = cal memory unlocked
+    #  Bits 4-15 unused.
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -790,13 +728,11 @@ class usb_1408FS:
     return (value[1] | (value[2]<<8)) & 0xf
 
   def SetCal(self, setting):
-    """
-    This command sets the voltage on the CAL output.  The output
-    will be 0V at power up, and should be returned to 0 when not in
-    use.
-    
-       setting:  0 = 0V,   1 = 2.5V
-    """
+    # This command sets the voltage on the CAL output.  The output
+    # will be 0V at power up, and should be returned to 0 when not in
+    # use.
+    #
+    #    setting:  0 = 0V,   1 = 2.5V
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -806,9 +742,7 @@ class usb_1408FS:
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.SET_CAL, setting], timeout = 100)
 
   def GetAll(self):
-    """
-    This command reads the value from all analog input channels and digital I/Os.
-    """
+    # This command reads the value from all analog input channels and digital I/Os.
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -832,11 +766,9 @@ class usb_1408FS:
   #################################
 
   def PrepareDowload(self):
-    """
-    This command puts the device into code update mode.  The unlock code must be correct as a
-    further safety device.  Call this once before sending code with WriteCode.  If not in
-    code update mode, any WriteCode will be ignored.  
-    """
+    # This command puts the device into code update mode.  The unlock code must be correct as a
+    # further safety device.  Call this once before sending code with WriteCode.  If not in
+    # code update mode, any WriteCode will be ignored.  
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -846,24 +778,22 @@ class usb_1408FS:
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.PREPARE_DOWNLOAD, 0xad], timeout = 100)
 
   def WriteCode(self, address, count, data):
-    """
-    This command writes to the program memory in the device.  This command is not accepted
-    unless the device is in update mode.  This command will normally be used when downloading
-    a new hex file, so it supports memory ranges that may be found in the hex file.  
-    
-    The address ranges are:
-    
-    0x000000 - 0x007AFF:  FLASH program memory
-    0x200000 - 0x200007:  ID memory (serial number is stored here on main micro)
-    0x300000 - 0x30000F:  CONFIG memory (processor configuration data)
-    0xF00000 - 0xF03FFF:  EEPROM memory
-    
-    FLASH program memory: The device must receive data in 64-byte segments that begin
-    on a 64-byte boundary.  The data is sent in messages containing 32 bytes.  count
-    must always equal 32.
-    
-    Other memory: Any number of bytes up to the maximum (32) may be sent.
-    """
+    # This command writes to the program memory in the device.  This command is not accepted
+    # unless the device is in update mode.  This command will normally be used when downloading
+    # a new hex file, so it supports memory ranges that may be found in the hex file.  
+    #
+    # The address ranges are:
+    #
+    # 0x000000 - 0x007AFF:  FLASH program memory
+    # 0x200000 - 0x200007:  ID memory (serial number is stored here on main micro)
+    # 0x300000 - 0x30000F:  CONFIG memory (processor configuration data)
+    # 0xF00000 - 0xF03FFF:  EEPROM memory
+    #
+    # FLASH program memory: The device must receive data in 64-byte segments that begin
+    # on a 64-byte boundary.  The data is sent in messages containing 32 bytes.  count
+    # must always equal 32.
+    #
+    # Other memory: Any number of bytes up to the maximum (32) may be sent.
 
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
@@ -897,11 +827,9 @@ class usb_1408FS:
     return (value[1,count+1])
 
   def WriteSerial(self, serial):
-    """
-    This command sends a new serial number to the device.  The serial number consists
-    of 8 bytes, typically ASCII numberic or hexadecimal digits (i.e. "00000001").
-    Note: The new serial number will be programmed but not used until hardware reset.
-    """
+    # This command sends a new serial number to the device.  The serial number consists
+    # of 8 bytes, typically ASCII numberic or hexadecimal digits (i.e. "00000001").
+    # Note: The new serial number will be programmed but not used until hardware reset.
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
                    libusb1.LIBUSB_RECIPIENT_INTERFACE
@@ -913,28 +841,28 @@ class usb_1408FS:
   def volts(self, gain, num):
     # converts signed short value to volts
     if gain == self.BP_20_00V:
-      volt = num * 20.0 / 0x1fff
+      volt = num * 20.0 / 0x7ff
     elif gain == self.BP_10_00V:
-      volt = num * 10.0 / 0x1fff
+      volt = num * 10.0 / 0x7ff
     elif gain == self.BP_5_00V:
-      volt = num * 5.0 / 0x1fff
+      volt = num * 5.0 / 0x7ff
     elif gain == self.BP_4_00V:
-      volt = num * 4.0 / 0x1fff
+      volt = num * 4.0 / 0x7ff
     elif gain == self.BP_2_50V:
-      volt = num * 2.5 / 0x1fff
+      volt = num * 2.5 / 0x7ff
     elif gain == self.BP_2_00V:
-      volt = num * 2.0 / 0x1fff
+      volt = num * 2.0 / 0x7ff
     elif gain == self.BP_1_25V:
-      volt = num * 1.25 / 0x1fff
+      volt = num * 1.25 / 0x7ff
     elif gain == self.BP_1_00V:
-      volt = num * 1.0 / 0x1fff
+      volt = num * 1.0 / 0x7ff
     elif gain == self.SE_10_00V:
-      volt = num * 10.0 / 0x1fff + 0.0
+      volt = num * 10.0 / 0x7ff + 0.0
     return volt
 
   def printStatus(self):
     status = self.Status()
-    print('**** USB-1408FS Status ****')
+    print('**** USB-1208FS Status ****')
     if status & self.SYNC:
       print('    Sync Master')
     else:
