@@ -60,9 +60,12 @@ class E_DIO24:
   #################################
 
   def DIn(self):
-    # This command reads the current state of the DIO pins.  A 0 in a
-    # bit position indicates the correspoing pin is reading a low
-    # state, and a 1 indicates a high state.
+    """
+    This command reads the current state of the DIO pins.  A 0 in a
+    bit position indicates the correspoing pin is reading a low
+    state, and a 1 indicates a high state.
+    """
+    
     dataCount = 0
     replyCount = 3
     result = False
@@ -105,9 +108,11 @@ class E_DIO24:
     return value
     
   def DOut_R(self):
-    # This command reads the DIO output latch value.  The factory power
-    # on default is all zeros. A 0 in a bit position indicates the
-    # corresponding pin driver is low, a 1 indicates it is high.
+    """
+    This command reads the DIO output latch value.  The factory power
+    on default is all zeros. A 0 in a bit position indicates the
+    corresponding pin driver is low, a 1 indicates it is high.
+    """
     
     dataCount = 0
     replyCount = 3
@@ -152,10 +157,12 @@ class E_DIO24:
     return value
 
   def DOut(self, mask, value):
-    # This command writes the DIO latch value.  The factory power on
-    # default is all ones (pins are floating). Writing a 0 to a bit will set
-    # the corresponding pin driver low, writing a 1 sets it high.
-    # Individual bits may be written using the port bitmask.
+    """
+    This command writes the DIO latch value.  The factory power on
+    default is all ones (pins are floating). Writing a 0 to a bit will set
+    the corresponding pin driver low, writing a 1 sets it high.
+    Individual bits may be written using the port bitmask.
+    """
     
     dataCount = 6
     replyCount = 0
@@ -202,9 +209,11 @@ class E_DIO24:
       print('Error in DOut E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def DConfig_R(self):
-    # This command reads the DIO configuration value.  A 1 in a bit
-    # position indicates the corresponding pin is set to an input, a 0
-    # indicates it is set to an output.  The power on devault is all 1 (input)
+    """
+    This command reads the DIO configuration value.  A 1 in a bit
+    position indicates the corresponding pin is set to an input, a 0
+    indicates it is set to an output.  The power on devault is all 1 (input)
+    """
     
     dataCount = 0
     replyCount = 3
@@ -249,10 +258,12 @@ class E_DIO24:
     return value
 
   def DConfig_W(self, mask, value):
-    # This command writes the configuration value.  A 1 in a bit
-    # position sets the corresponding pin to an input, a 0 sets it to an 
-    # output.  The power on default is all ones (input)
-    # Individual configurations may be written using the port bitmask.
+    """
+    This command writes the configuration value.  A 1 in a bit
+    position sets the corresponding pin to an input, a 0 sets it to an 
+    output.  The power on default is all ones (input)
+    Individual configurations may be written using the port bitmask.
+    """
     
     dataCount = 6
     replyCount = 0
@@ -304,10 +315,12 @@ class E_DIO24:
   #################################
 
   def counter(self):
-  # This command reads the event counter on pin P2D7. Configure it as
-  #   input.  The pin accepts frequency input up to 10 MHz.  The
-  #   internal counter increments when the TTL levels transition from
-  #   low to high.
+    """
+    This command reads the event counter on pin P2D7. Configure it as
+    input.  The pin accepts frequency input up to 10 MHz.  The
+    internal counter increments when the TTL levels transition from
+    low to high.
+    """
 
     dataCount = 0
     replyCount = 4
@@ -352,8 +365,10 @@ class E_DIO24:
     return value
   
   def resetCounter(self):
-    # This command resets the event counter.  On a write, the
-    # counter will be reset to 0.
+    """
+    This command resets the event counter.  On a write, the
+    counter will be reset to 0.
+    """
     
     dataCount = 0
     replyCount = 0
@@ -398,7 +413,10 @@ class E_DIO24:
   #     Miscellaneous Commands    #
   #################################
   def Blink(self, count=1):
-    # This command will blink the device power LED "count" times
+    """
+    This command will blink the device power LED "count" times
+    """
+    
 
     dataCount = 1
     replyCount = 0
@@ -440,7 +458,10 @@ class E_DIO24:
       print('Error in blink E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def Reset(self):
-    # The command resets the device.
+    """
+    The command resets the device.
+    """
+    
     dataCount = 0
     replyCount = 0
     result = False
@@ -480,8 +501,10 @@ class E_DIO24:
       print('Error in reset E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def Status(self):
-    # This command reads the device status
-    # bits 0-15   Reserved
+    """
+    This command reads the device status
+      bits 0-15   Reserved
+    """
 
     dataCount = 0
     replyCount = 2
@@ -526,9 +549,11 @@ class E_DIO24:
     return status
 
   def NetworkConfig(self):
-    # This command reads the current network configuration.  Returns tuple
-    #  (ip_address, subnet_mask, gateway_address)
-    #  
+    """
+    This command reads the current network configuration.  Returns tuple
+    (ip_address, subnet_mask, gateway_address)
+    """
+      
     dataCount = 0
     replyCount = 12
     result = False
@@ -573,10 +598,12 @@ class E_DIO24:
     return value
 
   def FirmwareUpgrade(self):
-    # This command causes the device to reset and enter the bootloader
-    # for a firmware upgrade.  It erases a portion of the program memory so
-    # the device must have firmware downloaded through the bootloder before
-    # it can be used again.
+    """
+    This command causes the device to reset and enter the bootloader
+    for a firmware upgrade.  It erases a portion of the program memory so
+    the device must have firmware downloaded through the bootloder before
+    it can be used again.
+    """
     
     dataCount = 2
     replyCount = 0
@@ -624,8 +651,10 @@ class E_DIO24:
   #################################
 
   def ConfigMemory_R(self, address, count):
-    # This command reads the nonvolatile configuration memory.  The configuration memory is
-    # 16 bytes (address 0 - 0xff)
+    """
+    This command reads the nonvolatile configuration memory.  The configuration memory is
+    16 bytes (address 0 - 0xff)
+    """
 
     if (count > 16):
       return False
@@ -677,18 +706,20 @@ class E_DIO24:
     return value
 
   def ConfigMemory_W(self, address, count, data):
-     # This command writes the nonvolatile configuration memory.  The
-     # config memory is 16 bytes (address 0 - 0xf) The config memory
-     # should only be written during factory setup and has an additional
-     # lock mechanism to prevent inadvertent writes.  To enable writes
-     # to the config memory, first write the unlock code 0xAA55 to
-     # address 0x10.  Writes to the entire meemory range are then
-     # possible.  Write any other value to address 0x10 to lock the
-     # memory after writing.  The amount of data to be writeen is
-     #inferred from the frame count - 2.
-     #
-     # address: the start address for writing (0-0xf)
-     # data:    the data to be written (frame count -2)
+    """
+    This command writes the nonvolatile configuration memory.  The
+    config memory is 16 bytes (address 0 - 0xf) The config memory
+    should only be written during factory setup and has an additional
+    lock mechanism to prevent inadvertent writes.  To enable writes
+    to the config memory, first write the unlock code 0xAA55 to
+    address 0x10.  Writes to the entire meemory range are then
+    possible.  Write any other value to address 0x10 to lock the
+    memory after writing.  The amount of data to be writeen is
+    nferred from the frame count - 2.
+    
+     address: the start address for writing (0-0xf)
+     data:    the data to be written (frame count -2)
+    """
 
     dataCount = count + 2
     replyCount = 0
@@ -736,11 +767,13 @@ class E_DIO24:
       print('Error in configMemory_W E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def UserMemory_R(self, address, count):
-    # This command reads the nonvolatile user memory.  The user memory is
-    # 3827 bytes (address 0 - 0xeef)
-    #
-    # address: the start address for reading (0-0xeef)
-    # count:   the number of bytes to read (max 1024 due to protocol)
+    """
+    This command reads the nonvolatile user memory.  The user memory is
+    3827 bytes (address 0 - 0xeef)
+    
+     address: the start address for reading (0-0xeef)
+     count:   the number of bytes to read (max 1024 due to protocol)
+    """
 
     if (count > 1024 or address > 0xeef):
       return False
@@ -792,10 +825,12 @@ class E_DIO24:
     return value
 
   def UserMemory_W(self, address, count, data):
-    # This command writes the nonvolatile user memory.  The user memory
-    # is 3824 bytes (address 0 - 0xeef). The amount of data to be
-    # written is inferred from the frame count - 2.  The maximum that
-    # can be written in one transfer is 1024 bytes.
+    """
+    This command writes the nonvolatile user memory.  The user memory
+    is 3824 bytes (address 0 - 0xeef). The amount of data to be
+    written is inferred from the frame count - 2.  The maximum that
+    can be written in one transfer is 1024 bytes.
+    """
 
     if (count > 512 or address > 0xeef):
       return False
@@ -843,11 +878,13 @@ class E_DIO24:
       print('Error in UserMemory_W E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def SettingsMemory_R(self, address, count):
-    # This command reads the nonvolatile settings memory.  The settings memory is
-    # 256 bytes (address 0 - 0xff)
-    #
-    # address: the start address for reading (0-0xff)
-    # count:   the number of bytes to read (max 256 due to protocol)
+    """
+    This command reads the nonvolatile settings memory.  The settings memory is
+    256 bytes (address 0 - 0xff)
+    
+     address: the start address for reading (0-0xff)
+     count:   the number of bytes to read (max 256 due to protocol)
+    """
 
     if (count > 256 or address > 0xff):
       return False
@@ -899,11 +936,13 @@ class E_DIO24:
     return value
 
   def SettingsMemory_W(self, address, count, data):
-    # This command writes to the nonvolatile settings memory.  The settings memory
-    # is 256 bytes (address 0 - 0xff).  The amount of data to be
-    # written is inferred from the frame count  - 2.  The maximum that
-    # can be written in one transfer is 512 bytes.  The settings will
-    # be implemented after a device reset.
+    """
+    This command writes to the nonvolatile settings memory.  The settings memory
+    is 256 bytes (address 0 - 0xff).  The amount of data to be
+    written is inferred from the frame count  - 2.  The maximum that
+    can be written in one transfer is 512 bytes.  The settings will
+    be implemented after a device reset.
+    """
 
     if (count > 256 or address > 0xff):
       return False
@@ -951,14 +990,16 @@ class E_DIO24:
       print('Error in SettingsMemory_W E-DIO24.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def BootloaderMemory_R(self, address, count):
-    # This command reads the bootloader stored in nonvolatile FLASH
-    # memory.  The bootloader is located in program FLASH memory in two
-    # physical address ranges: 0x1D000000 - 0x1D007FFF for bootloader
-    # code and 0x1FC00000 - 0x1FC01FFF for C startup code and
-    # interrupts.  Reads may be performed at any time.
-    #
-    # address: the start address for reading (see above)
-    # count:   the number of bytes to read (max 1024)
+    """
+    This command reads the bootloader stored in nonvolatile FLASH
+    memory.  The bootloader is located in program FLASH memory in two
+    physical address ranges: 0x1D000000 - 0x1D007FFF for bootloader
+    code and 0x1FC00000 - 0x1FC01FFF for C startup code and
+    interrupts.  Reads may be performed at any time.
+    
+     address: the start address for reading (see above)
+     count:   the number of bytes to read (max 1024)
+    """
 
     if (count > 1024):
       return False
@@ -1010,30 +1051,32 @@ class E_DIO24:
     return value
 
   def BootloaderMemory_W(self, address, count, data):
-    # This command writes the bootloader stored in nonvolatile FLASH
-    # memory.  The bootloader is located in program FLASH memory in two
-    # physical address ranges: 0x1D000000 - 0x1D007FFF for bootloader
-    # code and 0x1FC00000 - 0x1FC01FFF for C startup code and
-    # interrupts.  Writes outside these ranges are ignored.  The
-    # bootloader memory is write protected and must be unlocked in
-    # order to write the memory.  The unlock proceedure is to write the
-    # unlock code 0xAA55 to address 0xFFFFFFFE.  Writes to the entire
-    # memory range are then possible.  Write any other value to address
-    # 0xFFFFFFFE to lock the memory after writing.
-    #
-    # The FLASH memory must be erased prior to programming.  A bulk
-    # erase is perfomred by writing 0xAA55 to address 0x80000000 after
-    # unlocking the memory for write.  The bulk erase will require
-    # approximately 150ms to complete.  Once the erase is complete, the
-    # memory may be written; however, the device will not be able to
-    # boot unless it has a valid bootloader so the device shold not be
-    # reset until the bootloader is completely written and verified
-    # using BootloaderMemory_R().
-    #
-    # The writes are perfomred on 4-byte boundaries internally and it
-    # is recommended that the output data be sent in the same manner.
-    # The amount of data to be written is inferred frolm the frame
-    # count - 2. The maximum count value is 1024.
+    """
+    This command writes the bootloader stored in nonvolatile FLASH
+    memory.  The bootloader is located in program FLASH memory in two
+    physical address ranges: 0x1D000000 - 0x1D007FFF for bootloader
+    code and 0x1FC00000 - 0x1FC01FFF for C startup code and
+    interrupts.  Writes outside these ranges are ignored.  The
+    bootloader memory is write protected and must be unlocked in
+    order to write the memory.  The unlock proceedure is to write the
+    unlock code 0xAA55 to address 0xFFFFFFFE.  Writes to the entire
+    memory range are then possible.  Write any other value to address
+    0xFFFFFFFE to lock the memory after writing.
+    
+    The FLASH memory must be erased prior to programming.  A bulk
+    erase is perfomred by writing 0xAA55 to address 0x80000000 after
+    unlocking the memory for write.  The bulk erase will require
+    approximately 150ms to complete.  Once the erase is complete, the
+    memory may be written; however, the device will not be able to
+    boot unless it has a valid bootloader so the device shold not be
+    reset until the bootloader is completely written and verified
+    using BootloaderMemory_R().
+    
+    The writes are perfomred on 4-byte boundaries internally and it
+    is recommended that the output data be sent in the same manner.
+    The amount of data to be written is inferred frolm the frame
+    count - 2. The maximum count value is 1024.
+    """
 
     if (count > 1024):
       return False
@@ -1082,7 +1125,9 @@ class E_DIO24:
 
 
   def MACaddress(self):
-    # Gets the MAC address
+    """
+    Gets the MAC address
+    """
     
     address = 0x0a
     value =  self.ConfigMemory_R(address, 6)

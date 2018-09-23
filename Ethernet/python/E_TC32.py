@@ -19,7 +19,7 @@ from datetime import datetime
 from struct import *
 from mccPy import *
 
-'''
+"""
     Configuration memory map
 |=================================================================|
 |    Address   |        Value                                     |
@@ -71,7 +71,7 @@ Note: The settings do not take effect until after device is reset or power cycle
 | 0x2000 - 0x2DFF | EXP micro memory, available for UL use        |
 |=================================================================|
 
-'''
+"""
 
 ETC32_PID =   0x0132
 
@@ -169,7 +169,7 @@ class E_TC32:
     self.version = []                          # device firmware versions
     self.gain_voltages = []                    # gain calibration references values
 
-    self.Status()    # determine if EXP board present
+    self.Status()                              # determine if EXP board present
     self.channel_mask.append(0x0)
     self.channel_mask.append(0x0)
     self.TinConfig_R()
@@ -185,9 +185,11 @@ class E_TC32:
   #################################
 
   def DIn(self):
-    # This command reads the current state of the DIO pins.  A 0 in a
-    # bit position indicates the corresponding pin is reading a low
-    # state, and a 1 indicates a high state.
+    """
+    This command reads the current state of the DIO pins.  A 0 in a
+    bit position indicates the corresponding pin is reading a low
+    state, and a 1 indicates a high state.
+    """
     
     dataCount = 0
     replyCount = 2
@@ -235,9 +237,11 @@ class E_TC32:
       return value_base
     
   def DOut_R(self):
-    # This command reads the DIO output latch value.  The factory power
-    # on default is all zeros. A 0 in a bit position indicates the
-    # corresponding pin driver is low, a 1 indicates it is high.
+    """
+    This command reads the DIO output latch value.  The factory power
+    on default is all zeros. A 0 in a bit position indicates the
+    corresponding pin driver is low, a 1 indicates it is high.
+    """
     
     dataCount = 0
     replyCount = 8
@@ -285,13 +289,15 @@ class E_TC32:
       return value_base
 
   def DOut(self, value, index=BASE):
-    # This command writes the DIO latch value.  Writing a 0 to a bit will set
-    # the corresponding pin driver low, writing a 1 sets it high. If pin(s) are
-    # configured as alarm outputs, this command does not affect their value.
-    #
-    # index: bitmask the values to write
-    #  bit 0: Base unit
-    #  bit 1: EXP
+    """
+    This command writes the DIO latch value.  Writing a 0 to a bit will set
+    the corresponding pin driver low, writing a 1 sets it high. If pin(s) are
+    configured as alarm outputs, this command does not affect their value.
+    
+     index: bitmask the values to write
+      bit 0: Base unit
+      bit 1: EXP
+    """
     
     dataCount = 5
     replyCount = 0
@@ -338,19 +344,21 @@ class E_TC32:
   #################################
 
   def Tin(self, channel, units, wait):
-    # This command reads the value of a single thermocouple channel.  There are some
-    # special return values:
-    #
-    # -777.0: Input voltage outside valid common-mode voltage range
-    # -888.0: Open thermocouple detected
-    # -999.0: Channel disabled (also returned if EXP channels are specified but 
-    #         no EXP is connected) 
-    #
-    # channel: the channel to read (0-63)
-    # units:  0 - Celsius, linearized by TC type
-    #         1 - Voltage
-    #         2 - ADC code (uncalibrated)
-    # wait:   0 - return current value, 1 - wait for new reading before returning
+    """
+    This command reads the value of a single thermocouple channel.  There are some
+    special return values:
+    
+    -777.0: Input voltage outside valid common-mode voltage range
+    -888.0: Open thermocouple detected
+    -999.0: Channel disabled (also returned if EXP channels are specified but 
+            no EXP is connected) 
+    
+    channel: the channel to read (0-63)
+    units:  0 - Celsius, linearized by TC type
+            1 - Voltage
+            2 - ADC code (uncalibrated)
+    wait:   0 - return current value, 1 - wait for new reading before returning
+    """
 
     dataCount = 3
     replyCount = 4
@@ -396,11 +404,13 @@ class E_TC32:
     return value
 
   def CJC(self, channel):
-    # This command returns the most recent value of a single CJC sensor
-    # in Celsius.  The value -9999 will be returned if an EXP sensor is
-    # specified but no EXP is connected.
-    #
-    #    channel: the channel to read (0-63)
+    """
+    This command returns the most recent value of a single CJC sensor
+    in Celsius.  The value -9999 will be returned if an EXP sensor is
+    specified but no EXP is connected.
+    
+        channel: the channel to read (0-63)
+    """
 
     dataCount = 1
     replyCount = 4
@@ -444,21 +454,23 @@ class E_TC32:
     return value
 
   def TinMultiple(self, wait, units, channel_mask_base, channel_mask_exp=0):
-    # This command reads the value of multiple thermocouple channels 
-    # The channels to be read are passed as a bitmap when calling the command.
-    # The data will be returned in the order low channel number to high
-    # channel number.  The number of floating point values returned
-    # will be equal to the number of channels specified (max 64).  The
-    # special return values listed in the Tin command also apply to
-    # this command.
-    #
-    # wait:             0 - return current value
-    #                   1 - wait for new reading before returning
-    # units:            0 - Celsius
-    #                   1 - Voltage
-    #                   2 - ADC code (uncalibraded)
-    # channel_mask_base: the channel bitmask for the base unit (channel 0-31)
-    # channel_mask_exp:  the channel bitmask for the EXP unit (channel 32-63)
+    """
+    This command reads the value of multiple thermocouple channels 
+    The channels to be read are passed as a bitmap when calling the command.
+    The data will be returned in the order low channel number to high
+    channel number.  The number of floating point values returned
+    will be equal to the number of channels specified (max 64).  The
+    special return values listed in the Tin command also apply to
+    this command.
+    
+    wait:             0 - return current value
+                       1 - wait for new reading before returning
+    units:            0 - Celsius
+                       1 - Voltage
+                       2 - ADC code (uncalibraded)
+    channel_mask_base: the channel bitmask for the base unit (channel 0-31)
+    channel_mask_exp:  the channel bitmask for the EXP unit (channel 32-63)
+    """
 
     dataCount = 10
     replyCount = 4*(self.nBits(channel_mask_base) + self.nBits(channel_mask_exp))
@@ -504,17 +516,19 @@ class E_TC32:
     return value
 
   def CJCMultiple(self, channel_mask_base, channel_mask_exp=0):
-    # This command reads the value of multiple CJC sensors.  The
-    # sensors to be read are passed as a bitmap when calling the
-    # command.  The data will be returned in the order low channel
-    # number to high channel.  The number of floating point values
-    # returned will be equal to the number of channels specified (max
-    # 64).  The CJC values only update once per second so there is no
-    # need to call this faster.  The value -9999.0 will be returned
-    # if an EXO sensor is specified but no EXP is connected.
-    #
-    # cjc_mask_base: the channel bitmask for the base unit (channel 0-31)
-    # cjc_mask_exp:  the channel bitmask for the EXP unit (channel 32-63)
+    """
+    This command reads the value of multiple CJC sensors.  The
+    sensors to be read are passed as a bitmap when calling the
+    command.  The data will be returned in the order low channel
+    number to high channel.  The number of floating point values
+    returned will be equal to the number of channels specified (max
+    64).  The CJC values only update once per second so there is no
+    need to call this faster.  The value -9999.0 will be returned
+    if an EXO sensor is specified but no EXP is connected.
+    
+    cjc_mask_base: the channel bitmask for the base unit (channel 0-31)
+    cjc_mask_exp:  the channel bitmask for the EXP unit (channel 32-63)
+    """
 
     dataCount = 8
     replyCount = 4*(self.nBits(channel_mask_base) + self.nBits(channel_mask_exp))
@@ -558,18 +572,20 @@ class E_TC32:
     return value
 
   def TinConfig_R(self):
-    # This command reads the thermocouple channel configurations.  Each
-    # configuration is a uint8_t with the following possible values:
-    #
-    # 0 - channel disabled
-    # 1 - TC type J
-    # 2 - TC type K
-    # 3 - TC type T
-    # 4 - TC type E
-    # 5 - TC type R
-    # 6 - TC type S
-    # 7 - TC type B
-    # 8 - TC type N
+    """
+    This command reads the thermocouple channel configurations.  Each
+    configuration is a uint8_t with the following possible values:
+    
+    0 - channel disabled
+    1 - TC type J
+    2 - TC type K
+    3 - TC type T
+    4 - TC type E
+    5 - TC type R
+    6 - TC type S
+    7 - TC type B
+    8 - TC type N
+    """
 
     dataCount = 0
     replyCount = 64
@@ -612,20 +628,22 @@ class E_TC32:
     return self.config_values
 
   def TinConfig_W(self):
-    # This command writes the temperature channel configurations.  The
-    # micro stores these values in EEPROM and load them from the EEPROM
-    # at power on.  Each configuration is a uint8 with the following
-    # possible values:
-    #
-    # 0 - channel disabled
-    # 1 - TC type J
-    # 2 - TC type K
-    # 3 - TC type T
-    # 4 - TC type E
-    # 5 - TC type R
-    # 6 - TC type S
-    # 7 - TC type B
-    # 8 - TC type N
+    """
+    This command writes the temperature channel configurations.  The
+    micro stores these values in EEPROM and load them from the EEPROM
+    at power on.  Each configuration is a uint8 with the following
+    possible values:
+    
+    0 - channel disabled
+    1 - TC type J
+    2 - TC type K
+    3 - TC type T
+    4 - TC type E
+    5 - TC type R
+    6 - TC type S
+    7 - TC type B
+    8 - TC type N
+    """
 
     dataCount = 64
     replyCount = 0
@@ -668,9 +686,11 @@ class E_TC32:
       print('Error in TinConfig_W: E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def TinStatus(self):
-    # This command reads the status of the temperature readings.  If
-    # a bit is set the corresponding channel has a new reading that
-    # has not been read with either the Tin or TinMultiple command.
+    """
+    This command reads the status of the temperature readings.  If
+    a bit is set the corresponding channel has a new reading that
+    has not been read with either the Tin or TinMultiple command.
+    """
 
     dataCount = 0
     replyCount = 8
@@ -712,10 +732,12 @@ class E_TC32:
       print('Error in TinStatus: E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def OTDStatus(self):
-    # This command reads the status of the open thermocouple
-    # detection.  If a bit is set an open thermocouple is currently
-    # detected on the corresponding channel.  The LED on the front
-    #  of the device is on if any bits are set in this value.
+    """
+    This command reads the status of the open thermocouple
+    detection.  If a bit is set an open thermocouple is currently
+    detected on the corresponding channel.  The LED on the front
+    of the device is on if any bits are set in this value.
+    """
 
     dataCount = 0
     replyCount = 8
@@ -757,12 +779,14 @@ class E_TC32:
       print('Error in OTDStatus: E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def MeasureConfig_R(self):
-    # This command reads the measurement configuration for the base and exp units.
-    #
-    #    bit 0: OTD disable               0 - OTD enable,    1 - OTD disabled
-    #    bit 1: 50/60 Hz digital fileter  0 - notch @ 60 Hz, 1 - notch @ 50 Hz
-    #    bit 2: Coefficient select        0 - factory coef.  1 - field coef.
-    #    bits 3-7 - Reserved
+    """
+    This command reads the measurement configuration for the base and exp units.
+    
+       bit 0: OTD disable               0 - OTD enable,    1 - OTD disabled
+       bit 1: 50/60 Hz digital fileter  0 - notch @ 60 Hz, 1 - notch @ 50 Hz
+       bit 2: Coefficient select        0 - factory coef.  1 - field coef.
+       bits 3-7 - Reserved
+    """
 
     dataCount = 0
     replyCount = 2
@@ -804,14 +828,16 @@ class E_TC32:
       print('Error in MeasureConfig_R: E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def MeasureConfig_W(self):
-    # This command writes the measurement configuration for the base and exp units.
-    # The measurement microcontroller stores the configuration in EEPROM and
-    # restores it at power on.
-    #
-    #    bit 0: OTD disable               0 - OTD enable,    1 - OTD disabled
-    #    bit 1: 50/60 Hz digital fileter  0 - notch @ 60 Hz, 1 - notch @ 50 Hz
-    #    bit 2: Coefficient select        0 - factory coef.  1 - field coef.
-    #    bits 3-7 - Reserved
+    """
+    This command writes the measurement configuration for the base and exp units.
+    The measurement microcontroller stores the configuration in EEPROM and
+    restores it at power on.
+    
+       bit 0: OTD disable               0 - OTD enable,    1 - OTD disabled
+       bit 1: 50/60 Hz digital fileter  0 - notch @ 60 Hz, 1 - notch @ 50 Hz
+       bit 2: Coefficient select        0 - factory coef.  1 - field coef.
+       bits 3-7 - Reserved
+    """
 
     dataCount = 2
     replyCount = 0
@@ -854,22 +880,25 @@ class E_TC32:
       print('Error in MeasureConfig_W: E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def MeasureMode_R(self):
-    # This command reads the measurement mode.  The power on default is mode 0 (normal mode)
-    #
-    #   mode_base: the measurement mode for the base unit:
-    #         0 = Normal mode, the measurement loop converts all of the configured channels in sequence
-    #         1 = Test mode: the muxes are fixed on channel 0 and 16 and the ADCs continuously convert those channels.
-    #         2 = Offset measure mode: offset cal circuit is connected to cal mux and all conversions are performed 
-    #             on that input. Value is stored in channel 0 and 16.
-    #         3 = Gain measure mode: gain cal circuit is connected to cal mux and all conversions are performed on 
-    #             that input. Value is stored in channel 0 and 16.
-    #   mode_exp: the measurement mode for the EXP unit:
-    #         0 = Normal mode, the measurement loop converts all of the configured channels in sequence
-    #         1 = Test mode: the muxes are fixed on channel 32 and 48 and the ADCs continuously convert those channels.
-    #         2 = Offset measure mode: offset cal circuit is connected to cal mux and all conversions are performed 
-    #             on that input. Value is stored in channel 32 and 48.
-    #         3 = Gain measure mode: gain cal circuit is connected to cal mux and all conversions are performed on 
-    #             that input. Value is stored in channel 32 and 48.
+    """
+    This command reads the measurement mode.  The power on default is mode 0 (normal mode)
+    
+       mode_base: the measurement mode for the base unit:
+             0 = Normal mode, the measurement loop converts all of the configured channels in sequence
+             1 = Test mode: the muxes are fixed on channel 0 and 16 and the ADCs continuously convert those channels.
+             2 = Offset measure mode: offset cal circuit is connected to cal mux and all conversions are performed 
+                 on that input. Value is stored in channel 0 and 16.
+             3 = Gain measure mode: gain cal circuit is connected to cal mux and all conversions are performed on 
+                 that input. Value is stored in channel 0 and 16.
+       mode_exp: the measurement mode for the EXP unit:
+             0 = Normal mode, the measurement loop converts all of the configured channels in sequence
+             1 = Test mode: the muxes are fixed on channel 32 and 48 and the ADCs continuously convert those channels.
+             2 = Offset measure mode: offset cal circuit is connected to cal mux and all conversions are performed 
+                 on that input. Value is stored in channel 32 and 48.
+             3 = Gain measure mode: gain cal circuit is connected to cal mux and all conversions are performed on 
+                 that input. Value is stored in channel 32 and 48.
+    """
+    
     dataCount = 0
     replyCount = 2
     result = False
@@ -910,22 +939,24 @@ class E_TC32:
       print('Error in MeasureMode_R: E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def MeasureMode_W(self):
-    # This command writes the measurement mode.  The power on default is mode 0 (normal mode)
-    #
-    #   mode_base: the measurement mode for the base unit:
-    #         0 = Normal mode, the measurement loop converts all of the configured channels in sequence
-    #         1 = Test mode: the muxes are fixed on channel 0 and 16 and the ADCs continuously convert those channels.
-    #         2 = Offset measure mode: offset cal circuit is connected to cal mux and all conversions are performed 
-    #             on that input. Value is stored in channel 0 and 16.
-    #         3 = Gain measure mode: gain cal circuit is connected to cal mux and all conversions are performed on 
-    #             that input. Value is stored in channel 0 and 16.
-    #   mode_exp: the measurement mode for the EXP unit:
-    #         0 = Normal mode, the measurement loop converts all of the configured channels in sequence
-    #         1 = Test mode: the muxes are fixed on channel 32 and 48 and the ADCs continuously convert those channels.
-    #         2 = Offset measure mode: offset cal circuit is connected to cal mux and all conversions are performed 
-    #             on that input. Value is stored in channel 32 and 48.
-    #         3 = Gain measure mode: gain cal circuit is connected to cal mux and all conversions are performed on 
-    #             that input. Value is stored in channel 32 and 48.
+    """
+    This command writes the measurement mode.  The power on default is mode 0 (normal mode)
+    
+     mode_base: the measurement mode for the base unit:
+            0 = Normal mode, the measurement loop converts all of the configured channels in sequence
+            1 = Test mode: the muxes are fixed on channel 0 and 16 and the ADCs continuously convert those channels.
+            2 = Offset measure mode: offset cal circuit is connected to cal mux and all conversions are performed 
+                on that input. Value is stored in channel 0 and 16.
+            3 = Gain measure mode: gain cal circuit is connected to cal mux and all conversions are performed on 
+                that input. Value is stored in channel 0 and 16.
+      mode_exp: the measurement mode for the EXP unit:
+            0 = Normal mode, the measurement loop converts all of the configured channels in sequence
+            1 = Test mode: the muxes are fixed on channel 32 and 48 and the ADCs continuously convert those channels.
+            2 = Offset measure mode: offset cal circuit is connected to cal mux and all conversions are performed 
+                on that input. Value is stored in channel 32 and 48.
+            3 = Gain measure mode: gain cal circuit is connected to cal mux and all conversions are performed on 
+                that input. Value is stored in channel 32 and 48.
+    """
 
     dataCount = 2
     replyCount = 0
@@ -972,32 +1003,34 @@ class E_TC32:
   #################################
 
   def AlarmConfig_R(self):
-    # This command reads the temperature alarm configurations. There
-    # are configuration values and two threshold values for each of the
-    # 32/64 thermocouple channels.
-    #
-    #alarm_config: the alarm configuration
-    #  bit 0: Alarm enable
-    #         0 - alarm disabled, associated bit is controlled by DOut
-    #         1 - alarm enabled,  associated bit is controlled by status
-    #  bit 1: Alarm invert
-    #         0 - normal polarity   (output is low when in alarm condition)
-    #         1 - inverted polarity (output is high when in alarm condition)
-    #  bits 2-3: Alarm type
-    #         0 - High level: alarm when reading >= threshold 1, reset when reading < threshold 2
-    #         1 - Low level: alarm when reading <= threshold 1, reset when reading > threshold 2
-    #         2 - Outside window: alarm when reading < threshold 1 or > threshold 2
-    #  bit 4: Alarm latch
-    #         0 - no latch, alarm output status indicates current state of alarm
-    #         1 - latch, alarm output is active if an alarm condition is detected 
-    #             and remains active until cleared with AlarmStatus command
-    #  bits 5-6: Error alarms
-    #        00 - Alarm can only be set by valid temperature reading
-    #        01 - An open thermocouple or common-mode voltage error will also set the alarm
-    #        10 - Only an open thermocouple or common-mode voltage will set the alarm,
-    #             termperature is ignored.
-    #        11 - invalid.
-    #  bit 7: reserved.
+    """
+    This command reads the temperature alarm configurations. There
+    are configuration values and two threshold values for each of the
+    32/64 thermocouple channels.
+    
+    alarm_config: the alarm configuration
+      bit 0: Alarm enable
+             0 - alarm disabled, associated bit is controlled by DOut
+             1 - alarm enabled,  associated bit is controlled by status
+      bit 1: Alarm invert
+             0 - normal polarity   (output is low when in alarm condition)
+             1 - inverted polarity (output is high when in alarm condition)
+      bits 2-3: Alarm type
+             0 - High level: alarm when reading >= threshold 1, reset when reading < threshold 2
+             1 - Low level: alarm when reading <= threshold 1, reset when reading > threshold 2
+             2 - Outside window: alarm when reading < threshold 1 or > threshold 2
+      bit 4: Alarm latch
+             0 - no latch, alarm output status indicates current state of alarm
+             1 - latch, alarm output is active if an alarm condition is detected 
+                 and remains active until cleared with AlarmStatus command
+      bits 5-6: Error alarms
+            00 - Alarm can only be set by valid temperature reading
+            01 - An open thermocouple or common-mode voltage error will also set the alarm
+            10 - Only an open thermocouple or common-mode voltage will set the alarm,
+                 termperature is ignored.
+            11 - invalid.
+      bit 7: reserved.
+    """
 
     dataCount = 0
     replyCount = 576
@@ -1044,33 +1077,35 @@ class E_TC32:
       print('Error in AlarmConfig_R: E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def AlarmConfig_W(self):
-    # This command writes the temperature alarm configurations. There
-    # are configuration values and two threshold values for each of the
-    # 32/64 thermocouple channels.  The configuration is stored in
-    # EEPROM and restored at power on.
-    #
-    #alarm_config: the alarm configuration
-    #  bit 0: Alarm enable
-    #         0 - alarm disabled, associated bit is controlled by DOut
-    #         1 - alarm enabled,  associated bit is controlled by status
-    #  bit 1: Alarm invert
-    #         0 - normal polarity   (output is low when in alarm condition)
-    #         1 - inverted polarity (output is high when in alarm condition)
-    #  bits 2-3: Alarm type
-    #         0 - High level: alarm when reading >= threshold 1, reset when reading < threshold 2
-    #         1 - Low level: alarm when reading <= threshold 1, reset when reading > threshold 2
-    #         2 - Outside window: alarm when reading < threshold 1 or > threshold 2
-    #  bit 4: Alarm latch
-    #         0 - no latch, alarm output status indicates current state of alarm
-    #         1 - latch, alarm output is active if an alarm condition is detected 
-    #             and remains active until cleared with AlarmStatus command
-    #  bits 5-6: Error alarms
-    #        00 - Alarm can only be set by valid temperature reading
-    #        01 - An open thermocouple or common-mode voltage error will also set the alarm
-    #        10 - Only an open thermocouple or common-mode voltage will set the alarm,
-    #             termperature is ignored.
-    #        11 - invalid.
-    #  bit 7: reserved.
+    """
+    This command writes the temperature alarm configurations. There
+    are configuration values and two threshold values for each of the
+    32/64 thermocouple channels.  The configuration is stored in
+    EEPROM and restored at power on.
+    
+    alarm_config: the alarm configuration
+      bit 0: Alarm enable
+             0 - alarm disabled, associated bit is controlled by DOut
+             1 - alarm enabled,  associated bit is controlled by status
+      bit 1: Alarm invert
+             0 - normal polarity   (output is low when in alarm condition)
+             1 - inverted polarity (output is high when in alarm condition)
+      bits 2-3: Alarm type
+             0 - High level: alarm when reading >= threshold 1, reset when reading < threshold 2
+             1 - Low level: alarm when reading <= threshold 1, reset when reading > threshold 2
+             2 - Outside window: alarm when reading < threshold 1 or > threshold 2
+      bit 4: Alarm latch
+             0 - no latch, alarm output status indicates current state of alarm
+             1 - latch, alarm output is active if an alarm condition is detected 
+                 and remains active until cleared with AlarmStatus command
+      bits 5-6: Error alarms
+            00 - Alarm can only be set by valid temperature reading
+            01 - An open thermocouple or common-mode voltage error will also set the alarm
+            10 - Only an open thermocouple or common-mode voltage will set the alarm,
+                 termperature is ignored.
+            11 - invalid.
+      bit 7: reserved.
+    """
 
     dataCount = 0
     replyCount = 576
@@ -1117,13 +1152,15 @@ class E_TC32:
       print('Error in AlarmConfig_W: E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def AlarmStatus(self):
-    # This command reads the status of the temperature
-    # alarms. If a bit is set an alarm condition exists or is latched
-    # on the corresponding channel. If the alarm is configured for
-    # latching then the status will not clear when the alarm condition
-    # is no longer present. It must be cleared by writing a 1 to the
-    # corresponding bit. The LED on the front of the device is on if
-    # any bits are set in this value.
+    """
+    This command reads the status of the temperature
+    alarms. If a bit is set an alarm condition exists or is latched
+    on the corresponding channel. If the alarm is configured for
+    latching then the status will not clear when the alarm condition
+    is no longer present. It must be cleared by writing a 1 to the
+    corresponding bit. The LED on the front of the device is on if
+    any bits are set in this value.
+    """
 
     dataCount = 0
     replyCount = 8
@@ -1166,12 +1203,14 @@ class E_TC32:
     return self.alarm_status
 
   def ClearAlarmStatus(self, clear_masks, index=BASE):
-    # This command clears the alarm status.  Writing a 1 to a bit will
-    # clear the status for the corresponding channel.
-    #
-    #  index:   bit 0: Base Unit
-    #           bit 1: EXP
-    #  clear_masks; the alarm status clear masks
+    """
+    This command clears the alarm status.  Writing a 1 to a bit will
+    clear the status for the corresponding channel.
+    
+      index:   bit 0: Base Unit
+               bit 1: EXP
+      clear_masks; the alarm status clear masks
+    """
 
     dataCount = 5
     replyCount = 0
@@ -1219,18 +1258,20 @@ class E_TC32:
   #################################
   
   def UserMemory_R(self, address, count):
-    # This command reads the nonvolatile user memory. The
-    # user memory is spread among 3 EEPROM parts
-    #
-    #    Address                   Value
-    # --------------------------------------------
-    # 0x0000 - 0x0EFF     Comms micro memory
-    # 0x1000 - 0x1DFF     Measurement micro memory
-    # 0x2000 - 0x2DFF     EXP micro memory
-    #
-    #
-    # address: the start address for reading (0-0xdff)
-    # count:   the number of bytes to read (max 1024 due to protocol)
+    """
+    This command reads the nonvolatile user memory. The
+    user memory is spread among 3 EEPROM parts
+    
+        Address                   Value
+     --------------------------------------------
+     0x0000 - 0x0EFF     Comms micro memory
+     0x1000 - 0x1DFF     Measurement micro memory
+     0x2000 - 0x2DFF     EXP micro memory
+    
+    
+     address: the start address for reading (0-0xdff)
+     count:   the number of bytes to read (max 1024 due to protocol)
+    """
 
     if (count > 1024 or address > 0xdff):
       return False
@@ -1281,9 +1322,11 @@ class E_TC32:
     return value
 
   def UserMemory_W(self, address, count, data):
-    # This command writes the nonvolatile user memory. The amount of data 
-    # to be written is inferred from the frame count - 2.  The maximum that
-    # can be written in one transfer is 1024 - 2 bytes.
+    """
+    This command writes the nonvolatile user memory. The amount of data 
+    to be written is inferred from the frame count - 2.  The maximum that
+    can be written in one transfer is 1024 - 2 bytes.
+    """
 
     if (count > 512 or address > 0xdff):
       return False
@@ -1331,12 +1374,14 @@ class E_TC32:
       print('Error in UserMemory_W E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def SettingsMemory_R(self, address, count):
-    # This command reads the nonvolatile settings memory.  The settings memory is
-    # 32 bytes (address 0 - 0x1f)
-    #
-    # address: the start address for reading (0-0x1f)
-    # count:   the number of bytes to read (max 32 due to protocol)
-
+    """
+    This command reads the nonvolatile settings memory.  The settings memory is
+    32 bytes (address 0 - 0x1f)
+    
+    address: the start address for reading (0-0x1f)
+    count:   the number of bytes to read (max 32 due to protocol)
+    """
+    
     if (count > 32 or address > 0x1f):
       return False
 
@@ -1386,11 +1431,13 @@ class E_TC32:
     return value
 
   def SettingsMemory_W(self, address, count, data):
-    # This command writes to the nonvolatile settings memory.  The settings memory
-    # is 32 bytes (address 0 - 0x1f).  The amount of data to be
-    # written is inferred from the frame count  - 2.  The maximum that
-    # can be written in one transfer is 32 bytes.  The settings will
-    # be implemented after a device reset.
+    """
+    This command writes to the nonvolatile settings memory.  The settings memory
+    is 32 bytes (address 0 - 0x1f).  The amount of data to be
+    written is inferred from the frame count  - 2.  The maximum that
+    can be written in one transfer is 32 bytes.  The settings will
+    be implemented after a device reset.
+    """
 
     if (count > 256 or address > 0x1f):
       return False
@@ -1438,8 +1485,10 @@ class E_TC32:
       print('Error in SettingsMemory_W E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def ConfigMemory_R(self, address, count):
-    # This command reads the nonvolatile configuration memory.  The configuration memory is
-    # 16 bytes (address 0 - 0x0f)
+    """
+    This command reads the nonvolatile configuration memory.  The configuration memory is
+    16 bytes (address 0 - 0x0f)
+    """
 
     if (count > 16 or address > 0xf):
       return False
@@ -1489,12 +1538,14 @@ class E_TC32:
     return value
 
   def ConfigMemory_W(self, address, count, data):
-     # This command writes the nonvolatile configuration memory.  The
-     # config memory is 16 bytes (address 0 - 0xf) The config memory
-     # should only be written during factory setup.
-     #
-     # address: the start address for writing (0-0xf)
-     # data:    the data to be written (frame count -2)
+    """
+    This command writes the nonvolatile configuration memory.  The
+    config memory is 16 bytes (address 0 - 0xf) The config memory
+    should only be written during factory setup.
+    
+    address: the start address for writing (0-0xf)
+    data:    the data to be written (frame count -2)
+    """
 
     if (count > 16 or address > 0xf):
       return False
@@ -1542,10 +1593,12 @@ class E_TC32:
       print('Error in ConfigMemory_W E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def FactoryCoef_R(self):
-    # This command reads the factory calibration coefficients.  Each coefficient is
-    # a float.  The firmware applies the coefficients when calculating the voltage and
-    # temperature values for each channel.  The coefficients are applied immediately
-    # and stored in EEPROM.
+    """
+    This command reads the factory calibration coefficients.  Each coefficient is
+    a float.  The firmware applies the coefficients when calculating the voltage and
+    temperature values for each channel.  The coefficients are applied immediately
+    and stored in EEPROM.
+    """
 
     dataCount = 0
     replyCount = 64
@@ -1602,11 +1655,13 @@ class E_TC32:
       print('Error in FactoryCoef_R E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def FactoryCoef_W(self, index):
-    # This command writes the factory calibration coefficients.  The
-    # microcontroller stores the values in EEPROM and restores them at
-    # power on.
-    #
-    # index: the device to write, 0 - base,   1 - EXP
+    """
+    This command writes the factory calibration coefficients.  The
+    microcontroller stores the values in EEPROM and restores them at
+    power on.
+    
+    index: the device to write, 0 - base,   1 - EXP
+    """
 
     dataCount = 33
     replyCount = 0
@@ -1666,10 +1721,12 @@ class E_TC32:
       print('Error in FactoryCoef_W E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def FieldCoef_R(self):
-    # This command reads the field calibration coefficients.  Each coefficient is
-    # a float.  The firmware applies the coefficients when calculating the voltage and
-    # temperature values for each channel.  The coefficients are applied immediately
-    # and stored in EEPROM.
+    """
+    This command reads the field calibration coefficients.  Each coefficient is
+    a float.  The firmware applies the coefficients when calculating the voltage and
+    temperature values for each channel.  The coefficients are applied immediately
+    and stored in EEPROM.
+    """
 
     dataCount = 0
     replyCount = 64
@@ -1726,11 +1783,13 @@ class E_TC32:
       print('Error in FieldCoef_R E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def FieldCoef_W(self, index):
-    # This command writes the field calibration coefficients.  The
-    # microcontroller stores the values in EEPROM and restores them at
-    # power on.
-    #
-    # index: the device to write, 0 - base,   1 - EXP
+    """
+    This command writes the field calibration coefficients.  The
+    microcontroller stores the values in EEPROM and restores them at
+    power on.
+    
+    index: the device to write, 0 - base,   1 - EXP
+    """
 
     dataCount = 33
     replyCount = 0
@@ -1790,7 +1849,9 @@ class E_TC32:
       print('Error in FieldCoef_W E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def FactoryCalDate_R(self):
-    # This command reads the factory calibration dates.
+    """
+    This command reads the factory calibration dates.
+    """
       
     dataCount = 0
     replyCount = 12
@@ -1852,9 +1913,11 @@ class E_TC32:
       return date_base
 
   def FactoryCalDate_W(self, mdate, index=0):
-    # This command writes the factory calibration date
-    #
-    # index:  the device to write  0 - base unit,  1 - EXP
+    """
+    This command writes the factory calibration date
+    
+     index:  the device to write  0 - base unit,  1 - EXP
+    """
       
     dataCount = 7
     replyCount = 0
@@ -1902,7 +1965,9 @@ class E_TC32:
       print('Error in FactoryCalDate_W E-TC.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def FieldCalDate_R(self):
-    # This command reads the field calibration dates.
+    """
+    This command reads the field calibration dates.
+    """
       
     dataCount = 0
     replyCount = 12
@@ -1964,9 +2029,11 @@ class E_TC32:
       return date_base
 
   def FieldCalDate_W(self, mdate, index=0):
-    # This command writes the field calibration date
-    #
-    # index:  the device to write  0 - base unit,  1 - EXP
+    """
+    This command writes the field calibration date
+    
+    index:  the device to write  0 - base unit,  1 - EXP
+    """
       
     dataCount = 7
     replyCount = 0
@@ -2013,12 +2080,13 @@ class E_TC32:
     except ResultError:
       print('Error in FieldCalDate_W E-TC.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
-
   #################################
   #     Miscellaneous Commands    #
   #################################
   def Blink(self, count=1):
-    # This command will blink the device power LED "count" times
+    """
+    This command will blink the device power LED "count" times
+    """
 
     dataCount = 1
     replyCount = 0
@@ -2060,7 +2128,9 @@ class E_TC32:
       print('Error in blink E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def Reset(self):
-    # This command resets the device
+    """
+    This command resets the device
+    """
     
     dataCount = 0
     replyCount = 0
@@ -2101,9 +2171,11 @@ class E_TC32:
       print('Error in reset E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def Status(self):
-    # This command reads the device status
-    #   bit 0:  1 = EXP detected,  0 = no EXP
-    #   bits 1-15: Reserved
+    """
+    This command reads the device status
+       bit 0:  1 = EXP detected,  0 = no EXP
+       bits 1-15: Reserved
+    """
 
     dataCount = 0
     replyCount = 2
@@ -2146,15 +2218,17 @@ class E_TC32:
     return self.status
 
   def Version(self):
-    # This command reads the device firmware versions.  Each version
-    # will be in hex BCD (i.e. 0x0103 is version 1.03)
-    #
-    # version_comms           The communications micro firmware version
-    # boot_version_comms      The communcations micro bootloader firmware version
-    # version_base            The base measurement micro firmware version
-    # boot_version_base       The base measurement micro bootloader firmware version
-    # version_EXP             The EXP measurement micro firmware version
-    # boot_version_EXP        The EXP measurement micro bootloader firmware version
+    """
+    This command reads the device firmware versions.  Each version
+    will be in hex BCD (i.e. 0x0103 is version 1.03)
+    
+     version_comms           The communications micro firmware version
+     boot_version_comms      The communcations micro bootloader firmware version
+     version_base            The base measurement micro firmware version
+     boot_version_base       The base measurement micro bootloader firmware version
+     version_EXP             The EXP measurement micro firmware version
+     boot_version_EXP        The EXP measurement micro bootloader firmware version
+    """
 
     dataCount = 0
     replyCount = 12
@@ -2197,9 +2271,11 @@ class E_TC32:
     return self.version
 
   def NetworkConfig(self):
-    # This command reads the current network configuration.  Returns tuple
-    #  (ip_address, subnet_mask, gateway_address)
-    #  
+    """
+    This command reads the current network configuration.  Returns tuple
+    (ip_address, subnet_mask, gateway_address)
+    """
+    
     dataCount = 0
     replyCount = 12
     result = False
@@ -2242,12 +2318,14 @@ class E_TC32:
     return value
 
   def ADCal(self):
-    # This command causes the measurement loop to pause and an A/D
-    # system offset calibration to run.  The calibration requires
-    # approximately 50 ms to complete then the measurement loop
-    # automatically returns to the current mode.  The calibration will
-    # run on all A/Ds on both the main unit and EXP simultaneousluy.
-    # The command reply will not be sent until the calibration completes.
+    """
+    This command causes the measurement loop to pause and an A/D
+    system offset calibration to run.  The calibration requires
+    approximately 50 ms to complete then the measurement loop
+    automatically returns to the current mode.  The calibration will
+    run on all A/Ds on both the main unit and EXP simultaneousluy.
+    The command reply will not be sent until the calibration completes.
+    """
 
     dataCount = 0
     replyCount = 0
@@ -2288,7 +2366,9 @@ class E_TC32:
         print('Error in ADCal E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def MACaddress(self):
-    # Gets the MAC address
+    """
+    Gets the MAC address
+    """
     
     address = 0x0a
     value =  self.ConfigMemory_R(address, 6)
