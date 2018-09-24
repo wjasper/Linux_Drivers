@@ -127,21 +127,21 @@ def main():
       print("\t\t8. +/- 1.0V")
       gain = int(input("Select gain [1-8]: "))
       if gain == 1:
-        gain == usb1408FS.BP_20_00V
+        gain = usb1408FS.BP_20_00V
       elif gain == 2:
-        gain == usb1408FS.BP_10_00V
+        gain = usb1408FS.BP_10_00V
       elif gain == 3:
-        gain == usb1408FS.BP_5_00V
+        gain = usb1408FS.BP_5_00V
       elif gain == 4:
-        gain == usb1408FS.BP_4_00V
+        gain = usb1408FS.BP_4_00V
       elif gain == 5:
-        gain == usb1408FS.BP_2_50V
+        gain = usb1408FS.BP_2_50V
       elif gain == 6:
-        gain == usb1408FS.BP_2_00V
+        gain = usb1408FS.BP_2_00V
       elif gain == 7:
-        gain == usb1408FS.BP_1_25V
+        gain = usb1408FS.BP_1_25V
       elif gain == 8:
-        gain == usb1408FS.BP_1_00V
+        gain = usb1408FS.BP_1_00V
       for i in range(20):
         usb1408FS.DOut(usb1408FS.DIO_PORTA, 0)
         time.sleep(0.01)
@@ -150,7 +150,7 @@ def main():
         usb1408FS.DOut(usb1408FS.DIO_PORTA, 1)
         time.sleep(0.01)
         value = usb1408FS.AIn(chan, gain);
-        print('Channel: ',chan,' value = ', hex(value),'\t',format(usb1408FS.volts(gain, value),'.3f'),'V')
+        print('Channel: ',chan,' value =', hex(value),'\t',format(usb1408FS.volts(gain, value),'.3f'),'V')
     elif ch == 'g':
       print('Testing Analog input scan')
       freq = int(input('Enter desired frequency [Hz]: '))
@@ -167,23 +167,23 @@ def main():
       print("\t\t9. Single Ended +/- 10V")
       gain = int(input("Select gain [1-9]: "))
       if gain == 1:
-        gain == usb1408FS.BP_20_00V
+        gain = usb1408FS.BP_20_00V
       elif gain == 2:
-        gain == usb1408FS.BP_10_00V
+        gain = usb1408FS.BP_10_00V
       elif gain == 3:
-        gain == usb1408FS.BP_5_00V
+        gain = usb1408FS.BP_5_00V
       elif gain == 4:
-        gain == usb1408FS.BP_4_00V
+        gain = usb1408FS.BP_4_00V
       elif gain == 5:
-        gain == usb1408FS.BP_2_50V
+        gain = usb1408FS.BP_2_50V
       elif gain == 6:
-        gain == usb1408FS.BP_2_00V
+        gain = usb1408FS.BP_2_00V
       elif gain == 7:
-        gain == usb1408FS.BP_1_25V
+        gain = usb1408FS.BP_1_25V
       elif gain == 8:
-        gain == usb1408FS.BP_1_00V
+        gain = usb1408FS.BP_1_00V
       elif gain == 9:
-        gain == usb1408FS.SE_10_00V
+        gain = usb1408FS.SE_10_00V
       gains = [0]*8
       for i in range(8):
         gains[i] = gain
