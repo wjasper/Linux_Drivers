@@ -128,8 +128,6 @@ class usb_1208FS:
 
     # need to get wMaxPacketSize
     self.wMaxPacketSize = self.getMaxPacketSize()
-    print('wMaxPacketSize =', self.wMaxPacketSize)
-
     
   #################################
   #     Digital I/O  Commands     #
@@ -706,7 +704,7 @@ class usb_1208FS:
     wIndex = 0                         # interface
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.RESET], timeout = 100)
 
-  def SetTrigger(self, type):
+  def SetTrigger(self, trig_type):
     """
     This command configures the external trigger for analog input.  The
     trigger may be configured to activate with either a logic rising
@@ -714,7 +712,7 @@ class usb_1208FS:
     input will proceed as configured.  The EXTTRIG option must be used
     in the AInScan command to utilize this feature.
     
-    type:  the type of trigger  (0 = external trigger falling edge, 1 = external trigger rising edge)
+    trig_type:  the type of trigger  (0 = external trigger falling edge, 1 = external trigger rising edge)
     """
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
@@ -722,9 +720,9 @@ class usb_1208FS:
     request = 0x9                          # HID Set_Report
     wValue =  (2 << 8) | self.SET_TRIGGER  # HID output
     wIndex = 0                             # interface
-    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.SET_TRIGGER], timeout = 100)
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.SET_TRIGGER, trig_type], timeout = 100)
 
-  def SetSync(self, type):
+  def SetSync(self, sync_type):
     """
     This command configures the sync signal. The sync signal may be
     used to synchronize the analog input scan of multiple devices.
@@ -752,9 +750,9 @@ class usb_1208FS:
     The device will switch the SYNC pin to the appropriate
     input/output state when this command is received.
     
-     type:  0 = master,
-            1 = slave with continuous clock
-            2 = slave with gated clock
+    syc_type: 0 = master,
+              1 = slave with continuous clock
+              2 = slave with gated clock
     """
 
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
@@ -763,8 +761,7 @@ class usb_1208FS:
     request = 0x9                        # HID Set_Report
     wValue =  (2 << 8) | self.SET_SYNC   # HID output
     wIndex = 0                           # interface
-    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.SET_SYNC, type], timeout = 100)
-
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.SET_SYNC, sync_type], timeout = 100)
 
   def Status(self):
     """

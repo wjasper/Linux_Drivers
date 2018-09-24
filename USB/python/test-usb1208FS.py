@@ -29,7 +29,8 @@ def toContinue():
 def main():
   # initalize the class
   usb1208FS = usb_1208FS()
-  
+
+  print('wMaxPacketSize =', usb1208FS.wMaxPacketSize)  
   usb1208FS.DConfig(usb1208FS.DIO_PORTA, usb1208FS.DIO_DIR_OUT)
   usb1208FS.DConfig(usb1208FS.DIO_PORTB, usb1208FS.DIO_DIR_IN)
   usb1208FS.DOut(usb1208FS.DIO_PORTA, 0x0)
