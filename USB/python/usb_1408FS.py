@@ -570,11 +570,16 @@ class usb_1408FS:
     i = 0
     while nSamples >= 32:
       try:
-        ret = self.udev.interruptWrite(libusb1.LIBUSB_ENDPOINT_OUT | 2, value[2*i:64+2*i], timeout = 1000)
+        ret = self.udev.interruptWrite(libusb1.LIBUSB_ENDPOINT_OUT | 2, value[2*i:64+2*i], timeout = 100)
       except:
         pass
       try:
-        ret = self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2, timeout = 1000)
+        ret = unpack('BB',self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2, timeout = 100))
+        if ret[1] == 1: # Underrun error
+          raise UnderrunError
+      except UnderrunError:
+          print('AInScan: data underrun error')
+          pass
       except:
         pass
       i += 32

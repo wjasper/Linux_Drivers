@@ -18,6 +18,8 @@
 from usb_1608FS import *
 import time
 import sys
+import fcntl
+import os
 
 def toContinue():
   answer = input('Continue [yY]? ')
@@ -74,6 +76,26 @@ def main():
       print('Reading Digital I/O ...')
       usb1608FS.DConfig(usb1608FS.DIO_DIR_IN)
       print('DIO Port = ', hex(usb1608FS.DIn()))
+    elif ch == 'C':
+      print('USB-1608FS Continuous sampling.')
+      print('Hit space <CR> to exit')
+      freq = float(input('Enter desired frequency [Hz]: '))
+      gains = [usb1608FS.BP_10_00V]*8
+      chan = 0
+      options = 0x0;  # continuous execution, block transfer mode
+      data = usb1608FS.AInScan(chan, chan, gains, 0, freq, options)
+      flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      j = 0
+      while True:
+        raw_data = usb1608FS.AInRead()
+        print('Scan =',j,'samples returned =',len(raw_data))
+        j += 1
+        c = sys.stdin.readlines()
+        if (len(c) != 0):
+          break
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+      usb1608FS.AInStop()
     elif ch == 'w':
       usb1608FS.DConfig(usb1608FS.DIO_DIR_OUT)
       value = int(input('Enter value to write to DIO port [0-ff]: '), 16)

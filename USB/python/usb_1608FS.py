@@ -33,6 +33,10 @@ class UnderrunError(Error):
   ''' Raised when underrun on AOutScan'''
   pass
 
+class SaturationError(Error):
+  ''' Raised when DAC is saturated '''
+  pass
+
 # Base class for lookup tables of calibration coefficients (slope and offset)
 class table:
   def __init__(self):
@@ -513,6 +517,13 @@ class usb_1608FS:
     value = unpack('BBB',self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 2, 3, timeout = 1000))    
     value = value[1] | (value[2] << 8)
     value = int(value*self.Cal[channel][gain].slope + self.Cal[channel][gain].intercept)
+    try:
+      if value > 0xffff:
+        raise SaturationError
+    except SaturationError:
+      value = 0xffff
+    if value < 0:
+      value = 0
     if value >= 0x8000:
       value -= 0x8000
     else:
@@ -691,8 +702,8 @@ class usb_1608FS:
       Returns values when in continuous mode
     """
     raw_data = [0]*31*6
-    for pipe in range (1,8):   # pipe should take the values 1-6
-      value = unpack('h'*32,self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | (pipe+2), 64, timeout))
+    for pipe in range (1,6):   # pipe should take the values 1-6
+      value = unpack('H'*32,self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | (pipe+2), 64, 1000))
       for i in range(31):
         raw_data[(pipe-1)*31 + i] = value[i]
     return raw_data
