@@ -47,6 +47,7 @@ def main():
     print("\nUSB-1608FS Testing")
     print("----------------")
     print("Hit 'b' to blink LED.")
+    print("Hit 'B' to test digital bits")
     print("Hit 'c' to test counter. ")
     print("Hit 'C' for continous sampling")
     print("Hit 'd' to read digital port.")
@@ -70,7 +71,7 @@ def main():
       for i in range(20):
         usb1608FS.DOut(0xff);
         time.sleep(.01)
-        usb1608FS.DOut(0x0);
+        usb1608FS.DOut(0);
         print('Counter =', usb1608FS.CIn())   # read the current count
     elif ch == 'd':
       print('Reading Digital I/O ...')

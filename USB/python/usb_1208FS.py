@@ -66,6 +66,10 @@ class usb_1208FS:
   AIN_GAIN_QUEUE     = 0x10 # 1 = Use Channel Gain Queue, 0 = Use channnel parameters
   AIN_RETRIGGER      = 0x20 # 1 = retrigger mode, 0 = normal trigger
 
+  #Option values for AOutScan
+  AOUT_EXECUTION     = 0x1  # 1 = single execution, 0 = continuous execution
+  AOUT_TRIGGER       = 0x2  # 1 = Use external trigger
+
   DIO_PORTA       =  0
   DIO_PORTB       =  1
   DIO_DIR_IN      =  1
@@ -440,7 +444,7 @@ class usb_1208FS:
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, \
                                  [self.AOUT, channel, value & 0xff, (value >> 8) & 0xff], timeout = 100)
 
-  def AOutScan(self, lowchannel, hichannel, count, frequency, data, options):
+  def AOutScan(self, lowchannel, hichannel, frequency, data, options):
     """
     This command writes values to the analog output channels at a
     fixed rate.  The values lowchannel and hichannel specify the
@@ -515,6 +519,10 @@ class usb_1208FS:
     if (lowchannel > hichannel):
       print('AOutScan: lowchannel greater than hichannel')
       return
+    if lowchannel == hichannel:
+      count = len(data)
+    else:
+      count = int(len(data)/2)
 
     if (frequency > 0.596 and frequency < 10000):
       for prescale in range(9):
@@ -532,34 +540,53 @@ class usb_1208FS:
     if prescale == 9 or preload == 0:
       print('AOutScan: frequency out of range.')
 
-    nSamples = (hichannel - lowchannel + 1)*count
-    value = [0]*2*nSamples     # 2 bytes per sample
-
-    for i in range(nSamples):
-      data[i] <<= 4                       # shift over all data 4 bits
-      value[2*i] = data[i] & 0xff         # low byte
-      value[2*i+1] = (data[i]>>8) & 0xff  # high byte
+    nSamples = len(data)
+    timeout = int((nSamples*1000)/frequency + 1000)
 
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, \
             [self.AOUT_SCAN, lowchannel, hichannel, count & 0xff, (count >> 8) & 0xff, (count >> 16) & 0xff, \
-             (count >> 24) & 0xff, prescale, preload & 0xff, (preload >> 8) & 0xff, options], timeout = 50000)
+             (count >> 24) & 0xff, prescale, preload & 0xff, (preload >> 8) & 0xff, options], 100)
+
+    if (options & self.AOUT_EXECUTION) == 0x0:  # continuous execution
+      return
+
+    value = [0]*2*nSamples       # 2 bytes per sample
+
+    for i in range(nSamples):
+      x = (data[i] << 4)         # shift over all data 4 bits
+      value[2*i] = x & 0xff      # low byte
+      value[2*i+1] = (x) & 0xff  # high byte
+
     i = 0
     while nSamples >= 32:
       try:
-        ret = self.udev.interruptWrite(libusb1.LIBUSB_ENDPOINT_OUT | 2, value[2*i:64+2*i], timeout = 1000)
+        ret = self.udev.interruptWrite(libusb1.LIBUSB_ENDPOINT_OUT | 2, value[64*i:(i+1)*64], timeout)
       except:
+        print('Error in writing')
         pass
       try:
-        ret = self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2, timeout = 1000)
+        ret = self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2, timeout = 100)
       except:
         pass
-      i += 32
+      i += 64
       nSamples -= 32
     if nSamples > 0:  # partial scan
-      ret = self.udev.interruptWrite(libusb1.LIBUSB_ENDPOINT_OUT | 2, value[2*i:2*nSamples], timeout = 1000)
-      self.AOutStop()
-    else:
-        self.AOutStop()
+      ret = self.udev.interruptWrite(libusb1.LIBUSB_ENDPOINT_OUT | 2, value[64*i:64*i+2*nSamples], timeout = 100)
+    self.AOutStop()
+    try:  # clear out the input buffer
+      ret = self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2, timeout = 100)
+    except:
+      pass
+
+  def AOutWrite(self, data, timeout):
+    try:
+      ret = self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2, 100)
+    except:
+       pass
+    try:
+     ret = self.udev.interruptWrite(libusb1.LIBUSB_ENDPOINT_OUT | 2, data, timeout)
+    except:
+      return
     
   def AOutStop(self):
     """

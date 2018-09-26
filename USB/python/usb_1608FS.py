@@ -402,7 +402,7 @@ class usb_1608FS:
   def DConfig(self, direction):
     """
     This command sets the direction of the DIO port to input or output.  The I/O bits can be
-    individually configured useing the DConfigBit function.
+    individually configured using the DConfigBit function.
        direction:  0 - output,   1 - input
     """
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
@@ -426,7 +426,7 @@ class usb_1608FS:
     request = 0x9                          # HID Set_Report
     wValue =  (2 << 8) | self.DCONFIG_BIT  # HID output
     wIndex = 0                             # interface
-    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.DCONFIG, bit_num, direction], timeout = 100)
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.DCONFIG_BIT, bit_num, direction], timeout = 100)
 
   def DIn(self):
     """

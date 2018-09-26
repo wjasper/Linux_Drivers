@@ -18,6 +18,9 @@
 from usb_1408FS import *
 import time
 import sys
+import fcntl
+import os
+import math
 
 def toContinue():
   answer = input('Continue [yY]? ')
@@ -55,6 +58,7 @@ def main():
     print("\nUSB-1408FS Testing")
     print("----------------")
     print("Hit 'a' to test analog output scan.")
+    print("Hit 'A' for continuous output scan.")
     print("Hit 'b' to blink LED.")
     print("Hit 'c' to test counter. ")
     print("Hit 'd' to test digital I/O.")
@@ -215,14 +219,37 @@ def main():
       out_data = [0]*512
       print('Testing Analog Output Scan')
       frequency = int(input('Entered desired frequency [Hz]: '))
-      for j in range(2):
-        for i in range(512):
-          if i%2 == 0:
-            out_data[i] = 0
-          else:
-            out_data[i] = 0xfff
-        usb1408FS.AOutScan(0,0,512,frequency,out_data,1)
+      for i in range(512):
+        if i%2 == 0:
+          out_data[i] = 0
+        else:
+          out_data[i] = 0xfff
+      for j in range(5):
+        usb1408FS.AOutScan(0,0,frequency,out_data,1)
       usb1408FS.AOutStop()
+    elif ch == 'A':
+      print('Analog output scan continuous. Hit <space> <CR> to Stop')
+      frequency = 1000
+      nSamples = 32*32
+      out_data = [0]*1024
+      for i in range(512):
+        value = int(0.5*(math.sin(2*math.pi*i/128) + 1.)*0xffff)
+        out_data[2*i] = value & 0xff
+        out_data[2*i+1] = (value>>8) & 0xff
+      flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      usb1408FS.AOutScan(0,0,frequency,out_data,0)
+      while True:
+        usb1408FS.AOutWrite(out_data, 1000)
+        c = sys.stdin.readlines()
+        if (len(c) != 0):
+          break
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+      usb1408FS.AOutStop()
+      try:  # clear out the input buffer
+        ret = usb1408FS.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 10, 100)
+      except:
+        pass
     elif ch == 's':
         print("Serial No: %s" % usb1408FS.getSerialNumber())
     elif ch == 'I':
