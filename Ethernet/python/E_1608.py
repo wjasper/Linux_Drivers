@@ -44,7 +44,7 @@ NCHAN_AOUT         = 2    # max number of DAC channels
 NGAINS             = 4    # max number of gain levels (+/- 10V, +/- 5V, +/- 2V, +/- 1V)
 
 
-'''
+"""
     Settings memory map
 |=====================================================================================|
 |    Address    |        Value                                        | Default value |
@@ -111,7 +111,7 @@ Note: The settings do not take effect until after device is reset or power cycle
 |=================================================================|
 | 0x000 - 0x3FF  | Available for UL use                           |
 |=================================================================|
-'''
+"""
 
 class E_1608:
   # Digital I/O Commands
@@ -202,16 +202,17 @@ class E_1608:
   #################################
 
   def DIn(self):
-    # This command reads the current state of the DIO pins.  A 0 in a
-    # bit position indicates the corresponding pin is reading a low
-    # state, and a 1 indicates a high state.
+    """
+    This command reads the current state of the DIO pins.  A 0 in a
+    bit position indicates the corresponding pin is reading a low
+    state, and a 1 indicates a high state.
+    """
     
     dataCount = 0
     replyCount = 1
     result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
-
 
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DIN_R
     s_buffer[MSG_INDEX_START]          = MSG_START
@@ -250,9 +251,11 @@ class E_1608:
     return value
     
   def DOut_R(self):
-    # This command reads the DIO output latch value.  The factory power
-    # on default is all zeros. A 0 in a bit position indicates the
-    # corresponding pin driver is low, a 1 indicates it is high.
+    """
+    This command reads the DIO output latch value.  The factory power
+     on default is all zeros. A 0 in a bit position indicates the
+     corresponding pin driver is low, a 1 indicates it is high.
+    """
     
     dataCount = 0
     replyCount = 1
@@ -297,9 +300,11 @@ class E_1608:
     return value
 
   def DOut(self, value):
-    # This command writes the DIO latch value.  The factory power on
-    # default is all ones (pins are floating). Writing a 0 to a bit will set
-    # the corresponding pin driver low, writing a 1 sets it high.
+    """
+    This command writes the DIO latch value.  The factory power on
+    default is all ones (pins are floating). Writing a 0 to a bit will set
+    the corresponding pin driver low, writing a 1 sets it high.
+    """
     
     dataCount = 1
     replyCount = 0
@@ -342,9 +347,11 @@ class E_1608:
 
 
   def DConfig_R(self):
-    # This command reads the DIO configuration value.  A 1 in a bit
-    # position indicates the corresponding pin is set to an input, a 0
-    # indicates it is set to an output.  The power on devault is all 1 (input)
+    """
+    This command reads the DIO configuration value.  A 1 in a bit
+    position indicates the corresponding pin is set to an input, a 0
+    indicates it is set to an output.  The power on devault is all 1 (input)
+    """
     
     dataCount = 0
     replyCount = 1
@@ -389,9 +396,11 @@ class E_1608:
     return value
 
   def DConfig_W(self, value):
-    # This command writes the configuration value.  A 1 in a bit
-    # position sets the corresponding pin to an input, a 0 sets it to an 
-    # output.  The power on default is all ones (input)
+    """
+    This command writes the configuration value.  A 1 in a bit
+    position sets the corresponding pin to an input, a 0 sets it to an 
+    output.  The power on default is all ones (input)
+    """
     
     dataCount = 1
     replyCount = 0
@@ -438,11 +447,13 @@ class E_1608:
   #################################
 
   def AIn(self, channel, gain):
-    # This command reads the value of an analog input channel.  This command will
-    # not return valid data if AIn scan is currently running.
-    #
-    #  channel 0-7  single ended
-    #  channel 8-11 differential
+    """
+    This command reads the value of an analog input channel.  This command will
+    not return valid data if AIn scan is currently running.
+
+     channel 0-7  single ended
+     channel 8-11 differential
+    """
 
     dataCount = 2
     replyCount = 2
@@ -500,69 +511,69 @@ class E_1608:
     return value
 
   def AInScanStart(self, count, frequency, options):
-  #
-  # This command starts an analog input scan.  The channel ordering
-  # and number of channels per scan is set by the channel gain queue
-  # which must first be set with the AInQueue_W command.  This
-  # command will respond with the busy error if an AIn scan is
-  # currently running.
-  #
-  # The pacer rate is set by an internal 32-bit timer running at a
-  # base rate of 80 MHz.  The timer is controlled by pacer_period.
-  # This value is the period of the scan and the A/D is clocked at
-  # this rate.  A pulse will be ouput at the AICKO pin at every
-  # pacer_period interval.  The equation for calculating
-  # tracer_period is:
-  #
-  #     pacer_period = [80 MHz / (sample frequency)] -1
-  #
-  # If pacer_period is set to 0, the device does not generate an A/D
-  # clock.  It uses the AICKI pin as an input and the user must
-  # provice the pacer source.  The A/D acquires data on every rising
-  # edge of the pacer clock: the maximum allowable input frequency is
-  # 250 kHz.
-  #
-  # The data is read and sent to the host using the AInScan data TCP
-  # port.  The device checks for a connection on this port when
-  # AInScanStart is called and will return an error code if it is not
-  # connected.  The scan will not start until the command reply ACK
-  # is received; see the Ethernet Communication Mechanism section for
-  #  more details.
-  #
-  # Scan data will be acquired until an overrun occurs, the specified
-  # count is reached, or an AInScanStop command is sent.  the scan
-  # data will be in the format:
-  #
-  # First channel sample 0: second channel sample 0: .. : last channel sample 0
-  # First channel sample 1: second channel sample 1: .. : last channel sample 1
-  # ...
-  #  First channel sample n: second channel sample n: .. : last channel sample n
-  #
-  # If the host does not receive the data in a timely manner (due to
-  # a communications error, overrun, etc.) it can check the status of
-  # the scan with the Status command.  Any data in the scan data TCP
-  # buffer will be sent every 40ms or when the MTU size is reached.
-  #
-  # The external trigger may be used to start the scan.  If enabled,
-  # the device will wait until the appropriate trigger condition is
-  # detected then betgin sampling data at the specified rate.  No
-  # data will be available until the trigger is detected.
-  #
-  # count:      The total number or scan to scquire, 0 for continuous scan
-  # frequency:  the sampling frequency.  Use 0 for external clock.
-  # options:    Bit field that controls scan options
-  #             bits 0-1:   Reserved
-  #             bits 2-4:   Trigger setting:
-  #                          0: no trigger
-  #			     1: Edge/rising
-  #			     2: Edge / falling
-  #			     3: Level / high
-  #			     4: Level / low
-  #		 bit 5:      Reserved
-  #		 bit 6:      Reserved
-  #		 bit 7:      Reserved
-  #
-
+    """
+    This command starts an analog input scan.  The channel ordering
+    and number of channels per scan is set by the channel gain queue
+    which must first be set with the AInQueue_W command.  This
+    command will respond with the busy error if an AIn scan is
+    currently running.
+  
+    The pacer rate is set by an internal 32-bit timer running at a
+    base rate of 80 MHz.  The timer is controlled by pacer_period.
+    This value is the period of the scan and the A/D is clocked at
+    this rate.  A pulse will be ouput at the AICKO pin at every
+    pacer_period interval.  The equation for calculating
+    tracer_period is:
+  
+       pacer_period = [80 MHz / (sample frequency)] -1
+  
+    If pacer_period is set to 0, the device does not generate an A/D
+    clock.  It uses the AICKI pin as an input and the user must
+    provice the pacer source.  The A/D acquires data on every rising
+    edge of the pacer clock: the maximum allowable input frequency is
+    250 kHz.
+  
+    The data is read and sent to the host using the AInScan data TCP
+    port.  The device checks for a connection on this port when
+    AInScanStart is called and will return an error code if it is not
+    connected.  The scan will not start until the command reply ACK
+    is received; see the Ethernet Communication Mechanism section for
+    more details.
+  
+    Scan data will be acquired until an overrun occurs, the specified
+    count is reached, or an AInScanStop command is sent.  the scan
+    data will be in the format:
+  
+    First channel sample 0: second channel sample 0: .. : last channel sample 0
+    First channel sample 1: second channel sample 1: .. : last channel sample 1
+    ...
+    First channel sample n: second channel sample n: .. : last channel sample n
+  
+    If the host does not receive the data in a timely manner (due to
+    a communications error, overrun, etc.) it can check the status of
+    the scan with the Status command.  Any data in the scan data TCP
+    buffer will be sent every 40ms or when the MTU size is reached.
+  
+    The external trigger may be used to start the scan.  If enabled,
+    the device will wait until the appropriate trigger condition is
+    detected then betgin sampling data at the specified rate.  No
+    data will be available until the trigger is detected.
+   
+       count:      The total number or scan to scquire, 0 for continuous scan
+       frequency:  the sampling frequency.  Use 0 for external clock.
+       options:    Bit field that controls scan options
+                   bits 0-1:   Reserved
+                   bits 2-4:   Trigger setting:
+                               0: no trigger
+  		  	       1: Edge/rising
+  			       2: Edge / falling
+  			       3: Level / high
+  			       4: Level / low
+  	  	   bit 5:      Reserved
+  		   bit 6:      Reserved
+  		   bit 7:      Reserved
+    """
+  
     dataCount = 9
     replyCount = 0
     result = False
@@ -666,14 +677,15 @@ class E_1608:
     return corrected_data
                       
   def AInQueue_R(self):
-    # This command reads the analog input scan channel gain queue
-    # count       the number of queue entries, max 8
-    # channel_0   the channel number of the first queue element [0-11]
-    # range_0     the range number of the first queue element   [0-3]
-    # ...
-    # channel_n   the channel number of the last queue element [0-11]
-    # range_n     the range number of the last queue element   [0-3]
-
+    """
+      This command reads the analog input scan channel gain queue
+      count       the number of queue entries, max 8
+      channel_0   the channel number of the first queue element [0-11]
+      range_0     the range number of the first queue element   [0-3]
+       ...
+      channel_n   the channel number of the last queue element [0-11]
+      range_n     the range number of the last queue element   [0-3]
+    """
     dataCount = 0
     replyCount = 2*self.queue[0]+1
     result = False
@@ -715,13 +727,15 @@ class E_1608:
       print('Error in AInQueue_R E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def AInQueue_W(self):
-    # This command writes the analog input scan channel gain queue
-    # count       the number of queue entries, max 8
-    # channel_0   the channel number of the first queue element [0-11]
-    # range_0     the range number of the first queue element   [0-3]
-    # ...
-    # channel_n   the channel number of the last queue element [0-11]
-    # range_n     the range number of the last queue element   [0-3]
+    """
+    This command writes the analog input scan channel gain queue
+       count       the number of queue entries, max 8
+       channel_0   the channel number of the first queue element [0-11]
+       range_0     the range number of the first queue element   [0-3]
+       ...
+       channel_n   the channel number of the last queue element [0-11]
+       range_n     the range number of the last queue element   [0-3]
+    """
 
     dataCount = 2*self.queue[0]+1
     replyCount = 0
@@ -767,12 +781,13 @@ class E_1608:
       print('Error in AInQueue_W E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def AInScanStop(self, close_socket=0):
-    #
-    # This command stops the analog input scan (if running).  It will clear the
-    # scan data FIFO.
-    #
-    #  close_socket:    1 = close and reopen the data socekt
+    """
+    This command stops the analog input scan (if running).  It will clear the
+    scan data FIFO.
     
+       close_socket:    1 = close and reopen the data socekt
+    """
+
     dataCount = 1
     replyCount = 0
     result = False
@@ -818,10 +833,13 @@ class E_1608:
   ########################
 
   def AOut_R(self, value):
-    # This command reads the value of the analog output channels
-    #
-    # value[0]   the current value for analog output channel 0
-    # value[1]   the current value for analog output channel 1
+    """
+    This command reads the value of the analog output channels
+    
+      value[0]   the current value for analog output channel 0
+      value[1]   the current value for analog output channel 1
+    """
+    
     dataCount = 0
     replyCount = 4
     result = False
@@ -869,10 +887,12 @@ class E_1608:
     return value
 
   def AOut(self, channel, value):
-    # This command writes the value of the analog output channel.
-    #
-    #  channel: the channel to write (0-1)
-    #  value:   the value to write
+    """
+    This command writes the value of the analog output channel.
+    
+      channel: the channel to write (0-1)
+      value:   the value to write
+    """
 
     dataCount = 3
     replyCount = 0
@@ -923,8 +943,10 @@ class E_1608:
   #################################
 
   def Blink(self, count=1):
-    # This command will blink the device power LED "count" times
-
+    """
+     This command will blink the device power LED "count" times
+    """
+    
     dataCount = 1
     replyCount = 0
     result = False
@@ -965,7 +987,9 @@ class E_1608:
       print('Error in blink E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def Reset(self):
-    # This command resets the device
+    """
+    This command resets the device
+    """
     
     dataCount = 0
     replyCount = 0
@@ -1006,11 +1030,13 @@ class E_1608:
       print('Error in reset E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def Status(self):
-    # This command reads the device status
-    #   bit 0:     1 = data socket is open, 0 = data socket is closed
-    #   bit 1:     1 = AIn scan running
-    #   bit 2:     1 = AIn scan overrun
-    #   bits 3-15: Reserved
+    """
+    This command reads the device status
+      bit 0:     1 = data socket is open, 0 = data socket is closed
+      bit 1:     1 = AIn scan running
+      bit 2:     1 = AIn scan overrun
+      bits 3-15: Reserved
+    """
 
     dataCount = 0
     replyCount = 2
@@ -1054,9 +1080,11 @@ class E_1608:
     return status
 
   def NetworkConfig(self):
-    # This command reads the current network configuration.  Returns tuple
-    #  (ip_address, subnet_mask, gateway_address)
-    #  
+    """
+    This command reads the current network configuration.  Returns tuple
+     (ip_address, subnet_mask, gateway_address)
+    """
+      
     dataCount = 0
     replyCount = 12
     result = False
@@ -1100,10 +1128,12 @@ class E_1608:
     return value
   
   def FirmwareUpgrade(self):
-    # This command causes the device to reset and enter the bootloader
-    # for a firmware upgrade.  It erases a portion of the program memory so
-    # the device must have firmware downloaded through the bootloder before
-    # it can be used again.
+    """
+    This command causes the device to reset and enter the bootloader
+    for a firmware upgrade.  It erases a portion of the program memory so
+    the device must have firmware downloaded through the bootloder before
+    it can be used again.
+    """
     
     dataCount = 2
     replyCount = 0
@@ -1145,12 +1175,13 @@ class E_1608:
     except ResultError:
       print('Error in firmwareUpgrade E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
-
   #################################
   #       Counter Commands        #
   #################################
   def counter(self):
-    # This command read the event counter
+    """
+    This command read the event counter
+    """
 
     dataCount = 0
     replyCount = 4
@@ -1195,8 +1226,10 @@ class E_1608:
     return value
   
   def resetCounter(self):
-    # This command resets the event counter.  On a write, the
-    # counter will be reset to 0.
+    """
+    This command resets the event counter.  On a write, the
+    counter will be reset to 0.
+    """
     
     dataCount = 0
     replyCount = 0
@@ -1242,8 +1275,10 @@ class E_1608:
   #################################
 
   def CalMemory_R(self, address, count):
-    # This command reads the nonvolatile calibration memory.  The cal memory is
-    # 512 byes (address 0 - 0x1ff)
+    """
+    This command reads the nonvolatile calibration memory.  The cal memory is
+    512 byes (address 0 - 0x1ff)
+    """
 
     if (count > 512 or address > 0x1ff):
       return False
@@ -1295,15 +1330,17 @@ class E_1608:
     return value
 
   def CalMemory_W(self, address, count, data):
-    # This command writes the nonvolatile calibration memory.  The cal
-    # memory is 512 bytes (address 0 - 0xff).  The cal memory should
-    # only be written during factory calibration and setup and has an
-    # additional lock mechanism to prevent inadvertent writes.  To
-    # enable writes to the cal memory, first write the unlock code
-    # 0xAA55 to address 0x200.  Writes to the entire memory range are
-    # then possible.  Write any other value to address 0x200 to lock
-    # the mamory after writing.  The amount of data to be written is
-    # inferred from the frame count -2.
+    """
+    This command writes the nonvolatile calibration memory.  The cal
+    memory is 512 bytes (address 0 - 0xff).  The cal memory should
+    only be written during factory calibration and setup and has an
+    additional lock mechanism to prevent inadvertent writes.  To
+    enable writes to the cal memory, first write the unlock code
+    0xAA55 to address 0x200.  Writes to the entire memory range are
+    then possible.  Write any other value to address 0x200 to lock
+    the mamory after writing.  The amount of data to be written is
+    inferred from the frame count -2.
+    """
 
     if (count > 512 or address > 0xff):
       return False
@@ -1351,11 +1388,13 @@ class E_1608:
       print('Error in CalMemory_W E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def UserMemory_R(self, address, count):
-    # This command reads the nonvolatile user memory.  The user memory is
-    # 1024 bytes (address 0 - 0x3ff)
-    #
-    # address: the start address for reading (0-0x3ff)
-    # count:   the number of bytes to read (max 512 due to protocol)
+    """
+    This command reads the nonvolatile user memory.  The user memory is
+    1024 bytes (address 0 - 0x3ff)
+
+      address: the start address for reading (0-0x3ff)
+      count:   the number of bytes to read (max 512 due to protocol)
+    """
 
     if (count > 512 or address > 0x3ff):
       return False
@@ -1407,10 +1446,12 @@ class E_1608:
     return value
 
   def UserMemory_W(self, address, count, data):
-    # This command writes to the nonvolatile user memory.  The user memory
-    # is 1024 bytes (address 0 - 0x3ff).  The amount of data to be
-    # written is inferred from the frame count  - 2.  The maximum that
-    # can be written in one transfer is 512 bytes.
+    """
+    This command writes to the nonvolatile user memory.  The user memory
+    is 1024 bytes (address 0 - 0x3ff).  The amount of data to be
+    written is inferred from the frame count  - 2.  The maximum that
+    can be written in one transfer is 512 bytes.
+    """
 
     if (count > 512 or address > 0x3ff):
       return False
@@ -1458,11 +1499,13 @@ class E_1608:
       print('Error in UserMemory_W E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def SettingsMemory_R(self, address, count):
-    # This command reads the nonvolatile settings memory.  The settings memory is
-    # 512 bytes (address 0 - 0x1ff)
-    #
-    # address: the start address for reading (0-0x1ff)
-    # count:   the number of bytes to read (max 512 due to protocol)
+    """
+    This command reads the nonvolatile settings memory.  The settings memory is
+    512 bytes (address 0 - 0x1ff)
+    
+    address: the start address for reading (0-0x1ff)
+    count:   the number of bytes to read (max 512 due to protocol)
+    """
 
     if (count > 512 or address > 0x1ff):
       return False
@@ -1514,11 +1557,13 @@ class E_1608:
     return value
 
   def SettingsMemory_W(self, address, count, data):
-    # This command writes to the nonvolatile settings memory.  The settings memory
-    # is 512 bytes (address 0 - 0x1ff).  The amount of data to be
-    # written is inferred from the frame count  - 2.  The maximum that
-    # can be written in one transfer is 512 bytes.  The settings will
-    # be implemented after a device reset.
+    """
+    This command writes to the nonvolatile settings memory.  The settings memory
+    is 512 bytes (address 0 - 0x1ff).  The amount of data to be
+    written is inferred from the frame count  - 2.  The maximum that
+    can be written in one transfer is 512 bytes.  The settings will
+    be implemented after a device reset.
+    """
 
     if (count > 512 or address > 0x1ff):
       return False
@@ -1567,14 +1612,16 @@ class E_1608:
 
 
   def BootloaderMemory_R(self, address, count):
-    # This command reads the bootloader stored in nonvolatile FLASH
-    # memory.  The bootloader is located in program FLASH memory in two
-    # physical address ranges: 0x1D000000 - 0x1D007FFF for bootloader
-    # code and 0x1FC00000 - 0x1FC01FFF for C startup code and
-    # interrupts.  Reads may be performed at any time.
-    #
-    # address: the start address for reading (see above)
-    # count:   the number of bytes to read (max 512)
+    """
+    This command reads the bootloader stored in nonvolatile FLASH
+    memory.  The bootloader is located in program FLASH memory in two
+    physical address ranges: 0x1D000000 - 0x1D007FFF for bootloader
+    code and 0x1FC00000 - 0x1FC01FFF for C startup code and
+    interrupts.  Reads may be performed at any time.
+    
+      address: the start address for reading (see above)
+      count:   the number of bytes to read (max 512)
+    """
 
     if (count > 512):
       return False
@@ -1626,30 +1673,31 @@ class E_1608:
     return value
 
   def BootloaderMemory_W(self, address, count, data):
-    # This command writes the bootloader stored in nonvolatile FLASH
-    # memory.  The bootloader is located in program FLASH memory in two
-    # physical address ranges: 0x1D000000 - 0x1D007FFF for bootloader
-    # code and 0x1FC00000 - 0x1FC01FFF for C startup code and
-    # interrupts.  Writes outside these ranges are ignored.  The
-    # bootloader memory is write protected and must be unlocked in
-    # order to write the memory.  The unlock proceedure is to write the
-    # unlock code 0xAA55 to address 0xFFFFFFFE.  Writes to the entire
-    # memory range are then possible.  Write any other value to address
-    # 0xFFFFFFFE to lock the memory after writing.
-    #
-    # The FLASH memory must be erased prior to programming.  A bulk
-    # erase is perfomred by writing 0xAA55 to address 0x80000000 after
-    # unlocking the memory for write.  The bulk erase will require
-    # approximately 150ms to complete.  Once the erase is complete, the
-    # memory may be written; however, the device will not be able to
-    # boot unless it has a valid bootloader so the device shold not be
-    # reset until the bootloader is completely written and verified
-    # using BootloaderMemory_R().
-    #
-    # The writes are perfomred on 4-byte boundaries internally and it
-    # is recommended that the output data be sent in the same manner.
-    # The amount of data to be written is inferred frolm the frame
-    # count - 2.
+    """This command writes the bootloader stored in nonvolatile FLASH
+    memory.  The bootloader is located in program FLASH memory in two
+    physical address ranges: 0x1D000000 - 0x1D007FFF for bootloader
+    code and 0x1FC00000 - 0x1FC01FFF for C startup code and
+    interrupts.  Writes outside these ranges are ignored.  The
+    bootloader memory is write protected and must be unlocked in
+    order to write the memory.  The unlock proceedure is to write the
+    unlock code 0xAA55 to address 0xFFFFFFFE.  Writes to the entire
+    memory range are then possible.  Write any other value to address
+    0xFFFFFFFE to lock the memory after writing.
+    
+    The FLASH memory must be erased prior to programming.  A bulk
+    erase is perfomred by writing 0xAA55 to address 0x80000000 after
+    unlocking the memory for write.  The bulk erase will require
+    approximately 150ms to complete.  Once the erase is complete, the
+    memory may be written; however, the device will not be able to
+    boot unless it has a valid bootloader so the device shold not be
+    reset until the bootloader is completely written and verified
+    using BootloaderMemory_R().
+    
+    The writes are perfomred on 4-byte boundaries internally and it is
+    recommended that the output data be sent in the same manner.  The
+    amount of data to be written is inferred frolm the frame 
+    count-2.
+    """
 
     if (count > 512):
       return False
@@ -1697,7 +1745,10 @@ class E_1608:
       print('Error in BootloaderMemory_W E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
 
   def getMFGCAL(self):
-    # get the manufacturers calibration data (timestamp) from the Calibration memory
+    """
+    get the manufacturers calibration data (timestamp) from the
+    Calibration memory
+    """
 
     # get the year (since 2000)
     address = 0x50
@@ -1729,7 +1780,9 @@ class E_1608:
     return mdate
 
   def MACaddress(self):
-    # Gets the MAC address
+    """
+    Gets the MAC address
+    """
 
     # get lowest thress byes of MAC address
     address = 0x1fd
