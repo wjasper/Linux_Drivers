@@ -103,6 +103,8 @@ typedef struct EthernetDeviceInfo_t {
 
 
 // global functions;
+int flushInput(int sock);
+int sendMessage(int sock, void *message, int length, int flags);
 int receiveMessage(int sock, void *message, int maxLength, unsigned long timeout);
 void printDeviceInfo(EthernetDeviceInfo *device_info);
 unsigned char calcChecksum(void *buffer, int length);
