@@ -323,6 +323,26 @@ int openDevice(uint32_t addr, uint32_t connectCode)
     return sock;
 }     
 
+int flushInput(int sock)
+{
+  int numRecv, numTotal=0;
+  char cbuf[512];
+
+  while (1) {
+      numRecv = recv(sock, cbuf, sizeof cbuf, MSG_DONTWAIT);
+      if (numRecv <= 0) break;
+      numTotal += numRecv;
+  }
+  if (numTotal > 0) fprintf(stderr, "ethernet::flushInput flushed %d bytes\n", numTotal);
+  return numTotal;
+}
+
+int sendMessage(int sock, void *message, int length, int flags)
+{
+  flushInput(sock);
+  return send(sock, message, length, flags);
+}
+
 int receiveMessage(int sock, void *message, int maxLength, unsigned long timeout)
 {
   unsigned long val;

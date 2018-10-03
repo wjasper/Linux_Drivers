@@ -52,7 +52,7 @@ bool DIn_DIO24(EthernetDeviceInfo *device_info, uint32_t *value)
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 3;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -103,7 +103,7 @@ bool DOutR_DIO24(EthernetDeviceInfo *device_info, uint32_t *value)
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 3;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -157,7 +157,7 @@ bool DOut_DIO24(EthernetDeviceInfo *device_info, uint32_t mask, uint32_t value)
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -208,7 +208,7 @@ bool DConfigR_DIO24(EthernetDeviceInfo *device_info, uint32_t *value)
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 3;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -263,7 +263,7 @@ bool DConfigW_DIO24(EthernetDeviceInfo *device_info, uint32_t mask, uint32_t val
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -317,7 +317,7 @@ bool CounterR_DIO24(EthernetDeviceInfo *device_info, uint32_t *count)
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 4;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -366,7 +366,7 @@ bool CounterW_DIO24(EthernetDeviceInfo *device_info)
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -419,7 +419,7 @@ bool BlinkLED_DIO24(EthernetDeviceInfo *device_info, unsigned char count)
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -466,7 +466,7 @@ bool Reset_DIO24(EthernetDeviceInfo *device_info)
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -514,7 +514,7 @@ bool Status_DIO24(EthernetDeviceInfo *device_info, uint16_t *status)
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 2;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -567,7 +567,7 @@ bool NetworkConfig_DIO24(EthernetDeviceInfo *device_info, struct in_addr network
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 12;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -622,7 +622,7 @@ bool FirmwareUpgrade_DIO24(EthernetDeviceInfo *device_info)
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -679,7 +679,7 @@ bool ConfigMemoryR_DIO24(EthernetDeviceInfo *device_info, uint16_t address, uint
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = count;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -747,7 +747,7 @@ bool ConfigMemoryW_DIO24(EthernetDeviceInfo *device_info, uint16_t address, uint
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0; // no input arguments
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -807,7 +807,7 @@ bool UserMemoryR_DIO24(EthernetDeviceInfo *device_info, uint16_t address, uint16
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = count;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -864,7 +864,7 @@ bool UserMemoryW_DIO24(EthernetDeviceInfo *device_info, uint16_t address, uint16
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0; // no input arguments
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -920,7 +920,7 @@ bool SettingsMemoryR_DIO24(EthernetDeviceInfo *device_info, uint16_t address, ui
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = count;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -977,7 +977,7 @@ bool SettingsMemoryW_DIO24(EthernetDeviceInfo *device_info, uint16_t address, ui
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0; // no input arguments
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -1037,7 +1037,7 @@ bool BootloaderMemoryR_DIO24(EthernetDeviceInfo *device_info, uint16_t address, 
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = count;
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
@@ -1114,7 +1114,7 @@ bool BootloaderMemory_DIO24(EthernetDeviceInfo *device_info, uint16_t address, u
   buffer[MSG_INDEX_COUNT_HIGH]     = (unsigned char) (dataCount >> 8);
   buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+  if (sendMessage(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
     replyCount = 0; // no input arguments
     if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
