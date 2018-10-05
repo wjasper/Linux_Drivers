@@ -152,6 +152,25 @@ class mccEthernetDevice:
       checksum += buf[i]
     return (checksum & 0xff)
 
+  def flushInput(self):
+    # Flush input buffers.
+    numTotal = 0
+    while True:
+      try:
+        cbuf = self.sock.recv(512, self.sock.MSG_DONTWAIT)
+        numTotal += len(cbuf)
+      except:
+        break
+    if numTotal > 0:
+      print('flushInput flushed', numTotal, 'bytes')
+    return numTotal
+
+  def sendMessage(self, messge, flush=True):
+    if (flush):
+      self.flushInput()
+    self.sock.send(message)
+  
+
 ###############  end class defition ##########################
 
 def mccDiscover(productID=None):
@@ -187,13 +206,13 @@ def mccDiscover(productID=None):
       return devices
 
 
-# Structures for Temperature */
+# Structures for Temperature 
 ##################################################
 # NIST Thermocouple coefficients
 #
 # The following types are supported:
 #
-#    J, K, R, S, T, N, E, B
+#    J, K, T, E, R, S, B, N
 #
 # Define the types of Thermocouples supported */
 

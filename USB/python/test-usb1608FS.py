@@ -101,6 +101,27 @@ def main():
       usb1608FS.DConfig(usb1608FS.DIO_DIR_OUT)
       value = int(input('Enter value to write to DIO port [0-ff]: '), 16)
       usb1608FS.DOut(value)
+    elif ch == 'B':
+      print('Testing Digital Bit I/O')
+      print('Connect pins DIO0 through DIO3 <==> DIO4 through DIO7')
+      usb1608FS.DConfigBit(0,usb1608FS.DIO_DIR_OUT)
+      usb1608FS.DConfigBit(1,usb1608FS.DIO_DIR_OUT)
+      usb1608FS.DConfigBit(2,usb1608FS.DIO_DIR_OUT)
+      usb1608FS.DConfigBit(3,usb1608FS.DIO_DIR_OUT)
+      usb1608FS.DConfigBit(4,usb1608FS.DIO_DIR_IN)
+      usb1608FS.DConfigBit(5,usb1608FS.DIO_DIR_IN)
+      usb1608FS.DConfigBit(6,usb1608FS.DIO_DIR_IN)
+      usb1608FS.DConfigBit(7,usb1608FS.DIO_DIR_IN)
+      while True:
+        value = int(input('Enter number [0-f]: '),16)
+        usb1608FS.DBitOut(0, value & 0x1)
+        usb1608FS.DBitOut(1, value & 0x2)
+        usb1608FS.DBitOut(2, value & 0x4)
+        usb1608FS.DBitOut(3, value & 0x8)
+        value = usb1608FS.DBitIn(4) | usb1608FS.DBitIn(5) << 1 | usb1608FS.DBitIn(6) << 2 | usb1608FS.DBitIn(7) << 3
+        print('The value you read is',hex(value))
+        if toContinue() != True:
+          break
     elif ch == 'e':
       usb1608FS.udev.close()
       exit(0)

@@ -175,7 +175,7 @@ int main(int argc, char **argv)
         usbSetItem_USBTEMP(hid, ch/2, SENSOR_TYPE, SEMICONDUCTOR);
 	printf("        1.  Single ended.\n");
 	printf("        2.  Differential.\n");
-	printf("Enter connector type [1-4]: \n");
+	printf("Enter connection type [1-2]: \n");
 	scanf("%d", &i);
 	switch (i) {
 	  case 1: usbSetItem_USBTEMP(hid, ch/2, CONNECTION_TYPE, SINGLE_ENDED);break;

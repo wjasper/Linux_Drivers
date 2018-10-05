@@ -27,7 +27,7 @@
 #ifndef A2DC_H
 #define A2DC_H
 
-//#define DEBUG 1
+#define DEBUG 1
 #define ADAPTER_ID "PCIM-DAS1602-16.v1.6"
 
 /*****************************

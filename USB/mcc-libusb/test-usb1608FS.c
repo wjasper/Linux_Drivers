@@ -133,7 +133,7 @@ int main (int argc, char **argv)
       printf("Port = %#hx\n", wvalue);
       break;
     case 'C':
-     printf("USB-1608FS Continuous sampling.  Hit 's' to stop\n");
+      printf("USB-1608FS Continuous sampling.  Hit 's' to stop\n");
       printf("Enter desired frequency [Hz]: ");
       scanf("%f", &freq);
       gain = BP_10_00V;

@@ -69,6 +69,9 @@ default:
 test-pcim-das1602-16:  test-pcim-das1602-16.c
 	$(CC) -Wall -g -o $@ $@.c -lm
 
+main:  main.cpp
+	g++ -Wall -g -o $@ $@.cpp -lm
+
 clean:
 	rm -f *.o *~ \#* .pcim-das1602-16.*.cmd pcim-das1602-16.mod.c .a2dc.*.cmd $(TARGETS)
 	rm -rf .tmp_versions

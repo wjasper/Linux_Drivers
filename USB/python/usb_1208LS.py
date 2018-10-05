@@ -141,7 +141,7 @@ class usb_1208:
 
     self.h.write([0x0, self.DIN, port_number, 0, 0, 0, 0, 0, 0])
     try:
-      value = self.h.read(1,500)
+      value = self.h.read(8,500)
     except:
       print('DIn: error in reading.')
     return(value[0])
@@ -178,9 +178,8 @@ class usb_1208:
 
   def DBitOut(self, port_number, bit, value):
     """
-    This command reads an individual digital port bit.  It will return the value
-    seen at the port pin, so may be used for an input or output bit.
-    
+    This command writes an individual digital port bit.  
+
      port_number:    AUXPORT    =   0x10
                      Port A     =   0x01
                      Port B     =   0x04
@@ -452,7 +451,7 @@ class usb_1208:
     The non-volatile memory is used to store calibration coefficients, system
     information and user data.
     
-    address: the start address for the read.
+    address: the start address to write.
          |-----------------------------------------|
          |    Range          |       Usage         |
          |-----------------------------------------|
