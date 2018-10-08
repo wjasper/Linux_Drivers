@@ -2009,6 +2009,7 @@ class E_TC32:
            minute ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+4)
            second ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+5)
            date_base = datetime(year, month, day, hour, minute, second)
+           print('date_base =',date_base)
            if (self.status == 1): # EXP detected
              year ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+6)
              year += 2000
@@ -2023,6 +2024,8 @@ class E_TC32:
         raise ResultError
     except ResultError:
       print('Error in FieldCalDate_R E-TC32.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      date_base = datetime.today()     # send back current date
+      date_exp =  datetime.today()     # send back current date
     if (self.status == 1): # EXP detected
       return (date_base, date_exp)
     else:
