@@ -223,7 +223,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -272,7 +272,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -322,7 +322,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -368,7 +368,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -418,7 +418,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -472,7 +472,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -541,7 +541,7 @@ class E_1608:
     more details.
   
     Scan data will be acquired until an overrun occurs, the specified
-    count is reached, or an AInScanStop command is sent.  the scan
+    count is reached, or an AInScanStop command is sent. The scan
     data will be in the format:
   
     First channel sample 0: second channel sample 0: .. : last channel sample 0
@@ -559,7 +559,7 @@ class E_1608:
     detected then betgin sampling data at the specified rate.  No
     data will be available until the trigger is detected.
    
-       count:      The total number or scan to scquire, 0 for continuous scan
+       count:      The total number of scans to acquire, 0 for continuous scan
        frequency:  the sampling frequency.  Use 0 for external clock.
        options:    Bit field that controls scan options
                    bits 0-1:   Reserved
@@ -614,7 +614,7 @@ class E_1608:
 
     self.device.scan_timeout = 0.1 + count/frequency
     self.device.sock.settimeout(.01)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
@@ -642,24 +642,25 @@ class E_1608:
     # send ACK to start scan
     data = bytearray(1)
     data[0] = 0x0
-    self.device.sock.send(data)  # send a single byte
+    self.device.sendMessage(data)  # send a single byte
 
   def AInScanRead(self, nScan, nChan):
-    count = nScan*nChan   # total number of 2-byte samples
+    count = 2*nScan*nChan   # total number of 2-byte samples
     self.device.scan_sock.settimeout(self.device.scan_timeout)
-    data = bytearray(2*count)
+    data = bytearray(count)
     corrected_data = []
+    value = []
+    bytesReceived = 0
 
-    try:
-      data = self.device.scan_sock.recv(2*count)
-    except socket.timeout:
-      raise
-      print('AInScanRead: timeout error.\n')
-    if len(data) != 2*count:
-      print('AInScanRead: Number of bytes returned incorrect. ',len(data), 2*count)
-      return False
-       
-    value = unpack('H'*(len(data)//2), data)        # convert to unsigned short
+    while (bytesReceived  < count):
+      try:
+        data = self.device.scan_sock.recv(count - bytesReceived)
+      except socket.timeout:
+        raise
+        print('AInScanRead: timeout error.\n')
+      bytesReceived += len(data)
+      value[bytesReceived:] = unpack('H'*(len(data)//2), data)  # convert to unsigned short
+
     for i in range(nScan):                          # scan count
       for j in range(nChan):
         k = i*nChan + j                             # sample number
@@ -701,7 +702,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
@@ -757,7 +758,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
@@ -804,7 +805,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -856,7 +857,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -914,7 +915,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
@@ -963,7 +964,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -1006,7 +1007,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -1053,7 +1054,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -1100,7 +1101,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
@@ -1152,7 +1153,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
@@ -1198,7 +1199,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
@@ -1246,7 +1247,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
@@ -1302,7 +1303,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
@@ -1364,7 +1365,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
@@ -1418,7 +1419,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
@@ -1475,7 +1476,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
@@ -1529,7 +1530,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
@@ -1587,7 +1588,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
@@ -1645,7 +1646,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
@@ -1721,7 +1722,7 @@ class E_1608:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)

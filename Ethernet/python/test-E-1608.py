@@ -96,7 +96,8 @@ def main():
       gain = int(input('Input range [0-3]: '))
       for i in range(20):
         value = e1608.AIn(chan,gain)
-        print('Channel = ', chan, '  Range = ',gain, ' Sample[',i,'] = ',hex(value), '  Volts = ',e1608.volts(value, gain))
+        print('Channel = ', chan, '  Range = ',gain, ' Sample[',i,'] = ',hex(value), '  Volts = ',\
+              format(e1608.volts(value, gain),'.4f'))
     elif ch == 'e':
       e1608.device.sock.close()
       exit(0)
@@ -128,8 +129,8 @@ def main():
           k = i*nchan + j                   # sample number
           channel = e1608.queue[2*j+1]      # channel
           gain = e1608.queue[2*j+2]         # range value
-          print('Range ',gain,' channel ', channel, ' Sample[',k,'] = ', hex(data[k]),\
-                ' Volts = ', e1608.volts(data[k], gain))
+          print('Scan ',i,'Range ',gain,' channel ', j, ' Sample[',k,'] = ', hex(data[k]),\
+                ' Volts = ', format(e1608.volts(data[k], gain),'.4f'))
     elif ch == 'o':
       chan = int(input('Enter AOut channel [0-1]: '))
       volts = float(input('Enter desired output voltage [-10V to 10V]: '))

@@ -165,7 +165,7 @@ class mccEthernetDevice:
       print('flushInput flushed', numTotal, 'bytes')
     return numTotal
 
-  def sendMessage(self, messge, flush=True):
+  def sendMessage(self, message, flush=True):
     if (flush):
       self.flushInput()
     self.sock.send(message)

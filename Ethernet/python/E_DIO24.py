@@ -81,7 +81,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
@@ -129,7 +129,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -185,7 +185,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -230,7 +230,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -286,7 +286,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -337,7 +337,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
@@ -385,7 +385,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
@@ -434,7 +434,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -477,7 +477,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -521,7 +521,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
@@ -569,7 +569,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
@@ -622,7 +622,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
@@ -678,7 +678,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
@@ -743,7 +743,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
@@ -797,7 +797,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1050)
@@ -854,7 +854,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
@@ -908,7 +908,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
@@ -966,7 +966,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
@@ -1023,7 +1023,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1050)
@@ -1100,7 +1100,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
