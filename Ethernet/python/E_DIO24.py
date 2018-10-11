@@ -75,7 +75,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DIN_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -123,7 +123,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DOUT_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -179,7 +179,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_DATA+5]         = (value>>16) & 0xff
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -224,7 +224,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DCONF_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -280,7 +280,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_DATA+5]         = (value>>16) & 0xff
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -331,7 +331,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_COUNTER_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -379,7 +379,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_COUNTER_W
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -428,7 +428,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_DATA]           = count
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -471,7 +471,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_RESET
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -515,7 +515,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_STATUS
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -563,7 +563,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_NETWORK_CONF
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -616,7 +616,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_DATA+1]         = 0xad                     # key
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -672,7 +672,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -737,7 +737,7 @@ class E_DIO24:
       s_buffer[MSG_INDEX_DATA+2+i] = data[i]
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -791,7 +791,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -848,7 +848,7 @@ class E_DIO24:
       s_buffer[MSG_INDEX_DATA+2+i] = data[i]
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -902,7 +902,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -960,7 +960,7 @@ class E_DIO24:
       s_buffer[MSG_INDEX_DATA+2+i] = data[i]
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1017,7 +1017,7 @@ class E_DIO24:
     s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1094,7 +1094,7 @@ class E_DIO24:
       s_buffer[MSG_INDEX_DATA+2+i] = data[i]
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)

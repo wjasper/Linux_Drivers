@@ -200,7 +200,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DIN
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -252,7 +252,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DOUT_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -310,7 +310,7 @@ class E_TC32:
     pack_into('I', s_buffer, MSG_INDEX_DATA+1, value)
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -372,7 +372,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_DATA+2]         = wait
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -422,7 +422,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_DATA]           = channel
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -484,7 +484,7 @@ class E_TC32:
     pack_into('II',s_buffer, MSG_INDEX_DATA+2, channel_mask_base, channel_mask_exp)
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -540,7 +540,7 @@ class E_TC32:
     pack_into('II',s_buffer, MSG_INDEX_DATA, channel_mask_base, channel_mask_exp)
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -596,7 +596,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_TIN_CONFIG_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -656,7 +656,7 @@ class E_TC32:
       s_buffer[MSG_INDEX_DATA+i] = self.config_values[i]
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -701,7 +701,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_TIN_STATUS
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -748,7 +748,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_OTD_STATUS
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -797,7 +797,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_MEASURE_CONFIG_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -850,7 +850,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_DATA+1]         = self.config_measure[1]
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -908,7 +908,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_MEASURE_MODE_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -969,7 +969,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_DATA+1]         = self.mode_measure[1]
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1041,7 +1041,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_ALARM_CONFIG_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1122,7 +1122,7 @@ class E_TC32:
     pack_into('f'*32, s_buffer, MSG_INDEX_DATA+448, self.alarm_threshold2[32:64])
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1171,7 +1171,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_ALARM_STATUS_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1223,7 +1223,7 @@ class E_TC32:
     pack_into('I', s_buffer, MSG_INDEX_DATA+1, clear_masks)
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1290,7 +1290,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1344,7 +1344,7 @@ class E_TC32:
       s_buffer[MSG_INDEX_DATA+2+i] = data[i]
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1398,7 +1398,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1455,7 +1455,7 @@ class E_TC32:
       s_buffer[MSG_INDEX_DATA+2+i] = data[i]
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1506,7 +1506,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1563,7 +1563,7 @@ class E_TC32:
       s_buffer[MSG_INDEX_DATA+2+i] = data[i]
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1609,7 +1609,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FACTORY_COEF_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1691,7 +1691,7 @@ class E_TC32:
       pack_into('f', s_buffer, MSG_INDEX_DATA+29, self.calCoefFactory[1].intercept_50_exp)
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1737,7 +1737,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FIELD_COEF_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1819,7 +1819,7 @@ class E_TC32:
       pack_into('f', s_buffer, MSG_INDEX_DATA+29, self.calCoefField[1].intercept_50_exp)
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1862,7 +1862,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FACTORY_CAL_DATE_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1935,7 +1935,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_DATA+7]         = mdate.second
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -1978,7 +1978,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_FIELD_CAL_DATE_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -2009,7 +2009,6 @@ class E_TC32:
            minute ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+4)
            second ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+5)
            date_base = datetime(year, month, day, hour, minute, second)
-           print('date_base =',date_base)
            if (self.status == 1): # EXP detected
              year ,= unpack_from('B', r_buffer, MSG_INDEX_DATA+6)
              year += 2000
@@ -2054,7 +2053,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_DATA+7]         = mdate.second
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -2101,7 +2100,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_DATA]           = count
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -2144,7 +2143,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_RESET
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -2189,7 +2188,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_STATUS
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -2242,7 +2241,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_VERSION
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -2288,7 +2287,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_NETWORK_CONFIG
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -2339,7 +2338,7 @@ class E_TC32:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_AD_CAL
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
