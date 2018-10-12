@@ -28,7 +28,7 @@
 ###########################################################################
 
 #  Current Version of the driver
-VERSION=1.4
+VERSION=1.5
 
 #  Number of PCI-QUAD04 boards on your system: 
 #  MUST ALSO CHANGE MAX_BOARDS in quad04.h
