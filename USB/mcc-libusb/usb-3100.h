@@ -53,6 +53,7 @@ void usbDBitIn_USB31XX(hid_device *hid, uint8_t bit_num, uint8_t* value);
 void usbDBitOut_USB31XX(hid_device *hid, uint8_t bit_num, uint8_t value);
 
 void usbAOutConfig_USB31XX(hid_device *hid, uint8_t channel, uint8_t range);
+int usbAOutConfig_USB31XX_Error_Return(hid_device *hid, uint8_t channel, uint8_t range);
 void usbAOut_USB31XX(hid_device *hid, uint8_t channel, uint16_t value, uint8_t update);
 void usbAOutSync_USB31XX(hid_device *hid);
 
@@ -60,6 +61,7 @@ void usbInitCounter_USB31XX(hid_device *hid);
 uint32_t usbReadCounter_USB31XX(hid_device *hid);
 
 void usbReadMemory_USB31XX( hid_device *hid, uint16_t address, uint8_t count, uint8_t* memory);
+int usbReadMemory_USB31XX_Error_Return( hid_device *hid, uint16_t address, uint8_t count, uint8_t* memory);
 int usbWriteMemory_USB31XX(hid_device *hid, uint16_t address, uint8_t count, uint8_t data[]);
 void usbBlink_USB31XX(hid_device *hid, uint8_t count);
 int usbReset_USB31XX(hid_device *hid);

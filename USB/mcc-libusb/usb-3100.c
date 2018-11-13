@@ -176,12 +176,18 @@ void usbDBitOut_USB31XX(hid_device *hid, uint8_t bit_num, uint8_t value)
 /* Analog Out */
 void usbAOutConfig_USB31XX(hid_device *hid, uint8_t channel, uint8_t range)
 {
+    usbAOutConfig_USB31XX_Error_Return(hid, channel, range);
+}
+
+int usbAOutConfig_USB31XX_Error_Return(hid_device *hid, uint8_t channel, uint8_t range)
+{
   /* 
      This command configures the output range of an analog output
      channel.  The output will be set to 0V in the selected range, so
      an AOut is not needed after this command.
   */
 
+  int ret1, ret2;
   struct usbAOutConfig_t {
     uint8_t reportID;
     uint8_t channel;    // the channel to write (0-15)
@@ -211,10 +217,15 @@ void usbAOutConfig_USB31XX(hid_device *hid, uint8_t channel, uint8_t range)
       address = 0x100 + 0x10*channel;
   }
   
-  usbReadMemory_USB31XX(hid, address, sizeof(float), (uint8_t*) &CalTable[channel].slope);
-  usbReadMemory_USB31XX(hid, address+0x4, sizeof(float), (uint8_t*) &CalTable[channel].offset);
+  ret1 = usbReadMemory_USB31XX_Error_Return(hid, address, sizeof(float), (uint8_t*) &CalTable[channel].slope);
+  ret2 = usbReadMemory_USB31XX_Error_Return(hid, address+0x4, sizeof(float), (uint8_t*) &CalTable[channel].offset);
   PMD_SendOutputReport(hid, (uint8_t*) &usbAOutConfig, sizeof(usbAOutConfig));
  //  printf("Channel = %d    Slope = %f    Offset = %f\n", channel, CalTable[channel].slope, CalTable[channel].offset);
+ 
+  if( (ret1 <= 0) || (ret2 <= 0) )
+      return -1;
+  
+  return 0;
 }
  
 /* writes to analog out */
@@ -388,13 +399,18 @@ uint8_t usbGetStatus_USB31XX(hid_device *hid)
 
 void usbReadMemory_USB31XX(hid_device *hid, uint16_t address, uint8_t count, uint8_t* memory)
 {
+    usbReadMemory_USB31XX_Error_Return(hid, address, count, memory);
+}
+
+int usbReadMemory_USB31XX_Error_Return(hid_device *hid, uint16_t address, uint8_t count, uint8_t* memory)
+{
   /* 
      This command reads data from the configuration memory (EEPROM or FLASH).  
      All of the memory may be read:
         Addresses 0x000  - 0x0FF address  of EEPROM
         Addresses 0x0100 - 0x02FF address of FLASH
   */
-
+  int ret;
   struct arg_t {
     uint8_t reportID;
     uint8_t address[2]; // the start address for the read.
@@ -415,10 +431,11 @@ void usbReadMemory_USB31XX(hid_device *hid, uint16_t address, uint8_t count, uin
   arg.count = count;
 
   PMD_SendOutputReport(hid, (uint8_t *) &arg, sizeof(arg));
-  if (PMD_GetInputReport(hid, (uint8_t *) &memRead, 63, FS_DELAY) < 0) {
+  if ( (ret = PMD_GetInputReport(hid, (uint8_t *) &memRead, 63, FS_DELAY)) < 0 ) {
     perror("usbReadMemory_USB31XX error on read.");
   }
   memcpy(memory, memRead.memory, count);
+  return ret;
 }
 
 int usbWriteMemory_USB31XX(hid_device *hid, uint16_t address, uint8_t count, uint8_t data[])
