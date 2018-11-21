@@ -149,7 +149,7 @@ int main (int argc, char **argv)
         break;
       case 'c':
         usbCounterInit_USB2408(udev, COUNTER0);
-        printf("Connect DO0 to CTR0\n");
+        printf("Connect DIO0 to CTR0\n");
         toContinue();
         for (i = 0; i < 100; i++) {
 	  usbDOut_USB2408(udev, 0x0, 0);
@@ -218,7 +218,7 @@ int main (int argc, char **argv)
       case 'i':
         printf("Input channel [0-7]: ");
         scanf("%hhd", &channel);
-	printf("Gain Range for channel %d:  1 = 10V  2 = 5V  2 = 2.5V Differential: ", channel);
+	printf("Gain Range for channel %d:  1 = 10V  2 = 5V  3 = 2.5V Differential: ", channel);
 	while((ch = getchar()) == '\0' || ch == '\n');
 	switch(ch) {
   	  case '1': gain = BP_10V; break;

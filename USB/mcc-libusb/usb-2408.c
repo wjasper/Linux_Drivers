@@ -149,7 +149,6 @@ void usbCalDate_USB2408(libusb_device_handle *udev, struct tm *date)
   date = localtime(&time);
 }
 
-
 /***********************************************
  *            Digital I/O                      *
  ***********************************************/
@@ -750,8 +749,8 @@ void usbWriteMemory_USB2408(libusb_device_handle *udev, uint16_t length,  uint16
 void usbReset_USB2408(libusb_device_handle *udev)
 {
   /*
-    This function causes the device to perform a reset.  The device disconnects from the USB bus and resets
-    its microcontroller.
+    This function causes the device to perform a reset.  The device
+    disconnects from the USB bus and resets its microcontroller.
   */
 
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
@@ -892,13 +891,13 @@ double volts_USB2408(const int gain, const int value)
       volt = value * 0.625 / 0x7fffff;
       break;
     case BP_312V:
-      volt = value * 0.312 / 0x7fffff;
+      volt = value * 0.3125 / 0x7fffff;
       break;
     case BP_156V:
-      volt = value * 0.156 / 0x7fffff;
+      volt = value * 0.15625 / 0x7fffff;
       break;
     case BP_078V:
-      volt = value * 0.078 / 0x7fffff;
+      volt = value * 0.078125 / 0x7fffff;
       break;
   }
   return volt;

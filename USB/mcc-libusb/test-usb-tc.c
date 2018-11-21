@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
        	  printf("Type N Thermocouple Selected: \n");
 	  break;
         default:
-	  printf("Unknown or unsupported thermocopule type.\n");
+	  printf("Unknown or unsupported thermocople type.\n");
 	  break;
 	}
         usbSetItem_USBTC(hid, ADC_0, CH_0_TC, bIReg);
