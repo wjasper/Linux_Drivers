@@ -49,7 +49,6 @@ def main():
     print("Hit 'd' to test digital I/O ")
     print("Hit 'e' to exit")
     print("Hit 'f' for burnout status");
-    print("Hit 'g' to get serial number")
     print("Hit 'i' for information")
     print("Hit 'R' to reset");
     print("Hit 'r' to measure temperature (RTD)");
@@ -66,6 +65,9 @@ def main():
     elif ch == 'e':
       dev.h.close()
       exit(0)
+    elif ch == 'c':
+      print('Calibrating')
+      dev.Calibrate(0)
     elif ch == 'f':
       print('Burnout status =', hex(dev.BurnoutStatus(0xf)))
     elif ch == 'd':

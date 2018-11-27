@@ -488,6 +488,9 @@ class usb_temp:
 
     '''
     self.h.write([self.CALIBRATE, cal_type, path])
+    while (self.Status() & 0x1f):
+      print('Calibration in Progress:', self.Status() & 0x1f)
+      time.sleep(1.0)
 
   def BurnoutStatus(self, mask):
     ''' 
