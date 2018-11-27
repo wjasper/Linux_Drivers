@@ -182,7 +182,7 @@ int main (int argc, char **argv)
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
         j = 0;
 	do {
-	  usbAInScanRead_USB2408(udev, 512, 8, idata, 1);
+	  usbAInScanRead_USB2408(udev, 64, 8, idata, 1);          // 512 = 64 scans * 8 channels / scan
 	  for (i = 0; i < 512; i++) {
 	    queue_index = idata[i] >> 24;                         // MSB of data contains the queue index;
 	    gain = scanQueue.queue[queue_index].range;
@@ -265,11 +265,11 @@ int main (int argc, char **argv)
 
 	usbAInScanQueueWrite_USB2408(udev, &scanQueue);
 	usbAInScanStart_USB2408(udev, 900, count, 15);
-	usbAInScanRead_USB2408(udev, count, 1, idata, 0);
+	usbAInScanRead_USB2408(udev, count, scanQueue.count, idata, 0);
 	usbAInScanStop_USB2408(udev);
 
 	usbAInScanQueueRead_USB2408(udev, &scanQueue);
-	for (i = 0; i < count; i++) {
+	for (i = 0; i < count*scanQueue.count; i++) {
 	  queue_index = idata[i] >> 24;                         // MSB of data contains the queue index;
 	  gain = scanQueue.queue[queue_index].range;
 	  channel = scanQueue.queue[queue_index].channel;
