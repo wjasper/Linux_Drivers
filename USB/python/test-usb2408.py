@@ -212,28 +212,11 @@ def main():
       print('USB isolated update firmware version = ', version[3])
     elif ch == 't':
       channel = int(input('Input channel [0-7]: '))
-      ch = input('Input Thermocouple type [J,K,R,S,T,N,E,B]: ')
-      if ch == 'j' or ch == 'J':
-        tc_type = 0
-      elif  ch == 'k' or ch == 'K':
-        tc_type = 1
-      elif  ch == 'r' or ch == 'R':
-        tc_type = 2
-      elif  ch == 's' or ch == 'S':
-        tc_type = 3
-      elif  ch == 't' or ch == 'T':
-        tc_type = 4
-      elif  ch == 'n' or ch == 'N':
-        tc_type = 5
-      elif  ch == 'e' or ch == 'e':
-        tc_type = 6
-      elif  ch == 'b' or ch == 'B':
-        tc_type = 7
-      (tc_voltage, CJC_temp, flag) = usb2408.Temperature(tc_type, channel)
-      if flag & 0x80:
-        print('TC open detected.  Check wiring on channel', channel)
-      else:
-        print('Thermocouple voltage = %.12f V  CJC temp = %.3f C' %(tc_voltage, CJC_temp))
+      tc_type = input('Input Thermocouple type [B,E,J,K,R,S,T,N]: ')
+      for i in range(10):
+        temperature = usb2408.Temperature(tc_type, channel)
+        print('Temp = %.3f degC' %(temperature))
+        time.sleep(1)
             
 if __name__ == "__main__":
   main()

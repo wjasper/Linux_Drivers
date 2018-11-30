@@ -15,6 +15,7 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+from nist import *
 import libusb1
 import usb1
 import time
@@ -52,7 +53,7 @@ class table:
     self.slope = 0.0
     self.intercept = 0.0
 
-class usb_2408:
+class usb_2400:
   # Gain Ranges
   BP_10_00V  = 0x1         # +/- 10.0 V
   BP_5_00V   = 0x2         # +/- 5.00 V
@@ -156,14 +157,7 @@ class usb_2408:
 
   productID        = 0
 
-  def __init__(self, serial=None, productID=0x00fd):
-    self.productID = productID    # usb-2408
-    # self.productID = 0x00fd  # usb-2408-2AO
-    self.context = usb1.USBContext()
-    self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
-    if not self.udev:
-      raise IOError("MCC USB-2408 not found")
-
+  def __init__(self):
     # need to get wMaxPacketSize
     self.wMaxPacketSize = self.getMaxPacketSize()
 
@@ -265,7 +259,6 @@ class usb_2408:
     request_type = libusb1.LIBUSB_TYPE_VENDOR 
     data ,= unpack('I',self.udev.controlRead(request_type, self.AIN, input1, input2, 4, timeout = 200))
     flags = (data >> 24)
-    data &= 0x00ffffff
     data = self.int24ToInt(data)
     return (data, flags)
 
@@ -471,9 +464,6 @@ class usb_2408:
     self.AInScanFlush()
     return data
     
-  ###################################################
-  #    Analog Output  Commands  USB-2408-2AO only   #
-  ###################################################
 
   #################################
   #     Counter  Commands         #
@@ -658,7 +648,6 @@ class usb_2408:
     wValue = 0
     wIndex = 0
     version = list(unpack('HHHH',self.udev.controlRead(request_type, self.VERSION, wValue, wIndex, 8, timeout = 100)))
-    print('version =', hex(version[0]), hex(version[1]), hex(version[2]), hex(version[3]))
     version[0] = str(int(version[0]/0x100)) + '.' + str(version[0]%0x100)
     version[1] = str(int(version[1]/0x100))+ '.' + str(version[1]%0x100)
     version[2] = str(int(version[2]/0x100)) + '.' + str(version[2]%0x100)
@@ -829,7 +818,6 @@ class usb_2408:
     FULL_SCALE24_BITMASK = ((1<<24) - 1)
     SIGN_EXT_BITMASK = (~FULL_SCALE24_BITMASK)
     int24val &= 0xffffff
-
     if int24val & SIGN_BITMASK:
       int24val |= SIGN_EXT_BITMASK
     else:
@@ -875,19 +863,167 @@ class usb_2408:
     return volt
 
   def Temperature(self, tc_type, channel):
+    tc = Thermocouple()
     # Read the raw voltage (Mode = 4, Range = +/- .078V, Rate = 1kS/s)
     (value, flag) = self.AIn(channel, 4, 8, 5)
     if flag & 0x80:
-      return (-100, -100, flag)
+      print('TC open detected.  Check wiring on channel', channel)
+      return -1
     # Apply calibration offset from Gain Table (EEPROM) address 0x0130 (slope) and 0x0138 (offset)
     value = value*self.Cal[9].slope + self.Cal[9].intercept
+    # Convert the corrected valued to a voltage (Volts)
     tc_voltage = (value * 2. * 0.078125) / 16777216.
     # Correct the CJC Temperature by the CJCGradiant for the appropriate channel
     cjc = self.CJC()
     CJC_temp = cjc[channel//4] - self.CJCGradient[channel]
-    return (tc_voltage, CJC_temp, flag)
     # Calculate the CJC voltage using the NIST polynomials and add to tc_voltage in millivolts
-    # tc_voltage = self.NISTCalcVoltage(tc_type, CJC_Temp) + 1000.*tc_voltage
+    tc_mv = tc.temp_to_mv(tc_type, CJC_temp) + tc_voltage*1000.
     # Calcualate actual temperature using reverse NIST polynomial.
-    #return (NISTCalcTemp(tc_type, tc_voltage))
+    return tc.mv_to_temp(tc_type, tc_mv)
  
+class usb_2408(usb_2400):
+  def __init__(self, serial=None):
+    self.productID = 0x00fd    # usb-2408
+    self.context = usb1.USBContext()
+    self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+    if not self.udev:
+      raise IOError("MCC USB-2408 not found")
+    usb_2400.__init__(self)
+
+class usb_2408_2AO(usb_2400):
+  def __init__(self, serial=None):
+    self.productID = 0x00fe    # usb-2408-2AO
+    self.context = usb1.USBContext()
+    self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+    if not self.udev:
+      raise IOError("MCC USB-2408-2AO not found")
+    usb_2400.__init__(self)
+
+    # Build a lookup table of calibration coefficients to translate values to voltages:
+    # corrected value = value * Cal_AO[DAC#].slope + Cal_AO[DAC#].intercept
+    self.Cal_AO = [table(), table()]
+    address = 0x0180
+    for i in range(0,2): #two analog output channels
+      self.Cal_AO[i].slope ,= unpack('d', self.MemoryR(address, 8))
+      address += 8
+      self.Cal_AO[i].intercept ,= unpack('d', self.MemoryR(address, 8))
+      address += 8
+
+  ###################################################
+  #    Analog Output  Commands  USB-2408-2AO only   #
+  ###################################################
+
+  def AOut(self, channel, voltage, command=1):
+    '''
+    This command writes the values for the analog output channels.  The
+     values are 16-bit unsigned numbers.  This command will result in a control
+     pipe stall if an output scan is running.  The equation for the output voltage is:
+
+           V_out = (value - 32768 / 32768)* V_ref
+
+     where "value" is the value written to the channel and V_ref = 10V.  
+
+     command values:
+                     0x00  -  write value to buffer 0
+                     0x04  -  write value to buffer 1
+                     0x10  -  write value to buffer 0 and load DAC 0
+                     0x14  -  write value to buffer 1 and load DAC 0
+                     0x20  -  write value to buffer 0 and load DAC 1
+                     0x24  -  write value to buffer 1 and load DAC 1
+                     0x30  -  write value to buffer 0 and load DAC 0 & DAC 1
+                     0x34  -  write value to buffer 1 and load DAC 0 & DAC 1
+    '''
+    value = voltage*32768./10. + 32768.
+    value = value*self.Cal_AO[channel].slope + self.Cal_AO[channel].intercept
+
+    if value >= 0xffff:
+      value = 0xffff
+    elif value <= 0:
+      value = 0x0
+    else:
+      value = value & 0xffff
+
+    if channel == 0:
+      command = 0x10
+    else:
+      command = 0x24
+
+    (status, depth) = self.AOutScanStatus()
+    if status & self.OUTPUT_SCAN_RUNNING:
+      print('There are currently', depth, 'samples in the Output FIFO buffer.')
+      return
+
+    request_type = libusb1.LIBUSB_TYPE_VENDOR     
+    result = self.udev.controlWrite(request_type, self.AOUT, 0x0, 0x0, [value, command], timeout = 100)
+
+  def AOutScanStop(self):
+    '''
+    This command stops the analog output scan (if running) and
+    clears the output FIFO data.  Any data in the endpoint buffers will
+    be flushed, so this command is useful to issue prior to the
+    beginning of an output scan.
+    '''
+    request_type = libusb1.LIBUSB_TYPE_VENDOR     
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_STOP, 0x0, 0x0, [0x0], timeout = 100)
+
+  def AOutScanStatus(self):
+    '''
+    This comamnd reads the status of the analog output scan:
+    depth: the number of samples currently in the FIFO (max 1024)
+    status: bit 0: 1 = scan running
+            bit 1: 1 = scan underrun
+            bits 2-7: reserved
+    '''
+    request_type = libusb1.LIBUSB_TYPE_VENDOR     
+    result ,= unpack('HB',self.udev.controlRead(request_type, self.AOUT_SCAN_STATUS, 0x0, 0x0, 3, timeout = 100))
+    return (result[0], result[1])
+
+  def AOutScanStart(self, frequency, scans, options):
+    '''
+     This command configures the analog output channel scan.
+     This command will result in a bus stall if an AOUT_SCAN is
+     currently running.
+
+     Notes:
+     The output scan operates with the host continuously transferring data for the
+     outputs until the end of the scan.  If the "scans" parameter is 0, the scan will run
+     until the AOutScanStop command is issued by the host; if it is nonzero, the scan
+     will stop automatically after the specified number of scans have been output.
+     The channels in the scan are selected in the options bit field.  "Scans" refers to
+     the number of updates to the channels (if all channels are used, one scan is an
+     update to all 2 channels).
+
+     period = 50kHz / frequency
+
+     Multiple channels are updated simultaneously using the same time base.
+
+     The output data is sent using the bulk out endpoint.  The data format is:
+     low channel sample 0 : ... : [high channel sample 0]
+     low channel sample 1 : ... : [high channel sample 1]
+     .
+     .
+     .
+     low channel sample n : ... : [high channel sample n]
+
+     The output data is written to a 512-sample FIFO in the device.  The bulk endpoint
+     data is only accepted if there is room in the FIFO.  Output data may be sent to the
+     FIFO before the start of the scan, and the FIFO is cleared when the AOutScanStop command
+     is received.  The scan will not begin until the command is sent (and output data is in
+     the FIFO).  Data will be output until reaching the specified number of scans (in single
+     execution mode)or an AOutScanStop command is sent.
+    '''
+    if frequency <= 0:
+      pacer_period = int(round(50000./10.)) & 0xffffffff     # 10Hz.
+    else:
+      pacer_period = int(round(50000./frequency)) & 0xffffffff
+    scan &= 0xffff                                           # scan = 0 for continuous
+    options &= 0xff
+    (status, depth) = self.AOutScanStatus()
+    if status & self.OUTPUT_SCAN_RUNNING:
+      print('There are currently', depth, 'samples in the Output FIFO buffer.')
+      return
+    request_type = libusb1.LIBUSB_TYPE_VENDOR     
+    result = self.udev.controlWrite(request_type, self.AOUT, 0x0, 0x0, [pacer_period, scans, options], timeout = 100)
+
+  def AOutScanWrite(self, data):
+    result = self.udev.bulkWrite(1, data, timeout = 1000)
