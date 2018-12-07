@@ -444,7 +444,7 @@ class usb_2400:
       print('There are currently',depth,'samples in the FIFO buffer')
       return
     scanPacket = list(unpack('B'*7, pack('IHB',pacer_period, count, packet_size)))
-    result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 1000)
+    result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
 
   def AInScanRead(self, count, options):
     # Each scan consists of 4 bytes times the number of active channels in the scan queue
@@ -608,10 +608,10 @@ class usb_2400:
     request_type = libusb1.LIBUSB_TYPE_VENDOR
     wValue = 0
     wIndex = 0
-    result = self.udev.controlWrite(request_type, self.ADCAL, wValue, wIndex, [0], timeout = 100)
+    result = self.udev.controlWrite(request_type, self.AD_CAL, wValue, wIndex, [0], timeout = 1000)
     status = 1
     while status == 1:
-      status = self.usdev.controlRead(request_type, self.ADCAL, wValue, wIndex, 1, timeout = 100)
+      status = self.udev.controlRead(request_type, self.AD_CAL, wValue, wIndex, 1, timeout = 1000)
       time.sleep(1)
     return status
 
@@ -741,7 +741,7 @@ class usb_2400:
     request_type = libusb1.LIBUSB_TYPE_VENDOR
     wValue = 0
     wIndex = 0
-    data = unpack('B'*length, self.udev.controlRead(request_type, self.UPDATE_DATA, wValue, wIndex, length, timeout = 1000))
+    data = unpack('B'*length, self.udev.controlRead(request_type, self.UPDATE_DATA, wValue, wIndex, length, timeout = 100))
 
   def UpdateVersion(self):
     '''
@@ -752,7 +752,7 @@ class usb_2400:
     request_type = libusb1.LIBUSB_TYPE_VENDOR
     wValue = 0
     wIndex = 0
-    version = unpack('H', self.udev.controlRead(request_type, self.UPDATE_VERSION, wValue, wIndex, 2, timeout = 1000))
+    version = unpack('H', self.udev.controlRead(request_type, self.UPDATE_VERSION, wValue, wIndex, 2, timeout = 100))
     return version
     
   def getSerialNumber(self):
@@ -888,6 +888,7 @@ class usb_2408(usb_2400):
     self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
     if not self.udev:
       raise IOError("MCC USB-2408 not found")
+      return
     usb_2400.__init__(self)
 
 class usb_2408_2AO(usb_2400):
@@ -916,14 +917,14 @@ class usb_2408_2AO(usb_2400):
   def AOut(self, channel, voltage, command=1):
     '''
     This command writes the values for the analog output channels.  The
-     values are 16-bit unsigned numbers.  This command will result in a control
-     pipe stall if an output scan is running.  The equation for the output voltage is:
+    values are 16-bit unsigned numbers.  This command will result in a control
+    pipe stall if an output scan is running.  The equation for the output voltage is:
 
-           V_out = (value - 32768 / 32768)* V_ref
+          V_out = (value - 32768 / 32768)* V_ref
 
-     where "value" is the value written to the channel and V_ref = 10V.  
+    where "value" is the value written to the channel and V_ref = 10V.  
 
-     command values:
+    command values:
                      0x00  -  write value to buffer 0
                      0x04  -  write value to buffer 1
                      0x10  -  write value to buffer 0 and load DAC 0
@@ -934,7 +935,7 @@ class usb_2408_2AO(usb_2400):
                      0x34  -  write value to buffer 1 and load DAC 0 & DAC 1
     '''
     value = voltage*32768./10. + 32768.
-    value = value*self.Cal_AO[channel].slope + self.Cal_AO[channel].intercept
+    value = int(value*self.Cal_AO[channel].slope + self.Cal_AO[channel].intercept)
 
     if value >= 0xffff:
       value = 0xffff
@@ -954,7 +955,8 @@ class usb_2408_2AO(usb_2400):
       return
 
     request_type = libusb1.LIBUSB_TYPE_VENDOR     
-    result = self.udev.controlWrite(request_type, self.AOUT, 0x0, 0x0, [value, command], timeout = 100)
+    result = self.udev.controlWrite(request_type, self.AOUT, 0x0, 0x0, \
+                      [value & 0xff, (value >> 8) & 0xff, command], timeout = 100)
 
   def AOutScanStop(self):
     '''
@@ -975,8 +977,10 @@ class usb_2408_2AO(usb_2400):
             bits 2-7: reserved
     '''
     request_type = libusb1.LIBUSB_TYPE_VENDOR     
-    result ,= unpack('HB',self.udev.controlRead(request_type, self.AOUT_SCAN_STATUS, 0x0, 0x0, 3, timeout = 100))
-    return (result[0], result[1])
+    result = unpack('BBB',self.udev.controlRead(request_type, self.AOUT_SCAN_STATUS, 0x0, 0x0, 3, timeout = 100))
+    depth = (result[0] | result[1] << 8)
+    status = result[2]
+    return (depth, status)
 
   def AOutScanStart(self, frequency, scans, options):
     '''
@@ -1013,17 +1017,23 @@ class usb_2408_2AO(usb_2400):
      execution mode)or an AOutScanStop command is sent.
     '''
     if frequency <= 0:
-      pacer_period = int(round(50000./10.)) & 0xffffffff     # 10Hz.
+      pacer_period = int(round(50000./10.)) & 0xffff     # 10Hz.
     else:
-      pacer_period = int(round(50000./frequency)) & 0xffffffff
-    scan &= 0xffff                                           # scan = 0 for continuous
+      pacer_period = int(round(50000./frequency)) & 0xffff
+    scans &= 0xffff                                      # scans = 0 for continuous
     options &= 0xff
     (status, depth) = self.AOutScanStatus()
     if status & self.OUTPUT_SCAN_RUNNING:
       print('There are currently', depth, 'samples in the Output FIFO buffer.')
       return
-    request_type = libusb1.LIBUSB_TYPE_VENDOR     
-    result = self.udev.controlWrite(request_type, self.AOUT, 0x0, 0x0, [pacer_period, scans, options], timeout = 100)
+    request_type = libusb1.LIBUSB_TYPE_VENDOR
+    buf = pack('HHB', pacer_period, scans, options)
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_START, 0x0, 0x0, buf, timeout = 100)
 
   def AOutScanWrite(self, data):
-    result = self.udev.bulkWrite(1, data, timeout = 1000)
+    # data is a list of signed 16 bit numbers
+    value = [0]*len(data)*2
+    for i in range(len(data)):
+      value[2*i] = data[i] & 0xff
+      value[2*i+1] = (data[i] >> 8) & 0xff
+    result = self.udev.bulkWrite(1, value, timeout = 0)

@@ -20,6 +20,7 @@ import time
 import sys
 import fcntl
 import os
+import math
 
 def toContinue():
   answer = input('Continue [yY]? ')
@@ -30,7 +31,14 @@ def toContinue():
   
 def main():
   # initalize the class
-  usb2408 = usb_2408()
+  try:
+    usb2408 = usb_2408()
+  except:
+    try:
+      usb2408 = usb_2408_2AO()
+    except:
+      print('No device found')
+      return
 
   print('wMaxPacketSize =', usb2408.wMaxPacketSize)
   for gain in range(1,10):
@@ -46,22 +54,25 @@ def main():
   print('\nMFG Calibration date: ', usb2408.getMFGCAL())
   
   while True:
-    print("\nUSB-2408 Testing")
+    print("\nUSB-2408 and USB-2408-2AO Testing")
     print("----------------")
     print("Hit 'b' to blink LED.")
-    print("Hit 'c' to test counter");
-    print("Hit 'C' to test continuous sampling at 1000 Hz.");
+    print("Hit 'c' to test counter")
+    print("Hit 'C' to test continuous sampling at 1000 Hz.")
     print("Hit 'd' to read the digital I/O.")
     print("Hit 'D' to write the digital I/O.")
     print("Hit 'e' to exit.")
-    print("Hit 'i' to test Analog Input");
-    print("Hit 'I' to test Analog Input Scan");
-    print("Hit 'j' read CJC sensors.");
-    print("Hit 'r' to reset the device.");
-    print("Hit 's' to get serial number.");
-    print("Hit 'S' to get Status.");
-    print("Hit 't' to get TC temperature");
-    print("Hit 'v' to get version numbers.");
+    print("Hit 'i' to test Analog Input")
+    print("Hit 'I' to test Analog Input Scan")
+    print("Hit 'j' read CJC sensors.")
+    print("Hit 'o' for Analog Output")
+    print("Hit 'O' for Analog Output Scan")
+    print("Hit 'r' to reset the device.")
+    print("Hit 's' to get serial number.")
+    print("Hit 'S' to get Status.")
+    print("Hit 't' to get TC temperature")
+    print("Hit 'v' to get version numbers.")
+    print("Hit 'x' for self calibration.")
 
     ch = input('\n')
     if ch == 'b':
@@ -215,8 +226,48 @@ def main():
       tc_type = input('Input Thermocouple type [B,E,J,K,R,S,T,N]: ')
       for i in range(10):
         temperature = usb2408.Temperature(tc_type, channel)
-        print('Temp = %.3f degC' %(temperature))
+        tempF = temperature*9./5 + 32.
+        print('Temp = %.3f C   %.3f F' %(temperature, tempF))
         time.sleep(1)
+    elif ch == 'x':
+      usb2408.ADCal()
+    elif ch == 'o':
+      channel = int(input('Input Channel [0-1]: '))
+      while True:
+        voltage = float(input('Enter output voltage [-10 to 10]: '))
+        usb2408.AOut(channel, voltage)
+        if toContinue() == False:
+          break
+    elif ch == 'O':
+      channel = int(input('Input Channel [0-1]: '))
+      options = 0x1 << channel
+      print('Test of Analog Ouput Scan')
+      print('Hook up scope to VDAC Channel', channel)
+      frequency = float(input('Enter desired frequency of sine wave [Hz]: '))
+      sine = [0]*512
+      data = [0]*512
+      for i in range(512):
+        sine[i] = 10*math.sin(2*math.pi*i/128.)
+        data[i] = sine[i]*(1<<15)/10.
+        data[i] = data[i]*usb2408.Cal_AO[channel].slope + usb2408.Cal_AO[channel].intercept
+        if data[i] > 32767:
+          data [i] = 0x7fff
+        elif data[i] < -32768:
+          data[i] = 0x8000
+        else:
+          data[i] = int(data[i]) 
+      usb2408.AOutScanStop()
+      usb2408.AOutScanStart(128*frequency, 0, options)
+      print("Hit 's <CR>' to stop")
+      flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      while True:
+        usb2408.AOutScanWrite(data)
+        c = sys.stdin.readlines()
+        if (len(c) != 0):
+          fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+          break
+      usb2408.AOutScanStop()
             
 if __name__ == "__main__":
   main()

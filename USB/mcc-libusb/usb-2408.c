@@ -468,9 +468,9 @@ uint8_t  usbAOutScanStatus_USB2408_2AO(libusb_device_handle *udev, uint16_t *dep
   struct AOutStatus_t {
     uint16_t depth;    // number of samples currently in the FIFO (max 512)
     uint8_t status;    // bit 0: 1 = scan running
-                    // bit 1: 1 = scan overrun due to fifo full
-                    // bit 2: 1 = scan overrun due to pacer period too short for queue
-                    // bit 3-7: reserved
+                       // bit 1: 1 = scan overrun due to fifo full
+                       // bit 2: 1 = scan overrun due to pacer period too short for queue
+                       // bit 3-7: reserved
   } AOutStatus;
   libusb_control_transfer(udev, requesttype, AOUT_SCAN_STATUS, 0x0, 0x0, (unsigned char *) &AOutStatus, sizeof(AOutStatus), HS_DELAY);
   *depth =  AOutStatus.depth;
@@ -489,7 +489,7 @@ void usbAOutScanStart_USB2408_2AO(libusb_device_handle *udev, double frequency, 
      until the AOutScanStop command is issued by the host; if it is nonzero, the scan
      will stop automatically after the specified number of scans have been output.
      The channels in the scan are selected in the options bit field.  "Scans" refers to
-     the number of updates to the channels (if all channels are used, one scan s an
+     the number of updates to the channels (if all channels are used, one scan is an
      update to all 2 channels).
 
      period = 50kHz / frequency
@@ -511,15 +511,15 @@ void usbAOutScanStart_USB2408_2AO(libusb_device_handle *udev, double frequency, 
      the FIFO).  Data will be output until reaching the specified number of scans (in single
      execution mode)or an AOutScanStop command is sent.
   */
+  int ret;
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+
   struct scanPacket_t {
     uint16_t pacer_period; // pacer timer period = 50 kHz / (scan frequency)
     uint8_t scans[2];      // the total number of scans to perform (0 = continuous)
     uint8_t options;       // bit 0: 1 = include channel 0 in output scan
 		  	   // bit 1: 1 = include channel 1 in output scan
-			   // bit 2: 1 = include channel 2 in output scan
-			   // bit 3: 1 = include channel 3 in output scan
-			   // bits 4-7 reserved
+			   // bits 2-7 reserved
   } scanPacket;
   uint16_t depth;
   
@@ -531,7 +531,11 @@ void usbAOutScanStart_USB2408_2AO(libusb_device_handle *udev, double frequency, 
     printf("There are currently %d samples in the Output FIFO buffer.\n", depth);
     return;
   }
-  libusb_control_transfer(udev, requesttype, AOUT_SCAN_START, 0x0, 0x0, (unsigned char *) &scanPacket, sizeof(scanPacket), HS_DELAY);
+  ret = libusb_control_transfer(udev, requesttype, AOUT_SCAN_START, 0x0, 0x0,
+		       (unsigned char *) &scanPacket, sizeof(scanPacket), HS_DELAY);
+  if (ret < 0) {
+    perror("usbAOutScanStart_USB2408_2A0: error in writing packet");
+  }
 }
 
 void usbAOut_USB2408_2AO(libusb_device_handle *udev, int channel, double voltage, double table_AO[NCHAN_AO_2408][2])
@@ -653,7 +657,6 @@ void usbBlink_USB2408(libusb_device_handle *udev, uint8_t bcount)
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
   uint8_t cmd = BLINK_LED;
 
-  printf("Blinking LED (%x) for %d counts\n", cmd, bcount);
   libusb_control_transfer(udev, requesttype, BLINK_LED, 0x0, 0x0, (unsigned char *) &bcount, 1, HS_DELAY);
   return;
 }
@@ -853,7 +856,7 @@ void cleanup_USB2408( libusb_device_handle *udev )
 
 void voltsTos16_USB2408_2AO(double *voltage, int16_t *data, int nSamples, double table_AO[])
 {
-  /* This routine converts an array of voltages (-10 to 10 volts) to singed 24 bit ints for the DAC */
+  /* This routine converts an array of voltages (-10 to 10 volts) to signed 16 bit ints for the DAC */
   int i;
   double dvalue;
 

@@ -326,7 +326,7 @@ int main (int argc, char **argv)
 	printf("Hook scope up to VDAC 0\n");
 	printf("Enter desired frequency of sine wave [Hz]: ");
 	scanf("%lf", &frequency);
-	for (i = 0; i < 512; i ++) {
+	for (i = 0; i < 512; i++) {
 	  sine[i] = 10*sin(2.*M_PI*i/128.);
 	}
 	voltsTos16_USB2416_4AO(sine, sdata, 512, table_AO[channel]);
