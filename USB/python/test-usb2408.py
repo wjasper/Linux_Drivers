@@ -171,6 +171,7 @@ def main():
       count = 0   # for continuous mode
       rate = usb2408.HZ1000
       mode = usb2408.DIFFERENTIAL
+      gain = usb2408.BP_10_00V
       usb2408.Queue[0] = 8
       for i in range(1,9):
         usb2408.Queue[i].channel = i-1

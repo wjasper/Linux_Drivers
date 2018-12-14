@@ -857,6 +857,8 @@ class usb_2400:
       volt = value * 0.15625 / 0x7fffff;
     elif gain == self.BP_0_078V:
       volt = value * 0.078125 / 0x7fffff;
+    elif gain == 9:
+      volt = value * 0.078125 / 0x7fffff;
     else:
       print('Unknown voltage range.')
       return 0
