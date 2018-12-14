@@ -184,17 +184,18 @@ def main():
       flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
       while True:
-        print('j = ',j)
         data = usb2408.AInScanRead(64,usb2408.CONTINUOUS)
-        for i in range(512):
-          queue_index = (data[i] >> 24) + 1                  # MSB of data contains the queue index
-          gain = usb2408.Queue[queue_index].gain
-          channel = usb2408.Queue[queue_index].channel
-          data[i] = usb2408.int24ToInt(data[i])        # convert raw 24 bit signed to 32 bit int
-          value = int(data[i]*usb2408.Cal[gain].slope + usb2408.Cal[gain].intercept)
-          print('Sample %i Index %i Channel %i  gain = %i raw = %#x voltage = %f' \
-                %(i, queue_index, channel, gain, value, usb2408.volts(gain,value)))
+#        for i in range(512):
+#          queue_index = (data[i] >> 24) + 1                  # MSB of data contains the queue index
+#          gain = usb2408.Queue[queue_index].gain
+#          channel = usb2408.Queue[queue_index].channel
+#          data[i] = usb2408.int24ToInt(data[i])        # convert raw 24 bit signed to 32 bit int
+#          value = int(data[i]*usb2408.Cal[gain].slope + usb2408.Cal[gain].intercept)
+#          print('Sample %i Index %i Channel %i  gain = %i raw = %#x voltage = %f' \
+#                %(i, queue_index, channel, gain, value, usb2408.volts(gain,value)))
         j += 1
+        if j%10 == 0:
+          print('j = ',j)
         c = sys.stdin.readlines()
         if (len(c) != 0):
           fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
@@ -263,12 +264,17 @@ def main():
       flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
       while True:
-        usb2408.AOutScanWrite(data)
+        try:
+          usb2408.AOutScanWrite(data)
+        except:
+          fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+          usb2408.AOutScanStop()
+          break
         c = sys.stdin.readlines()
         if (len(c) != 0):
           fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+          usb2408.AOutScanStop()
           break
-      usb2408.AOutScanStop()
             
 if __name__ == "__main__":
   main()

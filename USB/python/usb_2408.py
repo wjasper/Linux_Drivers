@@ -1050,5 +1050,9 @@ class usb_2408_2AO(usb_2400):
     for i in range(len(data)):
       value[2*i] = data[i] & 0xff
       value[2*i+1] = (data[i] >> 8) & 0xff
-    result = self.udev.bulkWrite(1, value, timeout = 10000)
+    try:
+      result = self.udev.bulkWrite(1, value, timeout = 10000)
+    except:
+      print('AOutScanWrite: error in bulkWrite')
+      return
     
