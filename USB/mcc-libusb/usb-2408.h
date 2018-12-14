@@ -134,7 +134,7 @@ void usbAOutScanStop_USB2408_2AO(libusb_device_handle *udev);
 void usbAOutScanStart_USB2408_2AO(libusb_device_handle *udev, double frequency, uint16_t scans, uint8_t options);
 uint8_t  usbAOutScanStatus_USB2408_2AO(libusb_device_handle *udev, uint16_t *depth);
 void usbAOut_USB2408_2AO(libusb_device_handle *udev, int channel, double voltage, double table_A0[NCHAN_AO_2408][2]);
-void voltsTos16_USB2408_2AO(double *voltage, int16_t *data, int nSamples, double table_AO[]);
+void voltsToUint16_USB2408_2AO(double *voltage, uint16_t *data, int nSamples, double table_AO[]);
 double usbAInMinPacerPeriod_USB2408(libusb_device_handle *udev);
 int  int24ToInt(int int24val);
 double tc_temperature_USB2408(libusb_device_handle *udev, int tc_type, uint8_t channel);

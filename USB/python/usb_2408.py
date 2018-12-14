@@ -1016,10 +1016,14 @@ class usb_2408_2AO(usb_2400):
      the FIFO).  Data will be output until reaching the specified number of scans (in single
      execution mode)or an AOutScanStop command is sent.
     '''
-    if frequency <= 0:
-      pacer_period = int(round(50000./10.)) & 0xffff     # 10Hz.
+    if frequency <= 0.:
+      print('AOutScanStart: frequency must be positive')
+      return
+    elif frequency > 50000:
+      print('AOutScanStart: frequency must be less than 50 KHz')
+      return
     else:
-      pacer_period = int(round(50000./frequency)) & 0xffff
+      pacer_period = int(round(50000./frequency)) & 0xffffffff
     scans &= 0xffff                                      # scans = 0 for continuous
     options &= 0xff
     (status, depth) = self.AOutScanStatus()
@@ -1027,13 +1031,22 @@ class usb_2408_2AO(usb_2400):
       print('There are currently', depth, 'samples in the Output FIFO buffer.')
       return
     request_type = libusb1.LIBUSB_TYPE_VENDOR
-    buf = pack('HHB', pacer_period, scans, options)
-    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_START, 0x0, 0x0, buf, timeout = 100)
+    buf = bytearray(7)
+    buf[0] = pacer_period         & 0xff
+    buf[1] = (pacer_period >> 8)  & 0xff
+    buf[2] = (pacer_period >> 16) & 0xff
+    buf[3] = (pacer_period >> 24) & 0xff
+    buf[4] = scans                & 0xff
+    buf[5] = (scans >> 8)         & 0xff
+    buf[6] = options
+              
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_START, 0x0, 0x0, buf, timeout = 1000)
 
   def AOutScanWrite(self, data):
-    # data is a list of signed 16 bit numbers
+    # data is a list of unsigned 16 bit numbers
     value = [0]*len(data)*2
     for i in range(len(data)):
       value[2*i] = data[i] & 0xff
       value[2*i+1] = (data[i] >> 8) & 0xff
-    result = self.udev.bulkWrite(1, value, timeout = 0)
+    result = self.udev.bulkWrite(1, value, timeout = 10000)
+    

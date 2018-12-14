@@ -72,7 +72,7 @@
 #define MBD_COMMAND      (0x80)     // Text-baseed MBD command
 #define MBD_RAW          (0x81)     // Raw MBD response
 
-#define HS_DELAY 1000
+#define HS_DELAY 100
 
 // Globals
 Thermocouple_Data ThermocoupleData[8];
@@ -512,18 +512,27 @@ void usbAOutScanStart_USB2408_2AO(libusb_device_handle *udev, double frequency, 
      execution mode)or an AOutScanStop command is sent.
   */
   int ret;
+  uint32_t pacer_period = 0x0;
+  uint16_t depth;
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
   struct scanPacket_t {
-    uint16_t pacer_period; // pacer timer period = 50 kHz / (scan frequency)
-    uint8_t scans[2];      // the total number of scans to perform (0 = continuous)
-    uint8_t options;       // bit 0: 1 = include channel 0 in output scan
-		  	   // bit 1: 1 = include channel 1 in output scan
-			   // bits 2-7 reserved
+    uint8_t pacer_period[4]; // pacer timer period = 50 kHz / (scan frequency)
+    uint8_t scans[2];        // the total number of scans to perform (0 = continuous)
+    uint8_t options;         // bit 0: 1 = include channel 0 in output scan
+		  	     // bit 1: 1 = include channel 1 in output scan
+			     // bits 2-7 reserved
   } scanPacket;
-  uint16_t depth;
-  
-  scanPacket.pacer_period = (uint16_t) rint(50000./frequency);
+
+  if (frequency <= 0.0) {
+    printf("usbAOutScanStart_USB2408_2AO: frequency must be positive.\n");
+    return;
+  } else if (frequency > 50000.) {
+    printf("usbAOutScanStart_USB2408_2AO: frequency must be less than 50 kHz.\n");
+  } else {
+    pacer_period = (uint32_t) rint(50000./frequency);
+  }
+  memcpy(scanPacket.pacer_period, &pacer_period, 4);
   memcpy(scanPacket.scans, &scans, 2);
   scanPacket.options = options;
 
@@ -577,7 +586,7 @@ void usbAOut_USB2408_2AO(libusb_device_handle *udev, int channel, double voltage
   } else if (dvalue <= 0) {
     value = 0x0;
   } else {
-    value = (short int) dvalue;
+    value = (uint16_t) dvalue;
   }
 
   memcpy(aOut.value, &value, 2);
@@ -655,7 +664,6 @@ void usbBlink_USB2408(libusb_device_handle *udev, uint8_t bcount)
     This command will blink the device LED "count" number of times
   */
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
-  uint8_t cmd = BLINK_LED;
 
   libusb_control_transfer(udev, requesttype, BLINK_LED, 0x0, 0x0, (unsigned char *) &bcount, 1, HS_DELAY);
   return;
@@ -854,21 +862,21 @@ void cleanup_USB2408( libusb_device_handle *udev )
   }
 }
 
-void voltsTos16_USB2408_2AO(double *voltage, int16_t *data, int nSamples, double table_AO[])
+void voltsToUint16_USB2408_2AO(double *voltage, uint16_t *data, int nSamples, double table_AO[])
 {
   /* This routine converts an array of voltages (-10 to 10 volts) to signed 16 bit ints for the DAC */
   int i;
   double dvalue;
 
   for (i = 0; i < nSamples; i++) {
-    dvalue = voltage[i]*(1<<15)/10.;                             /* convert voltage to signed value */
+    dvalue = voltage[i]*32768./10. + 32768;
     dvalue = dvalue*table_AO[0] + table_AO[1];                   /* correct for calibration errors */
-    if (dvalue >= 32767.) {
-      data[i] = 0x7fff;
-    } else if (dvalue <= -32768.) {
-      data[i] = 0x8000;
+    if (dvalue >= 0xffff) {
+      data[i] = 0xffff;
+    } else if (dvalue <= 0.) {
+      data[i] = 0x0;
     } else {
-      data[i] = (short int) dvalue;
+      data[i] = (uint16_t) dvalue;
     }
   }
 }

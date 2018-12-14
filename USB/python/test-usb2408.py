@@ -247,17 +247,17 @@ def main():
       sine = [0]*512
       data = [0]*512
       for i in range(512):
-        sine[i] = 10*math.sin(2*math.pi*i/128.)
-        data[i] = sine[i]*(1<<15)/10.
+        sine[i] = 10*math.sin(2*math.pi*i/64.)
+        data[i] = sine[i]*32768./10. + 32768.
         data[i] = data[i]*usb2408.Cal_AO[channel].slope + usb2408.Cal_AO[channel].intercept
-        if data[i] > 32767:
-          data [i] = 0x7fff
-        elif data[i] < -32768:
-          data[i] = 0x8000
+        if data[i] > 65535.:
+          data [i] = 0xffff
+        elif data[i] < 0:
+          data[i] = 0x0
         else:
           data[i] = int(data[i]) 
       usb2408.AOutScanStop()
-      usb2408.AOutScanStart(128*frequency, 0, options)
+      usb2408.AOutScanStart(frequency, 0, options)
       print("Hit 's <CR>' to stop")
       flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)

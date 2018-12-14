@@ -70,8 +70,8 @@ int main (int argc, char **argv)
   double temperature;
   double frequency;
   double sine[512];
-  int16_t sdata[512];  // holds 16 bit signed analog output data
-  int32_t idata[512];  // holds 24 bit signed analog input data
+  uint16_t sdata[512];  // holds 16 bit unsigned analog output data
+  int32_t idata[512];   // holds 24 bit signed analog input data
   uint8_t status;
   uint16_t depth;
   uint16_t count;
@@ -294,25 +294,25 @@ int main (int argc, char **argv)
         channel = 0;
 	printf("Test of Analog Output Scan.\n");
 	printf("Hook scope up to VDAC 0\n");
-	printf("Enter desired frequency of sine wave [Hz]: ");
+	printf("Enter desired frequency of sine wave [Hz] [10 - 256 Hz]: ");
 	scanf("%lf", &frequency);
 	for (i = 0; i < 512; i++) {
-	  sine[i] = 10*sin(2.*M_PI*i/128.);
+	  sine[i] = 10.*sin(2.*M_PI*i/64.);
 	}
-	voltsTos16_USB2408_2AO(sine, sdata, 512, table_AO[channel]);
+	voltsToUint16_USB2408_2AO(sine, sdata, 512, table_AO[channel]);
 	usbAOutScanStop_USB2408_2AO(udev);
-	usbAOutScanStart_USB2408_2AO(udev, 128.*frequency, 0, (0x1 << channel));
+	usbAOutScanStart_USB2408_2AO(udev, frequency, 0, (0x1 << channel));
 	printf("Hit \'s <CR>\' to stop\n ");
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
 	j = 0;
 	do {
-	  ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_OUT|1, (unsigned char *) sdata, sizeof(sdata), &transferred, 1000);
+	  ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_OUT|1, (unsigned char *) sdata, sizeof(sdata), &transferred, 10000);
 	  if (ret < 0) {
 	    perror("Error in bulk write tansfer");
 	    printf("Scan %d: Wrote %d bytes  sizeof(sdata) = %ld\n", j++, transferred, sizeof(sdata));
 	    return -1;
-	  }
+	  } 
 	} while (!isalpha(getchar()));
 	fcntl(fileno(stdin), F_SETFL, flag);
 	usbAOutScanStop_USB2408_2AO(udev);
