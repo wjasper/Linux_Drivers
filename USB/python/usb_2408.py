@@ -250,7 +250,17 @@ class usb_2400:
      if an AInScan is currently running.
 
      channel: 0-15  the input channel to read
-     mode:    0-10 
+     mode:    0: Differential voltage
+              1: Single-ended voltage, high pin
+              2: Single-ended voltage, low pin
+              3: D/A readback voltage
+              4: Thermocouple
+              5: AIn offset calibration
+              6: AIn gain calibration
+              7: TC Offset Calibration
+              8: TC Gain Calibration Positive
+              9: TC Gain Calibration Negative
+             10: Thermocouple no burnout detect
      range:   0-8  
      rate:    0-15 
 
