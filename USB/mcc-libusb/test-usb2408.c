@@ -375,8 +375,11 @@ int main (int argc, char **argv)
 	    tc_type = TYPE_B; break;
 	  default: tc_type = TYPE_J; break;
 	}
-	temperature = tc_temperature_USB2408(udev, tc_type, channel);
-	printf("Temperature = %.3f C  %.3f F\n", temperature, temperature*9./5. + 32.);
+	for (i = 0; i < 20; i++) {
+	  temperature = tc_temperature_USB2408(udev, tc_type, channel);
+	  printf("Temperature = %.3f C  %.3f F\n", temperature, temperature*9./5. + 32.);
+	  sleep(1);
+	}
         break;
       case 'v':
         usbGetVersion_USB2408(udev, version);

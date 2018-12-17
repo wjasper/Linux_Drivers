@@ -259,7 +259,7 @@ void usbBuildCalTable_USB1608FS(libusb_device_handle *udev, Calibration_AIN tabl
   for (j = 0; j < NCHAN_USB1608FS; j++) {
     x0 = data[2*j];      // offset
     x1 = data[2*j+1];    // positive gain
-    table_AIN[0][j].slope = (y1 - y0)/(x1 - x0);          // slope
+    table_AIN[0][j].slope = (y1 - y0)/(x1 - x0);         // slope
     table_AIN[0][j].offset = (y0*x1 - y1*x0)/(x1 - x0);  // intercept
   }
 

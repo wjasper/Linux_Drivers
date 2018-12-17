@@ -934,7 +934,7 @@ double tc_temperature_USB2408(libusb_device_handle *udev, int tc_type, uint8_t c
     return -1;
   }
   // Apply calibration offset from Gain Table (EEPROM) address 0x0130 (slope) and 0x0138 (offset)
-  value = value*table_AI[BP_078V][0] + table_AI[BP_078V][1];
+  value = value*table_AI[9][0] + table_AI[9][1];
   // Calculate the TC voltage from the corrected values
   tc_voltage = (value * 2. * 0.078125) / 16777216.;
   // Read the correct CJC block from the array

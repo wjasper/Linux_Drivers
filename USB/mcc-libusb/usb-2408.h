@@ -76,7 +76,7 @@ extern "C" {
   
 #define NCHAN_2408      16       // max number of A/D channels in the device (8 Differential)
 #define nCJCGrad_2408    8       // max number of CJC Gradient array elements
-#define NGAINS_2408      9       // max number of gain levels (analog input)
+#define NGAINS_2408     10       // max number of gain levels (analog input)
 #define MAX_QUEUE_SIZE  64       // max number of entries in the AIN scan queue
 #define NCHAN_AO_2408    2       // number of analog output channels
 

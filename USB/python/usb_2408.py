@@ -253,11 +253,15 @@ class usb_2400:
      mode:    0-10 
      range:   0-8  
      rate:    0-15 
+
+     value: signed 24 bit value frad from the analog input channel
+     flags: bits  0-6: reserved
+            bit7: 1 = TC open detected,  0 = normal reading
     '''
-    input1 = (mode << 8) | channel
-    input2 = (rate << 8) | gain
+    wValue = (mode << 8) | channel
+    wIndex = (rate << 8) | gain
     request_type = libusb1.LIBUSB_TYPE_VENDOR 
-    data ,= unpack('I',self.udev.controlRead(request_type, self.AIN, input1, input2, 4, timeout = 200))
+    data ,= unpack('I',self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 4, timeout = 200))
     flags = (data >> 24)
     data = self.int24ToInt(data)
     return (data, flags)
