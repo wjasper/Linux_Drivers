@@ -65,8 +65,12 @@ def main():
     print("Hit 'i' to test Analog Input")
     print("Hit 'I' to test Analog Input Scan")
     print("Hit 'j' read CJC sensors.")
-    print("Hit 'o' for Analog Output")
-    print("Hit 'O' for Analog Output Scan")
+    if getattr(usb2408,'AOut',False) == False:
+     pass
+    else:
+      # Only for USB-2408-2A0
+      print("Hit 'o' for Analog Output")
+      print("Hit 'O' for Analog Output Scan")
     print("Hit 'r' to reset the device.")
     print("Hit 's' to get serial number.")
     print("Hit 'S' to get Status.")
