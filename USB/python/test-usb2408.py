@@ -237,10 +237,19 @@ def main():
       channel = int(input('Input Channel [0-1]: '))
       while True:
         voltage = float(input('Enter output voltage [-10 to 10]: '))
-        usb2408.AOut(channel, voltage)
+        try:
+          usb2408.AOut(channel, voltage)
+        except AttributeError:
+          print('AttributeError: USB-2408-2AO only')
+          break;
         if toContinue() == False:
           break
     elif ch == 'O':
+      try:
+        usb2408.AOutScanStop()
+      except AttributeError:
+        print('AttributeError: USB-2408-2AO only')
+        continue
       channel = int(input('Input Channel [0-1]: '))
       options = 0x1 << channel
       print('Test of Analog Ouput Scan')
@@ -258,7 +267,6 @@ def main():
           data[i] = 0x0
         else:
           data[i] = int(data[i]) 
-      usb2408.AOutScanStop()
       usb2408.AOutScanStart(frequency, 0, options)
       print("Hit 's <CR>' to stop")
       flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
