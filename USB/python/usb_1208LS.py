@@ -112,7 +112,7 @@ class usb_1208:
   #################################
 
   def DConfig(self, port_number, bit_mask):
-    """
+    '''
     This command sets the direction of the digital bits for a port
     
      port_number:    AUXPORT    =   0x10
@@ -121,14 +121,14 @@ class usb_1208:
     
      bit_mask   bit value:  0 = output,  1 = input
     Note: Bug in AUXPORT, take the one's complement
-    """
+    '''
 
     if self.productID == 0x0075 and port_number == self.DIO_AUXPORT:
       bit_mask = ((bit_mask ^ 0xff) & 0xff)
     self.h.write([self.DCONFIG, port_number, bit_mask, 0, 0, 0, 0, 0])
 
   def DIn(self, port_number):
-    """
+    '''
     This command reads the current state of the DIO port.  If the digital port
     is bitwise configurable, it may be any combination of inputs and outputs.
     The return value will be the value seen at the port pins.
@@ -137,7 +137,7 @@ class usb_1208:
                      Port A     =   0x01
                      Port B     =   0x04
     Bug: need leading 0 in command string.
-    """
+    '''
 
     self.h.write([0x0, self.DIN, port_number, 0, 0, 0, 0, 0, 0])
     try:
@@ -147,18 +147,18 @@ class usb_1208:
     return(value[0])
 
   def DOut(self, port_number, value):
-    """
+    '''
     This command writes data to the DIO port bits that are configured as outputs.
     
      port_number:    AUXPORT    =   0x10
                      Port A     =   0x01
                      Port B     =   0x04
      value:           value to write to the port
-    """
+    '''
     self.h.write([self.DOUT, port_number, value, 0, 0, 0, 0, 0])
 
   def DBitIn(self, port_number, bit):
-    """
+    '''
     This command reads an individual digital port bit.  It will return the value
     seen at the port pin, so may be used for an input or output bit.
     
@@ -167,7 +167,7 @@ class usb_1208:
                      Port B     =   0x04
     
      bit:            The bit to read (0-7)
-    """
+    '''
     
     self.h.write([self.DBIT_IN, port_number, bit, 0, 0, 0, 0, 0])
     try:
@@ -177,7 +177,7 @@ class usb_1208:
     return(value[0])
 
   def DBitOut(self, port_number, bit, value):
-    """
+    '''
     This command writes an individual digital port bit.  
 
      port_number:    AUXPORT    =   0x10
@@ -186,7 +186,7 @@ class usb_1208:
     
      bit:            The bit to read (0-7)
      value:          The value to write to the bit (0 or 1)
-    """
+    '''
     self.h.write([self.DBIT_OUT, port_number, bit, value, 0, 0, 0, 0])
     
   #################################
@@ -194,7 +194,7 @@ class usb_1208:
   #################################
 
   def AIn(self, channel, gain):
-    """
+    '''
     This command reads the value from an analog input channel, setting the desired
     gain range first.  Note that single-ended inputs include 11 bits of resolution
     while differential inputs have 12 bits of resolution.  Also, the 'range' code
@@ -202,7 +202,7 @@ class usb_1208:
     
        channel: the channel to read (0-3 differential, or 0-7 single ended)
        range:   the gain and input mode setting
-    """
+    '''
 
     if (gain == self.SE_10_00V):
       mode = 0    # single ended
@@ -237,7 +237,7 @@ class usb_1208:
     return int(value)
 
   def AInScan(self, count, frequency,  nQueue, chanQueue, gainQueue, options):
-    """
+    '''
     This command scans a range of analog input channels.  The
     channel configuration (low channel, high channel, and gain
     ranges) must be set with ALoadQueue.
@@ -257,7 +257,7 @@ class usb_1208:
     startup the acquisition
     
     In burst mode, wait for end-of-block acqusition (0xa5) then startup acquisition
-    """
+    '''
 
     # Calculate timer_preload and timer_prescale values
     if (100 <= frequency and frequency < 200): 
@@ -347,7 +347,9 @@ class usb_1208:
     return buffer
 
   def AInStop():
-    # This command stops the analog scan (if running)
+    '''
+    This command stops the analog scan (if running)
+    '''
     self.h.write([self.AIN_STOP, 0, 0, 0, 0, 0, 0, 0])
 
   def ALoadQueue(self, count, chanQueue, gainQueue):
@@ -370,12 +372,12 @@ class usb_1208:
   #################################
 
   def AOut(self, channel, value):
-    """
+    '''
     This command sets the voltage output of the specified analog output channel
     
        channel:  selects output channel (0 or 1)
        value:    value (uint16) in counts to output [10-bits 0-5V]
-    """
+    '''
     
     if (value > 0x3ff):
       value = 0x3ff
@@ -391,11 +393,11 @@ class usb_1208:
   #################################
 
   def CIn(self):
-    """
+    '''
     This function reads the 32-bit event counter on the device.  This
     counter tallies the transitions of an external input attached to
     the CTR pin (pin 20) on the screw terminal of the device.
-    """
+    '''
     
     self.h.write([self.CIN, 0, 0, 0, 0, 0, 0, 0])
     try:
@@ -406,7 +408,9 @@ class usb_1208:
     return (value[0] | (value[1]<<8) | (value[2]<<16) | (value[3]<<24))
 
   def CInit(self):
-    # This command initializes the event counter and resets the count to zero
+    ''' 
+    This command initializes the event counter and resets the count to zero
+    '''
     self.h.write([self.CINIT, 0, 0, 0, 0, 0, 0, 0])
 
   #################################
@@ -414,7 +418,7 @@ class usb_1208:
   #################################
 
   def MemRead(self, address, count):
-    """
+    '''
     This command reads data from the configuration memeory (EEPROM).
     
        address: the start address for the read.
@@ -433,7 +437,7 @@ class usb_1208:
                |-----------------------------------------|
     
      count: the number of bytes to read (maximum 8)
-    """
+    '''
 
     if (count > 8):
       print('MemRead: max count is 8')
@@ -446,7 +450,7 @@ class usb_1208:
     return(value[0:count])
 
   def MemWrite(self, address, count, data):
-    """
+    '''
     This command writes data to the non-volatile EEPROM memory on the device.
     The non-volatile memory is used to store calibration coefficients, system
     information and user data.
@@ -468,7 +472,7 @@ class usb_1208:
 
     count: the number of bytes to read (maximum 4)
     data:  the data to be written (4 bytes max)
-    """
+    '''
 
     if (count > 4):
       print('MemWrite: max count is 4')
@@ -481,21 +485,21 @@ class usb_1208:
   #################################
 
   def Blink(self):
-    """
+    '''
      This command causes the LED to flash several times.
-    """
+    '''
     self.h.write([self.BLINK_LED, 0, 0, 0, 0, 0, 0, 0])
 
   def Reset(self):
-    """
+    '''
     The command causes the device to perform a soft reset. The device
     simulates a disconnect from the USB bus which in turn causes the
     host computer to re-enumerate the device.
-    """
+    '''
     self.h.write([self.RESET, 0, 0, 0, 0, 0, 0, 0])
 
   def SetTrigger(self, type, chan=0):
-    """
+    '''
     This command configures the external trigger for analog input.  The
     trigger may be configured to activate with either a logic rising
     edge or falling edge input.  Once the trigger is received, the analog
@@ -504,16 +508,16 @@ class usb_1208:
     
      type:  the type of trigger  (0 = external trigger falling edge, 1 = external trigger rising edge)
      chan:  the digial bit that receives the trigger signal(0 for USB-120LS, 0-3 for miniLAB 1008)
-    """   
+    '''
     self.h.write([self.SET_TRIGGER, type, chan, 0, 0, 0, 0, 0, 0])
 
   def SetID(self, id):
-    """
+    '''
     This command stores an identifier on the unit.  Values of 0-255 are valid.  Note that 0
     is used to flag uninitialized units.
     
     id: user id number (0-255)
-    """
+    '''
 
     if id < 0 or id > 255:
       print('SetID: id out of range')
@@ -524,10 +528,10 @@ class usb_1208:
       print('Error in writing id')
       
   def GetID(self):
-    """
+    '''
     This function retrieves the id number stored on the device.  Note that a value of 0
     is used to flag an uninitialized device.
-    """
+    '''
     try:
       self.h.write([self.GET_ID, 0, 0, 0, 0, 0, 0, 0])
     except:
@@ -539,9 +543,9 @@ class usb_1208:
     return(value[0])
 
   def volts(self, gain, num):
-    """
+    '''
     converts raw values to volts
-    """
+    '''
     volt = 0.0
     if gain == self.SE_10_00V:
       volt = num * 10.0 / 0x3ff

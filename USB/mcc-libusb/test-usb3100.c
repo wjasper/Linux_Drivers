@@ -196,18 +196,18 @@ int main(int argc, char **argv) {
         break;
       case 'R':
         memset(memory, 0x0, 62);
-        usbReadMemory_USB31XX(hid, 0x0000, 60, memory);
+        usbReadMemory_USB31XX(hid, 0x0000, 62, memory);
         printf("reading from EEPROM: \n");
 	for (i = 0; i < 62; i+=2) {
 	  printf("address = %#x \t value = %#x \t\t", i, memory[i]);
-  	  printf("address = %#x \t value = %#x \t\n", i+1, memory[i+2]);
+  	  printf("address = %#x \t value = %#x \t\n", i+1, memory[i+1]);
 	}
 	memset(memory, 0x0, 62);
         usbReadMemory_USB31XX(hid, 0x0100, 62, memory);
         printf("\nreading from FLASH: \n");
 	for (i = 0; i < 62; i+=2) {
 	  printf("address = %#x \t value = %#x \t\t", i+0x100, memory[i]);
-  	  printf("address = %#x \t value = %#x \t\n", i+0x101, memory[i+2]);
+  	  printf("address = %#x \t value = %#x \t\n", i+0x101, memory[i+1]);
 	}
         break;
       default:

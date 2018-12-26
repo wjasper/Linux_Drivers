@@ -29,13 +29,6 @@ class OverrunError(Error):
   ''' Raised when overrun on AInScan'''
   pass
 
-class UnderrunError(Error):
-  ''' Raised when underrun on AOutScan'''
-  pass
-
-class SaturationError(Error):
-  ''' Raised when DAC is saturated '''
-  pass
 
 # Base class for lookup tables of calibration coefficients (slope and offset)
 class table:
@@ -511,7 +504,7 @@ class usb_1608FS:
     wIndex = 0                     # interface
 
     if channel < 0 or channel > 7:
-      print('AIn: channel out of range.')
+      raise ValueError('AIn: channel out of range.')
       return
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.AIN, channel, gain], timeout = 100)
     value = unpack('BBB',self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 2, 3, timeout = 1000))    
@@ -624,14 +617,14 @@ class usb_1608FS:
     wIndex = 0                          # interface
 
     if hichannel > 7:
-      print('AInScan: hichannel out of range')
+      raise ValueError('AInScan: hichannel out of range')
       return
     if lowchannel > 7:
-      print('AInScan: lowchannel out of range')
+      raise ValueError('AInScan: lowchannel out of range')
       return
 
     if frequency <= 0:
-      print('AInScan: frequency must be positive.')
+      raise ValueError('AInScan: frequency must be positive.')
       return
     
     nchan = hichannel - lowchannel + 1    # total number of channels in a scan
@@ -646,7 +639,7 @@ class usb_1608FS:
         break
 
     if prescale == 9 or preload == 0:
-      print('AInScan: frequency out of range')
+      raise ValueError('AInScan: frequency out of range')
       return
 
     if frequency < 150.:
@@ -801,7 +794,7 @@ class usb_1608FS:
     value = bytearray(count)
 
     if (count > 62):
-      print('MemRead: max count is 62')
+      raise ValueError('MemRead: max count is 62')
       return
     buf = [self.MEM_READ, address & 0xff, (address >> 8) & 0xff, mem_type, count] 
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, buf, timeout = 5000)
@@ -840,7 +833,8 @@ class usb_1608FS:
     wIndex = 0                           # interface
 
     if (count > 59):
-      print('MemWrite: max count is 59')
+      raise ValueError('MemWrite: max count is 59')
+      return
 
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.MEM_WRITE,address, data[:count]], timeout = 100)
 
@@ -1014,7 +1008,7 @@ class usb_1608FS:
     wIndex = 0                            # interface
 
     if (count > 32):
-      print('WriteCode: count greater than 32')
+      raise ValueError('WriteCode: count greater than 32')
       return
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, \
             [self.WRITE_CODE, address&0xff, (address>>8)&0xff, (address>>16)&0xff, count, data[0:count]], timeout = 100)
@@ -1029,7 +1023,7 @@ class usb_1608FS:
     wIndex = 0                           # interface
 
     if (count > 62):
-      print('ReadCode: count greater than 62')
+      raise ValueError('ReadCode: count greater than 62')
       return
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, \
              [self.READ_CODE, address&0xff, (address>>8)&0xff, (address>>16)&0xff, count], timeout = 100)                

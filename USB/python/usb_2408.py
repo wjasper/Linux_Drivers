@@ -203,13 +203,12 @@ class usb_2400:
   def DIn(self, port=0):
     '''
     This command reads the current state of the digital port pins.
-      port: the port to read (there is only one)  0: onboard (pins 0-7)
+    port: the port to read (there is only one)  0: onboard (pins 0-7)
     '''
     request_type = libusb1.LIBUSB_TYPE_VENDOR 
     wValue = 0
     wIndex = 0
     data = self.udev.controlRead(request_type, self.DIN, port, wIndex, 2, timeout = 100)
-    print(data)
     return data[0]
 
   def DOut(self, value, port=0):
@@ -395,8 +394,8 @@ class usb_2400:
       elif self.Queue[i].rate == self.HZ2_5:
         period += 1./2.5 + 640.E-6
       else:
-        print('Unknown rate')
-        break
+        raise ValueError('AInMinPacerPeriod: Unknown rate')
+        return
     return period
 
   def AInScanFlush(self):
@@ -745,7 +744,7 @@ class usb_2400:
     wValue = 0
     wIndex = 0
     if len(data) % 64 != 0:
-      print('UpdateData: Data must be divisible by 64')
+      raise ValueError('UpdateData: Data must be divisible by 64')
       return
 
     value = [address & 0xff, (address >>8) & 0xff, (address >>16) & 0xff] 
@@ -874,8 +873,8 @@ class usb_2400:
     elif gain == 9:
       volt = value * 0.078125 / 0x7fffff;
     else:
-      print('Unknown voltage range.')
-      return 0
+      raise ValueError('volts: Unknown voltage range.')
+      return 
     return volt
 
   def Temperature(self, tc_type, channel):
@@ -1033,10 +1032,10 @@ class usb_2408_2AO(usb_2400):
      execution mode)or an AOutScanStop command is sent.
     '''
     if frequency <= 0.:
-      print('AOutScanStart: frequency must be positive')
+      raise ValueError('AOutScanStart: frequency must be positive')
       return
     elif frequency > 50000:
-      print('AOutScanStart: frequency must be less than 50 KHz')
+      raise ValueError('AOutScanStart: frequency must be less than 50 KHz')
       return
     else:
       pacer_period = int(round(50000./frequency)) & 0xffffffff

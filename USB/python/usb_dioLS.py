@@ -160,7 +160,7 @@ class usb_dioLS:   # HID LS dio devices
     This command reads data from the configuration memeory (EEPROM).
     """
     if (count > 8):
-      print('MemRead: max count is 8')
+      rasie ValueError('MemRead: max count is 8')
       return
     self.h.write([self.MEM_READ, address, count, 0, 0, 0, 0, 0])
     try:
@@ -179,7 +179,7 @@ class usb_dioLS:   # HID LS dio devices
     """
 
     if (count > 4):
-      print('MemWrite: max count is 4')
+      raise ValueError('MemWrite: max count is 4')
       return
     self.h.write([self.MEM_Write, address, count, data[0:count]] + [0]*(5-count))
 
@@ -210,7 +210,7 @@ class usb_dioLS:   # HID LS dio devices
     """
 
     if id < 0 or id > 255:
-      print('SetID: id out of range')
+      raise ValueError('SetID: id out of range')
       return
     try:
       self.h.write([self.SET_ID, id, 0, 0, 0, 0, 0, 0])

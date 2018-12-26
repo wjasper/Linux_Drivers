@@ -1035,8 +1035,7 @@ class Thermocouple:
     elif type == 't':
       return self.typet_to_mv(degc)
     else:
-      print('Unknown thermocouple type')
-      return 0
+      raise ValueError('temp_to_mv: Unknown thermocouple type')
 
   def mv_to_temp(self, type, mv):
     '''
@@ -1060,5 +1059,5 @@ class Thermocouple:
     elif type == 't':
       return self.mv_to_typet(mv)
     else:
-      print('Unknown thermocouple type')
-      return 0
+      raise ValueError('mv_to_temp: Unknown thermocouple type')
+

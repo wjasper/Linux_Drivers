@@ -363,10 +363,10 @@ class usb_temp:
        |-----------------------------------------------------------------------|
     """
     if (micro_type == 0 and count > 62):
-      print('MemRead: max count is 62 for main microcontroller')
+      raise ValueError('MemRead: max count is 62 for main microcontroller')
       return
     if (micro_type == 1 and count > 60):
-      print('MemRead: max count is 60 for isolated microcontroller')
+      raise ValueError('MemRead: max count is 60 for isolated microcontroller')
       return
     self.h.write([self.MEM_READ, address, micro_type, count])
     try:
@@ -392,7 +392,7 @@ class usb_temp:
     """
 
     if (count > 59):
-      print('MemWrite: max count is 59')
+      raise ValueError('MemWrite: max count is 59')
       return
     self.h.write([self.MEM_WRITE, address, micro_type, count, data[0:count]], 1000)
 
@@ -445,7 +445,7 @@ class usb_temp:
       data  = unpack('BBBB', pack('f',value)) # convert float to 4 byte list
       self.h.write([self.SET_ITEM, item, subitem, data[0], data[1], data[2], data[3]])
     else:
-      print('Unknown subitem')
+      raise ValueError('SetItem: Unknown subitem')
       
   def GetItem(self, item, subitem):
     '''
@@ -460,7 +460,7 @@ class usb_temp:
       value ,= unpack_from('f', value, 1)
       return value
     else:
-      print('Unknown subitem')
+      raise ValueError('GetItem: Unknown subitem')
       return
 
   def Calibrate(self, cal_type=0, path=0):
