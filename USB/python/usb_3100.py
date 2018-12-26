@@ -19,14 +19,14 @@ import hid
 import time
 from struct import *
 
-# Base class for lookup tables of calibration coefficients (slope and offset)
+# Base class for lookup tables of calibration coefficients (slope and intercept)
 class table:
   def __init__(self):
     self.slope = 0.0
     self.intercept = 0.0
 
-
-class usb_3100:    # HID USB-310X devices
+    
+class usb_3100:    # HID USB-31XX devices
 
   DIO_DIR_IN   = 0x1  # input direction
   DIO_DIR_OUT  = 0x0  # output direction
@@ -183,7 +183,7 @@ class usb_3100:    # HID USB-310X devices
       raise ValueError('AOut: channel out of range.')
       return
 
-    value = int(self.CalTable[channel].slope*value + self.CalTable[channel].offset)
+    value = int(self.CalTable[channel].slope*value + self.CalTable[channel].intercept)
 
     if value > 0xffff:
       value = 0xffff
@@ -461,9 +461,9 @@ class usb_3101(usb_3100):
     try:
       self.h.open(0x09db, self.productID, serial)
     except:
-      print('Can not open USB-3101')
       raise FileNotFoundError()
       return
+
     # enable non-blocking mode
     self.h.set_nonblocking(1)
 
@@ -474,7 +474,6 @@ class usb_3102(usb_3100):
     try:
       self.h.open(0x09db, self.productID, serial)
     except:
-      print('Can not open USB-3102')
       raise FileNotFoundError()
       return
 
@@ -488,7 +487,6 @@ class usb_3103(usb_3100):
     try:
       self.h.open(0x09db, self.productID, serial)
     except:
-      print('Can not open USB-3103')
       raise FileNotFoundError()
       return
 
@@ -502,7 +500,6 @@ class usb_3104(usb_3100):
     try:
       self.h.open(0x09db, self.productID, serial)
     except:
-      print('Can not open USB-3104')
       raise FileNotFoundError()
       return
 
@@ -516,10 +513,9 @@ class usb_3105(usb_3100):
     try:
       self.h.open(0x09db, self.productID, serial)
     except:
-      print('Can not open USB-3105')
       raise FileNotFoundError()
       return
-
+    
     # enable non-blocking mode
     self.h.set_nonblocking(1)
 
@@ -530,7 +526,6 @@ class usb_3106(usb_3100):
     try:
       self.h.open(0x09db, self.productID, serial)
     except:
-      print('Can not open USB-3106')
       raise FileNotFoundError()
       return
 
@@ -544,7 +539,6 @@ class usb_3110(usb_3100):
     try:
       self.h.open(0x09db, self.productID, serial)
     except:
-      print('Can not open USB-3110')
       raise FileNotFoundError()
       return
 
@@ -558,7 +552,6 @@ class usb_3112(usb_3100):
     try:
       self.h.open(0x09db, self.productID, serial)
     except:
-      print('Can not open USB-3112')
       raise FileNotFoundError()
       return
 
@@ -572,7 +565,6 @@ class usb_3114(usb_3100):
     try:
       self.h.open(0x09db, self.productID, serial)
     except:
-      print('Can not open USB-3114')
       raise FileNotFoundError()
       return
 

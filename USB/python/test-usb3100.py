@@ -61,6 +61,10 @@ def main():
                     print('No USB-31XX device found')
                     return
 
+  print("Manufacturer: %s" % usb3100.h.get_manufacturer_string())
+  print("Product: %s" % usb3100.h.get_product_string())
+  print("Serial No: %s" % usb3100.h.get_serial_number_string())
+
   # config mask 0x01 means all inputs
   usb3100.DConfigPort(usb3100.DIO_DIR_OUT)
   usb3100.DOut(0)
@@ -106,7 +110,9 @@ def main():
       usb3100.AOut(channel, value, 0)
     elif ch == 'c':
       print('Connect CTR and DIO0')
+      print('Hit s <CR> to stop.')
       usb3100.CInit()
+      usb3100.DConfigPort(usb3100.DIO_DIR_OUT)
       time.sleep(1.)
       flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
@@ -125,6 +131,11 @@ def main():
       value = hex(input('Enter a byte value [0-0xff]: '))
       usb3100.DConfigPort(usb3100.DIO_DIR_OUT)
       usb3100.DOut(value & 0xff)
+    elif ch == 'i':
+      print('Testing Digital Input ...')
+      usb3100.DConfigPort(usb3100.DIO_DIR_IN)
+      value = usb3100.DIn()
+      print('Digital Input =', hex(value))
     elif ch == 'e':
       usb3100.h.close()
       exit(0)
@@ -134,6 +145,9 @@ def main():
       print("Serial No: %s" % usb3100.h.get_serial_number_string())
     elif ch == 'g':
       print("Serial No: %s" % usb3100.h.get_serial_number_string())
+    elif ch == 'r':
+      usb3100.Reset()
+      return 0
     elif ch == 'R':
       memory = usb3100.MemRead(0x0000, 62)
       print('reading from EEPROM: ')
