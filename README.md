@@ -21,8 +21,9 @@ a feature that you want but are having problems implementing, please
 write me (wjasper@ncsu.edu) about it.
 
 There have been many requests for Python drivers, which I have put off
-for many reasons.  However, I am beginning the process starting with the
-E-1608.py (Ethernet devices). Please send me comments and feedback.
+for many reasons.  However, I am beginning the process starting with
+the E-1608.py (Ethernet devices) and am now writing them for USB HID
+devices. Please send me comments and feedback.
 
 **Note:** There have been many changes to the 2.6 kernel API.  All the
 drivers have been tested with the 2.6.22 kernel.  There are backward
@@ -30,7 +31,7 @@ compatibility issues, so it may or may not work under earlier versions
 of 2.6 (pre 2.6.22).  Please send email and I'll try to work them out,
 or upgrade to the 2.6.22 or later kernel.  Around 2.6.29, the kernel
 API changed enough that I started a new version of the modules. I do
-not have a new version of the moduls for each version of the kernel.
+not have a new version of the modules for each version of the kernel.
 If you notice problems that are kernel version related, use a later
 version or email me.  The pci drivers should also work on the 3.X and
 4.X kernels.
@@ -86,10 +87,12 @@ I have written drivers for the following boards:
 
 **Python**
   USB-1208LS, USB-miniLAB1008, USB-1024LS, USB-1024HLS, USB-DIO24, USB-DIO24H, USB-SSR24, 
-  USB-SSR08, USB-ERB24, USB-ERB08, USB-PDISO8 USB-1208FS, USB-1408FS, USB-1608FS
+  USB-SSR08, USB-ERB24, USB-ERB08, USB-PDISO8 USB-1208FS, USB-1408FS, USB-1608FS,
+  USB-2408, USB-2408-2AO, USB-3101, USB-3101, USB-3102, USB-3103, USB-3104, USB-3105,
+  USB-3106, USB-3110, USB-3112, USB-3114
 
 **New Python**:heavy_exclamation_mark: USB-1208LS.py, USB-1024LS.py (also works for USB-1024HLS, 
-      USB-DIO24 and USB-DIO1024H), USB-SSR24, USB-SSR08, USB-ERB24, USB-ERB08, USB-PDISO8
+      USB-DIO24 and USB-DIO1024H), USB-SSR24, USB-SSR08, USB-ERB24, USB-ERB08, USB-PDISO8, USB-31XX
 
 ====================================================================
 ## FAQ:  Here are some questions that I sometimes get that might help.
