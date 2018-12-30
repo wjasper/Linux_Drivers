@@ -211,8 +211,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('DIn: timeout error.\n')
+      raise TimeoutError('DIn: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -263,8 +262,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('DOut_R: timeout error.\n')
+      raise TimeoutError('DOut_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -321,8 +319,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('DOut: timeout error.\n')
+      raise TimeoutError('DOut: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -383,8 +380,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('Tin: timeout error.\n')
+      raise TimeoutError('Tin: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -433,8 +429,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('CJC: timeout error.\n')
+      raise TimeoutError('CJC: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -495,8 +490,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(512)
     except socket.timeout:
-      raise
-      print('TinMultiple: timeout error.\n')
+      raise TimeoutError('TinMultiple: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -551,8 +545,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(512)
     except socket.timeout:
-      raise
-      print('CJCMultiple: timeout error.\n')
+      raise TimeoutError('CJCMultiple: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -607,8 +600,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(512)
     except socket.timeout:
-      raise
-      print('TinConfig_R: timeout error.\n')
+      raise TimeoutError('TinConfig_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -667,8 +659,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(512)
     except socket.timeout:
-      raise
-      print('TinConfig_W: timeout error.\n')
+      raise TimeoutError('TinConfig_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -712,8 +703,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(512)
     except socket.timeout:
-      raise
-      print('TinStatus: timeout error.\n')
+      raise TimeoutError('TinStatus: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -759,8 +749,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(512)
     except socket.timeout:
-      raise
-      print('OTDStatus: timeout error.\n')
+      raise TimeoutError('OTDStatus: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -808,8 +797,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(512)
     except socket.timeout:
-      raise
-      print('MeasureConfig_R: timeout error.\n')
+      raise TimeoutError('MeasureConfig_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -861,8 +849,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(512)
     except socket.timeout:
-      raise
-      print('MeasureConfig_W: timeout error.\n')
+      raise TimeoutError('MeasureConfig_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -919,8 +906,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('MeasureMode_R: timeout error.\n')
+      raise TimeoutError('MeasureMode_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -980,8 +966,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('MeasureMode_W: timeout error.\n')
+      raise TimeoutError('MeasureMode_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1052,8 +1037,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('AlarmConfig_R: timeout error.\n')
+      raise TimeoutError('AlarmConfig_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1133,8 +1117,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('AlarmConfig_W: timeout error.\n')
+      raise TimeoutError('AlarmConfig_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1182,8 +1165,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('AlarmStatus: timeout error.\n')
+      raise TimeoutError('AlarmStatus: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1234,8 +1216,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('ClearAlarmStatus: timeout error.\n')
+      raise TimeoutError('ClearAlarmStatus: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1301,8 +1282,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(1050)
     except socket.timeout:
-      raise
-      print('UserMemory_R: timeout error.\n')
+      raise TimeoutError('UserMemory_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1355,8 +1335,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('UserMemory_W: timeout error.\n')
+      raise TimeoutError('UserMemory_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1409,8 +1388,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('SettingsMemory_R: timeout error.\n')
+      raise TimeoutError('SettingsMemory_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1466,8 +1444,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('SettingsMemory_W: timeout error.\n')
+      raise TimeoutError('SettingsMemory_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1517,8 +1494,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('ConfigMemory_R: timeout error.\n')
+      raise TimeoutError('ConfigMemory_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1574,8 +1550,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('ConfigMemory_W: timeout error.\n')
+      raise TimeoutError('ConfigMemory_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1620,8 +1595,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(128)
     except socket.timeout:
-      raise
-      print('FactoryCoef_R: timeout error.\n')
+      raise TimeoutError('FactoryCoef_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1702,8 +1676,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('FactoryCoef_W: timeout error.\n')
+      raise TimeoutError('FactoryCoef_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1748,8 +1721,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(128)
     except socket.timeout:
-      raise
-      print('FieldCoef_R: timeout error.\n')
+      raise TimeoutError('FieldCoef_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1830,8 +1802,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('FieldCoef_W: timeout error.\n')
+      raise TimeoutError('FieldCoef_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1873,8 +1844,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('FactoryCalDate_R: timeout error.\n')
+      raise TimeoutError('FactoryCalDate_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1946,8 +1916,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('FactoryCalDate_W: timeout error.\n')
+      raise TimeoutError('FactoryCalDate_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1989,8 +1958,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('FieldCalDate_R: timeout error.\n')
+      raise TimeoutError('FieldCalDate_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -2064,8 +2032,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('FieldCalDate_W: timeout error.\n')
+      raise TimeoutError('FieldCalDate_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -2111,8 +2078,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('blink: timout error.\n')
+      raise TimeoutError('Blink: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -2154,8 +2120,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('reset: timout error.\n')
+      raise TimeoutError('Reset: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -2178,7 +2143,6 @@ class E_TC32:
        bit 0:  1 = EXP detected,  0 = no EXP
        bits 1-15: Reserved
     """
-
     dataCount = 0
     replyCount = 2
     result = False
@@ -2199,8 +2163,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('status: timout error.\n')
+      raise TimeoutError('Status: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -2252,8 +2215,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(32)
     except socket.timeout:
-      raise
-      print('version: timout error.\n')
+      raise TimeoutError('Version: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -2298,8 +2260,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('networkConfig: timout error.\n')
+      raise TimeoutError('NetworkConfig: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -2349,8 +2310,7 @@ class E_TC32:
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('ADCal: timeout error.\n')
+      raise TimeoutError('ADCal: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \

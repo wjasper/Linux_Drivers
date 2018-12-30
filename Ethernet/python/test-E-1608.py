@@ -72,13 +72,13 @@ def main():
     elif ch == 'c':
       print('Connect DIO0 to CTR')
       e1608.DConfig_W(0xf0)
-      e1608.resetCounter()
+      e1608.ResetCounter()
       for i in range(20):
         e1608.DOut(0x1)
         time.sleep(0.1)
         e1608.DOut(0x0)
         time.sleep(0.1)
-        count = e1608.counter()
+        count = e1608.Counter()
         print('Counter = ', count)
     elif ch == 'd':
       print("\n Testing Digital I/O ...")

@@ -66,13 +66,13 @@ def main():
       print('Testing Counter on E-TC')
       print('Connect DI00 to CTR')
       etc.DConfig_W(0xf0)
-      etc.resetCounter()
+      etc.ResetCounter()
       for i in range(20):
         etc.DOut(0x1)
         time.sleep(0.1)
         etc.DOut(0x0)
         time.sleep(0.1)
-        count = etc.counter()
+        count = etc.Counter()
         print('Counter = ', count)
     elif ch == 'd':
       print("\n Testing Digital I/O ...")
