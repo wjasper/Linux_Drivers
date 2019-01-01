@@ -24,7 +24,6 @@ class table:
   def __init__(self):
     self.slope = 0.0
     self.intercept = 0.0
-
     
 class usb_3100:    # HID USB-31XX devices
 
@@ -43,10 +42,10 @@ class usb_3100:    # HID USB-31XX devices
   # Digital I/O Commands
   DCONFIG          = 0x01  # Configure digital port
   DCONFIG_BIT      = 0x02  # Configure individual digital port bits
-  DIN              = 0x3   # Read digital port
-  DOUT             = 0x4   # Write digital port
-  DBIT_IN          = 0x5   # Read digital port bit
-  DBIT_OUT         = 0x6   # Write digital port bit
+  DIN              = 0x03  # Read digital port
+  DOUT             = 0x04  # Write digital port
+  DBIT_IN          = 0x05  # Read digital port bit
+  DBIT_OUT         = 0x06  # Write digital port bit
 
   # Analog Output Commands
   AOUT             = 0x14  # Write analog output channel
@@ -90,10 +89,10 @@ class usb_3100:    # HID USB-31XX devices
   #################################
 
   def DConfigPort(self, direction):
-    '''
+    """
     This command sets the direction of the DIO port bits to input or output
     direction:  0 = output,  1 = input
-    '''
+    """
     self.h.write([self.DCONFIG, direction])
 
   def DConfigBit(self, bit_num, direction):
@@ -130,7 +129,6 @@ class usb_3100:    # HID USB-31XX devices
     the value seen at the port pin, so may be used for an input or
     output bit.
       bit_num:            The bit to read (0-7)
-
     """
     self.h.write([self.DBIT_IN, bit_num])  
     try:
@@ -154,7 +152,7 @@ class usb_3100:    # HID USB-31XX devices
   #################################
 
   def AOut(self, channel, value, update = 0):
-    '''
+    """
     This command writes the value to an analog output channel.  The
     value is a 16-bit unsigned value.  The output range for a channel
     may be set with AOutConfig.  The equation for the output voltage is:
@@ -175,7 +173,7 @@ class usb_3100:    # HID USB-31XX devices
     channel: the channel to write (0-15)
     value:   the value to write
     update:  update mode:  0 = update immediately, 1 = update on sync signal
-    '''
+    """
 
     if update != 1:
       update = 0
@@ -192,18 +190,17 @@ class usb_3100:    # HID USB-31XX devices
     
     self.h.write([self.AOUT, channel, (value & 0xff), (value>>8) & 0xff, update])
 
-
   def AOutSync(self):
-    '''
+    """
     This command sends the output update signal to all D/A converters.
     If the sync signal is configured as an input with SetSync, this
     command has no effect; if the sync signal is configured as an
     output, a pulse will be generated on the sync pin.
-    '''
+    """
     self.h.write([self.AOUT_SYNC])
 
   def AOutConfig(self, channel, gain):
-    '''
+    """
     This command configures the output range of an analog outout
     channel.  The output will be set to 0V in the selected range, so
     an AOut is not needed after this command.
@@ -211,7 +208,7 @@ class usb_3100:    # HID USB-31XX devices
     channel: the channel to write (0-15)
     gain:    the output gain (don't care when doing current output)
              0 = 0-10V 1 = +/- 10V
-    '''
+    """
     if channel >= self.NCHAN:
       raise ValueError('AOutConfig: channel out of range')
       return
@@ -226,6 +223,7 @@ class usb_3100:    # HID USB-31XX devices
       address = 0x200 + 0x8*channel
     else:
       raise ValueError('AOutConfig: gain value out of range')
+      return
 
     self.CalTable[channel].slope ,= unpack('f', self.MemRead(address, 4))
     address += 4
@@ -237,29 +235,30 @@ class usb_3100:    # HID USB-31XX devices
   #################################
 
   def CInit(self):
-    '''
+    """
      This command initializes the event counter and resets the count to zero
-    '''
+    """
     self.h.write([self.CINIT])
 
   def CIn(self):
-    '''
+    """
     This function reads the 32-bit event counter on the device.  This
     counter tallies the transitions of an external input attached to
     the CTR pin on the screw terminal of the device.
-    '''
+    """
     self.h.write([self.CIN])
     try:
       value = self.h.read(5, 100)
     except:
-      print('Error in CIn.')
+      raise ValueError('Error in CIn.')
+      return
     return (value[1] | (value[2]<<8) | (value[3]<<16) | (value[4]<<24))
 
   #################################
   #     Memory  Commands          #
   #################################
   def MemRead(self, address, count):
-    '''
+    """
     This command reads data from the configuration memory (EEPROM or
     FLASH).  All of the memory may be read.  The EEPROM address are
     from 0x0000 to 0x00FF.  The FLASH addresses are from 0x0100 -
@@ -268,7 +267,7 @@ class usb_3100:    # HID USB-31XX devices
     address:  the start address for the read.
     type:     not used
     count:    the number of bytes to read (62 max)
-    '''
+    """
 
     if (count > 62):
       raise ValueError('MemRead: max count is 62.')
@@ -281,7 +280,8 @@ class usb_3100:    # HID USB-31XX devices
     return(bytes(value[1:count+1]))
 
   def MemWrite(self, address, count, data):
-    '''This command writes to the non-volatile memory on the device.  The
+    """
+    This command writes to the non-volatile memory on the device.  The
     non-volatile memory is used to store calibration coefficients,
     system information, and user data.  There are 256 bytes of EEPROM
     (addresses (0x0000- 0x00FF) available for general use and 512
@@ -311,7 +311,7 @@ class usb_3100:    # HID USB-31XX devices
     address:  the start address for the write
     count:    the number of bytes to write (59 max)
     data:     the data to be written (59 bytes max)
-    '''
+    """
     self.h.write([self.MEM_WRITE, (address & 0xff), (address>>8 & 0xff), count, data[0:count]])
 
     
@@ -320,20 +320,21 @@ class usb_3100:    # HID USB-31XX devices
   #################################
 
   def Blink(self, count):
-    '''
+    """
      This command causes the LED to flash several times.
-    '''
+    """
     self.h.write([self.BLINK_LED, count])
 
   def Reset(self):
-    '''
+    """
     This function causes the device to perform a reset.  The device
     disconnects from the USB bus and resets its microcontroller.
-    '''
+    """
     self.h.write([self.RESET])
 
   def SetSync(self, direction):
-    '''This command configures the sync signal.  The sync signal may be
+    """
+    This command configures the sync signal.  The sync signal may be
     used to synchronize the analog output updates.  When multiple
     devices are to be used, one device is selected as the master and
     the rest as slaves.  The sync signal of all devices must be wired
@@ -345,15 +346,15 @@ class usb_3100:    # HID USB-31XX devices
     input/output state when this command is received.
 
     direction:  0 = master (pin in output), 1 = slave (pin is input)
-    '''
+    """
     self.h.write([self.SET_SYNC, direction])
 
   def Status(self):
-    '''
+    """
     This command retrieves the status of the device
     bit 0:  0 = sync slave, 1 = sync master
     bits 1-7: TBD
-    '''
+    """
     self.h.write([self.GET_STATUS])
     try:
       value = self.h.read(2, 100)
@@ -361,22 +362,22 @@ class usb_3100:    # HID USB-31XX devices
       print('Error in reading Status')
     return value[1]
     
-    
   #################################
   #      Code Update  Commands    #
   #################################
     
   def PrepareDownload(self):
-    '''
+    """
     This command puts the device into code update mode.  The unlock
     code must be correct as a further safety device.  Call this once
     before sending code with WriteCode.  If not in code update mode,
     any WriteCode commands will be ignored.
-    '''
+    """
     self.h.write([self.PREPARE_DOWNLOAD, 0xad])
 
   def WriteCode(self, address, count, data):
-    '''This command writes to the program memory in the device.  This command is not accepted
+    """
+    This command writes to the program memory in the device.  This command is not accepted
     unless the device is in update mode.  This command will normally be used when downloading a
     new hex file, so it supports the memory ranges that may be found in the hex file.
 
@@ -402,7 +403,7 @@ class usb_3100:    # HID USB-31XX devices
     address: the start address for this portion of pgrogram memory.
     count:   the number of bytes of data (max 32)
     data:    the program data (max 32 bytes)
-    '''
+    """
 
     if (address >= 0x0 and address <= 0x007aff):
       count = 32
@@ -420,9 +421,9 @@ class usb_3100:    # HID USB-31XX devices
     self.h.write(self.WRITE_SERIAL,serial[0:8])
 
   def volts(self, gain, volt):
-    '''
+    """
     Function to convert volts (or current) to inteter value
-    '''
+    """
     if gain == self.UP_10_00V:
       if volt >= 10.:
         value = 0xffff
@@ -446,9 +447,9 @@ class usb_3100:    # HID USB-31XX devices
         value = volt*249*65535./5.
     else:
       raise ValueError('volts: Unknwon gain level')
+      return
 
     return int(value) & 0xffff
-      
 
 ###########################################################
 
