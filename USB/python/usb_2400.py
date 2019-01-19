@@ -789,7 +789,20 @@ class usb_2400:
     wIndex = 0
     version = unpack('H', self.udev.controlRead(request_type, self.UPDATE_VERSION, wValue, wIndex, 2, timeout = 100))
     return version
-    
+
+  ##############################################################################################
+
+  def openByVendorIDAndProductID(self, vendor_id, product_id, serial):
+    self.context = usb1.USBContext()
+    for device in self.context.getDeviceIterator(skip_on_error=False):
+      if device.getVendorID() == vendor_id and device.getProductID() == product_id:
+        if serial == None:
+          return device.open()
+        else:
+          if device.getSerialNumber() == serial:
+            return device.open()
+    return None      
+
   def getSerialNumber(self):
     with usb1.USBContext() as context:
       for device in context.getDeviceIterator(skip_on_error=True):
@@ -923,8 +936,9 @@ class usb_2400:
 class usb_2408(usb_2400):
   def __init__(self, serial=None):
     self.productID = 0x00fd    # usb-2408
-    self.context = usb1.USBContext()
-    self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+#   self.context = usb1.USBContext()
+#   self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+    self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
       raise IOError("MCC USB-2408 not found")
       return
@@ -939,8 +953,9 @@ class usb_2408(usb_2400):
 class usb_2408_2AO(usb_2400):
   def __init__(self, serial=None):
     self.productID = 0x00fe    # usb-2408-2AO
-    self.context = usb1.USBContext()
-    self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+#   self.context = usb1.USBContext()
+#   self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+    self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
       raise IOError("MCC USB-2408-2AO not found")
     usb_2400.__init__(self)
@@ -1113,8 +1128,9 @@ class usb_2416(usb_2400):
 
   def __init__(self, serial=None):
     self.productID = 0x00d0    # usb-2416
-    self.context = usb1.USBContext()
-    self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+#   self.context = usb1.USBContext()
+#   self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+    self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
       raise IOError("MCC USB-2416 not found")
     usb_2400.__init__(self)
@@ -1135,8 +1151,9 @@ class usb_2416_4AO(usb_2400):
 
   def __init__(self, serial=None):
     self.productID = 0x00d1    # usb-2416-4AO
-    self.context = usb1.USBContext()
-    self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+#   self.context = usb1.USBContext()
+#   self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+    self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
       raise IOError("MCC USB-2416-4AO not found")
       return
