@@ -120,8 +120,9 @@ class usb_1408FS:
 
   def __init__(self, serial=None):
     self.productID = 0x00a1                            # MCC USB-1408FS
-    self.context = usb1.USBContext()
-    self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+#    self.context = usb1.USBContext()
+#    self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+    self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
       raise IOError("MCC USB-1408FS not found")
     for i in range(4):
@@ -994,6 +995,19 @@ class usb_1408FS:
       print('    Normal sync')
     if status & self.UPDATE_MODE:
       print('    Program memory update mode')
+      
+  ##############################################################################################
+
+  def openByVendorIDAndProductID(self, vendor_id, product_id, serial):
+    self.context = usb1.USBContext()
+    for device in self.context.getDeviceIterator(skip_on_error=False):
+      if device.getVendorID() == vendor_id and device.getProductID() == product_id:
+        if serial == None:
+          return device.open()
+        else:
+          if device.getSerialNumber() == serial:
+            return device.open()
+    return None      
 
   def getSerialNumber(self):
     with usb1.USBContext() as context:
