@@ -30,7 +30,11 @@ def toContinue():
   
 def main():
   # initalize the class
-  usb1608FS = usb_1608FS()
+  try:
+    usb1608FS = usb_1608FS()
+  except:
+    print('No USB-1608FS device found.')
+    return
 
 # print out the calibration tables
   for chan in range(8):
