@@ -529,7 +529,8 @@ class usb_1608FS:
     return value
 
   def AInScan(self, lowchannel, hichannel, gains, count, frequency, options):
-    """This command scans a range of analog input channels and sends the
+    """
+    This command scans a range of analog input channels and sends the
     readings in interrupt transfers. The gain ranges that are
     currently set on the desired channels will be used (these may be
     changed with AIn or ALoadQueue.

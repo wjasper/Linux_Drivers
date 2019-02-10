@@ -401,6 +401,197 @@ class usb_1616FS:
 
     return value
 
+  def AInScan(self, lowchannel, hichannel, gains, count, frequency, options):
+    """
+    This command scans a range of analog input channels and sends the
+    readings in interrupt transfers. The gain ranges that are
+    currently set on the desired channels will be used (these may be
+    changed with AIn or ALoadQueue.
+
+        lowchannel:  the first channel of the scan (0–15)
+        hichannel:   the last channel of the scan (0–15)
+        gains:       array of integer ranges for the gain queue (See ALoadQueue)
+        count:       the total number of scans to perform, used only in single execution and burst modes.
+                     Note: the actual number of samples returned is count*(hichannel - lowchannel + 1)
+        frequency:   sample frequency in Samples/second
+        options:     bit 0: 1 = single execution,        0 = continuous execution
+                     bit 1: 1 = burst I/O mode,          0 = normal I/O mode
+                     bit 2: 1 = immediate transfer mode, 0 = block transfer mode
+                     bit 3: 1 = use external trigger
+                     bit 4: 1 = use external sync
+                     bit 5: 1 = debug mode (scan returns consecutive integers instead of sampled data, used for 
+                                           checking missed data, etc.)
+                    bits 6-7:  not used
+
+    The values lowchannel and hichannel specify the channel range for
+    the scan.  If lowchannel is higher than hichannel, the scan will
+    wrap (ie if lowchannel is 6 and high channel is 1, the scan will
+    return channels 6, 7, 0 and 1)
+    
+    The sample rate is set by the internal 16-bit incrementing timer
+    running at a base rate of 10MHz. The timer is controlled by
+    timer_prescale and timer_preload. These values are only used if
+    the device has been set to master the SYNC pin with the SetSync
+    command.
+
+    The timer will be reset and provide an internal interrupt with its
+    value equals timer_preload.  This allows for a lowest rate of
+    0.596 Hz (1:256 prescale, preload = 0xFFFF).  It is preferable to
+    keep the prescaler to the lowest value that will achive the
+    desired rate.
+
+              preload = (10 MHz / (frequency * prescaler)) - 1
+
+    The data will be returned in packets utilizing interrupt in endpoints. Two endpoints will be
+    used; each endpoint allows 64 bytes of data to be sent every millisecond, so the theoretical
+    limit is:
+         5 endpoints * 64 bytes/ms = 320 bytes/ms = 320,000 bytes/s = 160,000 samples/s
+
+    The data will be in the format:
+    lowchannel sample 0 : lowchannel + 1 sample 0 :… : hichannel sample 0
+    lowchannel sample 1 : lowchannel + 1 sample 1 :… : hichannel sample 1
+    .
+    .
+    .
+    lowchannel sample n : lowchannel + 1 sample n : … : hichannel sample n
+
+    The data will use successive endpoints, beginning with the first
+    endpoint at the start of a scan and cycling through the 5 endpoints
+    until reaching the specified count or an AInStop is sent.
+
+    Burst I/O mode will sample data to the onborad SRAM FIFO until
+    full, and then return the data in continuous messages using all 5
+    enpoints.  Pescaler values above 1:8 are not allowed in burset
+    I./O mode.  Single execution and immediate transfer bits will be
+    ignored in this mode.
+
+    Immediate transfer mode is used for low sampling rates to avoid
+    delays in receiving the sampled data.  The data will be sent at the
+    end of every timer period, rather than waiting for the buffer to
+    fill.  All 5 endpoints will still be used in a sequential manner.
+    This mode should not be used if the aggregate sampling rate is
+    greater than 32,000 samples per second in oreder to avoid data
+    loss.
+
+    The external trigger may be used to start data collection
+    synchronously.  If the bit is set, the device will wait until the
+    appropriate trigger edge is detected, then begin sampling data at
+    the specified rate.  No messages will be sent until the trigger
+    is detected.
+
+    External sync may be used to synchronize the sampling of multiple
+    USB-1608FS devices, or to sample data using an external clock.
+    The device must be set to be a sync slave with the SetSync command
+    prior to using this mode.  Data will be acquired on all specified
+    channels when the sync edge is detected.
+    """
+    
+    request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
+                   libusb1.LIBUSB_TYPE_CLASS   | \
+                   libusb1.LIBUSB_RECIPIENT_INTERFACE
+    request = 0x9                       # HID Set_Report
+    wValue =  (2 << 8) | self.AIN_SCAN  # HID output
+    wIndex = 0                          # interface
+
+    if hichannel > self.NCHAN - 1:
+      raise ValueError('AInScan: hichannel out of range')
+      return
+    if lowchannel > self.NCHAN - 1:
+      raise ValueError('AInScan: lowchannel out of range')
+      return
+
+    if frequency <= 0.596:
+      raise ValueError('AInScan: frequency must be greater than 0.596 Hz.')
+      return
+    
+    nchan = hichannel - lowchannel + 1    # total number of channels in a scan
+    nSamples = count*nchan                # total number of samples
+
+    if options & self.AIN_TRIGGER:
+      timeout = 0                         # wait forever
+
+    for prescale in range(9):
+      preload = 10.E6/(frequency * (1 << prescale))
+      if preload <= 0xffff:
+        break
+
+    if prescale == 9 or preload == 0:
+      raise ValueError('AInScan: frequency out of range')
+      return
+
+    if frequency < 150.:
+      timeout = int(32*1000./(frequency)) + 1000
+    else:
+      timeout = int(nSamples*1000./(frequency)) + 1000
+
+    # Load the gain queue
+    self.ALoadQueue(gains)
+
+    buf =  [self.AIN_SCAN, lowchannel, hichannel, count & 0xff, (count>>8) & 0xff, (count>>16) & 0xff, \
+            (count>>24) & 0xff,  prescale, int(preload) & 0xff, (int(preload)>>8) & 0xff, options]
+    ret = self.udev.controlWrite(request_type, request, wValue, wIndex, buf, 1000)
+
+    if (options & self.AIN_EXECUTION) == 0:   # continuous mode
+      return 0
+    
+    i = 0
+    pipe = 1              # initial endpoint to receive data
+    sdata = [0]*nSamples  # allocate buffer for returned samples
+
+    while nSamples > 0:
+      value = unpack('H'*64,self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | (pipe+2), 128, timeout))
+      # print('scan index = ', value[0])
+      # print('scan index = ', value[32])
+      if nSamples > 31:
+        for k in range(31):
+          sdata[i+k] = int(value[k+1])
+        nSamples -= 31
+      else:
+        for k in range(nSamples):
+          sdata[i+k] = int(value[k+1])
+        nSamples = 0
+        break
+      i += 31
+      if nSamples > 31:
+        for k in range(31):
+          sdata[i+k] = int(value[k+33])
+        nSamples -= 31
+      else:
+        for k in range(nSamples):
+          sdata[i+k] = int(value[k+33])
+        nSamples = 0
+        break
+      i += 31
+      pipe = (pipe%6) + 1   # pip should take on values 1 - 6
+
+    self.AInStop()         # Stop the scan
+    for i in range(count):
+      for j in range(lowchannel,hichannel+1):
+        sdata[i*nchan + j] = int(sdata[i*nchan + j]*self.Cal[j][gains[j]].slope + self.Cal[j][gains[j]].intercept)
+        if sdata[i*nchan + j] > 0xffff:
+          sdata[i*nchan + j] = 0xffff
+        if sdata[i*nchan + j] < 0x0:
+          sdata[i*nchan + j] = 0x0
+        if sdata[i*nchan + j] >= 0x8000:
+          sdata[i*nchan + j] -= 0x8000
+        else:
+          sdata[i*nchan + j] = 0x8000 - sdata[i*nchan + j]
+          sdata[i*nchan + j] *= -1
+    return sdata
+
+  def AInRead(self):
+    """
+      Returns values when in continuous mode
+    """
+    raw_data = [0]*31*6*2
+    timeout = 5000
+    for pipe in range (1,6):   # pipe should take the values 1-6
+      value = unpack('H'*64,self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | (pipe+2), 128, timeout))
+      for i in range(31):
+        raw_data[(pipe-1)*62 + i] = value[i+1]
+        raw_data[(pipe-1)*62 + 31 + i] = value[i+33]
+    return raw_data
+
   def AInStop(self):
     """
     This command stops the analog scan (if running)
