@@ -107,8 +107,25 @@ def main():
       data = usb2408.DOutR()
       print('The number you entered = ', hex(data))
     elif ch == 'i':
-      channel = int(input('Input channel [0-7]: '))
-      ch = int(input('Input gain range: 1 = 10V  2 = 5V  3 = 2.5V Differential: '))
+      ch = int(input('Input mode: 1 = Differential, 2 = Single-ended high pin, 3 = Single-ended, low pin: '))
+      if ch == 1:
+        mode = usb2408.DIFFERENTIAL
+      elif ch == 2:
+        mode = usb2408.SE_HIGH # channels 0-7 only
+      elif ch == 3:
+        mode = usb2408.SE_LOW  # channels 8-15 only
+      else:
+        print('Unknown mode')
+        continue
+      if mode == usb2408.DIFFERENTIAL:
+        channel = int(input('Input channel [0-7]: '))
+      else:
+        channel = int(input('Input channel [0-15]: '))
+      if mode != usb2408.DIFFERENTIAL and channel <= 7:
+        mode = usb2408.SE_HIGH # channels 0-7 only
+      if mode != usb2408.DIFFERENTIAL and channel >= 8:
+        mode = usb2408.SE_LOW # channels 8-15 only
+      ch = int(input('Input gain range: 1 = 10V  2 = 5V  3 = 2.5V: '))
       if ch == 1:
         gain = usb2408.BP_10_00V
       elif ch == 2:
@@ -116,10 +133,9 @@ def main():
       elif ch == 3:
         gain = usb2408.BP_2_50V
       else:
-        print('Unknown value')
+        print('Unknown gain range')
         continue
       rate = usb2408.HZ1000
-      mode = usb2408.DIFFERENTIAL
       for i in range(20):
         data, flags = usb2408.AIn(channel, mode, gain, rate)
         data = int(data*usb2408.Cal[gain].slope + usb2408.Cal[gain].intercept)
