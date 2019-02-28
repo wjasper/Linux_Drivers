@@ -283,9 +283,13 @@ class usb_2400:
       else: # EXP detected
         if mode == self.DIFFERENTIAL or mode == self.THERMOCOUPLE:
           self.NCHAN = 32
-        else:  
+        elif mode == self.SINGLE_ENDED: # Single Ended
           self.NCHAN = 64
-        
+          if channel < 32:
+            mode = self.SE_HIGH
+          else:
+            mode = self.SE_LOW
+
     if channel > self.NCHAN:
       raise ValueError('AIN: value of channel out of range')
       return
@@ -363,11 +367,17 @@ class usb_2400:
         if self.Queue[i+1].mode == self.SINGLE_ENDED and self.Queue[i+1].channel >= 8:
           self.Queue[i+1].mode = self.SE_LOW
       else: # USB-2416 or USB-2416-4AO
-        if self.Queue[i+1].mode == self.SINGLE_ENDED and self.Queue[i+1].channel < 16:
-          self.Queue[i+1].mode = self.SE_HIGH
-        if self.Queue[i+1].mode == self.SINGLE_ENDED and self.Queue[i+1].channel >= 16:
-          self.Queue[i+1].mode = self.SE_LOW
-        
+        if (self.Status() & 0x2) == 0:  # EXP not detected
+          if self.Queue[i+1].mode == self.SINGLE_ENDED and self.Queue[i+1].channel < 16:
+            self.Queue[i+1].mode = self.SE_HIGH
+          if self.Queue[i+1].mode == self.SINGLE_ENDED and self.Queue[i+1].channel >= 16:
+            self.Queue[i+1].mode = self.SE_LOW
+        else: # EXP detected
+          if self.Queue[i+1].mode == self.SINGLE_ENDED and self.Queue[i+1].channel < 32:
+            self.Queue[i+1].mode = self.SE_HIGH
+          if self.Queue[i+1].mode == self.SINGLE_ENDED and self.Queue[i+1].channel >= 32:
+            self.Queue[i+1].mode = self.SE_LOW
+            
     for i in range(self.Queue[0]):
       buf[4*i+1] = int(self.Queue[i+1].channel)
       buf[4*i+2] = int(self.Queue[i+1].mode)
@@ -376,7 +386,7 @@ class usb_2400:
     try:
      result = self.udev.controlWrite(request_type, self.AIN_SCAN_QUEUE, wValue, wIndex, buf, timeout = 100)
     except:
-      print('AinScanQueue: error loading Gain Queue.')
+      print('AInScanQueue: error loading Gain Queue.')
     return
 
   def AInScanQueueR(self):
@@ -391,7 +401,7 @@ class usb_2400:
   
   def AInMinPacerPeriod(self):
     '''
-    Calculate the minimum allowable pacer period
+    Calculate the minimum allowable pacer period.
     '''
     period = 0.0
     for i in range(1,self.Queue[0]+1):
