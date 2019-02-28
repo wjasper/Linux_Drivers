@@ -107,13 +107,11 @@ def main():
       data = usb2408.DOutR()
       print('The number you entered = ', hex(data))
     elif ch == 'i':
-      ch = int(input('Input mode: 1 = Differential, 2 = Single-ended high pin, 3 = Single-ended, low pin: '))
+      ch = int(input('Input mode: 1 = Differential, 2 = Single-Ended: '))
       if ch == 1:
         mode = usb2408.DIFFERENTIAL
       elif ch == 2:
-        mode = usb2408.SE_HIGH # channels 0-7 only
-      elif ch == 3:
-        mode = usb2408.SE_LOW  # channels 8-15 only
+        mode = usb2408.SINGLE_ENDED
       else:
         print('Unknown mode')
         continue
@@ -121,10 +119,6 @@ def main():
         channel = int(input('Input channel [0-7]: '))
       else:
         channel = int(input('Input channel [0-15]: '))
-      if mode != usb2408.DIFFERENTIAL and channel <= 7:
-        mode = usb2408.SE_HIGH # channels 0-7 only
-      if mode != usb2408.DIFFERENTIAL and channel >= 8:
-        mode = usb2408.SE_LOW # channels 8-15 only
       ch = int(input('Input gain range: 1 = 10V  2 = 5V  3 = 2.5V: '))
       if ch == 1:
         gain = usb2408.BP_10_00V

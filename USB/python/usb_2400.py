@@ -66,6 +66,7 @@ class usb_2400:
 
   # Modes
   DIFFERENTIAL = 0x0        # Voltage differential
+  SINGLE_ENDED = 0xb        # Voltage Single Ended
   SE_HIGH      = 0x1        # Voltage Single Ended high channel
   SE_LOW       = 0x2        # Voltage Single Ended low channel
   DAC_READBACK = 0x3        # Voltage - D/A readback
@@ -262,20 +263,28 @@ class usb_2400:
     '''
     if self.productID == 0xfd or self.productID == 0xfe: # USB-2408 or USB-2408-2AO
       if mode == self.DIFFERENTIAL or mode == self.THERMOCOUPLE:
-        self.NCHAN == 8
-      else:
-        self.NCHAN == 16
+        self.NCHAN = 8
+      elif mode == self.SINGLE_ENDED: # Single Ended
+        self.NCHAN = 16
+        if channel < 8:
+          mode = self.SE_HIGH
+        else:
+          mode = self.SE_LOW
     else: # USB-2416 or USB-2416-4AO
       if (self.Status() & 0x2) == 0:  # EXP not detected
         if mode == self.DIFFERENTIAL or mode == self.THERMOCOUPLE:
-          self.NCHAN == 16
-        else:  
-          self.NCHAN == 32
+          self.NCHAN = 16
+        elif mode == self.SINGLE_ENDED: # Single Ended
+          self.NCHAN = 32
+          if channel < 16:
+            mode = self.SE_HIGH
+          else:
+            mode = self.SE_LOW
       else: # EXP detected
         if mode == self.DIFFERENTIAL or mode == self.THERMOCOUPLE:
-          self.NCHAN == 32
+          self.NCHAN = 32
         else:  
-          self.NCHAN == 64
+          self.NCHAN = 64
         
     if channel > self.NCHAN:
       raise ValueError('AIN: value of channel out of range')
@@ -347,6 +356,18 @@ class usb_2400:
     wIndex = 0
     buf = [0]*(1+64*4)
     buf[0] = self.Queue[0]
+    for i in range(self.Queue[0]):
+      if self.productID == 0xfd or self.productID == 0xfe: # USB-2408 or USB-2408-2AO
+        if self.Queue[i+1].mode == self.SINGLE_ENDED and self.Queue[i+1].channel < 8:
+          self.Queue[i+1].mode = self.SE_HIGH
+        if self.Queue[i+1].mode == self.SINGLE_ENDED and self.Queue[i+1].channel >= 8:
+          self.Queue[i+1].mode = self.SE_LOW
+      else: # USB-2416 or USB-2416-4AO
+        if self.Queue[i+1].mode == self.SINGLE_ENDED and self.Queue[i+1].channel < 16:
+          self.Queue[i+1].mode = self.SE_HIGH
+        if self.Queue[i+1].mode == self.SINGLE_ENDED and self.Queue[i+1].channel >= 16:
+          self.Queue[i+1].mode = self.SE_LOW
+        
     for i in range(self.Queue[0]):
       buf[4*i+1] = int(self.Queue[i+1].channel)
       buf[4*i+2] = int(self.Queue[i+1].mode)
