@@ -444,7 +444,7 @@ int usbAInScan_USB1616FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
       count:        the total number of scans to perform, used only in single execution and burst modes.
                     Note: the actual number of samples returned is count*(highchannel - lowchannel + 1)
       frequency:    sample frequency in Samples/second
-      options:      bit 0: 1 = single execution         0 = continusous execution 
+      options:      bit 0: 1 = single execution         0 = continuous execution 
                     bit 1: 1 = burst I/O mode,          0 = normal I/O mode
                     bit 2: 1 = immediate transfer mode, 0 = block transfer mode
                     bit 3: 1 = use external trigger
