@@ -453,6 +453,9 @@ class usb_2400:
 
   def AInScanStart(self, frequency, count, packet_size=15):
     '''
+    count: The total number of scans to perform. (0 causes continuous scan)
+    packet_size: the number of samples per bulk transfer (0-15)
+
     This command starts an analog input channel scan.  The channel
     configuration for the scan is set with AInScanQueue.  This command
     will result in a bus stall if AInScan is currently running.
@@ -486,10 +489,14 @@ class usb_2400:
 
     Data will be sent until reaching the specified count or an
     AInScanStop() command is sent.
-
     '''
+
     request_type = libusb1.LIBUSB_TYPE_VENDOR
-    
+    if packet_size > 15:
+      packet_size = 15
+    if packet_size < 0:
+      packet_size = 0
+      
     period = self.AInMinPacerPeriod()
     if (period > 1./frequency):
       pacer_period = int(round(period*50000.))
