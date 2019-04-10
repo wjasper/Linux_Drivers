@@ -474,8 +474,8 @@ void usbReadUserMemory_USB1608FS_Plus(libusb_device_handle *udev, uint16_t addre
     
   /*
     These commands allow for reading and writing the nonvolatile user
-     memory. wLength specifies the number of bytes to read or write.
-     The user memory is 256 bytes (address 0-0xff)
+    memory. wLength specifies the number of bytes to read or write.
+    The user memory is 256 bytes (address 0-0xff)
   */
 
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
