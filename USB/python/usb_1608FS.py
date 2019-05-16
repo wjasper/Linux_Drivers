@@ -752,7 +752,7 @@ class usb_1608FS:
     request = 0x9                    # HID Set_Report
     wValue =  (2 << 8) | self.CINIT  # HID output
     wIndex = 0                       # interface
-    value = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.CINIT], timeout = 100)
+    value = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.CINIT], timeout = 1000)
 
   def CIn(self):
     """
@@ -766,8 +766,8 @@ class usb_1608FS:
     request = 0x9                  # HID Set_Report
     wValue =  (2 << 8) | self.CIN  # HID output
     wIndex = 0                     # interface
-    ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.CIN], timeout = 100)
-    value = unpack('BBBBB',self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 2, 5, timeout = 100))    
+    ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.CIN], timeout = 1000)
+    value = unpack('BBBBB',self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 2, 5, timeout = 1000))    
     return (value[1] | (value[2]<<8) | (value[3]<<16) | (value[4]<<24))
     
   #################################
