@@ -73,7 +73,7 @@
 static int wMaxPacketSize;  // will be the same for all devices of this type so
                             // no need to be reentrant. 
 
-void usbBuildGainTable_USB1608HS(libusb_device_handle *udev, float *table[NCHAN_1608HS][NGAINS_1608HS][2])
+void usbBuildGainTable_USB1608HS(libusb_device_handle *udev, float table[NCHAN_1608HS][NGAINS_1608HS][2])
 {
   /* Builds a lookup table of calibration coefficents to translate values into voltages:
        voltage = value*table[chan#][gain#][0] + table[chan#][gain#][1]
@@ -91,6 +91,9 @@ void usbBuildGainTable_USB1608HS(libusb_device_handle *udev, float *table[NCHAN_
       }
     }
   }
+
+  printf("wMaxPacketSize = %d\n\n", usb_get_max_packet_size(udev,0));
+  wMaxPacketSize = usb_get_max_packet_size(udev,0);
 
   return;
 }
@@ -220,18 +223,18 @@ void usbAInScanConfig_USB1608HS(libusb_device_handle *udev, uint8_t lowChan, uin
   struct AInScanConfig_t {
     uint8_t lowchannel;      // the first channel of the scan (0-7)
     uint8_t numchannels;     // the number of channels in the scan - 1 (0-7)
-    uint8_t count[3];        // uint24; Total numer of scans to perform, used only in single execution mode.
+    uint8_t count[3];        // uint24; Total number of scans to perform, used only in single execution mode.
     uint8_t timer_period[4]; // pacer time period value
     uint8_t options;         /* bit field that controls various options:
-			    bit 0:  1 = single execution, 0 = continuous execution
-			    bit 1:  1 = burst mode (single execution only), 0 = normal mode
-                            bit 2:  1 = immediate transfer (N/A in burst mode), 0 = block transfer
-                            bit 3:  1 = user extgernal trigger,
-			    bit 4:  1 = user SYNC_IN, 0 = use internal pacer
-                            bit 5:  1 = debug mode, 0 = normal data
-                            bit 6:  1 = retrigger mode, 0 = normal trigger
-			    bit 7:  1 = include DIn data with each scan
-		          */
+			        bit 0:  1 = single execution, 0 = continuous execution
+			        bit 1:  1 = burst mode (single execution only), 0 = normal mode
+                                bit 2:  1 = immediate transfer (N/A in burst mode), 0 = block transfer
+                                bit 3:  1 = user extgernal trigger,
+			        bit 4:  1 = user SYNC_IN, 0 = use internal pacer
+                                bit 5:  1 = debug mode, 0 = normal data
+                                bit 6:  1 = retrigger mode, 0 = normal trigger
+			        bit 7:  1 = include DIn data with each scan
+		             */
   } AInScanConfig;
 
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
@@ -239,7 +242,7 @@ void usbAInScanConfig_USB1608HS(libusb_device_handle *udev, uint8_t lowChan, uin
 
   AInScanConfig.lowchannel = lowChan;
   AInScanConfig.numchannels = numChan;
-  timer_period = (40e6/freq) - 1;
+  timer_period = (40000000./freq) - 1;
   AInScanConfig.timer_period[0] = timer_period & 0xff;
   AInScanConfig.timer_period[1] = (timer_period >> 8) & 0xff;
   AInScanConfig.timer_period[2] = (timer_period >> 16) & 0xff;
@@ -257,9 +260,7 @@ void usbAInScanConfig_USB1608HS(libusb_device_handle *udev, uint8_t lowChan, uin
 
 int usbAInScan_USB1608HS(libusb_device_handle *udev, uint16_t *data)
 {
-
   /*
-
   Data format:
 
   low channel samlpe 0: lowchannel + 1 sample 0: ... hichannel sample 0: [DIn value]
@@ -291,12 +292,13 @@ int usbAInScan_USB1608HS(libusb_device_handle *udev, uint16_t *data)
   int ret = -1;
   int nbytes;
   int transferred;
+  int transferred2;
   int nscan;
   char value[512];
 
   libusb_control_transfer(udev, requesttype, AIN_SCAN_CFG, 0x0, 0x0, (unsigned char *) &AInScanConfig, 
 			  sizeof(AInScanConfig), HS_DELAY);
-  nscan = AInScanConfig.count[0] + (1<<8)*AInScanConfig.count[1] + (1<<16)*AInScanConfig.count[2];
+  nscan = AInScanConfig.count[0] + (AInScanConfig.count[1] << 8) + (AInScanConfig.count[2] << 16);
 
   // number of bytes read = 2 * number of scans * number of channels (without DIn)
   if (AInScanConfig.options & AIN_DIN_DATA) {
@@ -304,7 +306,7 @@ int usbAInScan_USB1608HS(libusb_device_handle *udev, uint16_t *data)
   } else {
     nbytes = 2*nscan*(AInScanConfig.numchannels+1);   
   }
-
+  
   ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|1, (unsigned char *) data, nbytes, &transferred, HS_DELAY);
 
   if (ret < 0) {
@@ -314,10 +316,13 @@ int usbAInScan_USB1608HS(libusb_device_handle *udev, uint16_t *data)
     fprintf(stderr, "usbAInScanRead_USB1608HS: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
   }
 
+  printf("wMaxPacketSize = %d\n", wMaxPacketSize);
+
   // if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
-  if ((nbytes%wMaxPacketSize) == 0) {
-    libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|1, (unsigned char *) value, 2, &ret, 100);
+  if ((nbytes % wMaxPacketSize) == 0) {
+    ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|1, (unsigned char *) value, 2, &transferred2, 100);
   }
+
   return transferred;
 }
 
