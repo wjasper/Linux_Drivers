@@ -39,6 +39,7 @@ def main():
   while True:
     print("\nUSB-2001-TC Testing")
     print("----------------")
+    print("Hit 'a' to read AIn.")
     print("Hit 'b' to blink LED.")
     print("Hit 'c' to get calibration slope and offset")
     print("Hit 'C' to get calibration date")
@@ -47,6 +48,7 @@ def main():
     print("Hit 'I' to get information about the device")
     print("Hit 'F' to get the CJC reading in degree F")
     print("Hit 'K' to get the CJC reading in degree Kelvin")
+    print("Hit 'G' to call get_all")
     print("Hit 'r' to get reset device")
     print("Hit 's' to get serial number")
     print("Hit 'S' to get status")
@@ -60,6 +62,8 @@ def main():
     if ch == 'b':
       count = int(input('Enter number of times to blink: '))
       usb2001tc.Blink(count)
+    elif ch == 'a':
+      print("AIn = ", usb2001tc.AIn())
     elif ch == 'c':
       print("Calibration data: Slope = ", usb2001tc.getSlope(), "   Offset = ", usb2001tc.getOffset())
     elif ch == 'C':
@@ -78,6 +82,8 @@ def main():
       print("CJC = ", usb2001tc.getCJCDegF(), " degree F")
     elif ch == 'K':
       print("CJC = ", usb2001tc.getCJCDegKelvin(), " degree K")
+    elif ch == 'G':
+      usb2001tc.GetAll()
     elif ch == 'r':
       usb2001tc.Reset()
     elif ch == 's':
@@ -90,6 +96,17 @@ def main():
       print("Serial No: %s" % usb2001tc.getSerialNumber())
     elif ch == 'v':
       print("Firmware version: %s" % usb2001tc.getFirmwareVersion())
+    elif ch == 't':
+      # put the board in the correct voltage range +/- 73.125mV
+      usb2001tc.setVoltageRange(4)
+      ch = input("Input Thermocouple type [J,K,R,S,T,N,E,B]: ")
+      tc_type = ch
 
+      for i in range(10):
+        temperature = usb2001tc.tc_temperature(tc_type)
+        print("Thermocouple type: ", ch, "Temperature = ", temperature, "C  ", temperature*9./5. + 32., "F ")
+        time.sleep(1)
+
+        
 if __name__ == "__main__":
   main()
