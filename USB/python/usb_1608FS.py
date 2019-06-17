@@ -114,6 +114,7 @@ class usb_1608FS:
   EEPROM_VERSION_1_0 = False  # only set True for older version of the EEPROM
 
   def __init__(self, serial=None):
+    print("initializing\n")
     self.productID = 0x007d                            # MCC USB-1608FS
 #    self.context = usb1.USBContext()
 #    self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
