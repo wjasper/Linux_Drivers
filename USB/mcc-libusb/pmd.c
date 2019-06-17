@@ -204,7 +204,7 @@ int sendStringRequest(libusb_device_handle *udev, char *message)
   return ret;
 }
 
-int  getStringReturn(libusb_device_handle *udev, char *message)
+int getStringReturn(libusb_device_handle *udev, char *message)
 {
   /* Return 64 byte message */
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);

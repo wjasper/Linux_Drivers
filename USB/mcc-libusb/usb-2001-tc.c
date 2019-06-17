@@ -403,7 +403,7 @@ void getOffset_USB2001TC(libusb_device_handle *udev, double *offset)
 
   sendStringRequest(udev, "?AI{0}:OFFSET");
   getStringReturn(udev, message);
-  strncpy(value, &message[14], 8);
+  strncpy(value, &message[13], 8);
   *offset = atof(value);
 }
 
