@@ -89,10 +89,11 @@ I have written drivers for the following boards:
   USB-1208LS, USB-miniLAB1008, USB-1024LS, USB-1024HLS, USB-DIO24, USB-DIO24H, USB-SSR24, 
   USB-SSR08, USB-ERB24, USB-ERB08, USB-PDISO8 USB-1208FS, USB-1408FS, USB-1608FS,
   USB-2408, USB-2408-2AO, USB-3101, USB-3101, USB-3102, USB-3103, USB-3104, USB-3105,
-  USB-3106, USB-3110, USB-3112, USB-3114
+  USB-3106, USB-3110, USB-3112, USB-3114, USB-2001TC
 
 **New Python**:heavy_exclamation_mark: USB-1208LS.py, USB-1024LS.py (also works for USB-1024HLS, 
       USB-DIO24 and USB-DIO1024H), USB-SSR24, USB-SSR08, USB-ERB24, USB-ERB08, USB-PDISO8, USB-31XX
+      USB-2001TC
 
 ====================================================================
 ## FAQ:  Here are some questions that I sometimes get that might help.
