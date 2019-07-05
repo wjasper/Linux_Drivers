@@ -92,7 +92,7 @@ I have written drivers for the following boards:
   USB-3106, USB-3110, USB-3112, USB-3114, USB-2001TC
 
 **New Python**:heavy_exclamation_mark: USB-1208LS.py, USB-1024LS.py (also works for USB-1024HLS, 
-      USB-DIO24 and USB-DIO1024H), USB-SSR24, USB-SSR08, USB-ERB24, USB-ERB08, USB-PDISO8, USB-31XX
+      USB-DIO24 and USB-DIO1024H), USB-SSR24, USB-SSR08, USB-ERB24, USB-ERB08, USB-PDISO8, USB-31XX,
       USB-2001TC
 
 ====================================================================
