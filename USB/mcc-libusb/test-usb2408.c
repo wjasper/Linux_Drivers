@@ -310,7 +310,7 @@ int main (int argc, char **argv)
 	  ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_OUT|1, (unsigned char *) sdata, sizeof(sdata), &transferred, 10000);
 	  if (ret < 0) {
 	    perror("Error in bulk write tansfer");
-	    printf("Scan %d: Wrote %d bytes  sizeof(sdata) = %ld\n", j++, transferred, sizeof(sdata));
+	    printf("Scan %d: Wrote %d bytes  sizeof(sdata) = %zu\n", j++, transferred, sizeof(sdata));
 	    return -1;
 	  } 
 	} while (!isalpha(getchar()));
