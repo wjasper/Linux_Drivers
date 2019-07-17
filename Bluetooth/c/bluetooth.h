@@ -38,21 +38,18 @@ extern "C" {
 #define MSG_ERROR_BUSY      3   // Command failed because resource was busy
 #define MSG_ERROR_READY     4   // Command failed due to FIFO overrun
 
+#define MSG_INDEX_START     0
+#define MSG_INDEX_COMMAND   1
+#define MSG_INDEX_FRAME     2
+#define MSG_INDEX_STATUS    3
+#define MSG_INDEX_COUNT     4  // The maximum value for count is 0x256
+#define MSG_INDEX_DATA      5
 
-#define MSG_CHECKSUM_SIZE    1
+#define MSG_HEADER_SIZE     5
+#define MSG_CHECKSUM_SIZE   1
 
-#define MSG_INDEX_START      0
-#define MSG_INDEX_COMMAND    1
-#define MSG_INDEX_FRAME      2
-#define MSG_INDEX_STATUS     3
-#define MSG_INDEX_COUNT      4  // The maximum value for count is 0x256
-#define MSG_INDEX_DATA       5
-
-#define MSG_HEADER_SIZE      5
-#define MSG_CHECKSUM_SIZE    1
-
-#define MSG_REPLY            (0x80)
-#define MSG_START            (0xDB)
+#define MSG_REPLY           (0x80)
+#define MSG_START           (0xDB)
 
 typedef struct BluetoothDeviceInfo_t {
   struct sockaddr_rc address;                // baddr address of device

@@ -16,6 +16,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
@@ -73,10 +74,9 @@ int main(int argc, char**argv)
     return -1;
   }
 
-  openDevice(&device_info.device);
-  if (device_info.device.sock < 0) {
+  if (openDevice(&device_info.device) < 0) {
     printf("Error openeing device\n");
-    return -1;
+    exit(-1);
   } else {
     printf("Found a Bluetooth BTH-1208LS.\n");
   }
