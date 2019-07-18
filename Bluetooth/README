@@ -2,7 +2,7 @@
 			wjasper@ncsu.edu
 			March 14, 2016
 
-This file will hopefully guide you on using the mcc-bluetooth package
+This file will hopefully guide you on using the bluetooth package
 that will interface to Measurement Computing data acquisition devices.
 You will need to do pairing manually (once), for example using a applet like
 Blueman.  Once pairing is done, the test program will either do
@@ -21,14 +21,18 @@ On Fedora 22:                sudo dnf install bluez-libs-devel bluez-tools
 On Raspian/Ubuntu/Debian:    sudo apt-get install libbluetooth-dev bluez-tools
 Other distributions:         You are on your own ....
 
-The package assumes you have the bluez stack installed on your computer.  This should
-be standard on most versions of Linux.  You also need the program bt-device which is usually
-found in /usr/bin/bt-device.
+To run python scipts:
+sudo apt-get install bluez python-bluez
+sudo pip3 install pybluez
+
+The package assumes you have the bluez stack installed on your
+computer.  This should be standard on most versions of Linux.  You
+also need the program bt-device which is usually found in
+/usr/bin/bt-device.
 
 Now you are ready to compile and install the library.
 
-tar zxvf MCCLIBBTH.1.0.tgz
-cd mcc-bluetooth
+cd ~/Linux_Drivers/Bluetooth/c
 make
 sudo make install
 ./test-bth1208LS
