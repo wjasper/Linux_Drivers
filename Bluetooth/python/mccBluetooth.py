@@ -59,12 +59,11 @@ class mccBluetoothDevice:
     data = self.sock.recv(1024)
     return data
 
-  def sendMessage(self, message):
-    try:
-      self.sock.send(message)
-    except:
-      print("Error in sending Bluetooth message")
-      return
+  def sendMessage(self, message, flush=True):
+    if (flush):
+      self.flushInput()
+    print(message)
+    self.sock.send(message)
 
   def calcChecksum(self, buf, length):
     checksum = 0
@@ -72,6 +71,18 @@ class mccBluetoothDevice:
       checksum +=  buf[i]
     return (checksum & 0xff)
 
+  def flushInput(self):
+    # Flush input buffers.
+    numTotal = 0
+    while True:
+      try:
+        cbuf = self.sock.recv(512, self.sock.MSG_DONTWAIT)
+        numTotal += len(cbuf)
+      except:
+        break
+    if numTotal > 0:
+      print('flushInput flushed', numTotal, 'bytes')
+    return numTotal
 
   def openDevice(self):
     port = 1

@@ -38,5 +38,19 @@ def main():
   # initalize the class
   bth1208LS = BTH_1208LS(device[0])
 
+  while True:
+    print("\nBTH-1208LS Testing")
+    print("----------------")
+    print("Hit 'b' to blink.")
+
+    ch = input('\n')
+    if ch == 'b':
+      count = int(input('Enter number of times to blink: '))
+      bth1208LS.BlinkLED(count)
+    elif ch == 'e':
+      bth1208LS.device.sock.close()
+      exit(0)
+
+
 if __name__ == "__main__":
   main()

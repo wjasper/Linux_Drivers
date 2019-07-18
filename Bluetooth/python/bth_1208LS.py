@@ -190,10 +190,10 @@ class BTH_1208LS:
     s_buffer[MSG_INDEX_DATA]           = count
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
-    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send    
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
 
     self.device.sendMessage(s_buffer)
 
