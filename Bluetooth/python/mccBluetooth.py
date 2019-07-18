@@ -24,6 +24,16 @@ class table:
     self.slope = 0.0
     self.intercept = 0.0
 
+# Error Handling
+class Error(Exception):
+  ''' Base class for other exceptions.'''
+  pass
+
+class ResultError(Error):
+  ''' Raised when return TCP packet fails'''
+  pass
+    
+
 # Global constants
 MSG_SUCCESS =         0  # Command succeeded
 MSG_ERROR_PROTOCOL =  1  # Command failed due to improper protocol (number of expected data bytes did not match protocol definition)
@@ -62,8 +72,7 @@ class mccBluetoothDevice:
   def sendMessage(self, message, flush=True):
     if (flush):
       self.flushInput()
-    print(message)
-    self.sock.send(message)
+    self.sock.send(bytes(message))
 
   def calcChecksum(self, buf, length):
     checksum = 0
@@ -87,7 +96,6 @@ class mccBluetoothDevice:
   def openDevice(self):
     port = 1
     self.sock = BluetoothSocket(RFCOMM)
-    print('address = ', self.address)
 
     # connect to server
     self.sock.connect((self.address,port))

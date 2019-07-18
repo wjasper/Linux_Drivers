@@ -1271,10 +1271,10 @@ class E_1608:
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CAL_MEMORY_R
-    s_buffer[MSG_INDEX_DATA]           = address & 0xff
-    s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
-    s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
-    s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
+    s_buffer[MSG_INDEX_DATA]           = address & 0xff                # low byte
+    s_buffer[MSG_INDEX_DATA+1]         = (address >> 8) & 0xff         # high byte
+    s_buffer[MSG_INDEX_DATA+2]         = count & 0xff                  # low byte
+    s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff             # high byte
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send

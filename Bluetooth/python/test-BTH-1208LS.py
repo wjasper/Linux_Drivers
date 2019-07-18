@@ -42,6 +42,12 @@ def main():
     print("\nBTH-1208LS Testing")
     print("----------------")
     print("Hit 'b' to blink.")
+    print("Hit 'c' to test counter.")
+    print("Hit 'd' to test digitial IO.")
+    print("Hit 'e' to exit.")
+    print("Hit 's' to get serial number.")
+    print("Hit 'S' to get Status.")
+    print("Hit 'v' to get the battery voltage in mV.")
 
     ch = input('\n')
     if ch == 'b':
@@ -50,6 +56,19 @@ def main():
     elif ch == 'e':
       bth1208LS.device.sock.close()
       exit(0)
+    elif ch == 's':
+      print('Serial Number:',bth1208LS.GetSerialNumber())
+    elif ch == 'S':
+      status = bth1208LS.Status()
+      version = bth1208LS.FirmwareVersion()
+      radioVersion = bth1208LS.RadioFirmwareVersion()
+      print("Status:", hex(status), "    Firmware Version: {0:1x}.{1:2x}    Radio FirmwareVersion: {2:1x}.{3:2x}"\
+            .format ((version >> 8) & 0xff, (version & 0xff), (radioVersion >> 8) & 0xff, (radioVersion & 0xff)))
+    elif ch == 'r':
+      bth1208LS.Reset()
+    elif ch == 'v':
+      voltage = bth1208LS.BatteryVoltage()
+      print("Battery Voltage {0:d} mV".format(voltage))
 
 
 if __name__ == "__main__":
