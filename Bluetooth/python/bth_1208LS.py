@@ -158,20 +158,54 @@ class BTH_1208LS:
     # IEEE-754 4-byte floating point values.
     #
     #   calibrated code = code*slope + intercept
-    #  table_AInDE[NGAIN][NCHAN_DE]
-    self.table_AInDE  = [[table(), table(), table(), table()],\
-                         [table(), table(), table(), table()],\
-                         [table(), table(), table(), table()],\
-                         [table(), table(), table(), table()],\
-                         [table(), table(), table(), table()],\
-                         [table(), table(), table(), table()],\
-                         [table(), table(), table(), table()],\
-                         [table(), table(), table(), table()]]
+    #
+    #  table_AInDE[NCHAN_DE][NGAIN]
+    self.table_AInDE  = [[table(), table(), table(), table(), table(), table(), table(), table()],\
+                         [table(), table(), table(), table(), table(), table(), table(), table()],\
+                         [table(), table(), table(), table(), table(), table(), table(), table()],\
+                         [table(), table(), table(), table(), table(), table(), table(), table()]]
 
     #  table_AInSE = [NCHAN_SE]                         
     self.table_AInSE = [table(), table(), table(), table(), table(), table(), table(), table()]
 
+    self.BuildGainTable_DE()
+    self.BuildGainTable_SE()
 
+  def BuildGainTable_DE(self):
+    """
+    Builds a lookup table of differential mode calibration
+    coefficents to translate values into voltages: The calibration
+    coefficients are stored in onboard FLASH memory on the device in
+    IEEE-754 4-byte floating point values.
+
+       calibrated code = code * slope + intercept
+    """
+    address = 0x0
+    for gain in range(self.NGAINS):
+      for chan in range(self.NCHAN_DE):
+        self.table_AInDE[chan][gain].slope, = unpack('f', self.CalMemoryR(address, 4))
+        address += 4
+        self.table_AInDE[chan][gain].intercept, = unpack('f', self.CalMemoryR(address, 4))
+        address += 4
+
+  def BuildGainTable_SE(self):
+    """
+    Builds a lookup table of differential mode calibration
+    coefficents to translate values into voltages: The calibration
+    coefficients are stored in onboard FLASH memory on the device in
+    IEEE-754 4-byte floating point values.
+
+       calibrated code = code * slope + intercept
+    """
+
+    address = 0x100
+    for chan in range(self.NCHAN_SE):
+      self.table_AInSE[chan].slope, = unpack('f', self.CalMemoryR(address, 4))
+      address += 4
+      self.table_AInSE[chan].intercept, = unpack('f', self.CalMemoryR(address, 4))
+      address += 4
+
+      
 
   #############################################
   #        Memory Commands                    #
@@ -245,8 +279,8 @@ class BTH_1208LS:
       print("UserMemoryR: count must be less than 256.")
       return False
 
-    if (address > 0x2ff):
-      print("UserMemoryR: address must be between 0x0-0x2FF.")
+    if (address > 0xff):
+      print("UserMemoryR: address must be between 0x0-0xFF.")
       return False
 
     dataCount = 3
@@ -292,6 +326,175 @@ class BTH_1208LS:
 
     return data
 
+  def UserMemoryW(self, address, count, data):
+    """
+    This command writes the nonvolatile user memory.  The user memory
+    is 256 bytes (address 0 - 0xFF).  The amount of data to be
+    written is inferred from the frame count - 2;
+    """
+
+    if (count > 255):
+      print("UserMemoryW: count must be less than 256.")
+      return False
+
+    if (address > 0xff):
+      print("UserMemoryW: address must be between 0x0-0xFF.")
+      return False
+
+    dataCount = count + 2
+    replyCount = 0
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.USER_MEMORY_W
+    s_buffer[MSG_INDEX_DATA]           = address & 0xff       # low byte
+    s_buffer[MSG_INDEX_DATA+1]         = (address >> 8)& 0xff # high byte
+    for i in range(count):
+      s_buffer[MSG_INDEX_DATA+2+i] = data[i]
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('UserMemoryW: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in UserMemoryW BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+    
+  def SettingsMemoryR(self, address, count):
+    """
+    This command reads the nonvolatile settings memory.  The settings
+    memory is 1024 bytes (address 0 - 0x3FF)
+
+    """
+
+    if (count > 255):
+      print("SettingsMemoryR: count must be less than 256.")
+      return False
+
+    if (address > 0x3ff):
+      print("SettingsMemoryR: address must be between 0x0-0x3FF.")
+      return False
+
+    dataCount = 3
+    replyCount = count
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.SETTINGS_MEMORY_R
+    s_buffer[MSG_INDEX_DATA]           = address & 0xff        # low byte
+    s_buffer[MSG_INDEX_DATA+1]         = (address >> 8) & 0xff # high byte    
+    s_buffer[MSG_INDEX_DATA+2]         = count
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('SettingsMemoryR: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+        data = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in SettingsMemoryR BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
+    return data
+
+  def SettingsMemoryW(self, address, count, data):
+    """
+    This command writes the nonvolatile user memory.  The settings memory
+    is 1024 bytes (address 0 - 0x3FF).  The amount of data to be
+    written is inferred from the frame count - 2.  the
+    settings will be implemented immediately.
+    """
+
+    if (count > 255):
+      print("SettingsMemoryW: count must be less than 256.")
+      return False
+
+    if (address > 0x3ff):
+      print("SettingsMemoryW: address must be between 0x0-0x3FF.")
+      return False
+
+    dataCount = count + 2
+    replyCount = 0
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.SETTINGS_MEMORY_W
+    s_buffer[MSG_INDEX_DATA]           = address & 0xff       # low byte
+    s_buffer[MSG_INDEX_DATA+1]         = (address >> 8)& 0xff # high byte
+    for i in range(count):
+      s_buffer[MSG_INDEX_DATA+2+i] = data[i]
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('SettingsMemoryW: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in SettingsMemoryW BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+    
                          
   #############################################
   #        Miscellaneous Commands             #

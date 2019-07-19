@@ -84,16 +84,16 @@ int main(int argc, char**argv)
   // some initialization
   BuildGainTable_DE_BTH1208LS(&device_info);
   BuildGainTable_SE_BTH1208LS(&device_info);
-  for (i = 0; i < NGAINS; i++ ) {      // range 
-    for (j = 0; j < NCHAN_DE; j++) {   // channel
-      printf("Calibration Table: Range = %d Channel = %d Slope = %f   Offset = %f\n", 
-	     i, j, device_info.table_DE_AIN[i][j][0], device_info.table_DE_AIN[i][j][1]);
+  for (i = 0; i < NCHAN_DE; i++) {   // channel
+    for (j = 0; j < NGAINS; j++ ) {      // range 
+      printf("Calibration Table (Differential): Channel = %d  Gain = %d  Slope = %f   Offset = %f\n", 
+	     i, j, device_info.table_AInDE[i][j].slope, device_info.table_AInDE[i][j].intercept);
     }
   }
   printf("\n");
   for (i = 0; i < NCHAN_SE; i++ ) {  // channel  (SE only has 1 gain range)
-    printf("Calibration Single Ended Table: Channel = %d Slope = %f   Offset = %f\n", 
-	   i, device_info.table_SE_AIN[i][0], device_info.table_SE_AIN[i][1]);
+    printf("Calibration Table (Single Ended): Channel = %d  Slope = %f   Offset = %f\n", 
+	   i, device_info.table_AInSE[i].slope, device_info.table_AInSE[i].intercept);
   }
 
   CalDate_BTH1208LS(&device_info, &calDate);
@@ -146,7 +146,7 @@ int main(int argc, char**argv)
 	scanf("%hhd", &range);
 	for (i = 0; i < 20; i++) {
 	  AIn_BTH1208LS(&device_info, channel, DIFFERENTIAL, range, &value);
-	  value = rint(value*device_info.table_DE_AIN[range][channel][0] + device_info.table_DE_AIN[range][channel][1]);
+	  value = rint(value*device_info.table_AInDE[channel][range].slope + device_info.table_AInDE[channel][range].intercept);
   	  printf("Range %d  Channel %d   Sample[%d] = %#x Volts = %lf\n",
 		   range, channel,  i, value, volts_BTH1208LS(value, range));
 	  usleep(50000);	  
@@ -176,7 +176,7 @@ int main(int argc, char**argv)
 	AInScanStart_BTH1208LS(&device_info, count, 0x0, frequency, (0x1<<channel), options);
 	AInScanSendData_BTH1208LS(&device_info, count, dataAIn);
 	for (i = 0; i < count; i++) {
-	  dataAIn[i] = rint(dataAIn[i]*device_info.table_DE_AIN[range][channel][0] + device_info.table_DE_AIN[range][channel][1]);
+	  dataAIn[i] = rint(dataAIn[i]*device_info.table_AInDE[channel][range].slope + device_info.table_AInDE[channel][range].intercept);
           printf("Range %d Channel %d  Sample[%d] = %#x Volts = %lf\n", range, channel,
 		 i, dataAIn[i], volts_BTH1208LS(dataAIn[i], range));
 	}
@@ -218,7 +218,7 @@ int main(int argc, char**argv)
 	    printf("%6d", i);
 	    for (j = 0; j < nchan; j++)	{
 	      k = i*nchan + j;
-	      data = rint(dataAIn[k]*device_info.table_DE_AIN[range][j][0] + device_info.table_DE_AIN[range][j][1]);
+	      data = rint(dataAIn[k]*device_info.table_AInDE[j][range].slope + device_info.table_AInDE[j][range].intercept);
 	      printf(", %8.4f", volts_BTH1208LS(data, range));
 	    } /* for (j - 0; j < 8, j++) */
 	    printf("\n");

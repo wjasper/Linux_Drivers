@@ -38,6 +38,19 @@ def main():
   # initalize the class
   bth1208LS = BTH_1208LS(device[0])
 
+  # print out the calibration tables:
+  for chan in range(bth1208LS.NCHAN_DE):
+    for gain in range(bth1208LS.NGAINS):
+      print('Calibration Table (Differential): Chan =',chan,' Range = ',gain, \
+            'Slope = ',format(bth1208LS.table_AInDE[chan][gain].slope,'.5f'),\
+            'Intercept = ',format(bth1208LS.table_AInDE[chan][gain].intercept,'5f'))
+
+  print("")
+  for chan in range(bth1208LS.NCHAN_SE):
+    print('Calibration Table (Single Ended): Chan = ', chan, 
+          'Slope = ',format(bth1208LS.table_AInSE[chan].slope,'.5f'),\
+          'Intercept = ',format(bth1208LS.table_AInSE[chan].intercept,'5f'))
+
   while True:
     print("\nBTH-1208LS Testing")
     print("----------------")

@@ -32,15 +32,15 @@ void BuildGainTable_DE_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
      calibrated code = code * slope + intercept
   */
 
-  int i, j, k;
+  int chan, gain;
   uint16_t address = 0x0;
 
-  for (i = 0; i < NGAINS; i++ ) {
-    for (j = 0; j < NCHAN_DE; j++) {
-      for (k = 0; k < 2; k++) {
-	CalMemoryR_BTH1208LS(device_info, address, 4, (uint8_t *) &device_info->table_DE_AIN[i][j][k]);
-	address += 4;
-      }
+  for (gain = 0; gain < NGAINS; gain++ ) {
+    for (chan = 0; chan < NCHAN_DE; chan++) {
+      CalMemoryR_BTH1208LS(device_info, address, 4, (uint8_t *) &device_info->table_AInDE[chan][gain].slope);
+      address += 4;
+      CalMemoryR_BTH1208LS(device_info, address, 4, (uint8_t *) &device_info->table_AInDE[chan][gain].intercept);
+      address += 4;
     }
   }
 }
@@ -55,14 +55,12 @@ void BuildGainTable_SE_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
      calibrated code = code * slope + intercept
   */
 
-  int i, j;
+  int chan;
   uint16_t address = 0x100;
 
-  for (i = 0; i < NCHAN_SE; i++) {
-    for (j = 0; j < 2; j++) {
-      CalMemoryR_BTH1208LS(device_info, address, 4, (uint8_t *) &device_info->table_SE_AIN[i][j]);
-      address += 4;
-    }
+  for (chan = 0; chan < NCHAN_SE; chan++) {
+    CalMemoryR_BTH1208LS(device_info, address, 4, (uint8_t *) &device_info->table_AInSE[chan]);
+    address += 4;
   }
 }
 
@@ -1156,7 +1154,8 @@ bool UserMemoryW_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t address, 
 
 bool SettingsMemoryR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t address, uint8_t count, uint8_t *data)
 {
-  /* This command reads the nonvolatile settings memory.  The settings
+  /* 
+     This command reads the nonvolatile settings memory.  The settings
      memory is 1024 bytes (address 0 - 0x3FF)
   */
 
@@ -1685,7 +1684,7 @@ bool BatteryVoltage_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   }
 
   if (result == false) {
-    printf("Error in GetSerialNumber_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in BatteryVoltage_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
