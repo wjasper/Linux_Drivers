@@ -18,6 +18,7 @@
 import bluetooth 
 from struct import *
 from mccBluetooth import *
+from datetime import datetime
 
 BTH1208LS_PID = 6883
 
@@ -57,7 +58,7 @@ class BTH_1208LS:
   | 0x00C         | Auto shutdown timer value in minutes (0 = no auto shutdown).  When this   |
   |               | is used the device will automatically power down when powered by          |
   |               | batteries and no Bluetooth connection is present for this amount of time. |
-  |-------------------------------------------------------------------------------------------|
+;  |-------------------------------------------------------------------------------------------|
   | 0x00E         | Allow charging when Bluetooth connected                                   |
   |               |   0 = do not allow                                                        |
   |               |   1 = allow                                                               |
@@ -137,7 +138,7 @@ class BTH_1208LS:
   BP_1V    = 0x7      # +/- 1V
   UP_2_5V  = 0x8      # 0-2.5V
 
-  # Status bit values */
+  # Status bit values
   AIN_SCAN_RUNNING   = (0x1 << 1)
   AIN_SCAN_OVERRUN   = (0x1 << 2)
   NO_BATTERY         = (0x0)
@@ -145,7 +146,6 @@ class BTH_1208LS:
   MAINTENANCE_CHARGE = (0x2 << 8)
   FAULT_CHARGING     = (0x3 << 8)
   DISABLE_CHARGING   = (0x4 << 8)
-
 
   voltage = 0
   status = 0
@@ -205,7 +205,401 @@ class BTH_1208LS:
       self.table_AInSE[chan].intercept, = unpack('f', self.CalMemoryR(address, 4))
       address += 4
 
+  def CalDate(self):
+    """
+    get the manufacturers calibration data (timestamp) from the
+    Calibration memory
+    """
+
+    # get the year (since 2000)
+    address = 0x200
+    data ,= unpack('B', self.CalMemoryR(address, 1))
+    year  = 2000+data
+
+    # get the month
+    address = 0x201
+    month ,= unpack('B', self.CalMemoryR(address, 1))
+
+    # get the day
+    address = 0x202
+    day ,= unpack('B', self.CalMemoryR(address, 1))
+
+    # get the hour
+    address = 0x203
+    hour ,= unpack('B', self.CalMemoryR(address, 1))
+    
+    # get the minute
+    address = 0x204
+    minute ,= unpack('B', self.CalMemoryR(address, 1))
+
+    # get the second
+    address = 0x205
+    second ,= unpack('B', self.CalMemoryR(address, 1))
+
+    mdate = datetime(year, month, day, hour, minute, second)
+    return mdate
+
+  def volts(self, value, gain):
+    volt = 0.0
+    if   (gain == self.BP_20V):
+      volt = (value - 0x800)* 20.0/2048.
+    elif (gain == self.BP_10V):
+      volt = (value - 0x800)* 10.0/2048.
+    if   (gain == self.BP_5V):
+      volt = (value - 0x800)* 5.0/2048.
+    elif (gain == self.BP_4V):
+      volt = (value - 0x800)* 4.0/2048.
+    if   (gain == self.BP_2_5V):
+      volt = (value - 0x800)* 2.5/2048.
+    elif (gain == self.BP_2V):
+      volt = (value - 0x800)* 2.0/2048.
+    if   (gain == self.BP_1_25V):
+      volt = (value - 0x800)* 1.25/2048.
+    elif (gain == self.BP_1V):
+      volt = (value - 0x800)* 1.0/2048.
+    elif (gain == self.UP_2_5V):
+      volt = value*2.5/4096.             # analog output
+    else:
+      print("Unknown range.")
+
+    return volt
+
+  #############################################
+  #        Digital I/O Commands               #
+  #############################################
+
+  def DIn(self):
+    """
+    This command reads the current state of the DIO pins.  A 0 in a
+    bit position indicates the correspoing pin is reading a low
+    state, and a 1 indicates a high state.
+    """
+    
+    dataCount = 0
+    replyCount = 1
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.DIN_R
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('DIn: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+        data = r_buffer[MSG_INDEX_DATA]
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in DIn BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      return -1
+
+    return data
+
+  def DOutR(self, value):
+    """
+    This command reads the DIO output latch value. The factory power
+    on default is all 1 (pins are floating.) Writing a 0 to a bit
+    drives it low, writing a 1 allows it to float.
+    """
+
+    dataCount = 0
+    replyCount = 1
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.DOUT_R
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('DOutR: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+        data = r_buffer[MSG_INDEX_DATA]
+
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in DOutR BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
       
+  def DOut(self, value):
+    """
+    This command reads the DIO output latch value. The factory power
+    on default is all 1 (pins are floating.) Writing a 0 to a bit
+    drives it low, writing a 1 allows it to float.
+    """
+
+    dataCount = 1
+    replyCount = 0
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.DOUT_W
+    s_buffer[MSG_DATA]                 = value
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('DOut: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in DOut BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+    
+  #############################################
+  #        Analog Input Commands              #
+  #############################################
+
+  #############################################
+  #        Analog Output Commands             #
+  #############################################
+
+  def AOutR(self):
+    """
+     This command reads the value of the analog output channels
+
+     value[0]   the current value for analog output channel 0
+     value[1]   the current value for analog output channel 1
+    """
+
+    dataCount = 0
+    replyCount = 4
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.AOUT_R
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('AOutR: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+        data = unpack_from('H'*2, r_buffer, MSG_INDEX_DATA)
+        value[0] = round(data[0]*self.table_AOut[0].slope + self.table_AOut[0].intercept)
+        value[1] = round(data[1]*self.table_AOut[1].slope + self.table_AOut[1].intercept)
+
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AOutR BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
+  def AOut(self, channel, value):
+    """
+    This command writes the value of the analog output channels
+
+      channel: the channel to write (0-1)
+      value:   the value to write (0-4095)
+    """
+
+    dataCount = 3
+    replyCount = 0
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.AOUT_W
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_DATA]           = channel
+    s_buffer[MSG_INDEX_DATA+1]         = value & 0xff          # low byte
+    s_buffer[MSG_INDEX_DATA+2]         = (value>>8) & 0xff     # high byte
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('AOut: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AOut BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
+
+  #############################################
+  #           Counter Commands                #
+  #############################################
+
+  def Counter(self):
+    """
+    The command reads the event counter.
+    """
+    dataCount = 0
+    replyCount = 4
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.COUNTER_R
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('Counter: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+        value ,= unpack_from('I', r_buffer, MSG_INDEX_DATA)
+
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in Counter BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
+    return value
+
+  def ResetCounter(self):
+    """
+    This command resets the event counter.  On a write, the
+    counter will be reset to 0.
+    """
+    
+    dataCount = 0
+    replyCount = 0
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.COUNTER_W
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('ResetCounter: timeout error.')
+      return
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+           result = True
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in RestCounter_R E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+    
 
   #############################################
   #        Memory Commands                    #
@@ -536,6 +930,7 @@ class BTH_1208LS:
          r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
+
     try:
       if (result == False):
         raise ResultError

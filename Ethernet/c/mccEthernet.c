@@ -21,7 +21,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include "ethernet.h"
+#include "mccEthernet.h"
 
 static int recvfromTimeOut(int sock, long sec, long usec)
 {

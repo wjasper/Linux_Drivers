@@ -17,7 +17,7 @@
 
 from datetime import datetime
 from struct import *
-from mccPy import *
+from mccEthernet import *
 
 E1608_PID = 0x012F  # Product code for the MCC E-1608
 
@@ -880,7 +880,7 @@ class E_1608:
     This command writes the value of the analog output channel.
     
       channel: the channel to write (0-1)
-      value:   the value to write
+      value:   the value to write (0-4095)
     """
 
     dataCount = 3
@@ -1202,7 +1202,7 @@ class E_1608:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in counter E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in Counter E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
       return -1
 
     return value

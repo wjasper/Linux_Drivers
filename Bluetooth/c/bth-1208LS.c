@@ -59,7 +59,9 @@ void BuildGainTable_SE_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   uint16_t address = 0x100;
 
   for (chan = 0; chan < NCHAN_SE; chan++) {
-    CalMemoryR_BTH1208LS(device_info, address, 4, (uint8_t *) &device_info->table_AInSE[chan]);
+    CalMemoryR_BTH1208LS(device_info, address, 4, (uint8_t *) &device_info->table_AInSE[chan].slope);
+    address += 4;
+    CalMemoryR_BTH1208LS(device_info, address, 4, (uint8_t *) &device_info->table_AInSE[chan].intercept);
     address += 4;
   }
 }
@@ -76,7 +78,7 @@ void CalDate_BTH1208LS(DeviceInfo_BTH1208LS *device_info, struct tm *date)
   date->tm_year = calDate.year + 100;
   date->tm_mon = calDate.month - 1;
   date->tm_mday = calDate.day;
-  date->tm_hour = calDate.hour;
+  date->tm_hour = calDate.hour+1;
   date->tm_min = calDate.minute;
   date->tm_sec = calDate.second;
   time = mktime(date);
@@ -256,8 +258,9 @@ bool DOut_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t value)
 }
 
 /***********************************************
- *            Analog Input                     *
+ *          Analog Input Commands              *
  ***********************************************/
+
 bool AIn_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t channel, uint8_t mode, uint8_t range, uint16_t *value)
 {
     /* This command reads the value of an analog input channel.  This
@@ -760,7 +763,7 @@ bool AInScanClearFIFO_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
 }
 
 /*********************************************
- *        Analog Output                      *
+ *        Analog Output Commands             *
  *********************************************/
 
 bool AOutR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t value[2])
@@ -867,9 +870,9 @@ bool AOut_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t channel, uint16_t
   return result;
 }
 
-/***********************************************
- *            Counter/Timer                    *
- ***********************************************/
+/*****************************************
+ *            Counter Commands           *
+ *****************************************/
 
 bool Counter_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t *counter)
 {

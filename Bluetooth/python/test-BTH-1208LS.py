@@ -19,6 +19,13 @@ from bth_1208LS import *
 import time
 import sys
 
+def toContinue():
+  answer = input('Continue [yY]? ')
+  if (answer == 'y' or answer == 'Y'):
+    return True
+  else:
+    return False
+
 def main():
   if len(sys.argv) == 2:
     device = []
@@ -33,10 +40,24 @@ def main():
     exit(0)
 
   # Open the device
-  device[0].openDevice()
+  try:
+    device[0].openDevice()
+  except:
+    print("Can not open device. Could be in charging mode.")
+    exit(0)
 
   # initalize the class
   bth1208LS = BTH_1208LS(device[0])
+
+  # allow charging with Bluetooth connected.
+  data = [1]
+  bth1208LS.SettingsMemoryW(0xe, 1, data)
+
+  # print out the settings memory
+  address = 0x0
+  print("\nDumping Settings Memory: ")
+  print(bth1208LS.SettingsMemoryR(address, 15))
+  print("")
 
   # print out the calibration tables:
   for chan in range(bth1208LS.NCHAN_DE):
@@ -50,6 +71,10 @@ def main():
     print('Calibration Table (Single Ended): Chan = ', chan, 
           'Slope = ',format(bth1208LS.table_AInSE[chan].slope,'.5f'),\
           'Intercept = ',format(bth1208LS.table_AInSE[chan].intercept,'5f'))
+
+  # print last known calibration date:
+  mdate = bth1208LS.CalDate()
+  print('\nMFG Calibration date: ', mdate)
 
   while True:
     print("\nBTH-1208LS Testing")
@@ -66,6 +91,15 @@ def main():
     if ch == 'b':
       count = int(input('Enter number of times to blink: '))
       bth1208LS.BlinkLED(count)
+    elif ch == 'c':
+      bth1208LS.ResetCounter()
+      print("Connect AO 0 to CTR.")
+      toContinue()
+      for i in range(100):
+        bth1208LS.AOut(0, 4095)
+        bth1208LS.AOut(0, 0)
+      count = bth1208LS.Counter()
+      print("Count = ", count, "    Should read 100.")
     elif ch == 'e':
       bth1208LS.device.sock.close()
       exit(0)

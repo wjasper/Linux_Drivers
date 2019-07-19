@@ -17,7 +17,7 @@
 
 from datetime import datetime
 from struct import *
-from mccPy import *
+from mccEthernet import *
 
 """
     Configuration memory map

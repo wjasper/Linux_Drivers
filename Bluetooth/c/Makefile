@@ -15,9 +15,9 @@
 
 VERSION=1.0
 
-SRCS =	bluetooth.c bth-1208LS.c
+SRCS =	mccBluetooth.c bth-1208LS.c
 
-HEADERS = bluetooth.h bth-1208LS.h
+HEADERS = mccBluetooth.h bth-1208LS.h
 
 OBJS = $(SRCS:.c=.o)   # same list as SRCS with extension changed
 CC=gcc
@@ -34,7 +34,7 @@ TARGETS=libmccbth.$(SHARED_EXT) libmccbth.a test-bth1208LS
 
 ID=MCCLIBBTH
 DIST_NAME=$(ID).$(VERSION).tgz
-DIST_FILES={README,Makefile,bluetooth.h,bluetooth.c,bth-1208LS.h,bth-1208LS.c,test-bth1208LS.c}
+DIST_FILES={README,Makefile,mccBluetooth.h,mccBluetooth.c,bth-1208LS.h,bth-1208LS.c,test-bth1208LS.c}
 ###### RULES
 all: $(TARGETS)
 

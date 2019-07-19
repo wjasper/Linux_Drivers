@@ -24,7 +24,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
-#include "bluetooth.h"
+#include "mccBluetooth.h"
 #include <sys/socket.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>

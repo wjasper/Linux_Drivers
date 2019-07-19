@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 #include <time.h>
-#include "ethernet.h"
+#include "mccEthernet.h"
 
 #define E1608_PID       0x012F
 

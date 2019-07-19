@@ -20,7 +20,7 @@
 #define BTH_1208LS_H
 
 #include <stdint.h>
-#include "bluetooth.h"
+#include "mccBluetooth.h"
 
 #define BTH1208LS_PID  6883
 
@@ -115,12 +115,17 @@ typedef struct calibrationTimeStamp_t {
   uint8_t second; // Calibration date second
 } calibrationTimeStamp;
 
+typedef struct Calibration_t {
+  float slope;
+  float intercept;
+} Calibration;
+
 typedef struct DeviceInfo_BTH1208LS_t {
   BluetoothDeviceInfo device;
   uint16_t voltage;
   uint16_t status;
-  float table_DE_AIN[NGAINS][NCHAN_DE][2];  // calibration slope and offset differential mode
-  float table_SE_AIN[NCHAN_SE][2];          // calibration slope and offset single ended mode
+  Calibration table_AInDE[NCHAN_DE][NGAINS];  // calibration slope and offset differential mode
+  Calibration table_AInSE[NCHAN_SE];          // calibration slope and offset single ended mode
 } DeviceInfo_BTH1208LS;
 
 /* function prototypes for the BTH-1208LS */
