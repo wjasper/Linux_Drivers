@@ -27,16 +27,19 @@ def toContinue():
     return False
 
 def main():
+  target_name = "BTH-1208LS-6833"
+  device = []
+
   if len(sys.argv) == 2:
-    device = []
     device.append(mccBluetoothDevice(sys.argv[1]))
   else:
     # Discover a BTH-1208LS device
-    device = discoverDevice("BTH-1208LS-6833")
+    device.append(mccBluetoothDevice(discoverDevice(target_name)))
 
   if (len(device) > 0):
-      print('Number of devices found = ', len(device))
+    print('Number of devices found = ', len(device))
   else:
+    print('No device', target_name, 'found')
     exit(0)
 
   # Open the device

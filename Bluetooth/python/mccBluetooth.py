@@ -16,6 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 from bluetooth import *
+import subprocess
 import sys
 
 # Base class for lookup tables of calibration coefficients (slope and offset)
@@ -104,21 +105,17 @@ class mccBluetoothDevice:
 ####################################################################
       
 def discoverDevice(target_name):
-  device = mccBluetoothDevice()
+  # return the address of target_name
+  p = subprocess.Popen('/usr/bin/bt-device --list', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+  for line in p.stdout.readlines():
+    line = line.decode()
+    if target_name in line:
+      offset = line.find('(')
+      address = str(line[offset+1:-2])
+      retval = p.wait()
+      return address
+  # No device found
+  retval = p.wait()
+  return
 
-  nearby_devices = discover_devices(flush_cache=True)
-  print(nearby_devices)
 
-  for address in nearby_devices:
-    if target_name == lookup_name(address):
-      device.address = address
-      break
-
-  if device.address is not None:
-    print("Found target bluetooth device with address: ", device.address)
-    return device
-  else:
-    print("Could not find target bluetooth device: ", target_name)
-
-  results = find_service()
-  print(results)
