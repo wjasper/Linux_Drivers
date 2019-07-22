@@ -85,6 +85,11 @@ def main():
     print("Hit 'b' to blink.")
     print("Hit 'c' to test counter.")
     print("Hit 'd' to test digitial IO.")
+    print("Hit 'i' to test Analog Input")
+    print("Hit 'I' to test Analog Input Scan")
+    print("Hit 'o' to test Analog Output")
+    print("Hit 'x' to test Analog Input Scan (Multi-channel)")
+    print("Hit 'r' to reset the device.")
     print("Hit 'e' to exit.")
     print("Hit 's' to get serial number.")
     print("Hit 'S' to get Status.")
@@ -103,6 +108,14 @@ def main():
         bth1208LS.AOut(0, 0)
       count = bth1208LS.Counter()
       print("Count = ", count, "    Should read 100.")
+    elif ch == 'i':
+      channel = int(input("Input channel DE [0-3]: "))
+      gain = int(input("Input range [0-7]: "))
+      mode = bth1208LS.DIFFERENTIAL
+      for i in range(20):
+        value = bth1208LS.AIn(channel, mode, gain)
+        print("Range = {0:d},  Channel = {1:d},  Sample[{2:d}] = {3:x}    Volts = {4:f}"\
+              .format(gain, channel, i, value, bth1208LS.volts(value, gain)))
     elif ch == 'e':
       bth1208LS.device.sock.close()
       exit(0)
@@ -119,7 +132,13 @@ def main():
     elif ch == 'v':
       voltage = bth1208LS.BatteryVoltage()
       print("Battery Voltage {0:d} mV".format(voltage))
-
+    elif ch == 'o':
+      print("Test Analog Output")
+      channel = int(input("Enter Channel [0-1]: "))
+      voltage = float(input("Enter voltage ;0-2.5V: "))
+      value = int(voltage * 4095 / 2.5)
+      bth1208LS.AOut(channel, value)
+      print("Analog Output Voltage = ", bth1208LS.AOutR()[channel])
 
 if __name__ == "__main__":
   main()

@@ -241,26 +241,26 @@ class BTH_1208LS:
 
   def volts(self, value, gain):
     volt = 0.0
-    if   (gain == self.BP_20V):
+    if (gain == self.BP_20V):
       volt = (value - 0x800)* 20.0/2048.
     elif (gain == self.BP_10V):
       volt = (value - 0x800)* 10.0/2048.
-    if   (gain == self.BP_5V):
+    elif (gain == self.BP_5V):
       volt = (value - 0x800)* 5.0/2048.
     elif (gain == self.BP_4V):
       volt = (value - 0x800)* 4.0/2048.
-    if   (gain == self.BP_2_5V):
+    elif (gain == self.BP_2_5V):
       volt = (value - 0x800)* 2.5/2048.
     elif (gain == self.BP_2V):
       volt = (value - 0x800)* 2.0/2048.
-    if   (gain == self.BP_1_25V):
+    elif (gain == self.BP_1_25V):
       volt = (value - 0x800)* 1.25/2048.
     elif (gain == self.BP_1V):
       volt = (value - 0x800)* 1.0/2048.
     elif (gain == self.UP_2_5V):
       volt = value*2.5/4096.             # analog output
     else:
-      print("Unknown range.")
+      print("Unknown range: ",gain)
 
     return volt
 
@@ -283,7 +283,7 @@ class BTH_1208LS:
 
     s_buffer[MSG_INDEX_COMMAND]        = self.DIN_R
     s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID 
     self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
@@ -330,7 +330,7 @@ class BTH_1208LS:
 
     s_buffer[MSG_INDEX_COMMAND]        = self.DOUT_R
     s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
@@ -377,7 +377,7 @@ class BTH_1208LS:
     s_buffer[MSG_INDEX_COMMAND]        = self.DOUT_W
     s_buffer[MSG_DATA]                 = value
     s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
@@ -410,6 +410,504 @@ class BTH_1208LS:
   #        Analog Input Commands              #
   #############################################
 
+  def AIn(self, channel, mode, gain):
+    """
+    This command reads the value of an analog input channel.  This
+    command will result in a bus stall if an AInScan is currently
+    running.  The range parameter is ignored if the mode is specified
+    as single ended.
+
+      channel: the channel to read (0-7)
+      mode:    the input mode 0 - single ended, 1 - differential
+      range:   the input range for the channel (0-7)
+    """
+
+    dataCount = 3
+    replyCount = 2
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.AIN
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_DATA]           = channel
+    s_buffer[MSG_INDEX_DATA+1]         = mode
+    s_buffer[MSG_INDEX_DATA+2]         = gain
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('AIn: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+        value = (r_buffer[MSG_INDEX_DATA] | (r_buffer[MSG_INDEX_DATA+1]<<8))
+
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AIn BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      
+    if mode == self.SINGLE_ENDED:    # single ended
+      data = round(float(value)*self.table_AInSE[channel].slope + self.table_AInSE[channel].intercept)
+    else:               # differential
+      data = round(float(value)*self.table_AInDE[channel][gain].slope + self.table_AInDE[channel][gain].intercept)
+    if (data >= 65536):
+      value = 65535
+    elif (data < 0):
+      value = 0
+    else:
+      value = data
+    return value
+  
+
+  def AInScanStart(self, count, retrig_count, frequency, channels, options):
+    """
+  /* This command starts an analog input scan. This command will
+     respond with 0 if an AIn scan is currently running. The device
+     will not generate an internal pacer faster than 50 kHz.
+
+     The pacer rate is set by an internal 32-bit timer running at a
+     base rate of 40 MHz. The timer is controlled by
+     pacer_period. This value is the period of the scan and the A/Ds
+     are clocked at this rate. A pulse will be output at the SYNC pin
+     at every pacer_period interval if SYNC is configured as an
+     output. The equation for calculating pacer_period is:
+   
+           pacer_period = [40 MHz / (sample frequency)] - 1 
+
+     If pacer_period is set to 0 the device does not generate an A/D
+     clock. It uses the SYNC pin as an input and the user must provide
+     the pacer source. The A/Ds acquire data on every rising edge of
+     SYNC; the maximum allowable input frequency is 50 kHz.  
+
+    The scan will not begin until this command is sent and any trigger
+    conditions are met. Data will be acquired until an overrun occurs,
+    the specified count is reached, or an AInScanStop command is sent.
+
+    The data is read using the AInScanSendData command. The data will
+    be in the format:
+
+     lowchannel sample 0 : lowchannel + 1 sample 0 : … : hichannel sample 0 
+     lowchannel sample 1 : lowchannel + 1 sample 1 : … : hichannel sample 1
+      … 
+     lowchannel sample n : lowchannel + 1 sample n : … : hichannel sample n 
+
+     If the host does not receive the data in a timely manner (due to
+     a communications error, etc.) it can issue the AInScanResendData
+     command. The device will resend the last packet that was
+     transmitted. The device does not remove the sent data from its
+     FIFO until a new AInScanSendData command is received. This keeps
+     the data available for a resend. The host must send an
+     AInScanStop command at the end of a finite scan to let the device
+     know that the final packet was received successfully and allow
+     the scan to end.
+
+     The external trigger may be used to start the scan. If enabled,
+     the device will wait until the appropriate trigger condition is
+     detected then begin sampling data at the specified rate. No data
+     will be available until the trigger is detected. In retrigger
+     mode the trigger will be automatically rearmed and the scan will
+     restart after retrig_count samples have been acquired. The count
+     parameter specifies the total number of samples to acquire and
+     should be >= retrig_count. Specifying 0 for count causes
+     continuous retrigger scans.
+
+     Overruns are indicated in the status field of the AInScanDataRead
+     command response. The host may also read the status to verify.
+
+
+     count:         the total number of samples to acquire, 0 for continuous scan
+     retrig_count:  the number of samples to acquire for each trigger in retrigger mode
+     pacer_period:  the pacer timer period (0 for external clock)
+     channels:      bit field that selects the channels in the scan, upper 4 bits ignored in differential mode. 
+        ---------------------------------------------------------
+        | Bit7 | Bit6 | Bit5 | Bit4 | Bit3 | Bit2 | Bit1 | Bit0 |
+        ---------------------------------------------------------
+        | Ch7  |  Ch6 | Ch5  | Ch4  | Ch3  | Ch2  | Ch1  | Ch 0 |
+        ---------------------------------------------------------
+
+	options:  bit field that controls scan options
+	    bit 0: Reserved
+	    bit 1: 1 = differential mode, 0 = single ended mode
+	    bits 2-4: Trigger setting:
+	      0: no trigger
+  	      1: Edge / rising
+	      2: Edge / falling
+	      3: Level / high
+	      4: Level / low
+            bit 5: 1 = retrigger mode, 0 = normal trigger mode
+	    bit 6: Reserved
+	    bit 7: Reserved
+    """
+
+    if (frequency > 50000.):
+      frequency = 50000.
+    if (frequency > 0.):
+      pacer_period = round((40.E6 / frequency) - 1)
+    else:
+      pacer_period = 0
+    
+    dataCount = 14
+    replyCount = 0
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.AIn_SCAN_START
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_DATA]           = count & 0xff
+    s_buffer[MSG_INDEX_DATA+1]         = (count >> 8) & 0xff
+    s_buffer[MSG_INDEX_DATA+2]         = (count >> 16) & 0xff
+    s_buffer[MSG_INDEX_DATA+3]         = (count >> 24) & 0xff
+    s_buffer[MSG_INDEX_DATA+4]         = retrig_count & 0xff
+    s_buffer[MSG_INDEX_DATA+5]         = (retrig_count >> 8) & 0xff
+    s_buffer[MSG_INDEX_DATA+6]         = (retrig_count >> 16) & 0xff
+    s_buffer[MSG_INDEX_DATA+7]         = (retrig_count >> 24) & 0xff
+    s_buffer[MSG_INDEX_DATA+8]         = pacer_period & 0xff
+    s_buffer[MSG_INDEX_DATA+9]         = (pacer_period >> 8) & 0xff
+    s_buffer[MSG_INDEX_DATA+10]        = (pacer_period >> 16) & 0xff
+    s_buffer[MSG_INDEX_DATA+11]        = (pacer_period >> 24) & 0xff
+    s_buffer[MSG_INDEX_DATA+12]        = channels
+    s_buffer[MSG_INDEX_DATA+12]        = options
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('AInScanStart: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AInScanStart BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
+    return result
+
+  def AInScanSendData(self, count):
+    """
+    This command reads data from the scan FIFO. The device will
+    return all data currently in the FIFO up to the maximum amount
+    allowed in a frame (255 bytes / 127 samples). Incrementing frame
+    IDs are recommended in order to make use of the AInScanResendData
+    command on an error.
+
+      count: number of samples to send
+    """
+
+    dataCount = 0
+    replyCount = count*2
+    if (replyCount > 255):
+      replyCount = 255      # 255 the maximum number of bytes transmitted in a frame
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.AIN_SCAN_SEND_DATA
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('AInScanSendData: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+        data = unpack('H'*count,r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount])
+
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AInScanSendData BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
+    return data
+
+  def AInScanResendData(self, count, nChan):
+    """
+    This command resends the previous scan data that matches the
+    specified frame ID. This is used when the host doesn’t receive a
+    response from the device after sending AInScanSendData. The
+    device only buffers one most recently sent response and frame ID;
+    if the frame ID matches the device assumes that its response was
+    not received by the host and resends the previous data. If the
+    specified frame ID doesn’t match the most recent frame ID the
+    device assumes it did not receive the last AInScanSendData
+    command and sends new data from the FIFO.
+    """
+
+    dataCount = 0
+    replyCount = nChan*count*2
+    if (replyCount > 255):
+      replyCount = 255          # 255 the maximum number of bytes transmitted in a frame
+    self.device.framdeID -= 1   # decrement to the previous frame that needs resending.
+    
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.AIN_SCAN_RESEND_DATA
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('AInScanResendData: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+        data = unpack('H'*count*nChan,r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount])
+
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AInScanResendData BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
+    return data
+
+  def AInScanStop(self):
+    """
+    This command stops the analog input scan (if running)
+    """
+
+    dataCount = 0
+    replyCount = 0
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.AIN_SCAN_STOP
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('AInScanStop: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AInScanStop BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
+  def AInConfigR(self):
+    """
+    This command reads the analog input range configuration for
+    AInScan in differential mode.
+    """
+
+    dataCount = 0
+    replyCount = 4
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.AIN_CONFIG_R
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('AInConfigR: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+        data = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
+
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AInConfigR BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
+    return data
+
+  def AInConfigW(self, ranges):
+    """  
+    This command writes the analog input range configuration for
+    AInScan in differential mode.  This command will result in an
+    error respone if an AIn scan is currently running.
+
+        ranges: 4 channel ranges, each byte corresponds to an input channel.
+                These values are ignored in single ended mode (only 1 range available).
+    """
+    
+    dataCount = 4
+    replyCount = 0
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.AIN_CONFIG_W
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_DATA]           = ranges[0] & 0Xff
+    s_buffer[MSG_INDEX_DATA+1]         = ranges[1] & 0xff
+    s_buffer[MSG_INDEX_DATA+2]         = ranges[2] & 0xff
+    s_buffer[MSG_INDEX_DATA+3]         = ranges[3] & 0xff
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('AInConfigW: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AInConfigW BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
+  def AInScanClearFIFO(self):
+    """
+    This command clears the scan data FIFO
+    """
+    
+    dataCount = 0
+    replyCount = 0
+    result = False
+    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+
+    s_buffer[MSG_INDEX_COMMAND]        = self.AIN_SCAN_CLEAR_FIFO
+    s_buffer[MSG_INDEX_START]          = MSG_START
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
+    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[MSG_INDEX_STATUS]         = 0
+    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+
+    self.device.sendMessage(s_buffer)
+
+    try:
+      r_buffer = self.device.receiveMessage()
+    except socket.timeout:
+      raise TimeoutError('AInScanClearFIFO: timeout error.')
+      return
+
+    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
+         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+        result = True
+
+    try:
+      if (result == False):
+        raise ResultError
+    except ResultError:
+      print('Error in AInScanClearFIFO BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
+  
   #############################################
   #        Analog Output Commands             #
   #############################################
@@ -430,7 +928,7 @@ class BTH_1208LS:
 
     s_buffer[MSG_INDEX_COMMAND]        = self.AOUT_R
     s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
@@ -453,14 +951,14 @@ class BTH_1208LS:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
         data = unpack_from('H'*2, r_buffer, MSG_INDEX_DATA)
-        value[0] = round(data[0]*self.table_AOut[0].slope + self.table_AOut[0].intercept)
-        value[1] = round(data[1]*self.table_AOut[1].slope + self.table_AOut[1].intercept)
 
     try:
       if (result == False):
         raise ResultError
     except ResultError:
       print('Error in AOutR BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+
+    return data
 
   def AOut(self, channel, value):
     """
@@ -481,7 +979,7 @@ class BTH_1208LS:
     s_buffer[MSG_INDEX_DATA]           = channel
     s_buffer[MSG_INDEX_DATA+1]         = value & 0xff          # low byte
     s_buffer[MSG_INDEX_DATA+2]         = (value>>8) & 0xff     # high byte
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
@@ -527,7 +1025,7 @@ class BTH_1208LS:
 
     s_buffer[MSG_INDEX_COMMAND]        = self.COUNTER_R
     s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
@@ -630,7 +1128,7 @@ class BTH_1208LS:
     s_buffer[MSG_INDEX_DATA+1]         = (address >> 8) & 0xff # high byte    
     s_buffer[MSG_INDEX_DATA+2]         = count
     s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
@@ -688,7 +1186,7 @@ class BTH_1208LS:
     s_buffer[MSG_INDEX_DATA+1]         = (address >> 8) & 0xff # high byte    
     s_buffer[MSG_INDEX_DATA+2]         = count
     s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
@@ -747,7 +1245,7 @@ class BTH_1208LS:
     for i in range(count):
       s_buffer[MSG_INDEX_DATA+2+i] = data[i]
     s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
@@ -801,7 +1299,7 @@ class BTH_1208LS:
     s_buffer[MSG_INDEX_DATA+1]         = (address >> 8) & 0xff # high byte    
     s_buffer[MSG_INDEX_DATA+2]         = count
     s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
@@ -861,7 +1359,7 @@ class BTH_1208LS:
     for i in range(count):
       s_buffer[MSG_INDEX_DATA+2+i] = data[i]
     s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
@@ -908,7 +1406,7 @@ class BTH_1208LS:
     s_buffer[MSG_INDEX_COMMAND]        = self.BLINK_LED
     s_buffer[MSG_INDEX_DATA]           = count
     s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   # increment frame ID with every send
+    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
