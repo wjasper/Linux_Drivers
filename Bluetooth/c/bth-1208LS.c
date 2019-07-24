@@ -115,44 +115,43 @@ bool DIn_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t *value)
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  int dataCount = 0;
+  int replyCount = 1;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = DIN_R;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = DIN_R;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 1;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-	  *value = replyBuffer[MSG_INDEX_DATA];
+	  *value = r_buffer[MSG_INDEX_DATA];
 	}
       }
     }
   }
 
   if (result == false) {
-    printf("Error in DIn_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in DIn_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -165,44 +164,43 @@ bool DOutR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t *value)
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  int dataCount = 0;
+  int replyCount = 1;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = DOUT_R;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = DOUT_R;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 1;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-	  *value = replyBuffer[MSG_INDEX_DATA];
+	  *value = r_buffer[MSG_INDEX_DATA];
 	}
       }
     }
   }
 
   if (result == false) {
-    printf("Error in DOutR_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in DOutR_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -215,36 +213,35 @@ bool DOut_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t value)
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  int dataCount = 1;
+  int replyCount = 0;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 1;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = DOUT_W;
-  buffer[MSG_INDEX_DATA]           = value;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = DOUT_W;
+  s_buffer[MSG_INDEX_DATA]           = value;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)             &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
 	}
       }
@@ -252,7 +249,7 @@ bool DOut_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t value)
   }
 
   if (result == false) {
-    printf("Error in DOut_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in DOut_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -274,47 +271,46 @@ bool AIn_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t channel, uint8_t m
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  int dataCount = 3;
+  int replyCount = 2;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 3;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = AIN;
-  buffer[MSG_INDEX_DATA]           = channel;
-  buffer[MSG_INDEX_DATA+1]         = mode;
-  buffer[MSG_INDEX_DATA+2]         = range;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = AIN;
+  s_buffer[MSG_INDEX_DATA]           = channel;
+  s_buffer[MSG_INDEX_DATA+1]         = mode;
+  s_buffer[MSG_INDEX_DATA+2]         = range;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 2;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-	  memcpy((unsigned char *) value, &replyBuffer[MSG_INDEX_DATA], replyCount);
+	  memcpy((unsigned char *) value, &r_buffer[MSG_INDEX_DATA], replyCount);
 	}
       }
     }
   }
 
   if (result == false) {
-    printf("Error in AIn_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in AIn_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -401,12 +397,13 @@ bool AInScanStart_BTH1208LS(DeviceInfo_BTH1208LS *device_info,uint32_t count, ui
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[32];
-  unsigned char replyBuffer[32];
+  int dataCount = 14;
+  int replyCount = 0;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
+
   bool result = false;
   int length;
-  int dataCount = 14;
-  int replyCount;
   uint32_t pacer_period;
 
   if (sock < 0) {
@@ -420,29 +417,30 @@ bool AInScanStart_BTH1208LS(DeviceInfo_BTH1208LS *device_info,uint32_t count, ui
     pacer_period = 0;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = AIN_SCAN_START;
-  memcpy(&buffer[MSG_INDEX_DATA], &count, 4);
-  memcpy(&buffer[MSG_INDEX_DATA+4], &retrig_count, 4);
-  memcpy(&buffer[MSG_INDEX_DATA+8], &pacer_period, 4);
-  buffer[MSG_INDEX_DATA+12]        = channels;
-  buffer[MSG_INDEX_DATA+13]        = options;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  device_info->nDelay = 255*1000000./frequency;
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  s_buffer[MSG_INDEX_COMMAND]        = AIN_SCAN_START;
+  memcpy(&s_buffer[MSG_INDEX_DATA], &count, 4);
+  memcpy(&s_buffer[MSG_INDEX_DATA+4], &retrig_count, 4);
+  memcpy(&s_buffer[MSG_INDEX_DATA+8], &pacer_period, 4);
+  s_buffer[MSG_INDEX_DATA+12]        = channels;
+  s_buffer[MSG_INDEX_DATA+13]        = options;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
+
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
 	}
       }
@@ -450,9 +448,27 @@ bool AInScanStart_BTH1208LS(DeviceInfo_BTH1208LS *device_info,uint32_t count, ui
   }
 
   if (result == false) {
-    printf("Error in AInScanStart_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in AInScanStart_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
+}
+
+bool AInScanRead_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t nScan, uint8_t nChan , uint16_t *data)
+{
+  int nSamples = nScan*nChan;
+  int index = 0;
+
+  while (nSamples > 0) {
+    if (nSamples > 127) {
+      AInScanSendData_BTH1208LS(device_info, 127, &data[index]);
+      index += 127;
+      nSamples -= 127;
+    } else {
+      AInScanSendData_BTH1208LS(device_info, nSamples, &data[index]);
+      return true;
+    }
+  }
+  return true;
 }
 
 bool AInScanSendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count, uint16_t *data)
@@ -462,54 +478,58 @@ bool AInScanSendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count
      allowed in a frame (255 bytes / 127 samples). Incrementing frame
      IDs are recommended in order to make use of the AInScanResendData
      command on an error.
+
+       count: number of samples to return.
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[272];
+  int dataCount = 0;
+  int replyCount = count*2;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  replyCount = count*2;
   if (replyCount > 255) replyCount = 255;  // 255 the maximum number of bytes transmitted in a frame
-  
-  buffer[MSG_INDEX_COMMAND]        = AIN_SCAN_SEND_DATA;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  usleep(device_info->nDelay);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 5000)) > 0) {
+  s_buffer[MSG_INDEX_COMMAND]        = AIN_SCAN_SEND_DATA;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
+
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 5000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-	  memcpy(data, &replyBuffer[MSG_INDEX_DATA], replyCount);
+	  memcpy(data, &r_buffer[MSG_INDEX_DATA], replyCount);
 	}
+      } else {
+	printf("AInScanSendData_BTH1208LS: length = %d  %d\n", length, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount);;
       }
-    }
-  }
+    } 
+  } 
 
   if (result == false) {
-    printf("Error in AInScanSendData_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in AInScanSendData_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
 
-bool AInScanResendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count, uint8_t nChan, uint16_t *data)
+bool AInScanResendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count, uint16_t *data)
 {
   /* This command resends the previous scan data that matches the
      specified frame ID. This is used when the host doesn’t receive a
@@ -523,47 +543,46 @@ bool AInScanResendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t cou
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[272];
+  int dataCount = 0;
+  int replyCount = count*2;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  replyCount = count*nChan*2;
   if (replyCount > 255) replyCount = 255;    // 255 the maximum number of samples transmitted in a frame
   device_info->device.frameID--;             // decrement to the previous frame that needs resending.
   
-  buffer[MSG_INDEX_COMMAND]        = AIN_SCAN_RESEND_DATA;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = AIN_SCAN_RESEND_DATA;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-	  memcpy(data, &replyBuffer[MSG_INDEX_DATA], replyCount);
+	  memcpy(data, &r_buffer[MSG_INDEX_DATA], replyCount);
 	}
       }
     }
   }
 
   if (result == false) {
-    printf("Error in AInScanResendData_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in AInScanResendData_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -573,36 +592,34 @@ bool AInScanStop_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   /* This command stops the analog input scan (if running)  */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  int dataCount = 0;
+  int replyCount = 0;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = AIN_SCAN_STOP;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = AIN_SCAN_STOP;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	replyCount = 0;
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
 	}
       }
@@ -610,7 +627,7 @@ bool AInScanStop_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   }
 
   if (result == false) {
-    printf("Error in AInScanStop_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in AInScanStop_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -622,44 +639,43 @@ bool AInConfigR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t ranges[4])
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  int dataCount = 0;
+  int replyCount = 4;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = AIN_CONFIG_R;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = AIN_CONFIG_R;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 4;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-	  memcpy(ranges, &replyBuffer[MSG_INDEX_DATA], 4);
+	  memcpy(ranges, &r_buffer[MSG_INDEX_DATA], 4);
 	}
       }
     }
   }
 
   if (result == false) {
-    printf("Error in AInConfigR_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in AInConfigR_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -672,37 +688,36 @@ bool AInConfigW_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t ranges[4])
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  int dataCount = 4;
+  int replyCount = 0;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 4;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = AIN_CONFIG_W;
-  memcpy(&buffer[MSG_INDEX_DATA], ranges, 4);
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = AIN_CONFIG_W;
+  memcpy(&s_buffer[MSG_INDEX_DATA], ranges, 4);
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	replyCount = 0;
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
 	}
       }
@@ -710,7 +725,7 @@ bool AInConfigW_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t ranges[4])
   }
 
   if (result == false) {
-    printf("Error in AInConfigW_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in AInConfigW_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -720,36 +735,35 @@ bool AInScanClearFIFO_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   /* This command clears the scan data FIFO */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  int dataCount = 0;
+  int replyCount = 0;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = AIN_SCAN_CLEAR_FIFO;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = AIN_SCAN_CLEAR_FIFO;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	replyCount = 0;
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
 	}
       }
@@ -757,7 +771,7 @@ bool AInScanClearFIFO_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   }
 
   if (result == false) {
-    printf("Error in AInScanClearFIFO_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in AInScanClearFIFO_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -775,44 +789,43 @@ bool AOutR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t value[2])
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  int dataCount = 0;
+  int replyCount = 4;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = AOUT_R;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = AOUT_R;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 4;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-	  memcpy((unsigned char *) value, &replyBuffer[MSG_INDEX_DATA], replyCount);
+	  memcpy((unsigned char *) value, &r_buffer[MSG_INDEX_DATA], replyCount);
 	}
       }
     }
   }
 
   if (result == false) {
-    printf("Error in AOutR_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in AOutR_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -826,38 +839,37 @@ bool AOut_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t channel, uint16_t
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  int dataCount = 3;
+  int replyCount = 0;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 3;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = AOUT_W;
-  buffer[MSG_INDEX_DATA]           = channel;
-  buffer[MSG_INDEX_DATA+1]         = (unsigned char) value;
-  buffer[MSG_INDEX_DATA+2]         = (unsigned char) (value >> 8);
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = AOUT_W;
+  s_buffer[MSG_INDEX_DATA]           = channel;
+  s_buffer[MSG_INDEX_DATA+1]         = (unsigned char) value;
+  s_buffer[MSG_INDEX_DATA+2]         = (unsigned char) (value >> 8);
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                    &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                    &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                 &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                   &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
 	}
       }
@@ -865,7 +877,7 @@ bool AOut_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t channel, uint16_t
   }
 
   if (result == false) {
-    printf("Error in AOut_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in AOut_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -879,44 +891,43 @@ bool Counter_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t *counter)
   /* The command reads the event counter. */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[64];
-  unsigned char replyBuffer[64];
+  int dataCount = 0;
+  int replyCount = 4;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = COUNTER_R;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = COUNTER_R;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 4;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-          memcpy(counter, &replyBuffer[MSG_INDEX_DATA], replyCount);
+          memcpy(counter, &r_buffer[MSG_INDEX_DATA], replyCount);
 	}
       }
     }
   }
 
   if (result == false) {
-    printf("Error in Counter_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in Counter_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -928,35 +939,34 @@ bool ResetCounter_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[64];
-  unsigned char replyBuffer[64];
+  int dataCount = 0;
+  int replyCount = 0;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = COUNTER_W;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = COUNTER_W;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
 	}
       }
@@ -964,7 +974,7 @@ bool ResetCounter_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   }
 
   if (result == false) {
-    printf("Error in ResetCounter_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in ResetCounter_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -979,12 +989,12 @@ bool CalMemoryR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t address, u
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[64];
-  unsigned char replyBuffer[512];
+  int dataCount = 3;
+  int replyCount = count;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 3;
-  int replyCount;
 
   if (sock < 0) {
     return false;
@@ -1000,35 +1010,34 @@ bool CalMemoryR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t address, u
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = CAL_MEMORY_R;
-  memcpy(&buffer[MSG_INDEX_DATA], &address, 2);
-  buffer[MSG_INDEX_DATA+2]         = count;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = CAL_MEMORY_R;
+  memcpy(&s_buffer[MSG_INDEX_DATA], &address, 2);
+  s_buffer[MSG_INDEX_DATA+2]         = count;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = count;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-	  memcpy(data, &replyBuffer[MSG_INDEX_DATA], replyCount);
+	  memcpy(data, &r_buffer[MSG_INDEX_DATA], replyCount);
 	}
       }
     }
   }
 
   if (result == false) {
-    printf("Error in CalMemoryR_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in CalMemoryR_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -1040,12 +1049,12 @@ bool UserMemoryR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t address, 
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[512];
+  int dataCount = 3;
+  int replyCount = count;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 3;
-  int replyCount;
 
   if (sock < 0) {
     return false;
@@ -1061,35 +1070,34 @@ bool UserMemoryR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t address, 
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = USER_MEMORY_R;
-  memcpy(&buffer[MSG_INDEX_DATA], &address, 2);
-  buffer[MSG_INDEX_DATA+2]         = count;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = USER_MEMORY_R;
+  memcpy(&s_buffer[MSG_INDEX_DATA], &address, 2);
+  s_buffer[MSG_INDEX_DATA+2]         = count;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = count;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-	  memcpy(data, &replyBuffer[MSG_INDEX_DATA], replyCount);
+	  memcpy(data, &r_buffer[MSG_INDEX_DATA], replyCount);
 	}
       }
     }
   }
 
   if (result == false) {
-    printf("Error in UserMemoryR_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in UserMemoryR_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -1102,12 +1110,12 @@ bool UserMemoryW_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t address, 
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[512];
-  unsigned char replyBuffer[16];
+  int dataCount = count + 2;
+  int replyCount = 0;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = count + 2;
-  int replyCount;
 
   if (sock < 0) {
     return false;
@@ -1123,26 +1131,25 @@ bool UserMemoryW_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t address, 
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = USER_MEMORY_W;
-  memcpy(&buffer[MSG_INDEX_DATA], &address, 2);
-  memcpy(&buffer[MSG_INDEX_DATA+2], data, count);
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = USER_MEMORY_W;
+  memcpy(&s_buffer[MSG_INDEX_DATA], &address, 2);
+  memcpy(&s_buffer[MSG_INDEX_DATA+2], data, count);
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
 	}
       }
@@ -1150,7 +1157,7 @@ bool UserMemoryW_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t address, 
   }
 
   if (result == false) {
-    printf("Error in UserMemoryW_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in UserMemoryW_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -1163,12 +1170,12 @@ bool SettingsMemoryR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t addre
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[1048];
+  int dataCount = 3;
+  int replyCount = count;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 3;
-  int replyCount;
 
   if (sock < 0) {
     return false;
@@ -1184,35 +1191,34 @@ bool SettingsMemoryR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t addre
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = SETTINGS_MEMORY_R;
-  memcpy(&buffer[MSG_INDEX_DATA], &address, 2);
-  buffer[MSG_INDEX_DATA+2]         = count;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = SETTINGS_MEMORY_R;
+  memcpy(&s_buffer[MSG_INDEX_DATA], &address, 2);
+  s_buffer[MSG_INDEX_DATA+2]         = count;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = count;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-	  memcpy(data, &replyBuffer[MSG_INDEX_DATA], replyCount);
+	  memcpy(data, &r_buffer[MSG_INDEX_DATA], replyCount);
 	}
       }
     }
   }
 
   if (result == false) {
-    printf("Error in SettingsMemoryR_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in SettingsMemoryR_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -1226,12 +1232,12 @@ bool SettingsMemoryW_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t addre
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[1048];
-  unsigned char replyBuffer[16];
+  int dataCount = count + 2;
+  int replyCount = 0;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = count + 2;
-  int replyCount;
 
   if (sock < 0) {
     return false;
@@ -1247,26 +1253,25 @@ bool SettingsMemoryW_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t addre
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = SETTINGS_MEMORY_W;
-  memcpy(&buffer[MSG_INDEX_DATA], &address, 2);
-  memcpy(&buffer[MSG_INDEX_DATA+2], data, count);
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = SETTINGS_MEMORY_W;
+  memcpy(&s_buffer[MSG_INDEX_DATA], &address, 2);
+  memcpy(&s_buffer[MSG_INDEX_DATA+2], data, count);
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
 	}
       }
@@ -1274,7 +1279,7 @@ bool SettingsMemoryW_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t addre
   }
 
   if (result == false) {
-    printf("Error in SettingsMemoryW_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in SettingsMemoryW_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -1288,36 +1293,35 @@ bool BlinkLED_BTH1208LS(DeviceInfo_BTH1208LS *device_info, unsigned char count)
   /* This comman will blink the device power LED "count" times. */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[64];
-  unsigned char replyBuffer[64];
+  int dataCount = 1;
+  int replyCount = 0;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 1;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = BLINK_LED;
-  buffer[MSG_INDEX_DATA]           = count;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = BLINK_LED;
+  s_buffer[MSG_INDEX_DATA]           = count;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
 	}
       }
@@ -1325,7 +1329,7 @@ bool BlinkLED_BTH1208LS(DeviceInfo_BTH1208LS *device_info, unsigned char count)
   }
 
   if (result == false) {
-    printf("Error in BlinkLED_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in BlinkLED_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -1339,37 +1343,36 @@ bool GetSerialNumber_BTH1208LS(DeviceInfo_BTH1208LS *device_info, char serial[9]
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[64];
-  unsigned char replyBuffer[64];
+  int dataCount = 0;
+  int replyCount = 8;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = SERIAL;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = SERIAL;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 8;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-	  strncpy(serial, (char *) &replyBuffer[MSG_INDEX_DATA], replyCount);
+	  strncpy(serial, (char *) &r_buffer[MSG_INDEX_DATA], replyCount);
 	  serial[8] = '\0';
 	}
       }
@@ -1377,7 +1380,7 @@ bool GetSerialNumber_BTH1208LS(DeviceInfo_BTH1208LS *device_info, char serial[9]
   }
 
   if (result == false) {
-    printf("Error in GetSerialNumber_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in GetSerialNumber_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -1389,35 +1392,34 @@ bool Reset_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[64];
-  unsigned char replyBuffer[64];
+  int dataCount = 0;
+  int replyCount = 0;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = RESET;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = RESET;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
 	}
       }
@@ -1425,7 +1427,7 @@ bool Reset_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   }
 
   if (result == false) {
-    printf("Error in Reset_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in Reset_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -1449,44 +1451,43 @@ bool Status_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t *status)
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  int dataCount = 0;
+  int replyCount = 2;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = STATUS;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = STATUS;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 2;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-          memcpy(status, &replyBuffer[MSG_INDEX_DATA], 2);
+          memcpy(status, &r_buffer[MSG_INDEX_DATA], 2);
 	}
       }
     }
   }
 
   if (result == false) {
-    printf("Error in Status_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in Status_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -1500,35 +1501,34 @@ bool Ping_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t *status)
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  int dataCount = 0;
+  int replyCount = 0;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = PING;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = PING;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 0;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
 	}
       }
@@ -1536,7 +1536,7 @@ bool Ping_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t *status)
   }
 
   if (result == false) {
-    printf("Error in Ping_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in Ping_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -1550,44 +1550,43 @@ bool FirmwareVersion_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t *vers
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  int dataCount = 0;
+  int replyCount = 2;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = FIRMWARE_VERSION;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = FIRMWARE_VERSION;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 2;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-          memcpy(version, &replyBuffer[MSG_INDEX_DATA], 2);
+          memcpy(version, &r_buffer[MSG_INDEX_DATA], 2);
 	}
       }
     }
   }
 
   if (result == false) {
-    printf("Error in FirmwareVersion_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in FirmwareVersion_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -1601,44 +1600,43 @@ bool RadioFirmwareVersion_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t 
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[16];
-  unsigned char replyBuffer[16];
+  int dataCount = 0;
+  int replyCount = 2;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = RADIO_FIRMWARE_VERSION;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = RADIO_FIRMWARE_VERSION;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 2;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-          memcpy(version, &replyBuffer[MSG_INDEX_DATA], 2);
+          memcpy(version, &r_buffer[MSG_INDEX_DATA], 2);
 	}
       }
     }
   }
 
   if (result == false) {
-    printf("Error in RadioFirmwareVersion_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in RadioFirmwareVersion_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }
@@ -1650,44 +1648,43 @@ bool BatteryVoltage_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   */
 
   int sock = device_info->device.sock;
-  unsigned char buffer[64];
-  unsigned char replyBuffer[64];
+  int dataCount = 0;
+  int replyCount = 2;
+  unsigned char s_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount];
+  unsigned char r_buffer[MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount];
   bool result = false;
   int length;
-  int dataCount = 0;
-  int replyCount;
 
   if (sock < 0) {
     return false;
   }
 
-  buffer[MSG_INDEX_COMMAND]        = BATTERY_VOLTAGE;
-  buffer[MSG_INDEX_START]          = MSG_START;
-  buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
-  buffer[MSG_INDEX_STATUS]         = 0;
-  buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
-  buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(buffer, MSG_INDEX_DATA+dataCount);
+  s_buffer[MSG_INDEX_COMMAND]        = BATTERY_VOLTAGE;
+  s_buffer[MSG_INDEX_START]          = MSG_START;
+  s_buffer[MSG_INDEX_FRAME]          = device_info->device.frameID++;  // increment frame ID with every send
+  s_buffer[MSG_INDEX_STATUS]         = 0;
+  s_buffer[MSG_INDEX_COUNT]          = (unsigned char) (dataCount);
+  s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
-  if (send(sock, buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    replyCount = 2;
-    if ((length = receiveMessage(sock, replyBuffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+  if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
-	if ((replyBuffer[MSG_INDEX_START] == buffer[0])                                  &&
-            (replyBuffer[MSG_INDEX_COMMAND] == (buffer[MSG_INDEX_COMMAND] | MSG_REPLY))  &&
-	    (replyBuffer[MSG_INDEX_FRAME] == buffer[2])                                  &&
-	    (replyBuffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                               &&
-	    (replyBuffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                 &&
-	    (replyBuffer[MSG_INDEX_DATA+replyCount] + calcChecksum(replyBuffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
+	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
+            (r_buffer[MSG_INDEX_COMMAND] == (s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY)) &&
+	    (r_buffer[MSG_INDEX_FRAME] == s_buffer[MSG_INDEX_FRAME])                   &&
+	    (r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS)                                &&
+	    (r_buffer[MSG_INDEX_COUNT] == (unsigned char) replyCount)                  &&
+	    (r_buffer[MSG_INDEX_DATA+replyCount] + calcChecksum(r_buffer, MSG_HEADER_SIZE+replyCount) == 0xff)) {
 	  result = true;
-	  memcpy(&device_info->voltage, &replyBuffer[MSG_INDEX_DATA], replyCount);
+	  memcpy(&device_info->voltage, &r_buffer[MSG_INDEX_DATA], replyCount);
 	}
       }
     }
   }
 
   if (result == false) {
-    printf("Error in BatteryVoltage_BTH1208LS. Status = %d\n", replyBuffer[MSG_INDEX_STATUS]);
+    printf("Error in BatteryVoltage_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
   return result;
 }

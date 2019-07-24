@@ -116,6 +116,62 @@ def main():
         value = bth1208LS.AIn(channel, mode, gain)
         print("Range = {0:d},  Channel = {1:d},  Sample[{2:d}] = {3:x}    Volts = {4:f}"\
               .format(gain, channel, i, value, bth1208LS.volts(value, gain)))
+    elif ch == 'I':
+      print("Testing BTH-1208lS Analog Input Scan.")
+      count = int(input("Enter number of scans (less than 35): "))
+      channel = int(input("Input channel DE [0-3]: "))
+      gain = int(input("Input range [0-7]: "))
+      frequency = float(input("Enter sampling frequency [Hz]: "))
+      ranges = [0x0, 0x0, 0x0, 0x0]
+      ranges[channel] = gain
+      options = bth1208LS.DIFFERENTIAL_MODE
+      bth1208LS.AInScanStop()
+      bth1208LS.AInScanClearFIFO()
+      bth1208LS.AInConfigW(ranges)
+      time.sleep(1)
+      ranges = bth1208LS.AInConfigR()
+      print("ranges = ", ranges)
+      bth1208LS.AInScanStart(count, 0x0, frequency, (0x1 << channel), options)
+      dataAIn = bth1208LS.AInScanSendData(count)
+      bth1208LS.AInScanStop()
+      for i in range(count):
+        dataAIn[i] = round(dataAIn[i]*bth1208LS.table_AInDE[channel][gain].slope + bth1208LS.table_AInDE[channel][gain].intercept)
+        print("Range {0:d}  Channel {1:d}   Sample[{2:d}] = {3:x}   Volts = {4:f}"\
+              .format(gain, channel, i, dataAIn[i], bth1208LS.volts(dataAIn[i], gain)))
+    elif ch == 'x':
+      print("Testing BTH-1208LS Multi-Channel Analog Input Scan.")
+      nChan = int(input("Enter number of channels (1-4): "))
+      nScan = int(input("Enter number of scans: "))
+      repeats = int(input("Enter number of repeats: "))
+      frequency = float(input("Enter sampling frequency [Hz]: "))
+      # build bitmap for the first nchan in channels
+      channels = 0
+      for i in range(nChan):
+        channels |= (0x1 << i)
+      # Always use BP_20V to make it easy (BP_20V is 0...)
+      gain = bth1208LS.BP_20V
+      ranges = [0x0, 0x0, 0x0, 0x0]
+      for i in range(4):
+        ranges[i] = gain
+      options = bth1208LS.DIFFERENTIAL_MODE
+      bth1208LS.AInScanStop()
+      bth1208LS.AInScanClearFIFO()
+      bth1208LS.AInConfigW(ranges)
+      time.sleep(1)
+      for m in range(repeats):
+        print("\n\n---------------------------------------");
+        print("\nrepeat: ", m);
+        bth1208LS.AInScanStop()
+        bth1208LS.AInScanClearFIFO()
+        bth1208LS.AInScanStart(nScan*nChan, 0x0, frequency, channels, options)
+        data = bth1208LS.AInScanRead(nScan,nChan)
+        for i in range(int(nScan)):
+          print("{0:6d}".format(i), end="")
+          for j in range(nChan):
+            k = i*nChan + j
+            value = round(data[k]*bth1208LS.table_AInDE[j][gain].slope + bth1208LS.table_AInDE[j][gain].intercept)
+            print(" ,{0:8.4f}".format(bth1208LS.volts(value, ranges[0])), end="")
+          print("")
     elif ch == 'e':
       bth1208LS.device.sock.close()
       exit(0)

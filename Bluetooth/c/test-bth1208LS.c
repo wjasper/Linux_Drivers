@@ -61,7 +61,7 @@ int main(int argc, char**argv)
   double frequency, voltage;
   uint16_t dataAIn[8*512];  // holds 16 bit unsigned analog input data
   uint16_t data;
-  int nchan, repeats;
+  int nChan, repeats, nScan;
 
   memset(&device_info, 0x0, sizeof(device_info));
   device_info.device.frameID = 0;         // zero out the frameID
@@ -185,16 +185,16 @@ int main(int argc, char**argv)
         printf("Testing BTH-1208LS Multi-Channel Analog Input Scan.\n");
         AInScanStop_BTH1208LS(&device_info);
         printf("Enter number of channels (1-4): ");
-        scanf("%d", &nchan);
+        scanf("%d", &nChan);
         printf("Enter number of scans (less than 30): ");
-        scanf("%d", &count);
+        scanf("%d", &nScan);
         printf("Enter number of repeats: ");
         scanf("%d", &repeats);
 	printf("Enter sampling frequency: ");
         scanf("%lf", &frequency);
-        // Build bitmap for the first nchan in channels.
+        // Build bitmap for the first nChan in channels.
         channels = 0;
-        for (i = 0; i < nchan; i++) {
+        for (i = 0; i < nChan; i++) {
 	  channels |= (1 << i);
 	}
         // Always use BP_20V to make it easy (BP_20V is 0...)
@@ -212,17 +212,17 @@ int main(int argc, char**argv)
 	  printf("\nrepeat: %d\n", m);
 	  AInScanStop_BTH1208LS(&device_info);
 	  AInScanClearFIFO_BTH1208LS(&device_info);
-	  AInScanStart_BTH1208LS(&device_info, count*nchan, 0x0, frequency, channels, options);
-	  AInScanSendData_BTH1208LS(&device_info, count*nchan, dataAIn);
-	  for (i = 0; i < count/nchan; i++) {
+	  AInScanStart_BTH1208LS(&device_info, nScan*nChan, 0x0, frequency, channels, options);
+	  AInScanRead_BTH1208LS(&device_info, nScan, nChan, dataAIn);
+	  for (i = 0; i < nScan; i++) {
 	    printf("%6d", i);
-	    for (j = 0; j < nchan; j++)	{
-	      k = i*nchan + j;
+	    for (j = 0; j < nChan; j++)	{
+	      k = i*nChan + j;
 	      data = rint(dataAIn[k]*device_info.table_AInDE[j][range].slope + device_info.table_AInDE[j][range].intercept);
 	      printf(", %8.4f", volts_BTH1208LS(data, range));
 	    } /* for (j - 0; j < 8, j++) */
 	    printf("\n");
-	  } /* for (i = 0; i < count; i++) */
+	  } /* for (i = 0; i < nScan; i++) */
 	} /* for (m = 0; m < repeats; m++) */
 	printf("\n\n---------------------------------------");
 	break;

@@ -15,7 +15,8 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-import bluetooth 
+import bluetooth
+import time
 from struct import *
 from mccBluetooth import *
 from datetime import datetime
@@ -149,6 +150,7 @@ class BTH_1208LS:
 
   voltage = 0
   status = 0
+  nDelay = 0.0
 
   def __init__(self, device):
     self.device = device        # inherit values from mccBluetoothDevice
@@ -456,7 +458,6 @@ class BTH_1208LS:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
         value = (r_buffer[MSG_INDEX_DATA] | (r_buffer[MSG_INDEX_DATA+1]<<8))
-
     try:
       if (result == False):
         raise ResultError
@@ -562,6 +563,7 @@ class BTH_1208LS:
       pacer_period = round((40.E6 / frequency) - 1)
     else:
       pacer_period = 0
+    self.nDelay = 255./frequency
     
     dataCount = 14
     replyCount = 0
@@ -569,7 +571,7 @@ class BTH_1208LS:
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.AIn_SCAN_START
+    s_buffer[MSG_INDEX_COMMAND]        = self.AIN_SCAN_START
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_DATA]           = count & 0xff
     s_buffer[MSG_INDEX_DATA+1]         = (count >> 8) & 0xff
@@ -584,7 +586,7 @@ class BTH_1208LS:
     s_buffer[MSG_INDEX_DATA+10]        = (pacer_period >> 16) & 0xff
     s_buffer[MSG_INDEX_DATA+11]        = (pacer_period >> 24) & 0xff
     s_buffer[MSG_INDEX_DATA+12]        = channels
-    s_buffer[MSG_INDEX_DATA+12]        = options
+    s_buffer[MSG_INDEX_DATA+13]        = options
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
@@ -616,6 +618,18 @@ class BTH_1208LS:
 
     return result
 
+  def AInScanRead(self, nScan, nChan):
+    nSamples = nScan*nChan
+    data = []
+
+    while nSamples > 0:
+      if nSamples > 127:
+        data.extend(self.AInScanSendData(127))
+        nSamples -= 127
+      else:
+        data.extend(self.AInScanSendData(nSamples))
+        return data
+
   def AInScanSendData(self, count):
     """
     This command reads data from the scan FIFO. The device will
@@ -627,10 +641,13 @@ class BTH_1208LS:
       count: number of samples to send
     """
 
+    time.sleep(self.nDelay) # give system time to collect data
     dataCount = 0
     replyCount = count*2
     if (replyCount > 255):
       replyCount = 255      # 255 the maximum number of bytes transmitted in a frame
+      print("AInScanSendData: count greater than 255\n")
+      raise ResultError
     result = False
     s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
@@ -659,8 +676,9 @@ class BTH_1208LS:
          r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
-        data = unpack('H'*count,r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount])
-
+        data = unpack('H'*count, r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount])
+    else:
+      print("Error in length of return buffer.", len(r_buffer), MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount)
     try:
       if (result == False):
         raise ResultError
@@ -716,14 +734,13 @@ class BTH_1208LS:
          r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
-        data = unpack('H'*count*nChan,r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount])
+        data = unpack('H'*count*nChan, r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount])
 
     try:
       if (result == False):
         raise ResultError
     except ResultError:
       print('Error in AInScanResendData BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
-
     return data
 
   def AInScanStop(self):
@@ -805,7 +822,6 @@ class BTH_1208LS:
          r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
         data = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
-
     try:
       if (result == False):
         raise ResultError
