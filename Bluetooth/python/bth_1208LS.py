@@ -115,8 +115,6 @@ class BTH_1208LS:
   DIFFERENTIAL    = 1
 
   # Analog Input Scan Options
-  IMMEDIATE_TRANSFER_MODE = (0x1)
-  BLOCK_TRANSFER_MODE     = (0x0)
   DIFFERENTIAL_MODE       = (0x2)
   SINGLE_ENDED_MODE       = (0x0)
   NO_TRIGGER              = (0x0)
@@ -125,8 +123,6 @@ class BTH_1208LS:
   TRIG_LEVEL_HIGH         = (0x3 << 2)
   TRIG_LEVEL_LOW          = (0x4 << 2)
   RETRIGGER_MODE          = (0x1 << 5)
-  STALL_ON_OVERRUN        = (0x0)
-  INHIBIT_STALL           = (0x1 << 7)
 
   # Ranges
   BP_20V   = 0x0      # +/- 20 V
@@ -151,6 +147,9 @@ class BTH_1208LS:
   voltage = 0
   status = 0
   nDelay = 0.0
+  frequency = 0.0
+  options = 0       
+  nChan = 0          # number of channels in the scan
 
   def __init__(self, device):
     self.device = device        # inherit values from mccBluetoothDevice
@@ -563,8 +562,19 @@ class BTH_1208LS:
       pacer_period = round((40.E6 / frequency) - 1)
     else:
       pacer_period = 0
-    self.nDelay = 255./frequency
-    
+    self.frequency = frequency
+    self.options = options
+
+    self.nChan = 0
+    if (options & self.DIFFERENTIAL_MODE) == True:
+      for i in range(self.NCHAN_DE):
+        if (channels & (0x1 << i)) != 0x0:
+          self.nChan += 1
+    else:
+      for i in range(self.NCHAN_SE):
+        if (channels & (0x1 << i)) != 0x0:
+          self.nChan += 1
+
     dataCount = 14
     replyCount = 0
     result = False
@@ -618,15 +628,19 @@ class BTH_1208LS:
 
     return result
 
-  def AInScanRead(self, nScan, nChan):
-    nSamples = nScan*nChan
+  def AInScanRead(self, nScan):
+    nSamples = nScan*self.nChan
     data = []
 
     while nSamples > 0:
       if nSamples > 127:
+        self.nDelay = 127./(self.frequency)
+        time.sleep(self.nDelay)                  # give system time to collect data
         data.extend(self.AInScanSendData(127))
         nSamples -= 127
       else:
+        self.nDelay = (nSamples)/(self.frequency)
+        time.sleep(self.nDelay)                  # give system time to collect data
         data.extend(self.AInScanSendData(nSamples))
         return data
 
@@ -641,7 +655,6 @@ class BTH_1208LS:
       count: number of samples to send
     """
 
-    time.sleep(self.nDelay) # give system time to collect data
     dataCount = 0
     replyCount = count*2
     if (replyCount > 255):

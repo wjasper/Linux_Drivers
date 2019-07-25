@@ -122,11 +122,15 @@ typedef struct Calibration_t {
 
 typedef struct DeviceInfo_BTH1208LS_t {
   BluetoothDeviceInfo device;
-  uint16_t voltage;
-  uint16_t status;
   Calibration table_AInDE[NCHAN_DE][NGAINS];  // calibration slope and offset differential mode
   Calibration table_AInSE[NCHAN_SE];          // calibration slope and offset single ended mode
+  float frequency;
   int nDelay;
+  int nChan;
+  uint16_t voltage;
+  uint16_t status;
+  uint8_t  options;
+
 } DeviceInfo_BTH1208LS;
 
 /* function prototypes for the BTH-1208LS */
@@ -137,7 +141,7 @@ bool AIn_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t channel, uint8_t m
 bool AInScanStart_BTH1208LS(DeviceInfo_BTH1208LS *device_info,uint32_t count, uint32_t retrig_count, double frequency,
 		  uint8_t channels, uint8_t options);
 bool AInScanSendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count, uint16_t *data);
-bool AInScanRead_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t nScan, uint8_t nChan , uint16_t *data);  
+bool AInScanRead_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t nScan, uint16_t *data);  
 bool AInScanResendData_BTH_1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count, uint16_t *data);
 bool AInScanStop_BTH1208LS(DeviceInfo_BTH1208LS *device_info);
 bool AInConfigR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t ranges[4]);

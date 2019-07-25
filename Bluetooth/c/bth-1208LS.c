@@ -405,6 +405,7 @@ bool AInScanStart_BTH1208LS(DeviceInfo_BTH1208LS *device_info,uint32_t count, ui
   bool result = false;
   int length;
   uint32_t pacer_period;
+  int i;
 
   if (sock < 0) {
     return false;
@@ -417,8 +418,23 @@ bool AInScanStart_BTH1208LS(DeviceInfo_BTH1208LS *device_info,uint32_t count, ui
     pacer_period = 0;
   }
 
-  device_info->nDelay = 255*1000000./frequency;
-
+  device_info->frequency = frequency;
+  device_info->options = options;
+  device_info->nChan = 0;
+  if ((options & DIFFERENTIAL_MODE) == true) {
+    for (i = 0; i < NCHAN_DE; i++) {
+      if ((channels & (0x1 << i)) != 0x0) {
+	device_info->nChan++;
+      }
+    }
+  } else {
+    for (i = 0; i < NCHAN_SE; i++) {
+      if ((channels & (0x1 << i)) != 0x0) {
+	device_info->nChan++;
+      }
+    }
+  }
+     
   s_buffer[MSG_INDEX_COMMAND]        = AIN_SCAN_START;
   memcpy(&s_buffer[MSG_INDEX_DATA], &count, 4);
   memcpy(&s_buffer[MSG_INDEX_DATA+4], &retrig_count, 4);
@@ -453,17 +469,21 @@ bool AInScanStart_BTH1208LS(DeviceInfo_BTH1208LS *device_info,uint32_t count, ui
   return result;
 }
 
-bool AInScanRead_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t nScan, uint8_t nChan , uint16_t *data)
+bool AInScanRead_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t nScan, uint16_t *data)
 {
-  int nSamples = nScan*nChan;
+  int nSamples = nScan*device_info->nChan;
   int index = 0;
 
   while (nSamples > 0) {
     if (nSamples > 127) {
+      device_info->nDelay = 127.*1000000/device_info->frequency;
+      usleep(device_info->nDelay);
       AInScanSendData_BTH1208LS(device_info, 127, &data[index]);
       index += 127;
       nSamples -= 127;
     } else {
+      device_info->nDelay = nSamples*1000000./device_info->frequency;
+      usleep(device_info->nDelay);
       AInScanSendData_BTH1208LS(device_info, nSamples, &data[index]);
       return true;
     }
@@ -495,7 +515,6 @@ bool AInScanSendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count
   }
 
   if (replyCount > 255) replyCount = 255;  // 255 the maximum number of bytes transmitted in a frame
-  usleep(device_info->nDelay);
 
   s_buffer[MSG_INDEX_COMMAND]        = AIN_SCAN_SEND_DATA;
   s_buffer[MSG_INDEX_START]          = MSG_START;

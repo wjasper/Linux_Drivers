@@ -154,7 +154,7 @@ int main(int argc, char**argv)
         break;
       case 'I':
 	printf("Testing BTH-1208lS Analog Input Scan.\n");
-        printf("Enter number of scans (less than 35): ");
+        printf("Enter number of scans: ");
         scanf("%d", &count);
 	printf("Input channel 0-3: ");
         scanf("%hhd", &channel);
@@ -168,13 +168,9 @@ int main(int argc, char**argv)
 	AInScanClearFIFO_BTH1208LS(&device_info);
         AInConfigW_BTH1208LS(&device_info, ranges);
 	memset(dataAIn, 0x0, sizeof(dataAIn));
-	sleep(1);
 	AInConfigR_BTH1208LS(&device_info, ranges);
-	for (i = 0; i < 4; i++) {
-	  printf("Channel %d     range %d\n", i, ranges[i]);
-	}
 	AInScanStart_BTH1208LS(&device_info, count, 0x0, frequency, (0x1<<channel), options);
-	AInScanSendData_BTH1208LS(&device_info, count, dataAIn);
+	AInScanRead_BTH1208LS(&device_info, count, dataAIn);
 	for (i = 0; i < count; i++) {
 	  dataAIn[i] = rint(dataAIn[i]*device_info.table_AInDE[channel][range].slope + device_info.table_AInDE[channel][range].intercept);
           printf("Range %d Channel %d  Sample[%d] = %#x Volts = %lf\n", range, channel,
@@ -186,7 +182,7 @@ int main(int argc, char**argv)
         AInScanStop_BTH1208LS(&device_info);
         printf("Enter number of channels (1-4): ");
         scanf("%d", &nChan);
-        printf("Enter number of scans (less than 30): ");
+        printf("Enter number of scans: ");
         scanf("%d", &nScan);
         printf("Enter number of repeats: ");
         scanf("%d", &repeats);
@@ -206,14 +202,13 @@ int main(int argc, char**argv)
         options = DIFFERENTIAL_MODE;
         // Run a loop for the specified number of repeats and
         // show the results...
-	sleep(1);
         for (m = 0; m < repeats; m++) {
 	  printf("\n\n---------------------------------------");
 	  printf("\nrepeat: %d\n", m);
 	  AInScanStop_BTH1208LS(&device_info);
 	  AInScanClearFIFO_BTH1208LS(&device_info);
 	  AInScanStart_BTH1208LS(&device_info, nScan*nChan, 0x0, frequency, channels, options);
-	  AInScanRead_BTH1208LS(&device_info, nScan, nChan, dataAIn);
+	  AInScanRead_BTH1208LS(&device_info, nScan, dataAIn);
 	  for (i = 0; i < nScan; i++) {
 	    printf("%6d", i);
 	    for (j = 0; j < nChan; j++)	{
