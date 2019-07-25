@@ -421,7 +421,7 @@ bool AInScanStart_BTH1208LS(DeviceInfo_BTH1208LS *device_info,uint32_t count, ui
   device_info->frequency = frequency;
   device_info->options = options;
   device_info->nChan = 0;
-  if ((options & DIFFERENTIAL_MODE) == true) {
+  if ((options & DIFFERENTIAL_MODE) == DIFFERENTIAL_MODE) {
     for (i = 0; i < NCHAN_DE; i++) {
       if ((channels & (0x1 << i)) != 0x0) {
 	device_info->nChan++;
