@@ -566,7 +566,7 @@ class BTH_1208LS:
     self.options = options
 
     self.nChan = 0
-    if (options & self.DIFFERENTIAL_MODE) == True:
+    if (options & self.DIFFERENTIAL_MODE) == self.DIFFERENIAL_MODE:
       for i in range(self.NCHAN_DE):
         if (channels & (0x1 << i)) != 0x0:
           self.nChan += 1
