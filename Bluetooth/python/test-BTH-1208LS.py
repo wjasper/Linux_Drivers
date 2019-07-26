@@ -134,7 +134,6 @@ def main():
       ranges = bth1208LS.AInConfigR()
       bth1208LS.AInScanStart(count, 0x0, frequency, (0x1 << channel), options)
       dataAIn = bth1208LS.AInScanRead(count)
-      bth1208LS.AInScanStop()
       for i in range(count):
         dataAIn[i] = round(dataAIn[i]*bth1208LS.table_AInDE[channel][gain].slope + bth1208LS.table_AInDE[channel][gain].intercept)
         print("Range {0:d}  Channel {1:d}  Sample[{2:d}] = ".format(gain, channel, i), hex(dataAIn[i])," Volts = {0:7.4f}".format(bth1208LS.volts(dataAIn[i], gain)))
@@ -172,6 +171,8 @@ def main():
             value = round(data[k]*bth1208LS.table_AInDE[j][gain].slope + bth1208LS.table_AInDE[j][gain].intercept)
             print(" ,{0:8.4f}".format(bth1208LS.volts(value, ranges[0])), end="")
           print("")
+        bth1208LS.AInScanStop()
+        bth1208LS.AInScanClearFIFO()
     elif ch == 'C':
       print('BTH-1208LS Continuous Samping')
       print('Hit space <CR> to exit.')
@@ -186,7 +187,7 @@ def main():
 #      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
       j = 0
       while True:
-        time.sleep(126/frequency)
+        time.sleep(127/frequency)
         raw_data = bth1208LS.AInScanSendData(127)
         print('Scan =',j,'samples returned =',len(raw_data))
         j += 1

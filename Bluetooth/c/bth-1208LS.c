@@ -471,6 +471,8 @@ bool AInScanStart_BTH1208LS(DeviceInfo_BTH1208LS *device_info,uint32_t count, ui
 
 int AInScanRead_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t nScan, uint16_t *data)
 {
+  /* returns nScan*nChan = nSamples in raw form */
+  
   int nSamples = nScan*device_info->nChan;
   int index = 0;
   int nReceived = 0;
@@ -486,6 +488,8 @@ int AInScanRead_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t nScan, uin
       device_info->nDelay = (nSamples*1000.)/device_info->frequency;
       usleep(device_info->nDelay*1000);
       nReceived += AInScanSendData_BTH1208LS(device_info, nSamples, &data[index], device_info->nDelay);
+      AInScanStop_BTH1208LS(device_info);
+      AInScanClearFIFO_BTH1208LS(device_info);
       return nReceived;
     }
   }

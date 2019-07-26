@@ -59,7 +59,7 @@ int main(int argc, char**argv)
   uint16_t values[2];
   uint32_t count;
   double frequency, voltage;
-  uint16_t dataAIn[8*512];  // holds 16 bit unsigned analog input data
+  uint16_t dataAIn[4*12192];  // holds 16 bit unsigned analog input data
   uint16_t data;
   int nChan, repeats, nScan;
 

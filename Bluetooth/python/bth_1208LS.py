@@ -642,6 +642,8 @@ class BTH_1208LS:
         self.nDelay = (nSamples)/(self.frequency)
         time.sleep(self.nDelay)                  # give system time to collect data
         data.extend(self.AInScanSendData(nSamples))
+        self.AInScanStop()
+        self.AInScanClearFIFO()
         return data
 
   def AInScanSendData(self, count):
