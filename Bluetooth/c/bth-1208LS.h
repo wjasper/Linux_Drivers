@@ -68,7 +68,7 @@ extern "C" {
 #define NCHAN_SE                 8  // max number of A/D single-ended channels
 #define NCHAN_AOUT               2  // max number of D/A 12 bit 0-2.5V output channels
 
-/* Aanalog Input */
+/* Analog Input */
 #define SINGLE_ENDED   0
 #define DIFFERENTIAL   1
 
@@ -125,7 +125,7 @@ typedef struct DeviceInfo_BTH1208LS_t {
   Calibration table_AInDE[NCHAN_DE][NGAINS];  // calibration slope and offset differential mode
   Calibration table_AInSE[NCHAN_SE];          // calibration slope and offset single ended mode
   float frequency;
-  int nDelay;
+  unsigned long nDelay;
   int nChan;
   uint16_t voltage;
   uint16_t status;
@@ -140,9 +140,9 @@ bool DOut_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t value);
 bool AIn_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t channel, uint8_t mode, uint8_t range, uint16_t *value);
 bool AInScanStart_BTH1208LS(DeviceInfo_BTH1208LS *device_info,uint32_t count, uint32_t retrig_count, double frequency,
 		  uint8_t channels, uint8_t options);
-bool AInScanSendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count, uint16_t *data);
-bool AInScanRead_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t nScan, uint16_t *data);  
-bool AInScanResendData_BTH_1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count, uint16_t *data);
+int  AInScanSendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count, uint16_t *data, unsigned long timeout);
+int  AInScanRead_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t nScan, uint16_t *data);  
+int  AInScanResendData_BTH_1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count, uint16_t *data);
 bool AInScanStop_BTH1208LS(DeviceInfo_BTH1208LS *device_info);
 bool AInConfigR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t ranges[4]);
 bool AInConfigW_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t ranges[4]);
