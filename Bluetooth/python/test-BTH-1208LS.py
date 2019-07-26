@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 #
-# Copyright (c) 2018 Warren J. Jasper <wjasper@ncsu.edu>
+# Copyright (c) 2019 Warren J. Jasper <wjasper@ncsu.edu>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -18,6 +18,8 @@
 from bth_1208LS import *
 import time
 import sys
+import fcntl
+import os
 
 def toContinue():
   answer = input('Continue [yY]? ')
@@ -84,6 +86,7 @@ def main():
     print("----------------")
     print("Hit 'b' to blink.")
     print("Hit 'c' to test counter.")
+    print("Hit 'C' for continuous sampling")
     print("Hit 'd' to test digitial IO.")
     print("Hit 'i' to test Analog Input")
     print("Hit 'I' to test Analog Input Scan")
@@ -169,6 +172,29 @@ def main():
             value = round(data[k]*bth1208LS.table_AInDE[j][gain].slope + bth1208LS.table_AInDE[j][gain].intercept)
             print(" ,{0:8.4f}".format(bth1208LS.volts(value, ranges[0])), end="")
           print("")
+    elif ch == 'C':
+      print('BTH-1208LS Continuous Samping')
+      print('Hit space <CR> to exit.')
+      frequency = float(input('Enter desired frequency [Hz]: '))
+      options = bth1208LS.DIFFERENTIAL_MODE  # Single Ended mode
+      count = 0                              # continuous execution
+      channels = 0x01                        # read all 8 channels
+      bth1208LS.AInScanStop()
+      bth1208LS.AInScanClearFIFO()
+      bth1208LS.AInScanStart(count, 0x0, frequency, channels, options)
+      flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+#      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      j = 0
+      while True:
+        time.sleep(126/frequency)
+        raw_data = bth1208LS.AInScanSendData(127)
+        print('Scan =',j,'samples returned =',len(raw_data))
+        j += 1
+#        c = sys.stdin.readlines()
+#        if (len(c) != 0):
+#          break
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+      usb1616FS.AInStop()
     elif ch == 'e':
       bth1208LS.device.sock.close()
       exit(0)

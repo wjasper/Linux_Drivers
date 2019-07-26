@@ -105,6 +105,7 @@ int main(int argc, char**argv)
     printf("----------------\n");
     printf("Hit 'b' to blink\n");
     printf("Hit 'c' to test counter\n");
+    printf("Hit 'C' to for continuous sampling\n");
     printf("Hit 'd' to test digitial IO\n");
     printf("Hit 'i' to test Analog Input\n");
     printf("Hit 'I' to test Analog Input Scan\n");
@@ -179,7 +180,6 @@ int main(int argc, char**argv)
         break;
       case 'x':
         printf("Testing BTH-1208LS Multi-Channel Analog Input Scan.\n");
-        AInScanStop_BTH1208LS(&device_info);
         printf("Enter number of channels (1-4): ");
         scanf("%d", &nChan);
         printf("Enter number of scans: ");
@@ -221,6 +221,26 @@ int main(int argc, char**argv)
 	} /* for (m = 0; m < repeats; m++) */
 	printf("\n\n---------------------------------------");
 	break;
+      case 'C':
+        printf("Testing BTH-1208LS Continuous Analog Input Scan.\n");
+	printf("Hit any key to exit\n");
+	printf("Enter sampling frequency: ");
+        scanf("%lf", &frequency);
+	channels = 0x1;
+	range = BP_20V;
+	memset(ranges, BP_20V, sizeof(ranges));
+	AInScanStop_BTH1208LS(&device_info);
+	AInScanClearFIFO_BTH1208LS(&device_info);
+        AInConfigW_BTH1208LS(&device_info, ranges);
+        options = DIFFERENTIAL_MODE;
+	nScan = 0;    // Continuous scan
+	AInScanStart_BTH1208LS(&device_info, nScan, 0x0, frequency, channels, options);
+	i = 0;
+	do {
+	  j = AInScanRead_BTH1208LS(&device_info, 127, dataAIn);
+	  printf("Scan = %d, samples returned = %d\n", i, j);
+	  i++;
+	} while (1);
       case 'o':
 	printf("Test Analog Output\n");
         printf("Enter Channel [0-1] ");

@@ -469,29 +469,30 @@ bool AInScanStart_BTH1208LS(DeviceInfo_BTH1208LS *device_info,uint32_t count, ui
   return result;
 }
 
-bool AInScanRead_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t nScan, uint16_t *data)
+int AInScanRead_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t nScan, uint16_t *data)
 {
   int nSamples = nScan*device_info->nChan;
   int index = 0;
+  int nReceived = 0;
 
   while (nSamples > 0) {
     if (nSamples > 127) {
-      device_info->nDelay = 127.*1000000/device_info->frequency;
-      usleep(device_info->nDelay);
-      AInScanSendData_BTH1208LS(device_info, 127, &data[index]);
+      device_info->nDelay = (127.*1000.)/device_info->frequency;
+      usleep(device_info->nDelay*1000);
+      nReceived += AInScanSendData_BTH1208LS(device_info, 127, &data[index], device_info->nDelay);
       index += 127;
       nSamples -= 127;
     } else {
-      device_info->nDelay = nSamples*1000000./device_info->frequency;
-      usleep(device_info->nDelay);
-      AInScanSendData_BTH1208LS(device_info, nSamples, &data[index]);
-      return true;
+      device_info->nDelay = (nSamples*1000.)/device_info->frequency;
+      usleep(device_info->nDelay*1000);
+      nReceived += AInScanSendData_BTH1208LS(device_info, nSamples, &data[index], device_info->nDelay);
+      return nReceived;
     }
   }
-  return true;
+  return -1;
 }
 
-bool AInScanSendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count, uint16_t *data)
+int AInScanSendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count, uint16_t *data, unsigned long timeout)
 {
   /* This command reads data from the scan FIFO. The device will
      return all data currently in the FIFO up to the maximum amount
@@ -524,7 +525,7 @@ bool AInScanSendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 5000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, timeout)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -545,7 +546,7 @@ bool AInScanSendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count
   if (result == false) {
     printf("Error in AInScanSendData_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
-  return result;
+  return replyCount/2;
 }
 
 bool AInScanResendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t count, uint16_t *data)
@@ -596,6 +597,8 @@ bool AInScanResendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t cou
 	  result = true;
 	  memcpy(data, &r_buffer[MSG_INDEX_DATA], replyCount);
 	}
+      } else {
+	printf("AInScanSendResendData_BTH1208LS: length = %d  %d\n", length, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount);;
       }
     }
   }
@@ -603,7 +606,7 @@ bool AInScanResendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t cou
   if (result == false) {
     printf("Error in AInScanResendData_BTH1208LS. Status = %d\n", r_buffer[MSG_INDEX_STATUS]);
   }
-  return result;
+  return replyCount/2;
 }
 
 bool AInScanStop_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
