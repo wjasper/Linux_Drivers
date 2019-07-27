@@ -30,43 +30,37 @@
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_lib.h>
 
-static int recvfromTimeOut(int sock, long sec, long usec)
+static int recvfromTimeOut(int sock, struct timeval* tv)
 {
-  struct timeval timeout;
   fd_set fds;
-
-  timeout.tv_sec = sec;
-  timeout.tv_usec = usec;
 
   FD_ZERO(&fds);
   FD_SET(sock, &fds);
   // -1: error occurred
   // 0: timed out
   // >0: data ready to be read
-  return select(sock+1, &fds, 0, 0, &timeout);
+  return select(sock+1, &fds, 0, 0, tv);
 }
 
 int receiveMessage(int sock, void *message, int maxLength, unsigned long timeout)
 {
-  unsigned long val;
-  long timeout_s;
-  long timeout_us;
+  // timeout is in ms.
+  struct timeval tv;
   int bytesReceived;
 
   if (sock < 0) {  // invalid socket number.
     return -1;
   }
 
+  tv.tv_sec = timeout/1000;
+  tv.tv_usec = (timeout - (tv.tv_sec*1000)) * 1000;
+  
   // set a receive timeout
-  val = timeout + 100;
-  setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &val, sizeof(unsigned long));
-
-  timeout_s = timeout / 1000;
-  timeout_us = (timeout - (timeout_s*1000)) * 1000;
+  setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char *) &tv, sizeof(tv));
 
   bytesReceived = 0;
 
-  switch (recvfromTimeOut(sock, timeout_s, timeout_us)) {
+  switch (recvfromTimeOut(sock, &tv)) {
     case 0:   // timed out
     case -1:  // error
       return -1;
