@@ -479,14 +479,14 @@ int AInScanRead_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t nScan, uin
 
   while (nSamples > 0) {
     if (nSamples > 127) {
-      device_info->nDelay = (127.*1000.)/device_info->frequency;
-      usleep(device_info->nDelay*1000);
+      device_info->nDelay = (127.*1000.)/device_info->frequency;  // delay in ms
+      //     usleep(device_info->nDelay*1000);
       nReceived += AInScanSendData_BTH1208LS(device_info, 127, &data[index], device_info->nDelay);
       index += 127;
       nSamples -= 127;
     } else {
-      device_info->nDelay = (nSamples*1000.)/device_info->frequency;
-      usleep(device_info->nDelay*1000);
+      device_info->nDelay = (nSamples*1000.)/device_info->frequency;  // delay in ms
+      //      usleep(device_info->nDelay*1000);
       nReceived += AInScanSendData_BTH1208LS(device_info, nSamples, &data[index], device_info->nDelay);
       AInScanStop_BTH1208LS(device_info);
       AInScanClearFIFO_BTH1208LS(device_info);
