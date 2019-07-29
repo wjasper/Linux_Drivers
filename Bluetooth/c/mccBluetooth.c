@@ -18,9 +18,11 @@
 #include <stdio.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/time.h>
 #include <sys/types.h>
 
@@ -47,6 +49,7 @@ int receiveMessage(int sock, void *message, int maxLength, unsigned long timeout
   // timeout is in ms.
   struct timeval tv;
   int bytesReceived;
+  int status;
 
   if (sock < 0) {  // invalid socket number.
     return -1;
@@ -54,19 +57,20 @@ int receiveMessage(int sock, void *message, int maxLength, unsigned long timeout
 
   tv.tv_sec = timeout/1000;
   tv.tv_usec = (timeout - (tv.tv_sec*1000)) * 1000;
-  
+
   // set a receive timeout
   setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char *) &tv, sizeof(tv));
 
   bytesReceived = 0;
+  status = recvfromTimeOut(sock, &tv); 
 
-  switch (recvfromTimeOut(sock, &tv)) {
+  switch (status) {
     case 0:   // timed out
-    case -1:  // error
-      return -1;
+    case -1:  // error 
+     return -1;
       break;
     default:  // got a reply
-      bytesReceived = recv(sock, message, maxLength, 0);
+      bytesReceived = recv(sock, message, maxLength, MSG_DONTWAIT);
       break;
   }
   return bytesReceived;
@@ -107,6 +111,7 @@ int discoverDevice(BluetoothDeviceInfo *device, char *name)
 int openDevice(BluetoothDeviceInfo *device)
 {
   int sock, status;
+  int sock_flags;
   struct sockaddr_rc addr = {0};
 
   // allocate a socket
@@ -125,5 +130,10 @@ int openDevice(BluetoothDeviceInfo *device)
     return -1;
   }
   device->sock = sock;
+
+  // put socket in non-blocking mode
+  sock_flags = fcntl(sock, F_GETFL, 0);
+  fcntl(sock, F_SETFL, sock_flags | O_NONBLOCK);
+
   return 0;
 }

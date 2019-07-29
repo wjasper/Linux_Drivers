@@ -134,7 +134,7 @@ bool DIn_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t *value)
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -183,7 +183,7 @@ bool DOutR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t *value)
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -233,7 +233,7 @@ bool DOut_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t value)
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -293,7 +293,7 @@ bool AIn_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t channel, uint8_t m
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -448,7 +448,7 @@ bool AInScanStart_BTH1208LS(DeviceInfo_BTH1208LS *device_info,uint32_t count, ui
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -479,15 +479,15 @@ int AInScanRead_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t nScan, uin
 
   while (nSamples > 0) {
     if (nSamples > 127) {
-      device_info->nDelay = (127.*1000.)/device_info->frequency;  // delay in ms
-      //     usleep(device_info->nDelay*1000);
-      nReceived += AInScanSendData_BTH1208LS(device_info, 127, &data[index], device_info->nDelay);
+      device_info->nDelay = (127.*750.)/device_info->frequency;  // delay in ms
+      usleep(device_info->nDelay);
+      nReceived += AInScanSendData_BTH1208LS(device_info, 127, &data[index], device_info->nDelay*100);
       index += 127;
       nSamples -= 127;
     } else {
       device_info->nDelay = (nSamples*1000.)/device_info->frequency;  // delay in ms
-      //      usleep(device_info->nDelay*1000);
-      nReceived += AInScanSendData_BTH1208LS(device_info, nSamples, &data[index], device_info->nDelay);
+      usleep(device_info->nDelay);
+      nReceived += AInScanSendData_BTH1208LS(device_info, nSamples, &data[index], device_info->nDelay*100);
       AInScanStop_BTH1208LS(device_info);
       AInScanClearFIFO_BTH1208LS(device_info);
       return nReceived;
@@ -589,7 +589,7 @@ bool AInScanResendData_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t cou
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -637,7 +637,7 @@ bool AInScanStop_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -684,7 +684,7 @@ bool AInConfigR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t ranges[4])
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -734,7 +734,7 @@ bool AInConfigW_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t ranges[4])
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	replyCount = 0;
@@ -780,7 +780,7 @@ bool AInScanClearFIFO_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	replyCount = 0;
@@ -834,7 +834,7 @@ bool AOutR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t value[2])
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -887,7 +887,7 @@ bool AOut_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t channel, uint16_t
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                    &&
@@ -936,7 +936,7 @@ bool Counter_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint32_t *counter)
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -984,7 +984,7 @@ bool ResetCounter_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -1046,7 +1046,7 @@ bool CalMemoryR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t address, u
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -1106,7 +1106,7 @@ bool UserMemoryR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t address, 
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -1167,7 +1167,7 @@ bool UserMemoryW_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t address, 
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -1227,7 +1227,7 @@ bool SettingsMemoryR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t addre
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -1289,7 +1289,7 @@ bool SettingsMemoryW_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t addre
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -1339,7 +1339,7 @@ bool BlinkLED_BTH1208LS(DeviceInfo_BTH1208LS *device_info, unsigned char count)
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -1388,7 +1388,7 @@ bool GetSerialNumber_BTH1208LS(DeviceInfo_BTH1208LS *device_info, char serial[9]
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -1437,7 +1437,7 @@ bool Reset_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -1496,7 +1496,7 @@ bool Status_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t *status)
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -1546,7 +1546,7 @@ bool Ping_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t *status)
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -1595,7 +1595,7 @@ bool FirmwareVersion_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t *vers
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -1645,7 +1645,7 @@ bool RadioFirmwareVersion_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint16_t 
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
@@ -1693,7 +1693,7 @@ bool BatteryVoltage_BTH1208LS(DeviceInfo_BTH1208LS *device_info)
   s_buffer[MSG_INDEX_DATA+dataCount] = (unsigned char) 0xff - calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount);
 
   if (send(sock, s_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount, 0) > 0) {
-    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 1000)) > 0) {
+    if ((length = receiveMessage(sock, r_buffer, MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount, 100)) > 0) {
       // check response
       if (length == MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) {
 	if ((r_buffer[MSG_INDEX_START] == s_buffer[MSG_INDEX_START])                   &&
