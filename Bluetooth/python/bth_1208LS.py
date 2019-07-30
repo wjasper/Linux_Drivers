@@ -293,7 +293,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('DIn: timeout error.')
       return
@@ -340,7 +340,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('DOutR: timeout error.')
       return
@@ -387,7 +387,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('DOut: timeout error.')
       return
@@ -443,7 +443,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('AIn: timeout error.')
       return
@@ -606,7 +606,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('AInScanStart: timeout error.')
       return
@@ -635,12 +635,12 @@ class BTH_1208LS:
     while nSamples > 0:
       if nSamples > 127:
         self.nDelay = 127./(self.frequency)
-        time.sleep(self.nDelay)                  # give system time to collect data
+        time.sleep(self.nDelay*.95)                  # give system time to collect data
         data.extend(self.AInScanSendData(127))
         nSamples -= 127
       else:
         self.nDelay = (nSamples)/(self.frequency)
-        time.sleep(self.nDelay)                  # give system time to collect data
+        time.sleep(self.nDelay*.95)                  # give system time to collect data
         data.extend(self.AInScanSendData(nSamples))
         self.AInScanStop()
         self.AInScanClearFIFO()
@@ -678,9 +678,9 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
-    except self.device.sock.socket.timeout:
-      raise TimeoutError('AInScanSendData: timeout error.')
+      r_buffer = self.device.receiveMessage(len(r_buffer))
+    except:
+      print('AInScanResendError: receiveMessage')
       return
 
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
@@ -739,9 +739,9 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
-    except self.device.sock.socket.timeout:
-      raise TimeoutError('AInScanResendData: timeout error.')
+      r_buffer = self.device.receiveMessage(len(r_buffer))
+    except:
+      print('AInScanResendData: receiveMessage.')
       return
 
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
@@ -787,7 +787,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('AInScanStop: timeout error.')
       return
@@ -830,7 +830,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('AInConfigR: timeout error.')
       return
@@ -883,7 +883,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('AInConfigW: timeout error.')
       return
@@ -925,7 +925,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('AInScanClearFIFO: timeout error.')
       return
@@ -975,7 +975,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('AOutR: timeout error.')
       return
@@ -1026,7 +1026,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('AOut: timeout error.')
       return
@@ -1072,7 +1072,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('Counter: timeout error.')
       return
@@ -1118,7 +1118,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('ResetCounter: timeout error.')
       return
@@ -1175,10 +1175,9 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
-    except self.device.sock.socket.timeout:
-      raise TimeoutError('CalMemoryR: timeout error.')
-      return
+      r_buffer = self.device.receiveMessage(len(r_buffer))
+    except:
+      print("Error in CalMemoryR BTH-1208LS receiveMessage")
 
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1233,7 +1232,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('UserMemoryR: timeout error.')
       return
@@ -1292,7 +1291,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('UserMemoryW: timeout error.')
       return
@@ -1346,7 +1345,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('SettingsMemoryR: timeout error.')
       return
@@ -1406,7 +1405,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('SettingsMemoryW: timeout error.')
       return
@@ -1453,7 +1452,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('Blink: timeout error.')
       return
@@ -1497,7 +1496,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('GetSerialNumber: timeout error.')
       return
@@ -1542,7 +1541,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('Reset: timeout error.')
       return
@@ -1596,7 +1595,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('Status: timeout error.')
       return
@@ -1644,7 +1643,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('Ping: timeout error.')
       return
@@ -1689,7 +1688,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('FrimwareVersion: timeout error.')
       return
@@ -1736,7 +1735,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('RadioFrimwareVersion: timeout error.')
       return
@@ -1781,7 +1780,7 @@ class BTH_1208LS:
     self.device.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage()
+      r_buffer = self.device.receiveMessage(len(r_buffer))
     except self.device.sock.socket.timeout:
       raise TimeoutError('BatteryVoltage: timeout error.')
       return

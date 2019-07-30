@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <string.h>
 #include <stdbool.h>
 #include <fcntl.h>
@@ -49,6 +50,7 @@ int main(int argc, char**argv)
   DeviceInfo_BTH1208LS device_info;
   uint8_t options;
   uint8_t channel, channels;
+  int flag;
   int ch;
   int i, j, k, m;
   char serial[9];  // serial number
@@ -234,13 +236,20 @@ int main(int argc, char**argv)
         AInConfigW_BTH1208LS(&device_info, ranges);
         options = DIFFERENTIAL_MODE;
 	nScan = 0;    // Continuous scan
+	flag = fcntl(fileno(stdin), F_GETFL);
+	fcntl(0, F_SETFL, flag | O_NONBLOCK);
 	AInScanStart_BTH1208LS(&device_info, nScan, 0x0, frequency, channels, options);
 	i = 0;
 	do {
-	  j = AInScanRead_BTH1208LS(&device_info, 127, dataAIn);
+	  device_info.nDelay = (127.*1000.)/frequency;     // delay in ms
+	  usleep(device_info.nDelay*900);                  // sleep in us
+	  j = AInScanSendData_BTH1208LS(&device_info, 127, dataAIn, device_info.nDelay);
 	  printf("Scan = %d, samples returned = %d\n", i, j);
 	  i++;
-	} while (1);
+	} while (!isalpha(getchar()));
+	fcntl(fileno(stdin), F_SETFL, flag);
+	AInScanStop_BTH1208LS(&device_info);
+	break;
       case 'o':
 	printf("Test Analog Output\n");
         printf("Enter Channel [0-1] ");

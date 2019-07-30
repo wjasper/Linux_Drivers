@@ -19,24 +19,21 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
+#include <sys/select.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include "mccEthernet.h"
 
-static int recvfromTimeOut(int sock, long sec, long usec)
+static int recvfromTimeOut(int sock, struct timeval* timeout)
 {
-  struct timeval timeout;
   fd_set fds;
-
-  timeout.tv_sec = sec;
-  timeout.tv_usec = usec;
 
   FD_ZERO(&fds);
   FD_SET(sock, &fds);
   // -1: error occurred
   // 0: timed out
   // >0: data ready to be read
-  return select(sock+1, &fds, 0, 0, &timeout);
+  return select(sock+1, &fds, 0, 0, timeout);
 }
 
 void printDeviceInfo(EthernetDeviceInfo *device_info)
@@ -64,6 +61,8 @@ int discoverDevice(EthernetDeviceInfo *device_info, uint16_t productID)
   struct sockaddr_in sendaddr;
   struct sockaddr_in recvaddr;
   struct sockaddr_in remoteaddr;
+  struct timeval tv;
+  
   int sock;
   int broadcast;
   unsigned char msg[64];
@@ -110,9 +109,12 @@ int discoverDevice(EthernetDeviceInfo *device_info, uint16_t productID)
     return -1;
   }
 
+  tv.tv_sec = 1;
+  tv.tv_usec = 0;
+
   // look for replies (including the original broadcast)
   while (!finished) {
-    switch (recvfromTimeOut(sock, 1, 0)) {
+    switch (recvfromTimeOut(sock, &tv)) {
       case 0:
         // timed out
         finished = true;
@@ -156,6 +158,7 @@ int discoverDevices(EthernetDeviceInfo *devices_info[], uint16_t productID, int 
   struct sockaddr_in sendaddr;
   struct sockaddr_in recvaddr;
   struct sockaddr_in remoteaddr;
+  struct timeval tv;
   int sock;
   int broadcast;
   unsigned char msg[64];
@@ -204,9 +207,12 @@ int discoverDevices(EthernetDeviceInfo *devices_info[], uint16_t productID, int 
     return -1;
   }
 
+  tv.tv_sec = 1;
+  tv.tv_usec = 0;
+
   // look for replies (including the original broadcast)
   while (!finished) {
-    switch (recvfromTimeOut(sock, 1, 0)) {
+    switch (recvfromTimeOut(sock, &tv)) {
       case 0:
         // timed out
         finished = true;
@@ -254,6 +260,7 @@ int openDevice(uint32_t addr, uint32_t connectCode)
 {
   int sock;
   struct sockaddr_in sendaddr;
+  struct timeval tv;
   unsigned char msg[64];
   int bytesReceived;
 
@@ -284,8 +291,11 @@ int openDevice(uint32_t addr, uint32_t connectCode)
     return -1;
   }
 
+  tv.tv_sec = 1;
+  tv.tv_usec = 0;
+
   // look for a reply
-  switch (recvfromTimeOut(sock, 1, 0)) {
+  switch (recvfromTimeOut(sock, &tv)) {
     case 0:  // timed out
     case -1: //  error    
       close (sock);
@@ -345,25 +355,21 @@ int sendMessage(int sock, void *message, int length, int flags)
 
 int receiveMessage(int sock, void *message, int maxLength, unsigned long timeout)
 {
-  unsigned long val;
-  long timeout_s;
-  long timeout_us;
-  int bytesReceived;
+  struct timeval tv;
+  int bytesReceived = 0;
 
   if (sock < 0) {  // invalid socket number.
     return -1;
   }
 
   // set a receive timeout
-  val = timeout + 100;
-  setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &val, sizeof(unsigned long));
+  tv.tv_sec = timeout/1000;
+  tv.tv_usec = (timeout - (tv.tv_sec*1000)) * 1000;
 
-  timeout_s = timeout / 1000;
-  timeout_us = (timeout - (timeout_s*1000)) * 1000;
+  // set a receive timeout  
+  setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char *) &tv, sizeof(tv));
 
-  bytesReceived = 0;
-
-  switch (recvfromTimeOut(sock, timeout_s, timeout_us)) {
+  switch (recvfromTimeOut(sock, &tv)) {
     case 0:   // timed out
     case -1:  // error
       return -1;

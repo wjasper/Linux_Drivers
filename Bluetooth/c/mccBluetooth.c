@@ -25,14 +25,15 @@
 #include <errno.h>
 #include <sys/time.h>
 #include <sys/types.h>
-
-#include "mccBluetooth.h"
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_lib.h>
+#include "mccBluetooth.h"
 
-static int recvfromTimeOut(int sock, struct timeval* tv)
+
+static int recvfromTimeOut(int sock, struct timeval* timeout)
 {
   fd_set fds;
 
@@ -41,7 +42,7 @@ static int recvfromTimeOut(int sock, struct timeval* tv)
   // -1: error occurred
   // 0: timed out
   // >0: data ready to be read
-  return select(sock+1, &fds, 0, 0, tv);
+  return select(sock+1, &fds, 0, 0, timeout);
 }
 
 int receiveMessage(int sock, void *message, int maxLength, unsigned long timeout)
@@ -114,7 +115,6 @@ int discoverDevice(BluetoothDeviceInfo *device, char *name)
 int openDevice(BluetoothDeviceInfo *device)
 {
   int sock, status;
-  int sock_flags;
   struct sockaddr_rc addr = {0};
 
   // allocate a socket
@@ -133,10 +133,6 @@ int openDevice(BluetoothDeviceInfo *device)
     return -1;
   }
   device->sock = sock;
-
-  // put socket in non-blocking mode
-  //  sock_flags = fcntl(sock, F_GETFL, 0);
-  //  fcntl(sock, F_SETFL, sock_flags | O_NONBLOCK);
 
   return 0;
 }
