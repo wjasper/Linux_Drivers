@@ -184,18 +184,18 @@ def main():
       bth1208LS.AInScanClearFIFO()
       bth1208LS.AInScanStart(count, 0x0, frequency, channels, options)
       flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
-#      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
       j = 0
       while True:
         time.sleep(127/frequency)
         raw_data = bth1208LS.AInScanSendData(127)
         print('Scan =',j,'samples returned =',len(raw_data))
         j += 1
-#        c = sys.stdin.readlines()
-#        if (len(c) != 0):
-#          break
+        c = sys.stdin.readlines()
+        if (len(c) != 0):
+          break
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
-      usb1616FS.AInStop()
+      bth1208LS.AInScanStop()
     elif ch == 'e':
       bth1208LS.device.sock.close()
       exit(0)

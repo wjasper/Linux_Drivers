@@ -226,7 +226,7 @@ int main(int argc, char**argv)
 	printf("Hit any key to exit\n");
 	printf("Enter sampling frequency: ");
         scanf("%lf", &frequency);
-	channels = 0x1;
+	channels = 0x2;
 	range = BP_20V;
 	memset(ranges, BP_20V, sizeof(ranges));
 	AInScanStop_BTH1208LS(&device_info);

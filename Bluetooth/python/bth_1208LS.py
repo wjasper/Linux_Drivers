@@ -695,7 +695,8 @@ class BTH_1208LS:
     else:
       # We did not get enough data.
       data = self.AInScanResendData(count)
-      return data
+      if len(data) == count:
+        result = True
     try:
       if (result == False):
         raise ResultError
