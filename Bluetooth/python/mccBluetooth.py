@@ -67,8 +67,7 @@ class mccBluetoothDevice:
     return
 
   def receiveMessage(self, length):
-    data = self.sock.recv(length, 0)
-#   print("receiveMessage: length = ", length,"    data = ", data)
+    data = self.sock.recv(length)
     return data
 
   def sendMessage(self, message, flush=True):

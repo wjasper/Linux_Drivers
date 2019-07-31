@@ -316,7 +316,7 @@ class BTH_1208LS:
 
     return data
 
-  def DOutR(self, value):
+  def DOutR(self):
     """
     This command reads the DIO output latch value. The factory power
     on default is all 1 (pins are floating.) Writing a 0 to a bit
@@ -341,9 +341,9 @@ class BTH_1208LS:
 
     try:
       r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
-      raise TimeoutError('DOutR: timeout error.')
-      return
+    except:
+      print("DOutR: Error in receiveMessage")
+      return -1
 
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -360,6 +360,7 @@ class BTH_1208LS:
         raise ResultError
     except ResultError:
       print('Error in DOutR BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+    return data
 
       
   def DOut(self, value):
@@ -376,7 +377,7 @@ class BTH_1208LS:
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
     s_buffer[MSG_INDEX_COMMAND]        = self.DOUT_W
-    s_buffer[MSG_DATA]                 = value
+    s_buffer[MSG_INDEX_DATA]           = value
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
     self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    

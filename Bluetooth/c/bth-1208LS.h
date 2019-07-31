@@ -135,7 +135,7 @@ typedef struct DeviceInfo_BTH1208LS_t {
 
 /* function prototypes for the BTH-1208LS */
 bool DIn_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t *value);
-bool DOutR_E1608(DeviceInfo_BTH1208LS *device_info, uint8_t *value);
+bool DOutR_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t *value);
 bool DOut_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t value);
 bool AIn_BTH1208LS(DeviceInfo_BTH1208LS *device_info, uint8_t channel, uint8_t mode, uint8_t range, uint16_t *value);
 bool AInScanStart_BTH1208LS(DeviceInfo_BTH1208LS *device_info,uint32_t count, uint32_t retrig_count, double frequency,

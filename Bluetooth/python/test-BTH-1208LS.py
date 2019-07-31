@@ -111,6 +111,12 @@ def main():
         bth1208LS.AOut(0, 0)
       count = bth1208LS.Counter()
       print("Count = ", count, "    Should read 100.")
+    elif ch == 'd':
+      print("Test of DIO Out")
+      value = int(input("Input value [0-ff]: "),base=16) & 0xff
+      bth1208LS.DOut(value)
+      value = bth1208LS.DOutR()
+      print("The value you wrote = ", hex(value))
     elif ch == 'i':
       channel = int(input("Input channel DE [0-3]: "))
       gain = int(input("Input range [0-7]: "))
@@ -215,10 +221,10 @@ def main():
     elif ch == 'o':
       print("Test Analog Output")
       channel = int(input("Enter Channel [0-1]: "))
-      voltage = float(input("Enter voltage ;0-2.5V: "))
+      voltage = float(input("Enter voltage [0-2.5V]: "))
       value = int(voltage * 4095 / 2.5)
       bth1208LS.AOut(channel, value)
-      print("Analog Output Voltage = ", bth1208LS.AOutR()[channel])
+      print("Analog Output Voltage = ", bth1208LS.AOutR()[channel]*2.5/4095)
 
 if __name__ == "__main__":
   main()

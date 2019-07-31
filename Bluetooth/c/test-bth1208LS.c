@@ -103,7 +103,7 @@ int main(int argc, char**argv)
   printf("MFG Calibration date = %s\n", asctime(&calDate));
 
   while(1) {
-    printf("\nBTH-1208LS Testing\n");
+    printf("\n\nBTH-1208LS Testing\n");
     printf("----------------\n");
     printf("Hit 'b' to blink\n");
     printf("Hit 'c' to test counter\n");
@@ -137,6 +137,14 @@ int main(int argc, char**argv)
 	Counter_BTH1208LS(&device_info, &count);
         printf("Count = %d.  Should read 100.\n", count);
         break;
+      case 'd':
+	printf("Test of DIO Out\n");
+	printf("Input value [0-ff]: ");
+	scanf("%hhx", &options);
+	DOut_BTH1208LS(&device_info, options);
+	DOutR_BTH1208LS(&device_info, &options);
+	printf("The value you wrote = %#x", options);
+	break;
       case 'e':
         close(device_info.device.sock);
 	printf("Success!\n");
@@ -258,7 +266,7 @@ int main(int argc, char**argv)
 	scanf("%lf", &voltage);
         value = voltage * 4095 / 2.5;
 	AOut_BTH1208LS(&device_info, channel, value);
-	AOutR_BTH1208LS(&device_info, &values[channel]);
+	AOutR_BTH1208LS(&device_info, values);
 	printf("Analog Output Voltage = %f V\n", volts_BTH1208LS(values[channel], UP_2_5V));
         break;
       case 'S':
