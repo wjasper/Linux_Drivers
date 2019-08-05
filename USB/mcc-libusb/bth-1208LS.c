@@ -337,7 +337,7 @@ void usbAInScanStop_BTH1208LS(libusb_device_handle *udev)
   }
 }
 
-void usbAInScanConfig_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4])
+void usbAInConfigW_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4])
 {
   /* This command reads or writes the analog input ranges used for
      AInScan in differential mode.  The command will result in a bus
@@ -348,17 +348,17 @@ void usbAInScanConfig_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4])
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
   if (libusb_control_transfer(udev, requesttype, AIN_CONFIG, 0x0, 0x0, (unsigned char *) &ranges[0], 4, LS_DELAY) < 0) {
-    perror("usbAInConfig_BTH1208LS error in writing configuration ranges.");
+    perror("usbAInConfigW_BTH1208LS error in writing configuration ranges.");
   }
 }
 
-void usbAInScanConfigR_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4])
+void usbAInConfigR_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4])
 {
   
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
   if (libusb_control_transfer(udev, requesttype, AIN_CONFIG, 0x0, 0x0, (unsigned char *) &ranges[0], 4, LS_DELAY) < 0) {
-    perror("usbAInScanConfigR_BTH1208LS error in reading configuration ranges.");
+    perror("usbAInConfigR_BTH1208LS error in reading configuration ranges.");
   }
 }
 

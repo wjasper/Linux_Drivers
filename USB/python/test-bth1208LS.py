@@ -91,6 +91,14 @@ def main():
       bth1208LS.DOut(value)
       value = bth1208LS.DOutR()
       print("The value you entered: ", hex(value))
+    elif ch == 'i':
+      channel = int(input("Input channel DE [0-3]: "))
+      gain = int(input("Input range [0-7]: "))
+      mode = bth1208LS.DIFFERENTIAL
+      for i in range(20):
+        value = bth1208LS.AIn(channel, mode, gain)
+        print("Range = {0:d},  Channel = {1:d},  Sample[{2:d}] = {3:x}    Volts = {4:f}"\
+              .format(gain, channel, i, value, bth1208LS.volts(value, gain)))
     elif ch == 'o':
       print("Test Analog Output")
       channel = int(input("Enter Channel [0-1]: "))

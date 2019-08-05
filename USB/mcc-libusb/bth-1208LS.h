@@ -109,8 +109,8 @@ void usbAInScanStart_BTH1208LS(libusb_device_handle *udev, uint32_t count, uint3
 			       double frequency, uint8_t channel, uint8_t options);
 int usbAInScanRead_BTH1208LS(libusb_device_handle *udev, uint32_t count, uint16_t *data, uint8_t options);
 void usbAInScanStop_BTH1208LS(libusb_device_handle *udev);
-void usbAInScanConfig_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4]);
-void usbAInScanConfigR_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4]);
+void usbAInConfigW_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4]);
+void usbAInConfigR_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4]);
 void usbAInScanClearFIFO_BTH1208LS(libusb_device_handle *udev);
 void usbBlinkLED_BTH1208LS(libusb_device_handle *udev, uint8_t count);
 void usbReset_BTH1208LS(libusb_device_handle *udev);

@@ -319,6 +319,156 @@ class bth_1208LS(mccUSB):
   #        Analog Input Commands              #
   #############################################
 
+  def AIn(self, channel, mode, gain):
+    """
+    This command reads the value of an analog input channel.  This
+    command will result in a bus stall if an AInScan is currently
+    running.  The range parameter is ignored if the mode is specified
+    as single ended.
+
+     channel: the channel to read (0-7)
+     mode:    the input mode 0 - single ended, 1 - differential
+     range:   the input range for the channel (0-7)
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = (channel | (mode << 0x8))
+    wIndex = gain
+    value ,= unpack('H',self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 2, timeout = 100))
+
+    if mode == self.SINGLE_ENDED:    # single ended
+      data = round(float(value)*self.table_AInSE[channel].slope + self.table_AInSE[channel].intercept)
+    else:               # differential
+      data = round(float(value)*self.table_AInDE[channel][gain].slope + self.table_AInDE[channel][gain].intercept)
+    if (data >= 65536):
+      value = 65535
+    elif (data < 0):
+      value = 0
+    else:
+      value = data
+    return value
+
+  def AInScanStart(self, count, retrig_count, frequency, channels, options):
+    """
+     This command starts an analog input scan. This command will
+    result in a bus stall if an AIn scan is currently running. The
+    device will not generate an internal pacer faster than 50 kHz.
+
+    The pacer rate is set by an internal 32-bit timer running at a
+    base rate of 40 MHz. The timer is controlled by
+    pacer_period. This value is the period of the scan and the A/Ds
+    are clocked at this rate. A pulse will be output at the SYNC pin
+    at every pacer_period interval if SYNC is configured as an
+    output. The equation for calculating pacer_period is:
+   
+          pacer_period = [40 MHz / (sample frequency)] - 1 
+
+    If pacer_period is set to 0 the device does not generate an A/D
+    clock. It uses the SYNC pin as an input and the user must provide
+    the pacer source. The A/Ds acquire data on every rising edge of
+    SYNC; the maximum allowable input frequency is 50 kHz.  The data
+    will be returned in packets utilizing a bulk in endpoint. The
+    data will be in the format: 
+
+     lowchannel sample 0 : lowchannel + 1 sample 0 : … : hichannel sample 0 
+     lowchannel sample 1 : lowchannel + 1 sample 1 : … : hichannel sample 1
+      … 
+     lowchannel sample n : lowchannel + 1 sample n : … : hichannel sample n 
+
+    The scan will not begin until this command is sent and any
+    trigger conditions are met. Data will be sent until reaching the
+    specified count or an AInScanStop command is sent.
+
+    The external trigger may be used to start the scan. If enabled,
+    the device will wait until the appropriate trigger condition is
+    detected then begin sampling data at the specified rate. No
+    packets will be sent until the trigger is detected. In retrigger
+    mode the trigger will be automatically rearmed and the scan will
+    restart after retrig_count samples have been acquired. The count
+    parameter specifies the total number of samples to acquire and
+    should be >= retrig_count. Specifying 0 for count causes
+    continuous retrigger scans. The data is still sent as a
+    continuous stream during retrigger scan so the last data from a
+    previous scan will not be transferred until the beginning of the
+    next retrigger scan if it does not end on a packet boundary.
+
+    In block transfer mode the data is sent in 64-byte packets as
+    soon as enough data is available from the A/D. In immediate
+    transfer mode the data is sent after each sample period,
+    resulting in packets that are always 2 bytes (1 sample.) This
+    mode should only be used for low pacer rates, typically under 100
+    Hz, because it will overrun much easier.  
+
+    Overruns are indicated by the device stalling the bulk in
+    endpoint during the scan. The host may read the status to verify
+    and must clear the stall condition before further scans can be
+    performed.
+
+     count:         the total number of samples to acquire, 0 for continuous scan
+     retrig_count:  the number of samples to acquire for each trigger in retrigger mode
+     pacer_period:  the pacer timer period (0 for external clock)
+     channels:      bit field that selects the channels in the scan, upper 4 bits ignored in differential mode. 
+        ---------------------------------------------------------
+        | Bit7 | Bit6 | Bit5 | Bit4 | Bit3 | Bit2 | Bit1 | Bit0 |
+        ---------------------------------------------------------
+        | Ch7  |  Ch6 | Ch5  | Ch4  | Ch3  | Ch2  | Ch1  | Ch 0 |
+        ---------------------------------------------------------
+
+	options:  bit field that controls scan options
+	    bit 0: Reserved
+	    bit 1: 1 = differential mode, 0 = single ended mode
+	    bits 2-4: Trigger setting:
+	      0: no trigger
+  	      1: Edge / rising
+	      2: Edge / falling
+	      3: Level / high
+	      4: Level / low
+            bit 5: 1 = retrigger mode, 0 = normal trigger mode
+	    bit 6: Reserved
+	    bit 7: Reserved
+    """
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    if frequency > 50000.:
+      frequency = 50000
+    if frequency > 0:
+      pacer_period = round((40E.6 / frequency) - 1)
+    else:
+      pacer_period = 0
+    
+    
+  def AInScanStop(self):
+    """
+    This command stops the analog input scan (if running).
+    """
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AIN_SCAN_STOP
+    wValue = 0x0
+    wIndex = 0x0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def AInConfigR(self):
+    """
+    This command reads or writes the analog input ranges used for
+    AInScan in differential mode.  The command will result in a bus
+    stall if an AInScan is currently running.  
+    """
+
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request = self.AIN_CONFIG
+    wValue = 0x0
+    wIndex = 0x0
+    ranges = unpack('BBBB',self.udev.controlRead(request_type, request, wValue, wIndex, 4, timeout = 100))
+    return ranges
+
+  def AInConfigW(self, ranges):
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request = self.AIN_CONFIG
+    wValue = 0x0
+    wIndex = 0x0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [ranges], timeout = 100)
+    
+    
   #############################################
   #        Analog Output Commands             #
   #############################################
@@ -349,7 +499,7 @@ class bth_1208LS(mccUSB):
     request = self.AOUT
     wValue = 0
     wIndex = 0
-    channels = unpack('HH',self.udev.controlRead(request_type, request, wValue, wIndex, 4))
+    channels = unpack('HH',self.udev.controlRead(request_type, request, wValue, wIndex, 4, timeout = 100))
     if channel == 0:
       return channels[0]
     else:
@@ -575,7 +725,7 @@ class bth_1208LS(mccUSB):
     to 16 ASCII characters.  The length of the code is specified in
     wLength.
     """
-    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);  
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT) 
     wValue = 0
     wIndex = 0
     pin = self.udev.controlRead(request_type, self.BLUETOOTH_PIN, wValue, wIndex, 16, timeout = 100)
@@ -591,7 +741,7 @@ class bth_1208LS(mccUSB):
       print("BluetootPinW: length of pin greater than 16.")
       return
     
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);  
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT) 
     wValue = 0
     wIndex = 0
     self.udev.controlWrite(request_type, self.BLUETOOTH_PIN, wValue, wIndex, [pin], timeout = 100)

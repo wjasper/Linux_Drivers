@@ -187,10 +187,10 @@ int main (int argc, char **argv)
 	}
 	usbAInScanStop_BTH1208LS(udev);
 	usbAInScanClearFIFO_BTH1208LS(udev);
-        usbAInScanConfig_BTH1208LS(udev, ranges);
+        usbAInConfigW_BTH1208LS(udev, ranges);
 	memset(dataAIn, 0x0, sizeof(dataAIn));
 	sleep(1);
-	usbAInScanConfigR_BTH1208LS(udev, ranges);
+	usbAInConfigR_BTH1208LS(udev, ranges);
 	for (i = 0; i < 4; i++) {
 	  printf("Channel %d     range %d\n", i, ranges[i]);
 	}
@@ -223,7 +223,7 @@ int main (int argc, char **argv)
 	options = DIFFERENTIAL_MODE;
         // Always use BP_20V to make it easy (BP_20V is 0...)
         memset(ranges, BP_20V, sizeof(ranges));
-        usbAInScanConfig_BTH1208LS(udev, ranges);
+        usbAInConfigW_BTH1208LS(udev, ranges);
         // Run a loop for the specified number of repeats and
         // show the results...
         for (m = 0; m < repeats; m++) {
