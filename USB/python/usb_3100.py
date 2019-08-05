@@ -18,15 +18,9 @@
 import hid
 import time
 from struct import *
-
-# Base class for lookup tables of calibration coefficients (slope and intercept)
-class table:
-  def __init__(self):
-    self.slope = 0.0
-    self.intercept = 0.0
+from mccUSB import *
     
-class usb_3100:    # HID USB-31XX devices
-
+class usb_3100(mccUSB):    # HID USB-31XX devices
   DIO_DIR_IN   = 0x1  # input direction
   DIO_DIR_OUT  = 0x0  # output direction
 

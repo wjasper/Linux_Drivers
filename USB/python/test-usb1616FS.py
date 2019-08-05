@@ -73,6 +73,7 @@ def main():
         usb1616FS.DOut(0xff);
         time.sleep(.01)
         usb1616FS.DOut(0);
+        time.sleep(.01)
         print('Counter =', usb1616FS.CIn())   # read the current count
     elif ch == 'd':
       print('Reading Digital I/O ...')

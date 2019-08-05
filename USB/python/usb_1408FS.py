@@ -20,28 +20,10 @@ import usb1
 import time
 import sys
 from struct import *
-
-class Error(Exception):
-  ''' Base class for other exceptions.'''
-  pass
-
-class OverrunError(Error):
-  ''' Raised when overrun on AInScan'''
-  pass
-
-class UnderrunError(Error):
-  ''' Raised when underrun on AOutScan'''
-  pass
-
-# Base class for lookup tables of calibration coefficients (slope and offset)
-class table:
-  def __init__(self):
-    self.slope = 0.0
-    self.intercept = 0.0
+from mccUSB import *
 
 
-class usb_1408FS:
-
+class usb_1408FS(mccUSB):
   # Gain Ranges
   SE_10_00V   = 0x9         # Single Ended 0-10.0 V
   BP_20_00V   = 0x0         # Differential +/- 20.0 V
@@ -120,8 +102,6 @@ class usb_1408FS:
 
   def __init__(self, serial=None):
     self.productID = 0x00a1                            # MCC USB-1408FS
-#    self.context = usb1.USBContext()
-#    self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
     self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
       raise IOError("MCC USB-1408FS not found")
@@ -996,39 +976,3 @@ class usb_1408FS:
     if status & self.UPDATE_MODE:
       print('    Program memory update mode')
       
-  ##############################################################################################
-
-  def openByVendorIDAndProductID(self, vendor_id, product_id, serial):
-    self.context = usb1.USBContext()
-    for device in self.context.getDeviceIterator(skip_on_error=False):
-      if device.getVendorID() == vendor_id and device.getProductID() == product_id:
-        if serial == None:
-          return device.open()
-        else:
-          if device.getSerialNumber() == serial:
-            return device.open()
-    return None      
-
-  def getSerialNumber(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getSerialNumber())
-
-  def getProduct(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getProduct())
-
-  def getManufacturer(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getManufacturer())
-
-  def getMaxPacketSize(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getMaxPacketSize0())

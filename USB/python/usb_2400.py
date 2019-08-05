@@ -15,29 +15,16 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-from thermocouple import *
 import libusb1
 import usb1
 import time
 import sys
+
 from struct import *
 from datetime import datetime
+from thermocouple import *
+from mccUSB import *
 
-class Error(Exception):
-  ''' Base class for other exceptions.'''
-  pass
-
-class OverrunError(Error):
-  ''' Raised when overrun on AInScan'''
-  pass
-
-class UnderrunError(Error):
-  ''' Raised when underrun on AOutScan'''
-  pass
-
-class SaturationError(Error):
-  ''' Raised when DAC is saturated '''
-  pass
 
 # Base class for AIn scan queue
 class queue:
@@ -47,13 +34,7 @@ class queue:
     self.gain    = 0x0  # the input range (see AIn)
     self.rate    = 0x0  # the A/D data rate (see AIn)  
 
-# Base class for lookup tables of calibration coefficients (slope and intercept)
-class table:
-  def __init__(self):
-    self.slope = 0.0
-    self.intercept = 0.0
-
-class usb_2400:
+class usb_2400(mccUSB):
   # Gain Ranges
   BP_10_00V  = 0x1         # +/- 10.0 V
   BP_5_00V   = 0x2         # +/- 5.00 V
@@ -828,45 +809,8 @@ class usb_2400:
     version = unpack('H', self.udev.controlRead(request_type, self.UPDATE_VERSION, wValue, wIndex, 2, timeout = 100))
     return version
 
-  ##############################################################################################
-
-  def openByVendorIDAndProductID(self, vendor_id, product_id, serial):
-    self.context = usb1.USBContext()
-    for device in self.context.getDeviceIterator(skip_on_error=False):
-      if device.getVendorID() == vendor_id and device.getProductID() == product_id:
-        if serial == None:
-          return device.open()
-        else:
-          if device.getSerialNumber() == serial:
-            return device.open()
-    return None      
-
-  def getSerialNumber(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getSerialNumber())
-
-  def getProduct(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getProduct())
-
-  def getManufacturer(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getManufacturer())
-
-  def getMaxPacketSize(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getMaxPacketSize0())
 
   def getMFGCAL(self):
-
     '''
       get the manufacturers calibration data (timestamp) from EEPROM
     '''

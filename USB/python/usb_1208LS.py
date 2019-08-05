@@ -18,21 +18,9 @@
 import hid
 import time
 from struct import *
+from mccUSB import *
 
-# Error Handling
-class Error(Exception):
-  ''' Base class for other exceptions.'''
-  pass
-
-class OverrunError(Error):
-  ''' Raised when overrun on AInScan'''
-  pass
-
-class UnderrunError(Error):
-  ''' Raised when underrun on AInScan'''
-  pass
-
-class usb_1208:
+class usb_1208(mccUSB):
 
   DIO_PORTA     = 0x01
   DIO_PORTB     = 0x04

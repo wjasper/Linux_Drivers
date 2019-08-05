@@ -21,39 +21,10 @@ import time
 import sys
 from struct import *
 from datetime import datetime
+from mccUSB import *
 
 
-class Error(Exception):
-  ''' Base class for other exceptions.'''
-  pass
-
-class OverrunError(Error):
-  ''' Raised when overrun on AInScan'''
-  pass
-
-# Description of the requestType byte
-# Data transfer direction D7
-HOST_TO_DEVICE = 0x0 << 7
-DEVICE_TO_HOST = 0x1 << 7
-# Type D5-6D
-STANDARD_TYPE = 0x0 << 5
-CLASS_TYPE    = 0x1 << 5
-VENDOR_TYPE   = 0x2 << 5
-RESERVED_TYPE = 0x3 << 5
-# Recipient D0 - D4
-DEVICE_RECIPIENT    = 0x0
-INTERFACE_RECIPIENT = 0x1
-ENDPOINT_RECIPIENT  = 0x2
-OTHER_RECIPIENT     = 0x3
-RESERVED_RECIPIENT  = 0x4 
-
-# Base class for lookup tables of calibration coefficients (slope and intercept)
-class table:
-  def __init__(self):
-    self.slope = 0.0
-    self.intercept = 0.0
-
-class bth_1208LS:
+class bth_1208LS(mccUSB):
   """
     Settings memory map
   |===========================================================================================|
@@ -498,40 +469,3 @@ class bth_1208LS:
     wIndex = 0
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [count], timeout = 100)
     
-  ##############################################################################################
-
-  def openByVendorIDAndProductID(self, vendor_id, product_id, serial):
-    self.context = usb1.USBContext()
-    for device in self.context.getDeviceIterator(skip_on_error=False):
-      if device.getVendorID() == vendor_id and device.getProductID() == product_id:
-        if serial == None:
-          return device.open()
-        else:
-          if device.getSerialNumber() == serial:
-            return device.open()
-    return None      
-
-  def getSerialNumber(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getSerialNumber())
-
-  def getProduct(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getProduct())
-
-  def getManufacturer(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getManufacturer())
-
-  def getMaxPacketSize(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getMaxPacketSize0())
-
