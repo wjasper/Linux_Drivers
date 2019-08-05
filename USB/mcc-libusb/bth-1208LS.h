@@ -128,7 +128,7 @@ void usbCalMemoryW_BTH1208LS(libusb_device_handle *udev, uint16_t address, uint1
 void usbAOut_BTH1208LS(libusb_device_handle *udev, uint8_t channel, uint16_t value);
 uint16_t usbAOutR_BTH1208LS(libusb_device_handle *udev, uint8_t channel);
 void usbCounter_BTH1208LS(libusb_device_handle *udev, uint32_t *counter);
-void usbCounterReset_BTH1208LS(libusb_device_handle *udev);
+void usbResetCounter_BTH1208LS(libusb_device_handle *udev);
 void cleanup_BTH1208LS(libusb_device_handle *udev);
 double volts_BTH1208LS(uint16_t value, uint8_t range);
   

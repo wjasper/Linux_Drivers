@@ -285,14 +285,14 @@ class bth_1208LS(mccUSB):
     return value
 
   def DOut(self, value):
-    '''
+    """
     This command writes the DIO output latch values.  The factory
     power on default is all 1 (pins are floting).  Since the outputs
     are open drain, writing a 0 turns on the low side transistor and
     drives a 0 to the port pin and writing a 1 turns off the
     transistor and allows the pin to float.  The bits are mapped to
     the individual port pins.
-    '''
+    """
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.DOUT
@@ -301,14 +301,14 @@ class bth_1208LS(mccUSB):
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
 
   def DOutR(self):
-    '''
+    """
     This command reads the DIO output latch values.  The factory
     power on default is all 1 (pins are floting).  Since the outputs
     are open drain, writing a 0 turns on the low side transistor and
     drives a 0 to the port pin and writing a 1 turns off the
     transistor and allows the pin to float.  The bits are mapped to
     the individual port pins.
-    '''
+    """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
@@ -323,10 +323,66 @@ class bth_1208LS(mccUSB):
   #        Analog Output Commands             #
   #############################################
 
+  def AOut(self, channel, value):
+    """
+    This command writes the values of an analog output channel
+
+      channel: the channel to write (0-1)
+      value:   the value to write (0-4095)
+    """
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AOUT
+    wValue = value & 0xffff
+    wIndex = channel & 0xff
+
+    if channel > 2 or channel < 0:
+      print("AOut: channel must be 0 or 1.")
+      return
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def AOutR(self, channel=0):
+    """
+    This command reads the value of  both  analog output channels
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AOUT
+    wValue = 0
+    wIndex = 0
+    channels = unpack('HH',self.udev.controlRead(request_type, request, wValue, wIndex, 4))
+    if channel == 0:
+      return channels[0]
+    else:
+      return channels[1]
+    
+    
+    
+    
+
   #############################################
   #           Counter Commands                #
   #############################################
 
+  def Counter(self):
+    """
+    The command reads the event counter.
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = 0
+    count ,= unpack('I',self.udev.controlRead(request_type, self.COUNTER, wValue, wIndex, 4, timeout = 100))
+    return count
+    
+  def ResetCounter(self):
+    """
+    This command resets the event counter to 0.
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.COUNTER
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+    
   #############################################
   #        Memory Commands                    #
   #############################################
@@ -460,12 +516,118 @@ class bth_1208LS(mccUSB):
   #############################################
 
   def BlinkLED(self, count):
-    '''
+    """
     This command will blink the device LED
-    '''
+    """
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.BLINK_LED
     wValue = 0
     wIndex = 0
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [count], timeout = 100)
+    
+  def Reset(self):
+    """
+    This command resets the device
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.RESET
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def Status(self):
+    """
+    This command retrieves the status of the device.  Writing the command will clear
+    the error indicators.
+
+    status:      bit 0:      Reserved
+                 bit 1:      1 = AIn scan running
+                 bit 2:      1 = AIn scan overrun
+                 bits 3-7:   Reserved
+                 bits 8-10:  Charger status:
+                              0 = no battery
+                              1 = fast charge
+                              2 = maintenance charge
+                              3 = fault (not charging)
+                              4 = disabled
+                 bits 11-15   Reserved
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = 0
+    status ,= unpack('H',self.udev.controlRead(request_type, self.STATUS, wValue, wIndex, 2, timeout = 100))
+    return status
+
+  def InitRadio(self):
+    """
+    This command sets the radio module to factory default settings.
+    This should be used during manufacturing to initialize the radio.
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.INIT_RADIO
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def BluetoothPinR(self):
+    """
+    This command reads the Bluetooth PIN code.  The PIN code can be up
+    to 16 ASCII characters.  The length of the code is specified in
+    wLength.
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);  
+    wValue = 0
+    wIndex = 0
+    pin = self.udev.controlRead(request_type, self.BLUETOOTH_PIN, wValue, wIndex, 16, timeout = 100)
+    return  pin.decode()
+
+  def BluetoothPinW(self, pin):
+    """
+    This command writes the Bluetooth PIN code.  The PIN code can be up
+    to 16 ASCII characters.  The length of the code is specified in
+    wLength.
+    """
+    if len(pin) > 16:
+      print("BluetootPinW: length of pin greater than 16.")
+      return
+    
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);  
+    wValue = 0
+    wIndex = 0
+    self.udev.controlWrite(request_type, self.BLUETOOTH_PIN, wValue, wIndex, [pin], timeout = 100)
+
+  def BatteryVoltage(self):
+    """
+    This command reads the voltage of the battery.  The voltage is
+    returned in millivolts.
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = 0
+    voltage ,= unpack('H',self.udev.controlRead(request_type, self.BATTERY_VOLTAGE, wValue, wIndex, 2, timeout = 100))
+    return voltage
+
+  def RadioFirmwareVersion(self):
+    """
+    This command reads the radio firmware version.  The version
+    consists of 16 bits in hexadecimal BCD notation.  i.e. version
+    6.15 would be 0x0615.
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = 0
+    version ,= unpack('H',self.udev.controlRead(request_type, self.RADIO_FIRMWARE_VERSION, wValue, wIndex, 2, timeout = 100))
+    return version
+    
+  def DFU(self):
+    """
+    This command places the device in firmware upgrade mode by erasing
+    a portion of the program memory.  The next time the device is
+    reset, it will enumerate in the bootloader and is unusable as a
+    DAQ device until new firmware is loaded.
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0xADAD
+    wIndex = 0
+    self.udev.controlWrite(request_type, self.DFU, wValue, wIndex, [0x0], timeout = 100)
     

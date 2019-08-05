@@ -56,6 +56,7 @@ int main (int argc, char **argv)
   int i, j, k, m;
   uint8_t options;
   char serial[9];
+  char pin[17];
   uint8_t channel, channels;
   uint8_t range;
   uint8_t bValue;
@@ -144,7 +145,7 @@ int main (int argc, char **argv)
         cleanup_BTH1208LS(udev);
         return 0;
       case 'c':
-        usbCounterReset_BTH1208LS(udev);
+        usbResetCounter_BTH1208LS(udev);
         printf("Connect AO 0 to CTR.\n");
         toContinue();
         for (i = 0; i < 100; i++) {                   // toggle
@@ -267,6 +268,14 @@ int main (int argc, char **argv)
         break;
       case 'S':
         printf("Status = %#x\n", usbStatus_BTH1208LS(udev));
+	usbBatteryVoltage_BTH1208LS(udev, &value);
+        printf("Battery voltage = %d\n", value);
+	usbBluetoothPinR_BTH1208LS(udev, pin);
+	pin[16] = '\0';
+	printf("Bluetooth PIN = %s\n", pin);
+	usbRadioFirmwareVersion_BTH1208LS(udev, &value);
+	printf("Radio Firmware Version: %x.%x\n",(value >> 8) & 0xff, value & 0xff);
+	
 	break;
       default:
         break;

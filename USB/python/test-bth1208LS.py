@@ -74,6 +74,15 @@ def main():
     elif ch == 'e':
       bth1208LS.udev.close()
       exit(0)
+    elif ch == 'c':
+      bth1208LS.ResetCounter()
+      print("Connect AO 0 to CTR.")
+      toContinue()
+      for i in range(100):
+        bth1208LS.AOut(0, 4095)
+        bth1208LS.AOut(0, 0)
+      count = bth1208LS.Counter()
+      print("Count = ", count, "    Should read 100.")
     elif ch == 'd':
       value = bth1208LS.DIn()
       print("Digital IO pins: ", hex(value))
@@ -82,15 +91,21 @@ def main():
       bth1208LS.DOut(value)
       value = bth1208LS.DOutR()
       print("The value you entered: ", hex(value))
+    elif ch == 'o':
+      print("Test Analog Output")
+      channel = int(input("Enter Channel [0-1]: "))
+      voltage = float(input("Enter voltage [0-2.5V]: "))
+      value = int(voltage * 4095 / 2.5)
+      bth1208LS.AOut(channel, value)
+      print("Analog Output Voltage = ", bth1208LS.AOutR(channel)*2.5/4095)
     elif ch == 's':
-      print('Serial Number:',bth1208LS.GetSerialNumber())
+      print('Serial Number: ', bth1208LS.getSerialNumber())
     elif ch == 'S':
       status = bth1208LS.Status()
-      version = bth1208LS.FirmwareVersion()
+      pin = bth1208LS.BluetoothPinR()
       radioVersion = bth1208LS.RadioFirmwareVersion()
-      print("Status:", hex(status), "    Firmware Version: {0:1x}.{1:2x}    Radio FirmwareVersion: {2:1x}.{3:2x}"\
-            .format ((version >> 8) & 0xff, (version & 0xff), (radioVersion >> 8) & 0xff, (radioVersion & 0xff)))
-
+      print("Status:", hex(status), "    Bluetooth PIN:", pin,"    Radio FirmwareVersion: {0:1x}.{1:2x}"\
+            .format((radioVersion >> 8) & 0xff, (radioVersion & 0xff)))
 
 if __name__ == "__main__":
   main()

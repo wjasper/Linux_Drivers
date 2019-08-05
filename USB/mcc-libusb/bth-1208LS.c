@@ -409,9 +409,9 @@ uint16_t usbAOutR_BTH1208LS(libusb_device_handle *udev, uint8_t channel)
   }
 }
 
-/***********************************************
- *            Counter/Timer                    *
- ***********************************************/
+/***************************************
+ *            Counter                  *
+ ***************************************/
 void usbCounter_BTH1208LS(libusb_device_handle *udev, uint32_t *counter)
 {
   /* The command reads the event counter. */
@@ -422,7 +422,7 @@ void usbCounter_BTH1208LS(libusb_device_handle *udev, uint32_t *counter)
   }
 }
 
-void usbCounterReset_BTH1208LS(libusb_device_handle *udev)
+void usbResetCounter_BTH1208LS(libusb_device_handle *udev)
 {
   /* This command resets the event counter to 0 */
   
@@ -633,8 +633,7 @@ uint16_t usbStatus_BTH1208LS(libusb_device_handle *udev)
 void usbInitRadio_BTH1208LS(libusb_device_handle *udev)
 {
   /* This command sets the radio module to factory default settings.
-     This should be used during manufacgturing to initialize the
-     radio.
+     This should be used during manufacturing to initialize the radio.
   */
   
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
