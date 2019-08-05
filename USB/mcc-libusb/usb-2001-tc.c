@@ -536,7 +536,7 @@ int tc_temperature_USB2001TC(libusb_device_handle *udev, char tc_type, double *t
 
   // Read the CJC value in Celsius
   getCJCDegC_USB2001TC(udev, &CJC_Temp);
-  
+
   // Calculate the CJC voltage using the NIST polynomials and add to tc_voltage in millivolts
   tc_voltage = NISTCalcVoltage(tc_type, CJC_Temp) + tc_voltage;
 

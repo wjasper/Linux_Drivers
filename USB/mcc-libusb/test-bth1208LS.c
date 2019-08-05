@@ -58,6 +58,7 @@ int main (int argc, char **argv)
   char serial[9];
   uint8_t channel, channels;
   uint8_t range;
+  uint8_t bValue;
   uint8_t ranges[4] = {0, 0, 0, 0};
   uint16_t value;
   uint32_t count;
@@ -109,7 +110,8 @@ int main (int argc, char **argv)
     printf("----------------\n");
     printf("Hit 'b' to blink\n");
     printf("Hit 'c' to test counter\n");
-    printf("Hit 'd' to test digital IO\n");
+    printf("Hit 'd' to read digital IO pins\n");
+    printf("Hit 'D' to write digital IO value\n");
     printf("Hit 'i' to test Analog Input\n");
     printf("Hit 'I' to test Analog Input Scan\n");
     printf("Hit 'o' to test Analog Output\n");
@@ -123,8 +125,20 @@ int main (int argc, char **argv)
     switch(ch) {
       case 'b': /* test to see if LED blinks */
         printf("Enter number or times to blink: ");
-        scanf("%hhd", &options);
-        usbBlinkLED_BTH1208LS(udev, options);
+        scanf("%hhd", &bValue);
+        usbBlinkLED_BTH1208LS(udev, bValue);
+	break;
+      case 'd':
+	usbDIn_BTH1208LS(udev, &bValue);
+	printf("Digital IO value: %#hhx\n", bValue);
+	break;
+      case 'D':
+	printf("Enter digital value [0-ff]: ");
+	scanf("%hhx", &bValue);
+        usbDOut_BTH1208LS(udev, bValue);
+	bValue = 0x0;
+	usbDOutR_BTH1208LS(udev, &bValue);
+	printf("The value you wrote: %#x\n", bValue);
 	break;
       case 'e':
         cleanup_BTH1208LS(udev);

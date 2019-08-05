@@ -87,7 +87,8 @@ def main():
     print("Hit 'b' to blink.")
     print("Hit 'c' to test counter.")
     print("Hit 'C' for continuous sampling")
-    print("Hit 'd' to test digitial IO.")
+    print("Hit 'd' to read digital IO.")
+    print("Hit 'D' to write digital IO.")
     print("Hit 'i' to test Analog Input")
     print("Hit 'I' to test Analog Input Scan")
     print("Hit 'o' to test Analog Output")
@@ -112,6 +113,9 @@ def main():
       count = bth1208LS.Counter()
       print("Count = ", count, "    Should read 100.")
     elif ch == 'd':
+      value = bth1208LS.DIn()
+      print("Digital IO pins: ", hex(value))
+    elif ch == 'D':
       print("Test of DIO Out")
       value = int(input("Input value [0-ff]: "),base=16) & 0xff
       bth1208LS.DOut(value)
