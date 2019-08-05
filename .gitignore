@@ -11,6 +11,11 @@
 *.pyc
 __pycache__
 
+# Backup files #
+##########################
+\#*
+*~
+
 # Compiled test programs #
 ##########################
 test-usb1608G
