@@ -479,23 +479,23 @@ class BTH_1208LS:
 
   def AInScanStart(self, count, retrig_count, frequency, channels, options):
     """
-  /* This command starts an analog input scan. This command will
-     respond with 0 if an AIn scan is currently running. The device
-     will not generate an internal pacer faster than 50 kHz.
+    This command starts an analog input scan. This command will
+    respond with 0 if an AIn scan is currently running. The device
+    will not generate an internal pacer faster than 50 kHz.
 
-     The pacer rate is set by an internal 32-bit timer running at a
-     base rate of 40 MHz. The timer is controlled by
-     pacer_period. This value is the period of the scan and the A/Ds
-     are clocked at this rate. A pulse will be output at the SYNC pin
-     at every pacer_period interval if SYNC is configured as an
-     output. The equation for calculating pacer_period is:
+    The pacer rate is set by an internal 32-bit timer running at a
+    base rate of 40 MHz. The timer is controlled by
+    pacer_period. This value is the period of the scan and the A/Ds
+    are clocked at this rate. A pulse will be output at the SYNC pin
+    at every pacer_period interval if SYNC is configured as an
+    output. The equation for calculating pacer_period is:
    
            pacer_period = [40 MHz / (sample frequency)] - 1 
 
-     If pacer_period is set to 0 the device does not generate an A/D
-     clock. It uses the SYNC pin as an input and the user must provide
-     the pacer source. The A/Ds acquire data on every rising edge of
-     SYNC; the maximum allowable input frequency is 50 kHz.  
+    If pacer_period is set to 0 the device does not generate an A/D
+    clock. It uses the SYNC pin as an input and the user must provide
+    the pacer source. The A/Ds acquire data on every rising edge of
+    SYNC; the maximum allowable input frequency is 50 kHz.  
 
     The scan will not begin until this command is sent and any trigger
     conditions are met. Data will be acquired until an overrun occurs,
@@ -509,29 +509,28 @@ class BTH_1208LS:
       … 
      lowchannel sample n : lowchannel + 1 sample n : … : hichannel sample n 
 
-     If the host does not receive the data in a timely manner (due to
-     a communications error, etc.) it can issue the AInScanResendData
-     command. The device will resend the last packet that was
-     transmitted. The device does not remove the sent data from its
-     FIFO until a new AInScanSendData command is received. This keeps
-     the data available for a resend. The host must send an
-     AInScanStop command at the end of a finite scan to let the device
-     know that the final packet was received successfully and allow
-     the scan to end.
+    If the host does not receive the data in a timely manner (due to
+    a communications error, etc.) it can issue the AInScanResendData
+    command. The device will resend the last packet that was
+    transmitted. The device does not remove the sent data from its
+    FIFO until a new AInScanSendData command is received. This keeps
+    the data available for a resend. The host must send an
+    AInScanStop command at the end of a finite scan to let the device
+    know that the final packet was received successfully and allow
+    the scan to end.
 
-     The external trigger may be used to start the scan. If enabled,
-     the device will wait until the appropriate trigger condition is
-     detected then begin sampling data at the specified rate. No data
-     will be available until the trigger is detected. In retrigger
-     mode the trigger will be automatically rearmed and the scan will
-     restart after retrig_count samples have been acquired. The count
-     parameter specifies the total number of samples to acquire and
-     should be >= retrig_count. Specifying 0 for count causes
-     continuous retrigger scans.
+    The external trigger may be used to start the scan. If enabled,
+    the device will wait until the appropriate trigger condition is
+    detected then begin sampling data at the specified rate. No data
+    will be available until the trigger is detected. In retrigger
+    mode the trigger will be automatically rearmed and the scan will
+    restart after retrig_count samples have been acquired. The count
+    parameter specifies the total number of samples to acquire and
+    should be >= retrig_count. Specifying 0 for count causes
+    continuous retrigger scans.
 
-     Overruns are indicated in the status field of the AInScanDataRead
-     command response. The host may also read the status to verify.
-
+    Overruns are indicated in the status field of the AInScanDataRead
+    command response. The host may also read the status to verify.
 
      count:         the total number of samples to acquire, 0 for continuous scan
      retrig_count:  the number of samples to acquire for each trigger in retrigger mode
