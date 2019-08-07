@@ -308,13 +308,13 @@ class usb_1208(mccUSB):
       scanIndex = data[102] | (data[103]<<8)
       try:
         if (scanIndex > self.scanIdx):
-          raise OverRunError
+          raise OverrunError
       except OverRunError:
         print('AInScan: Overrun Error')
         return
       try:
         if (scanIndex < self.scanIdx):
-          raise UnderRunError
+          raise UnderrunError
       except UnderRunError:
         print('AInScan: Underrun Error')
         return

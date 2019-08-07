@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
 from bth_1208LS import *
 import time
 import sys
@@ -28,13 +29,40 @@ def toContinue():
     return False
 
 def main():
-  # initalize the class
+  target_name = "BTH-1208LS-6833"
+  device = []
+
+  if len(sys.argv) == 2:
+    device.append(mccBluetoothDevice(sys.argv[1]))
+  else:
+    # Discover a BTH-1208LS device
+    device.append(mccBluetoothDevice(discoverDevice(target_name)))
+
+  if (len(device) > 0):
+    print('Number of devices found = ', len(device))
+  else:
+    print('No device', target_name, 'found')
+    exit(0)
+
+  # Open the device
   try:
-    bth1208LS = bth_1208LS()
-    print("BTH-1208LS device found.\n")
+    device[0].openDevice()
   except:
-    print('No BTH-1208LS device found.')
-    return
+    print("Can not open device. Could be in charging mode.")
+    exit(0)
+
+  # initalize the class
+  bth1208LS = BTH_1208LS(device[0])
+
+  # allow charging with Bluetooth connected.
+  data = [1]
+  bth1208LS.SettingsMemoryW(0xe, 1, data)
+
+  # print out the settings memory
+  address = 0x0
+  print("\nDumping Settings Memory: ")
+  print(bth1208LS.SettingsMemoryR(address, 15))
+  print("")
 
   # print out the calibration tables:
   for chan in range(bth1208LS.NCHAN_DE):
@@ -53,32 +81,28 @@ def main():
   mdate = bth1208LS.CalDate()
   print('\nMFG Calibration date: ', mdate)
 
-
   while True:
     print("\nBTH-1208LS Testing")
     print("----------------")
-    print("Hit 'b' to blink LED.")
+    print("Hit 'b' to blink.")
     print("Hit 'c' to test counter.")
-    print("Hit 'C' for continuous sampling.")
+    print("Hit 'C' for continuous sampling")
     print("Hit 'd' to read digital IO.")
     print("Hit 'D' to write digital IO.")
-    print("Hit 'i' to test Analog Input.")
-    print("Hit 'I' to test Analog Input Scan.")
-    print("Hit 'o' to test Analog Output.")
-    print("Hit 'x' to test Analog Input Scan (Multi-channel).")
+    print("Hit 'i' to test Analog Input")
+    print("Hit 'I' to test Analog Input Scan")
+    print("Hit 'o' to test Analog Output")
+    print("Hit 'x' to test Analog Input Scan (Multi-channel)")
     print("Hit 'r' to reset the device.")
+    print("Hit 'e' to exit.")
     print("Hit 's' to get serial number.")
     print("Hit 'S' to get Status.")
-    print("Hit 'e' to exit.")
-    
+    print("Hit 'v' to get the battery voltage in mV.")
+
     ch = input('\n')
-    
     if ch == 'b':
       count = int(input('Enter number of times to blink: '))
       bth1208LS.BlinkLED(count)
-    elif ch == 'e':
-      bth1208LS.udev.close()
-      exit(0)
     elif ch == 'c':
       bth1208LS.ResetCounter()
       print("Connect AO 0 to CTR.")
@@ -92,10 +116,11 @@ def main():
       value = bth1208LS.DIn()
       print("Digital IO pins: ", hex(value))
     elif ch == 'D':
-      value = int(input('Input digital value [0-ff]: '),base=16)
+      print("Test of DIO Out")
+      value = int(input("Input value [0-ff]: "),base=16) & 0xff
       bth1208LS.DOut(value)
       value = bth1208LS.DOutR()
-      print("The value you entered: ", hex(value))
+      print("The value you wrote = ", hex(value))
     elif ch == 'i':
       channel = int(input("Input channel DE [0-3]: "))
       gain = int(input("Input range [0-7]: "))
@@ -117,7 +142,6 @@ def main():
       bth1208LS.AInScanClearFIFO()
       bth1208LS.AInConfigW(ranges)
       ranges = bth1208LS.AInConfigR()
-      print('ranges = ', ranges)
       bth1208LS.AInScanStart(count, 0x0, frequency, (0x1 << channel), options)
       dataAIn = bth1208LS.AInScanRead(count)
       for i in range(count):
@@ -157,6 +181,8 @@ def main():
             value = round(data[k]*bth1208LS.table_AInDE[j][gain].slope + bth1208LS.table_AInDE[j][gain].intercept)
             print(" ,{0:8.4f}".format(bth1208LS.volts(value, ranges[0])), end="")
           print("")
+        bth1208LS.AInScanStop()
+        bth1208LS.AInScanClearFIFO()
     elif ch == 'C':
       print('BTH-1208LS Continuous Samping')
       print('Hit space <CR> to exit.')
@@ -171,7 +197,8 @@ def main():
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
       j = 0
       while True:
-        raw_data = bth1208LS.AInScanRead(128)
+        time.sleep((127./frequency)*.85)
+        raw_data = bth1208LS.AInScanSendData(127)
         print('Scan =', j, 'samples returned =', len(raw_data))
         j += 1
         c = sys.stdin.readlines()
@@ -179,21 +206,29 @@ def main():
           break
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
       bth1208LS.AInScanStop()
+    elif ch == 'e':
+      bth1208LS.device.sock.close()
+      exit(0)
+    elif ch == 's':
+      print('Serial Number:',bth1208LS.GetSerialNumber())
+    elif ch == 'S':
+      status = bth1208LS.Status()
+      version = bth1208LS.FirmwareVersion()
+      radioVersion = bth1208LS.RadioFirmwareVersion()
+      print("Status:", hex(status), "    Firmware Version: {0:1x}.{1:2x}    Radio FirmwareVersion: {2:1x}.{3:2x}"\
+            .format ((version >> 8) & 0xff, (version & 0xff), (radioVersion >> 8) & 0xff, (radioVersion & 0xff)))
+    elif ch == 'r':
+      bth1208LS.Reset()
+    elif ch == 'v':
+      voltage = bth1208LS.BatteryVoltage()
+      print("Battery Voltage {0:d} mV".format(voltage))
     elif ch == 'o':
       print("Test Analog Output")
       channel = int(input("Enter Channel [0-1]: "))
       voltage = float(input("Enter voltage [0-2.5V]: "))
       value = int(voltage * 4095 / 2.5)
       bth1208LS.AOut(channel, value)
-      print("Analog Output Voltage = ", bth1208LS.AOutR(channel)*2.5/4095)
-    elif ch == 's':
-      print('Serial Number: ', bth1208LS.getSerialNumber())
-    elif ch == 'S':
-      status = bth1208LS.Status()
-      pin = bth1208LS.BluetoothPinR()
-      radioVersion = bth1208LS.RadioFirmwareVersion()
-      print("Status:", hex(status), "    Bluetooth PIN:", pin,"    Radio FirmwareVersion: {0:1x}.{1:2x}"\
-            .format((radioVersion >> 8) & 0xff, (radioVersion & 0xff)))
+      print("Analog Output Voltage = ", bth1208LS.AOutR()[channel]*2.5/4095)
 
 if __name__ == "__main__":
   main()

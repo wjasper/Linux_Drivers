@@ -122,6 +122,8 @@ class bth_1208LS(mccUSB):
   STALL_ON_OVERRUN        = 0x0
   INHIBIT_STALL           = 0x1 << 7
 
+  CONTINUOUS_MODE         = False
+
   # Ranges
   BP_20V   = 0x0   # +/- 20 V
   BP_10V   = 0x1   # +/- 10V
@@ -266,7 +268,7 @@ class bth_1208LS(mccUSB):
     elif (gain == self.UP_2_5V):
       volt = value*2.5/4096.             # analog output
     else:
-      print("Unknown range: ",gain)
+      raise ValueError('Unknown range.')
 
     return volt
 
@@ -431,10 +433,64 @@ class bth_1208LS(mccUSB):
     if frequency > 50000.:
       frequency = 50000
     if frequency > 0:
-      pacer_period = round((40E.6 / frequency) - 1)
+      pacer_period = round((40.E6 / frequency) - 1)
     else:
       pacer_period = 0
+    self.frequency = frequency
+    self.options = options
+    if count == 0:
+      self.CONTINUOUS_MODE = True
+    else:
+      self.CONTINUOUS_MODE = False
+
+    self.nChan = 0
+    if options & self.DIFFERENTIAL_MODE:
+      for i in range(self.NCHAN_DE):
+        if (channels & (0x1 << i)) != 0x0:
+          self.nChan += 1
+    else:
+      for i in range(self.NCHAN_SE):
+        if (channels & (0x1 << i)) != 0x0:
+          self.nChan += 1
+
+    scanPacket = list(unpack('B'*14, pack('IIIBB', count, retrig_count, pacer_period, channels, options)))
+    result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
+
+  def AInScanRead(self, nScan):
+    nSamples = int(nScan * self.nChan)
     
+    if self.options & self.IMMEDIATE_TRANSFER_MODE:
+      for i in range(self.nSamples):
+        try: 
+          data.extend(unpack('H',self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2, 2000)))
+        except:
+          print('AInScanRead: error in bulk transfer in immmediate transfer mode.')
+          return
+    else:
+      try:
+        data =  unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, int(2*nSamples), 2000))
+      except:
+        print('AInScanRead: error in bulk transfer!')
+        return
+
+    status = self.Status()
+    # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
+    if ((int(nSamples*2) % self.wMaxPacketSize) == 0 and  not(status & self.AIN_SCAN_RUNNING)):
+      data2 = self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2, 100)
+    
+    try:
+      if status & self.AIN_SCAN_OVERRUN:
+        raise OverrunERROR
+    except:
+      print('AInScanRead: Overrun Error')
+      return
+
+    if self.CONTINUOUS_MODE:
+      return list(data)
+    
+    self.AInScanStop()
+    self.AInScanClearFIFO()
+    return list(data)
     
   def AInScanStop(self):
     """
@@ -466,7 +522,17 @@ class bth_1208LS(mccUSB):
     request = self.AIN_CONFIG
     wValue = 0x0
     wIndex = 0x0
-    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [ranges], timeout = 100)
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, ranges, timeout = 100)
+
+  def AInScanClearFIFO(self):
+    """
+    The command clears the internal scan endoint FIFOs
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request = self.AIN_SCAN_CLEAR_FIFO
+    wValue = 0x0
+    wIndex = 0x0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
     
     
   #############################################
@@ -487,7 +553,7 @@ class bth_1208LS(mccUSB):
     wIndex = channel & 0xff
 
     if channel > 2 or channel < 0:
-      print("AOut: channel must be 0 or 1.")
+      raise ValueError('AOut: channel must be 0 or 1.')
       return
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
 
@@ -550,11 +616,11 @@ class bth_1208LS(mccUSB):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
 
     if count > 768:
-      print("CalMemoryR: max bytes that can be read is 768.")
+      raise ValueError('CalMemoryR: max bytes that can be read is 768.')
       return
 
     if address > 0x2ff:
-      print("CalMemoryR: address must be in the range 0 - 0x2FF.")
+      raise ValueError('CalMemoryR: address must be in the range 0 - 0x2FF.')
       return
 
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -577,11 +643,11 @@ class bth_1208LS(mccUSB):
     wIndex = 0
 
     if count > 256:
-      print("UserMemoryR: max bytes that can be read is 256.")
+      raise ValueError('UserMemoryR: max bytes that can be read is 256.')
       return
 
     if address > 0xff:
-      print("UserMemoryR: address must be in the range 0 - 0xff.")
+      raise ValueError('UserMemoryR: address must be in the range 0 - 0xff.')
       return
     
     try:
@@ -598,11 +664,11 @@ class bth_1208LS(mccUSB):
     wIndex = 0
 
     if count > 256:
-      print("UserMemoryW: max bytes that can be read is 256.")
+      raise ValueError('UserMemoryW: max bytes that can be read is 256.')
       return
 
     if address > 0xff:
-      print("UserMemoryW: address must be in the range 0 - 0xff.")
+      raise ValueError('UserMemoryW: address must be in the range 0 - 0xff.')
       return
 
     try:
@@ -627,11 +693,11 @@ class bth_1208LS(mccUSB):
     wIndex = 0
 
     if count > 512:
-      print("SettingsMemoryR: max bytes that can be read is 512.")
+      raise ValueError('SettingsMemoryR: max bytes that can be read is 512.')
       return
 
     if address > 0x3ff:
-      print("SettingsMemoryR: address must be in the range 0 - 0x3ff.")
+      raise ValueError('SettingsMemoryR: address must be in the range 0 - 0x3ff.')
       return
     
     try:
@@ -648,11 +714,11 @@ class bth_1208LS(mccUSB):
     wIndex = 0
 
     if count > 512:
-      print("SettingsMemoryW: max bytes that can be read is 512.")
+      raise ValueError('SettingsMemoryW: max bytes that can be read is 512.')
       return
 
     if address > 0x3ff:
-      print("SettingsMemoryW: address must be in the range 0 - 0x3ff.")
+      raise ValueError('SettingsMemoryW: address must be in the range 0 - 0x3ff.')
       return
 
     try:
@@ -738,7 +804,7 @@ class bth_1208LS(mccUSB):
     wLength.
     """
     if len(pin) > 16:
-      print("BluetootPinW: length of pin greater than 16.")
+      raise ValueError('BluetoothPinW: length of pin greater than 16.')
       return
     
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT) 

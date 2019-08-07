@@ -556,9 +556,9 @@ class BTH_1208LS:
 	    bit 7: Reserved
     """
 
-    if (frequency > 50000.):
+    if frequency > 50000.:
       frequency = 50000.
-    if (frequency > 0.):
+    if frequency > 0.:
       pacer_period = round((40.E6 / frequency) - 1)
     else:
       pacer_period = 0
