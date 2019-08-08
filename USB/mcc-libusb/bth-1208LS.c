@@ -293,6 +293,10 @@ int usbAInScanRead_BTH1208LS(libusb_device_handle *udev, uint32_t count, uint16_
   uint16_t status;
   unsigned char value[MAX_PACKET_SIZE];
 
+  if (count == 0) {  // in continuous mode
+    nbytes = 256;
+  }
+
   if (options & IMMEDIATE_TRANSFER_MODE) {
     for (i = 0; i < nbytes/2; i++) {
       ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|1, (unsigned char *) &data[i], 2, &transferred, 2000);
@@ -314,16 +318,20 @@ int usbAInScanRead_BTH1208LS(libusb_device_handle *udev, uint32_t count, uint16_
   }
 
   status = usbStatus_BTH1208LS(udev);
+  if ((status & AIN_SCAN_OVERRUN)) {
+    printf("Analog AIn scan overrun.\n");
+  }
+
+  if (count == 0) {
+    return nbytes/2;
+  }
+
   // if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
   if ((nbytes%wMaxPacketSize) == 0 && !(status & AIN_SCAN_RUNNING)) {
     libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|1, (unsigned char *) value, 2, &ret, 100);
   }
 
-  if ((status & AIN_SCAN_OVERRUN)) {
-    printf("Analog AIn scan overrun.\n");
-  }
-
-  return nbytes;
+  return nbytes/2;
 }
 
 void usbAInScanStop_BTH1208LS(libusb_device_handle *udev)

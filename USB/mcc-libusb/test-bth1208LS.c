@@ -52,6 +52,7 @@ int main (int argc, char **argv)
   float table_DE_AIN[NGAINS][NCHAN_DE][2];
   float table_SE_AIN[NCHAN_SE][2];
 
+  int flag;
   int ch;
   int i, j, k, m;
   uint8_t options;
@@ -117,6 +118,7 @@ int main (int argc, char **argv)
     printf("Hit 'I' to test Analog Input Scan\n");
     printf("Hit 'o' to test Analog Output\n");
     printf("Hit 'x' to test Analog Input Scan (Multi-channel)\n");
+    printf("Hit 'C' to test continuous mode");
     printf("Hit 'r' to reset the device\n");
     printf("Hit 's' to get serial number\n");
     printf("Hit 'S' to get Status\n");
@@ -219,7 +221,6 @@ int main (int argc, char **argv)
         for (i = 0; i < nchan; i++) {
 	  channels |= (1 << i);
 	}
-        frequency = 10000.;
 	options = DIFFERENTIAL_MODE;
         // Always use BP_20V to make it easy (BP_20V is 0...)
         memset(ranges, BP_20V, sizeof(ranges));
@@ -232,7 +233,7 @@ int main (int argc, char **argv)
 	  usbAInScanStart_BTH1208LS(udev, count*nchan, 0x0, frequency, channels, options);
 	  ret = usbAInScanRead_BTH1208LS(udev, count*nchan,  dataAIn, options);
 	  printf("Number samples read = %d\n", ret/2);
-	  if (ret != nchan*count*2) { /* if (ret != count*2) */
+	  if (ret != nchan*count) { 
 	    printf("***ERROR***  ret = %d   count = %d  nchan = %d\n", ret, count, nchan);
 	    continue;
 	  } 
@@ -247,6 +248,31 @@ int main (int argc, char **argv)
 	  } /* for (i = 0; i < count; i++) */
 	} /* for (m = 0; m < repeats; m++) */
 	printf("\n\n---------------------------------------");
+	break;
+      case 'C':
+	printf("BTH-1208LS Continuous Samping\n");
+	printf("Hit space <CR> to exit.\n");
+	printf("Enter sampling frequency: ");
+        scanf("%lf", &frequency);
+	options = DIFFERENTIAL_MODE;
+        channels = 0x1;
+        // Always use BP_20V to make it easy (BP_20V is 0...)
+        memset(ranges, BP_20V, sizeof(ranges));
+	usbAInScanStop_BTH1208LS(udev);
+	usbAInScanClearFIFO_BTH1208LS(udev);
+	usbAInConfigW_BTH1208LS(udev, ranges);
+	usbAInScanStart_BTH1208LS(udev, 0x0, 0x0, frequency, channels, options);
+	flag = fcntl(fileno(stdin), F_GETFL);
+	fcntl(0, F_SETFL, flag | O_NONBLOCK);
+        j = 0;
+	do {
+	  ret = usbAInScanRead_BTH1208LS(udev, 0x0,  dataAIn, options);
+	  printf("Scan = %d,  samples returned = %d\n", j++, ret);
+	} while (!isalpha(getchar()));
+	fcntl(fileno(stdin), F_SETFL, flag);
+        usbAInScanStop_BTH1208LS(udev);
+	usbAInScanClearFIFO_BTH1208LS(udev);
+        sleep(2); // let things settle down.
 	break;
       case 'r':
         usbReset_BTH1208LS(udev);

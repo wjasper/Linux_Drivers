@@ -164,6 +164,9 @@ def main():
       options = bth1208LS.DIFFERENTIAL_MODE  # Single Ended mode
       count = 0                              # continuous execution
       channels = 0x01                        # read all 8 channels
+      # Always use BP_20V to make it easy (BP_20V is 0...)
+      ranges = [0x0, 0x0, 0x0, 0x0]
+      bth1208LS.AInConfigW(ranges)
       bth1208LS.AInScanStop()
       bth1208LS.AInScanClearFIFO()
       bth1208LS.AInScanStart(count, 0x0, frequency, channels, options)
