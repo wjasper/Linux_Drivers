@@ -150,6 +150,7 @@ class BTH_1208LS:
   frequency = 0.0
   options = 0       
   nChan = 0          # number of channels in the scan
+  continuous_mode = False
 
   def __init__(self, device):
     self.device = device        # inherit values from mccBluetoothDevice
@@ -564,6 +565,10 @@ class BTH_1208LS:
       pacer_period = 0
     self.frequency = frequency
     self.options = options
+    if count == 0:
+      self.continuous_mode = True
+    else:
+      self.continuous_mode = False
 
     self.nChan = 0
     if (options & self.DIFFERENTIAL_MODE) == self.DIFFERENTIAL_MODE:
@@ -642,9 +647,10 @@ class BTH_1208LS:
         self.nDelay = (nSamples)/(self.frequency)
         time.sleep(self.nDelay*.95)                  # give system time to collect data
         data.extend(self.AInScanSendData(nSamples))
-        self.AInScanStop()
-        self.AInScanClearFIFO()
-        return data
+        if self.continuous_mode == False:
+          self.AInScanStop()
+          self.AInScanClearFIFO()
+    return data
 
   def AInScanSendData(self, count):
     """
