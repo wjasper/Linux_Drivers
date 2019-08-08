@@ -650,7 +650,7 @@ class BTH_1208LS:
         if self.continuous_mode == False:
           self.AInScanStop()
           self.AInScanClearFIFO()
-    return data
+        return data
 
   def AInScanSendData(self, count):
     """

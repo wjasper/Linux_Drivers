@@ -197,8 +197,7 @@ def main():
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
       j = 0
       while True:
-        time.sleep((127./frequency)*.85)
-        raw_data = bth1208LS.AInScanSendData(127)
+        raw_data = bth1208LS.AInScanRead(127)
         print('Scan =', j, 'samples returned =', len(raw_data))
         j += 1
         c = sys.stdin.readlines()
