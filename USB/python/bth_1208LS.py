@@ -122,7 +122,7 @@ class bth_1208LS(mccUSB):
   STALL_ON_OVERRUN        = 0x0
   INHIBIT_STALL           = 0x1 << 7
 
-  CONTINUOUS_MODE         = False
+  continuous_mode         = False
 
   # Ranges
   BP_20V   = 0x0   # +/- 20 V
@@ -439,9 +439,9 @@ class bth_1208LS(mccUSB):
     self.frequency = frequency
     self.options = options
     if count == 0:
-      self.CONTINUOUS_MODE = True
+      self.continuous_mode = True
     else:
-      self.CONTINUOUS_MODE = False
+      self.continuous_mode = False
 
     self.nChan = 0
     if options & self.DIFFERENTIAL_MODE:
@@ -474,19 +474,19 @@ class bth_1208LS(mccUSB):
         return
 
     status = self.Status()
-    # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
-    if ((int(nSamples*2) % self.wMaxPacketSize) == 0 and  not(status & self.AIN_SCAN_RUNNING)):
-      data2 = self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2, 100)
-    
     try:
       if status & self.AIN_SCAN_OVERRUN:
         raise OverrunERROR
     except:
       print('AInScanRead: Overrun Error')
       return
-
-    if self.CONTINUOUS_MODE:
+    
+    if self.continuous_mode:
       return list(data)
+
+    # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
+    if ((int(nSamples*2) % self.wMaxPacketSize) == 0 and  not(status & self.AIN_SCAN_RUNNING)):
+      data2 = self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2, 100)
     
     self.AInScanStop()
     self.AInScanClearFIFO()
