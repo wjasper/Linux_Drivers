@@ -95,7 +95,7 @@ int main (int argc, char **argv)
     printf("----------------\n");
     printf("Hit 'b' to blink\n");
     printf("Hit 'c' to test counter\n");
-    printf("Hit 'd' to test digital IO\n");
+    printf("Hit 'd' to test digital I/O\n");
     printf("Hit 'D' to set counter debounce\n");
     printf("Hit 'r' to reset the device\n");
     printf("Hit 's' to get serial number\n");

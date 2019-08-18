@@ -468,7 +468,7 @@ void usbCounterLimitValuesR_USB_CTR(libusb_device_handle *udev, uint8_t counter,
   /*
     This command reads or sets the counter's limit values.
       index: 0 = Minimum Limit Value, 1 = Maximum Limit Value
-      value: when the counter reaches this value, roos over or stops depending on the options.
+      value: when the counter reaches this value, rolls over or stops depending on the options.
   */
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
@@ -578,12 +578,12 @@ void usbScanConfigW_USB_CTR(libusb_device_handle *udev, uint8_t lastElement, Sca
 void usbScanStart_USB_CTR(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, uint32_t pacer_period, uint8_t options)
 {
   /*
-    count:         the total number of scans to perform (0 for continusous scan)
+    count:         the total number of scans to perform (0 for continuous scan)
     retrig_count:  the number of scans to perform for each trigger in retrigger mode
     pacer_period:  pacer timer period value (0 for external clock)
     packet_size:   number of samples - 1 to transfer at a time.
     options:       bit field that controls various options
-      bit 0:   1 = Maintain counter value on scan start, 0  = Clear counter value on scan start
+      bit 0:   1 = Maintain counter value on scan start, 0 = Clear counter value on scan start
       bit 1:   Reserved
       bit 2:   Reserved
       bit 3:   1 = use trigger
@@ -635,7 +635,6 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, uint32_t count, uint32_t r
     appropriate trigger edge is detected, then begin sampling data at
     the specified rate.  No messages will be sent until the trigger is
     detected.
-    
   */
 
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
@@ -978,7 +977,7 @@ void usbMemWriteEnable_USB_CTR(libusb_device_handle *udev)
 
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
   uint8_t unlock_code = 0xad;
-  libusb_control_transfer(udev, requesttype, MEM_ADDRESS, 0x0, 0x0, (unsigned char *) &unlock_code, sizeof(unlock_code), HS_DELAY);
+  libusb_control_transfer(udev, requesttype, MEM_WRITE_ENABLE, 0x0, 0x0, (unsigned char *) &unlock_code, sizeof(unlock_code), HS_DELAY);
 }
 
 /***********************************************
@@ -1105,7 +1104,8 @@ void usbFPGAData_USB_CTR(libusb_device_handle *udev, uint8_t *data, uint8_t leng
 void usbFPGAVersion_USB_CTR(libusb_device_handle *udev, uint16_t *version)
 {
   /*
-    This command reads the FPGA version.
+    This command reads the FPGA version.  The version is in
+    hexadecimal BCD, i.e. 0x0102 is version 01.02.
   */
 
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);

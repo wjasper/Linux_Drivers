@@ -93,9 +93,15 @@ class mccUSB:
         if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
           return(device.getManufacturer())
 
-  def getMaxPacketSize(self):
+  def getMaxPacketSize(self, endpoint=0):
     with usb1.USBContext() as context:
       for device in context.getDeviceIterator(skip_on_error=True):
         if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getMaxPacketSize0())
+          try:
+            maxPacketSize = device.getMaxPacketSize(endpoint)
+            return maxPacketSize
+          except:
+            maxPacketSize = device.getMaxPacketSize0()
+            return maxPacketSize
+
 
