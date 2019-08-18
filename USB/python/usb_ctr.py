@@ -26,12 +26,25 @@ from usb_ctr_rbf import FPGA_data
 
 class CounterParameters:
   def __init__(self):
-    self.counter = 0x0
+    self.counter = 0
     self.modeOptions = 0x0
     self.counterOptions = 0x0
     self.gateOptions = 0x0
     self.outputOptions = 0x0
     self.debounce = 0x0
+    self.outputValue0 = 0x0
+    self.outputValue1 = 0x0
+    self.limitValue0 = 0x0    # Minimum Limit Value
+    self.limitValue1 = 0x0    # Maximum Limit Value
+
+class TimerParameters:
+  def __init__(self):
+    self.timer = 0
+    self.period = 0
+    self.pulseWidth = 0
+    self.count = 0
+    self.dely = 0
+    self.control = 0x0
 
 class usb_ctr(mccUSB):
 
@@ -461,6 +474,10 @@ class usb_ctr(mccUSB):
     wValue = index
     wIndex = counter
     value ,= unpack('Q',self.udev.controlRead(request_type, self.COUNTER_OUT_VALUES, wValue, wIndex, 8, self.HS_DELAY))
+    if index == 0:
+      self.counterParameters[counter].outputValue0 = value
+    else:
+      self.counterParameters[counter].outputValue1 = value
     return value
     
   def CounterOutValuesW(self, counter, index, value):
@@ -475,8 +492,8 @@ class usb_ctr(mccUSB):
     request = self.COUNTER_OUT_VALUES
     wValue = options
     wIndex = counter
-    value = value & 0xffffffffffffffff
-    self.udev.controlWrite(request_type, request, wValue, wIndex, [value], self.HS_DELAY)
+    value = pack('Q', value)
+    self.udev.controlWrite(request_type, request, wValue, wIndex, value, self.HS_DELAY)
 
   def CounterLimitValuesR(self, counter, index):
     """
@@ -495,6 +512,10 @@ class usb_ctr(mccUSB):
     wValue = index
     wIndex = counter
     value ,= unpack('Q',self.udev.controlRead(request_type, self.COUNTER_LIMIT_VALUES, wValue, wIndex, 8, self.HS_DELAY))
+    if index == 0:
+      self.counterParameters[counter].limitValue0 = value
+    else:
+      self.counterParameters[counter].limitValue1 = value
     return value
     
   def CounterLimitValuesW(self, counter, index, value):
@@ -509,9 +530,9 @@ class usb_ctr(mccUSB):
     request = self.COUNTER_LIMIT_VALUES
     wValue = options
     wIndex = counter
-    value = value & 0xffffffffffffffff
+    value = pack('Q',value)
 
-    self.udev.controlWrite(request_type, request, wValue, wIndex, [value], self.HS_DELAY)
+    self.udev.controlWrite(request_type, request, wValue, wIndex, value, self.HS_DELAY)
 
   def CounterParamsR(self, counter):
     """
@@ -654,7 +675,9 @@ class usb_ctr(mccUSB):
     request = self.SCAN_START
     wValue = 0x0
     wIndex = 0x0
-    data = bytearray(14)
+
+    scan.frequency = frequency
+    sacn.options = options
 
     if frequency == 0:
       pacer_period = 0
@@ -662,22 +685,38 @@ class usb_ctr(mccUSB):
       pacer_period = int((96.E6/frequency) - 1)
     return
 
-    data[0] = count         & 0xff
-    data[1] = (count >> 8)  & 0xff
-    data[2] = (count >> 16) & 0xff
-    data[3] = (count >> 24) & 0xff
-    data[4] = retrig_count          & 0xff
-    data[5] = (retrig_count >> 8)   & 0xff
-    data[6] = (retrig_count >> 16)  & 0xff
-    data[7] = (retrig_count >> 24)  & 0xff
-    data[8] = pacer_period          & 0xff
-    data[9] = (pacer_period >> 8)   & 0xff
-    data[10] = (pacer_period >> 16) & 0xff
-    data[11] = (pacer_period >> 24) & 0xff
-    data[12] = wMaxPacketSize - 1
-    data[13] = options
-  
+    if count == 0:    # continuous mode
+      self.continuous_mode = True
+    else:
+      self.continuous_mode = False
+
+    data = pack('IIIBB', count, retrig_count, pacer_period, self.wMaxPacketSize-1, options)
     self.udev.controlWrite(request_type, request, wValue, wIndex, data, self.HS_DELAY)
+
+  def ScanRead(self, count):
+    if self.continuous_mode:
+      nSamples = int(self.wMaxPacketSize/2)
+    else:
+      nSamples = count*(self.lastElement+1)
+    data = unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(nSamples*2), 2000))
+
+    status = self.Status()
+    if status & self.SCAN_OVERRUN:
+      raise OverrunERROR
+
+    if self.continuouis_mode:
+      return list(data)
+
+    # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
+    if ((int(nSamples*2) % self.wMaxPacketSize) == 0 and  not(status & self.PACER_RUNNING)):
+      data2 = self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2, 100)
+
+    self.ScanStop()
+    self.ScanClearFIFO()
+    self.BulkFlush(5)
+    
+    return list(data)
+
 
   def ScanStop(self):
     """
@@ -712,6 +751,200 @@ class usb_ctr(mccUSB):
   ##########################################
   #             Timer Commands             #
   ##########################################
+
+  def TimerControlR(self, timer):
+    """
+    This command reads/writes the timer control register
+      timer:     the timer selected (0-3)
+      control:   bit 0:    1 = enable timer,  0 = disable timer
+                 bit 1:    1 = timer running, 0 = timer stopped
+                          (read only, useful when using count)
+                 bit 2:    1 = inverted output (active low)
+                           0 = normal output (active high)
+                 bits 3-7: reserved
+    """
+    if timer > self.NTIMER:
+      raise ValueError('TimerControlR: timer out of range')
+      return
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = timer
+    data, = self.udev.controlRead(request_type, self.TIMER_CONTROL, wValue, wIndex, 1, self.HS_DELAY)
+    self.timerParameters[timer].conrol = data
+    return data
+
+  def TimerControlW(self, timer, control):
+    if timer > self.NTIMER:
+      raise ValueError('TimerControlW: timer out of range')
+      return
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.TIMER_CONTROL
+    wValue = 0x0
+    wIndex = timer
+    self.udev.controlWrite(request_type, request, wValue, wIndex, [control], self.HS_DELAY)
+
+  def TimerPeriodR(self, timer):
+    """
+    This command reads or writes the given timer period register.
+
+    The timer is based on a 96 MHz input clock and has a 32-bit period register. The
+    frequency of the output is set to:
+
+    frequency = 96 MHz / (period + 1)
+
+    Note that the value for pulseWidth should always be smaller than the value for
+    the period register or you may get unexpected results.  This results in a minimum
+    allowable value for the period of 1, which sets the maximum frequency to 96 MHz/2.
+    """
+    if timer > self.NTIMER:
+      raise ValueError('TimerPeriodR: timer out of range')
+      return
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = timer
+    period ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PERIOD, wValue, wIndex, 4, self.HS_DELAY))
+    self.timerParameters[timer].period = period
+    return period
+
+  def TimerPeriodW(self, timer, period):
+    if timer > self.NTIMER:
+      raise ValueError('TimerPeriodW: timer out of range')
+      return
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.TIMER_PERIOD
+    wValue = 0x0
+    wIndex = timer
+    period = pack('I', period)
+    self.udev.controlWrite(request_type, request, wValue, wIndex, period, self.HS_DELAY)
+
+  def TimerPulseWidthR(self, timer):
+    """
+    This command reads/writes the timer pulse width register.
+    The timer is based on a 96 MHz input clock and has a 32-bit pulse width register.
+    The width of the output pulse is set to:
+
+    pulse width = (pulseWidth + 1) / 96 MHz
+
+    Note that the value for pulseWidth should always be smaller than the value for
+    the period register or you may get unexpected results.
+    """
+    if timer > self.NTIMER:
+      raise ValueError('TimerPulseWidthR: timer out of range')
+      return
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = timer
+    pulse_width ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PULSE_WIDTH, wValue, wIndex, 4, self.HS_DELAY))
+    self.timerParameters[timer].pulseWidth = pulse_width
+    return pulse_width
+
+  def TimerPulseWidthW(self, timer, pulse_width):
+    if timer > self.NTIMER:
+      raise ValueError('TimerPulseWidthW: timer out of range')
+      return
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.TIMER_PULSE_WIDTH
+    wValue = 0x0
+    wIndex = timer
+    pulse_width = pack('I', pulse_width)
+    self.udev.controlWrite(request_type, request, wValue, wIndex, pulse_width, self.HS_DELAY)
+    
+  def TimerCountR(self, timer):
+    """
+    This command reads/writes the timer count register.
+    The number of output pulses can be controlled with the count register.  Setting
+    this register to 0 will result in pulses being generated until the timer is disabled.
+    Setting it to a non-zero value will results in the specified number of pulses being
+    generated then the output will go low until the timer is disabled.
+    """
+    if timer > self.NTIMER:
+      raise ValueError('TimerCountR: timer out of range')
+      return
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = timer
+    count ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_COUNT, wValue, wIndex, 4, self.HS_DELAY))
+    self.timerParameters[timer].count = count
+    return count
+
+  def TimerCountW(self, timer, count):
+    if timer > self.NTIMER:
+      raise ValueError('TimerCountW: timer out of range')
+      return
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.TIMER_COUNT
+    wValue = 0x0
+    wIndex = timer
+    count = pack('I', count)
+    self.udev.controlWrite(request_type, request, wValue, wIndex, count, self.HS_DELAY)
+    return count
+
+  def TimerStartDelayR(self, timer):
+    """
+    This command reads/writes the timer start delay register.  This
+    register is the amount of time to delay before starting the timer
+    output after enabling the output.  The value specifies the number
+    of 64 MHZ clock pulses to delay.  This value may not be written
+    while the timer output is enabled.
+    """
+    if timer > self.NTIMER:
+      raise ValueError('TimerStartDelayR: timer out of range')
+      return
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = timer
+    delay ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_START_DELAY, wValue, wIndex, 4, self.HS_DELAY))
+    self.timerParameters[timer].delay = delay
+    return delay
+
+  def TimerStartDelayW(self, timer, delay):
+    if timer > self.NTIMER:
+      raise ValueError('TimerStartDelayW: timer out of range')
+      return
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.TIMER_START_DELAY
+    wValue = 0x0
+    wIndex = timer
+    delay = pack('I', delay)
+    self.udev.controlWrite(request_type, request, wValue, wIndex, delay, self.HS_DELAY)
+
+  def TimerParamsR(self, timer):
+    """
+    This command reads/writes all timer parameters in one call.
+    See the individual command descriptions for futher information
+    on each parameter.
+    """
+    if timer > self.NTIMER:
+      raise ValueError('TimerParamsR: timer out of range')
+      return
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = timer
+    data = unpack('IIII', self.udev.controlRead(request_type, self.TIMER_PARAMETERS, wValue, wIndex, 16, self.HS_DELAY))
+    self.timerParameters[timer].period = data[0]
+    self.timerParameters[timer].pulseWidth = data[1]
+    self.timerParameters[timer].count = data[2]
+    self.timerParameters[timer].delay = data[3]
+    return 
+
+  def TimerParamsW(self, timer):
+    if timer > self.NTIMER:
+      raise ValueError('TimerParamsW: timer out of range')
+      return
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.TIMER_START_DELAY
+    wValue = 0x0
+    wIndex = timer
+    barray = pack('IIII', self.timerParameters[timer].period, self.timerParameters[timer].pulseWidth, \
+                  self.timerParameters[timer].count, self.timerParameters[timer].delay)
+    self.udev.controlWrite(request_type, request, wValue, wIndex, barray, self.HS_DELAY)
+
 
   ##########################################
   #           Memory Commands              #
@@ -933,9 +1166,13 @@ class usb_ctr04(usb_ctr):
       return
     
     self.counterParameters = [CounterParameters(), CounterParameters(), CounterParameters(), CounterParameters()]
+    self.timerParameters = [TimerParameters(), TimerParameters(), TimerParameters(), TimerParameters()]
+
     for i in range(self.NCOUNTER):
       self.counterParameters[i].counter = i
-      self.CounterParamsW(i)
+
+    for i in range(self.NTIMER):
+      self.timerParameters[i].timer = i
 
     usb_ctr.__init__(self)
 
@@ -952,8 +1189,11 @@ class usb_ctr08(usb_ctr):
     
     self.counterParameters = [CounterParameters(), CounterParameters(), CounterParameters(), CounterParameters(), \
                              CounterParameters(), CounterParameters(), CounterParameters(), CounterParameters()]
+    self.timerParameters = [TimerParameters(), TimerParameters(), TimerParameters(), TimerParameters()]
     for i in range(self.NCOUNTER):
       self.counterParameters[i].counter = i
-      self.CounterParamsW(i)
+
+    for i in range(self.NTIMER):
+      self.timerParameters[i].timer = i
 
     usb_ctr.__init__(self)
