@@ -61,6 +61,7 @@ int main (int argc, char **argv)
   uint8_t timer;
   uint8_t debounce;
 
+  TimerParams timerParameters[4];
 
   udev = NULL;
 
@@ -101,6 +102,7 @@ int main (int argc, char **argv)
     printf("Hit 's' to get serial number\n");
     printf("Hit 'S' to get Status\n");
     printf("Hit 't' to test the timers\n");
+    printf("Hit 'T' to print out the timer parameters\n");
     printf("Hit 'v' to get version numbers\n");
     printf("Hit 'e' to exit\n");
 
@@ -205,6 +207,14 @@ int main (int argc, char **argv)
 	toContinue();
 	usbTimerControlW_USB_CTR(udev, timer, 0x0);
         break;
+      case 'T':
+	for (i = 0; i < 4; i++) {
+  	  usbTimerParamsR_USB_CTR(udev, i, &timerParameters[i]);
+	  printf("Timer: %d   period: %#x   pulseWidth: %#x    count: %#x    delay: %#x\n",
+		 i, timerParameters[i].period, timerParameters[i].pulseWidth,
+		 timerParameters[i].count, timerParameters[i].delay);
+	}
+	break;
       case 'v':
 	version = 0xbeef;
         usbFPGAVersion_USB_CTR(udev, &version);

@@ -715,7 +715,7 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, int count, int lastElement, 
   
 
 /***********************************************
- *            Timer                            *
+ *            Timer  Commands                  *
  ***********************************************/
 void usbTimerControlR_USB_CTR(libusb_device_handle *udev, uint8_t timer,  uint8_t *control)
 {

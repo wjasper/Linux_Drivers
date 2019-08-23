@@ -124,7 +124,7 @@ def main():
       frequency = int(input('Enter frequency of timer: '))
       timer     = int(input('Enter timer [0-3]: '))
       period = int(96.E6/frequency - 1)
-      ctr08.TimerPeriodW(timer, frequency)
+      ctr08.TimerPeriodW(timer, period)
       ctr08.TimerPulseWidthW(timer, int(period/2))
       ctr08.TimerCountW(timer, 0)
       ctr08.TimerStartDelayW(timer,0)
@@ -133,13 +133,12 @@ def main():
       ctr08.TimerControlW(timer, 0x0)
     elif ch == 'T':
       for timer in range(ctr08.NTIMER):
-        ctr08.TimerParamsR(timer)
         print("Timer:", ctr08.timerParameters[timer].timer, \
               "  Control Reg:",hex(ctr08.TimerControlR(timer)), \
-              "\tPeriod Reg:",hex(ctr08.timerParameters[timer].period), \
-              "\tPulse Width Reg:",hex(ctr08.timerParameters[timer].pulseWidth), \
-              "  Count Reg:",hex(ctr08.timerParameters[timer].count), \
-              "  Delay Reg:",hex(ctr08.timerParameters[timer].delay))
+              "\tPeriod Reg:",hex(ctr08.TimerPeriodR(timer)), \
+              "\tPulse Width Reg:",hex(ctr08.TimerPulseWidthR(timer)), \
+              "    \tCount Reg:",hex(ctr08.TimerCountR(timer)), \
+              "    \tDelay Reg:",hex(ctr08.TimerStartDelayR(timer)))
     elif ch == 'L':
       ctr08.ScanConfigR()
       print("Scan list: ", ctr08.scanList) 

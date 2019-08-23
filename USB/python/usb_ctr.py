@@ -237,8 +237,9 @@ class usb_ctr(mccUSB):
     if counter > self.NCOUNTER:
       raise ValueError('CounterSet: counter out of range.')
       return
-        
-    self.udev.controlWrite(request_type, request, wValue, wIndex, [count], self.HS_DELAY)
+
+    count = pack('Q', count)
+    self.udev.controlWrite(request_type, request, wValue, wIndex, count, self.HS_DELAY)
 
   def Counter(self, counter):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -490,7 +491,7 @@ class usb_ctr(mccUSB):
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.COUNTER_OUT_VALUES
-    wValue = options
+    wValue = index
     wIndex = counter
     value = pack('Q', value)
     self.udev.controlWrite(request_type, request, wValue, wIndex, value, self.HS_DELAY)
@@ -528,7 +529,7 @@ class usb_ctr(mccUSB):
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.COUNTER_LIMIT_VALUES
-    wValue = options
+    wValue = index
     wIndex = counter
     value = pack('Q',value)
 
@@ -770,7 +771,7 @@ class usb_ctr(mccUSB):
     wValue = 0
     wIndex = timer
     data, = self.udev.controlRead(request_type, self.TIMER_CONTROL, wValue, wIndex, 1, self.HS_DELAY)
-    self.timerParameters[timer].conrol = data
+    self.timerParameters[timer].control = data
     return data
 
   def TimerControlW(self, timer, control):
@@ -780,9 +781,9 @@ class usb_ctr(mccUSB):
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_CONTROL
-    wValue = 0x0
+    wValue = control
     wIndex = timer
-    self.udev.controlWrite(request_type, request, wValue, wIndex, [control], self.HS_DELAY)
+    self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], self.HS_DELAY)
 
   def TimerPeriodR(self, timer):
     """
@@ -844,7 +845,6 @@ class usb_ctr(mccUSB):
     if timer > self.NTIMER:
       raise ValueError('TimerPulseWidthW: timer out of range')
       return
-
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PULSE_WIDTH
     wValue = 0x0
@@ -930,6 +930,7 @@ class usb_ctr(mccUSB):
     self.timerParameters[timer].pulseWidth = data[1]
     self.timerParameters[timer].count = data[2]
     self.timerParameters[timer].delay = data[3]
+    self.TimerControlW(timer, self.timerParameters[timer].control)
     return 
 
   def TimerParamsW(self, timer):
@@ -1190,10 +1191,14 @@ class usb_ctr08(usb_ctr):
     self.counterParameters = [CounterParameters(), CounterParameters(), CounterParameters(), CounterParameters(), \
                              CounterParameters(), CounterParameters(), CounterParameters(), CounterParameters()]
     self.timerParameters = [TimerParameters(), TimerParameters(), TimerParameters(), TimerParameters()]
-    for i in range(self.NCOUNTER):
-      self.counterParameters[i].counter = i
+    for counter in range(self.NCOUNTER):
+      self.counterParameters[counter].counter = counter
 
-    for i in range(self.NTIMER):
-      self.timerParameters[i].timer = i
+    for timer in range(self.NTIMER):
+      self.timerParameters[timer].timer = timer
+      self.TimerPeriodW(timer,0x0)
+      self.TimerPulseWidthW(timer,0x0)
+      self.TimerCountW(timer,0x0)
+      self.TimerStartDelayW(timer, 0x0)
 
     usb_ctr.__init__(self)
