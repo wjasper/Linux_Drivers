@@ -134,9 +134,15 @@ class usb_ctr(mccUSB):
 
     self.scanList = bytearray(33)
     self.lastElement = 0         # the last element of the scanlist
+    self.continuous_mode = False
 
     # Find the maxPacketSize for bulk transfers
     self.wMaxPacketSize = self.getMaxPacketSize(libusb1.LIBUSB_ENDPOINT_IN | 0x6)  #EP IN 6
+
+    # Set up the Timers
+    self.timerParameters = [TimerParameters(), TimerParameters(), TimerParameters(), TimerParameters()]
+    for timer in range(self.NTIMER):
+      self.timerParameters[timer].timer = timer
   
     # Configure the FPGA
     if  not (self.Status() & self.FPGA_CONFIGURED) :
@@ -589,7 +595,7 @@ class usb_ctr(mccUSB):
     be a read of the DIO, otherwise it will use the specified counter and bank.
 
     ScanList[33] channel configuration:
-      bit(0-2): Counter Nuber (0-7)
+      bit(0-2): Counter Number (0-7)
       bit(3-4): Counter Bank (0-3)
       bit(5): 1 = DIO,  0 = Counter
       bit(6): 1 = Fill with 16-bits of 0's,  0 = normal (This allows for the creation
@@ -643,7 +649,7 @@ class usb_ctr(mccUSB):
 
            timer_period = [96 MHz / (sample frequency)]  - 1
 
-    The data will be returned in packets utilizing a bulk IN endpint.
+    The data will be returned in packets utilizing a bulk IN endpoint.
     The data will be in the format:
 
     lowchannel sample 0:  low channel + 1 sample 0: ... : hichannel sample 0
@@ -677,21 +683,20 @@ class usb_ctr(mccUSB):
     wValue = 0x0
     wIndex = 0x0
 
-    scan.frequency = frequency
-    sacn.options = options
+    self.frequency = frequency
+    self.options = options
 
     if frequency == 0:
       pacer_period = 0
     else:
       pacer_period = int((96.E6/frequency) - 1)
-    return
 
     if count == 0:    # continuous mode
       self.continuous_mode = True
     else:
       self.continuous_mode = False
 
-    data = pack('IIIBB', count, retrig_count, pacer_period, self.wMaxPacketSize-1, options)
+    data = pack('IIIBB', count, retrig_count, pacer_period, (self.wMaxPacketSize-1)&0xff, options&0xff)
     self.udev.controlWrite(request_type, request, wValue, wIndex, data, self.HS_DELAY)
 
   def ScanRead(self, count):
@@ -699,13 +704,18 @@ class usb_ctr(mccUSB):
       nSamples = int(self.wMaxPacketSize/2)
     else:
       nSamples = count*(self.lastElement+1)
-    data = unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(nSamples*2), 2000))
+    time_delay = int(self.HS_DELAY + 1000*nSamples/self.frequency)
+    data = []
+    try:
+     data = unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(nSamples*2), time_delay))
+    except:
+      print("Error in ScanRead.  Bytes received = ", len(data), "nSamples = ", nSamples)
 
     status = self.Status()
     if status & self.SCAN_OVERRUN:
       raise OverrunERROR
 
-    if self.continuouis_mode:
+    if self.continuous_mode:
       return list(data)
 
     # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
@@ -717,7 +727,6 @@ class usb_ctr(mccUSB):
     self.BulkFlush(5)
     
     return list(data)
-
 
   def ScanStop(self):
     """
@@ -1167,13 +1176,8 @@ class usb_ctr04(usb_ctr):
       return
     
     self.counterParameters = [CounterParameters(), CounterParameters(), CounterParameters(), CounterParameters()]
-    self.timerParameters = [TimerParameters(), TimerParameters(), TimerParameters(), TimerParameters()]
-
     for i in range(self.NCOUNTER):
       self.counterParameters[i].counter = i
-
-    for i in range(self.NTIMER):
-      self.timerParameters[i].timer = i
 
     usb_ctr.__init__(self)
 
@@ -1190,15 +1194,7 @@ class usb_ctr08(usb_ctr):
     
     self.counterParameters = [CounterParameters(), CounterParameters(), CounterParameters(), CounterParameters(), \
                              CounterParameters(), CounterParameters(), CounterParameters(), CounterParameters()]
-    self.timerParameters = [TimerParameters(), TimerParameters(), TimerParameters(), TimerParameters()]
     for counter in range(self.NCOUNTER):
       self.counterParameters[counter].counter = counter
-
-    for timer in range(self.NTIMER):
-      self.timerParameters[timer].timer = timer
-      self.TimerPeriodW(timer,0x0)
-      self.TimerPulseWidthW(timer,0x0)
-      self.TimerCountW(timer,0x0)
-      self.TimerStartDelayW(timer, 0x0)
 
     usb_ctr.__init__(self)

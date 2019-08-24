@@ -607,7 +607,7 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, uint32_t count, uint32_t r
 
            timer_period = [96 MHz / (sample frequency)]  - 1
 
-    The data will be returned in packets utilizing a bulk IN endpint.
+    The data will be returned in packets utilizing a bulk IN endpoint.
     The data will be in the format:
 
     lowchannel sample 0:  low channel + 1 sample 0: ... : hichannel sample 0
