@@ -561,6 +561,8 @@ void usbScanConfigR_USB_CTR(libusb_device_handle *udev, uint8_t lastElement, Sca
       bit(5): 1 = DIO,  0 = Counter
       bit(6): 1 = Fill with 16-bits of 0's,  0 = normal (This allows for the creation
       of a 32 or 64-bit element of the DIO when it is mixed with 32 or 64-bit elements of counters)
+
+    lastElement: the last element of the scanlist [0-32]
    */
 
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
@@ -684,9 +686,9 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, int count, int lastElement, 
 {
   char value[64];
   int ret = -1;
-  int nbytes = count*lastElement*2;    // nuber of bytes to read;
+  int nbytes = count*lastElement*2;    // number of bytes to read;
   int transferred;
-  uint8_t status;
+  uint16_t status;
 
   ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) data, nbytes, &transferred, HS_DELAY);
 

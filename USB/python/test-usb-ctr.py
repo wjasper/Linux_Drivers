@@ -118,16 +118,16 @@ def main():
     elif ch == 'i':
       print("Testing scan input")
       print("Connect Timer 1 to Counter 1")
-      count = 10            # total number of scans to perform
-      frequency = 1000      # scan rate at 1000 Hz
+      count = 100                # total number of scans to perform
+      frequency = 1000           # scan rate at 1000 Hz
+
       # Set up the scan list (use 4 counters 0-3)
       for counter in  range(4):  # use the first 4 counters
         for bank in range(4):    # each counter has 4 banks of 16-bit registers to be scanned
           ctr.scanList[4*counter + bank] = (counter & 0x7) | (bank & 0x3) << 3 | (0x2 << 5)
-      ctr.lastElement = 15       # depth of scan list
+      ctr.lastElement = 15        # depth of scan list [0-32]
       ctr.ScanConfigW()
       ctr.ScanConfigR()
-      print("Scan list: ", ctr.scanList) 
       
       # set up the counters
       for counter in  range(4):  # use the first 4 counters
@@ -138,20 +138,27 @@ def main():
         ctr.CounterOutConfigW(counter, 0)   # output off
 
       # set up the timer to generate some pulses
-      frequency = 2000
-      period = int(96.E6/frequency - 1)
+      timer_frequency = 4000   # 4 pulses per scan
+      period = int(96.E6/timer_frequency - 1)
       timer = 1
       ctr.TimerPeriodW(timer, period)
       ctr.TimerPulseWidthW(timer, int(period/2))
       ctr.TimerCountW(timer, 0)
       ctr.TimerStartDelayW(timer,0)
       ctr.TimerControlW(timer, 0x1)
-  
+
       ctr.ScanStart(count, 0, frequency, 0)
       data = ctr.ScanRead(count)
-      print("data = ", data, len(data))
+      counter_data = [0, 0, 0, 0]
+      for scan in range(count):          # total number of scans
+        for counter in range(4):         # number of counters
+          offset = scan*16 + counter*4   # there are 4 banks of 16-bit values per counter
+          counter_data[counter] = data[offset] & 0xffff
+          counter_data[counter] += (data[offset+1] & 0xffff) << 16
+          counter_data[counter] += (data[offset+2] & 0xffff) << 32
+          counter_data[counter] += (data[offset+3] & 0xffff) << 48
+        print("Scan:", scan, "   ", counter_data[0], counter_data[1], counter_data[2], counter_data[3])
       ctr.TimerControlW(timer, 0x0)
-
     elif ch == 'P':
       for counter in range(ctr.NCOUNTER):
         ctr.CounterParamsR(counter)
@@ -186,7 +193,10 @@ def main():
               "    \tDelay Reg:",hex(ctr.TimerStartDelayR(timer)))
     elif ch == 'L':
       ctr.ScanConfigR()
-      print("Scan list: ", ctr.scanList) 
+      print("Scan list: ", end='')
+      for i in range(33):
+        print(hex(ctr.scanList[i]),"", end='')
+      print(" ")
     elif ch == 'M':
       address = int(input("Enter memory address: "),16)
       length = int(input("Enter number of bytes to read: "))
