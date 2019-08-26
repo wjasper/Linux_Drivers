@@ -152,7 +152,7 @@ int main (int argc, char **argv)
 	break;
       case 'i':
 	printf("Testing scan input\n");
-	printf("Connect Timer 1 to Counter 1");
+	printf("Connect Timer 1 to Counter 1\n");
 	count = 100;       // total number of scans to perform
 	frequency = 1000;  // scan rate at 1000 Hz
 
@@ -187,20 +187,18 @@ int main (int argc, char **argv)
 
 	usbScanStart_USB_CTR(udev, count, 0, frequency, 0);
         usbScanRead_USB_CTR(udev, count, scanList.lastElement, data);
+	usbTimerControlW_USB_CTR(udev, timer, 0x0);
+
 	for (i = 0; i < count; i++) {
 	  for (counter = 0; counter < 4; counter++) {
 	    offset = i*16 + counter*4;
-            counter_data[counter] = data[offset] & 0xffff;
-	    counter_data[counter] += (long) (data[offset+1] & 0xffff) << 16;
-	    counter_data[counter] += (long) (data[offset+2] & 0xffff) << 32;
-	    counter_data[counter] += (long) (data[offset+3] & 0xffff) << 48;
+            counter_data[counter] =  (long) data[offset];
+	    counter_data[counter] += ((long) (data[offset+1] & 0xffff)) << 16;
+	    counter_data[counter] += ((long) (data[offset+2] & 0xffff)) << 32;
+	    counter_data[counter] += ((long) (data[offset+3] & 0xffff)) << 48;
 	  }
 	  printf("Scan: %d     %ld  %ld  %ld  %ld\n", i, counter_data[0], counter_data[1], counter_data[2], counter_data[3]);
 	}
-	for (i = 0; i < count; i++) {
-          printf("%#x ", data[i]);
-	}
-	  
 	break;
       case 'd':
         printf("\nTesting Digital I/O...\n");
