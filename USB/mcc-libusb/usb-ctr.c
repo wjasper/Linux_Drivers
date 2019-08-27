@@ -705,9 +705,15 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, int count, int lastElement, 
 {
   char value[64];
   int ret = -1;
-  int nbytes = count*(lastElement+1)*2;    // number of bytes to read;
+  int nbytes;              // number of bytes to read;
   int transferred;
   uint16_t status;
+
+  if (count > 0) {
+    nbytes = count*(lastElement+1)*2; 
+  } else {             // continuous mode
+    nbytes = wMaxPacketSize/2;
+  }
 
   ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) data, nbytes, &transferred, HS_DELAY);
 
@@ -716,6 +722,10 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, int count, int lastElement, 
   }
   if (transferred != nbytes) {
     fprintf(stderr, "usbAInScanRead_USB_CTR: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
+  }
+
+  if (count == 0) {
+    return ret;
   }
 
   // if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
