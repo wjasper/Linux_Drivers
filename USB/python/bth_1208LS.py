@@ -676,7 +676,7 @@ class bth_1208LS(mccUSB):
     """
     This command allows for reading and writing the nonvolite
     settings memory.  wLength specifies the number of bytes to read
-    or write.  The use memory is 1024 bytes (address 0 - 0x3FF).  If
+    or write.  The settings memory is 1024 bytes (address 0 - 0x3FF).  If
     the settings are written they will be implemented immediately.
 
     This command allow for reading and writing the nonvolatile user
