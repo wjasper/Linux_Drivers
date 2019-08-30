@@ -32,7 +32,7 @@ extern "C" {
 #define NTIMER    4        // Number of PWM Timers
 #define NCOUNTER  8        // Number of Counters
 
-  /* Status bit values */
+// Status bit values 
 #define PACER_RUNNING      (0x1 << 1)
 #define SCAN_OVERRUN       (0x1 << 2)
 #define SCAN_DONE          (0x1 << 5)

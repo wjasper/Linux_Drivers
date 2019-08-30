@@ -31,22 +31,6 @@ extern "C" {
 #define USB204_PID   (0x0114)
 #define USB205_PID   (0x012c)
 
-/* Description of the requestType byte */
-// Data transfer direction D7
-#define HOST_TO_DEVICE (0x0 << 7)
-#define DEVICE_TO_HOST (0x1 << 7)
-// Type D5-D6
-#define STANDARD_TYPE (0x0 << 5)
-#define CLASS_TYPE    (0x1 << 5)
-#define VENDOR_TYPE   (0x2 << 5)
-#define RESERVED_TYPE (0x3 << 5)
-// Recipient D0 - D4
-#define DEVICE_RECIPIENT    (0x0)
-#define INTERFACE_RECIPIENT (0x1)
-#define ENDPOINT_RECIPIENT  (0x2)
-#define OTHER_RECIPIENT     (0x3)
-#define RESERVED_RECIPIENT  (0x4) 
-
 /* Analog Input Scan Options */
 #define IMMEDIATE_TRANSFER_MODE (0x1)
 #define BLOCK_TRANSFER_MODE     (0x0)

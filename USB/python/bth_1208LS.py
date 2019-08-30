@@ -94,7 +94,7 @@ class bth_1208LS(mccUSB):
   INIT_RADIO              = 0x45  # Reset radio to default settings
   BLUETOOTH_PIN           = 0x46  # Read/write Bluetooth PIN
   BATTERY_VOLTAGE         = 0x47  # Read battery voltage
-  SERIAL                  = 0x48  # Read/srite serial number
+  SERIAL                  = 0x48  # Read/write serial number
   RADIO_FIRMWARE_VERSION  = 0x49  # Read radio firmware version
   DFU                     = 0x50  # Enter device firmware upgrade mode
 
@@ -198,7 +198,7 @@ class bth_1208LS(mccUSB):
 
   def BuildGainTable_SE(self):
     """
-    Builds a lookup table of differential mode calibration
+    Builds a lookup table of single ended multiplexed calibration
     coefficents to translate values into voltages: The calibration
     coefficients are stored in onboard FLASH memory on the device in
     IEEE-754 4-byte floating point values.
@@ -571,10 +571,6 @@ class bth_1208LS(mccUSB):
     else:
       return channels[1]
     
-    
-    
-    
-
   #############################################
   #           Counter Commands                #
   #############################################

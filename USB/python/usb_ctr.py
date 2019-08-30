@@ -22,7 +22,6 @@ import sys
 from struct import *
 from datetime import datetime
 from mccUSB import *
-from usb_ctr_rbf import FPGA_data
 
 class CounterParameters:
   def __init__(self):
@@ -131,7 +130,6 @@ class usb_ctr(mccUSB):
   HS_DELAY = 2000
 
   def __init__(self):
-
     self.scanList = bytearray(33)
     self.lastElement = 0         # the last element of the scanlist
     self.continuous_mode = False
@@ -143,9 +141,11 @@ class usb_ctr(mccUSB):
     self.timerParameters = [TimerParameters(), TimerParameters(), TimerParameters(), TimerParameters()]
     for timer in range(self.NTIMER):
       self.timerParameters[timer].timer = timer
-  
+
     # Configure the FPGA
     if  not (self.Status() & self.FPGA_CONFIGURED) :
+      # load the FPGA data into memory
+      from usb_ctr_rbf import FPGA_data
       print("Configuring FPGA.  This may take a while ...")
       self.FPGAConfig()
       if self.Status() & self.FPGA_CONFIG_MODE:
