@@ -135,7 +135,7 @@ void usbDTristateW_USB1608FS_Plus(libusb_device_handle *udev, uint8_t value)
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
   if (libusb_control_transfer(udev, requesttype, DTRISTATE, value, 0x0, NULL, 0x0, HS_DELAY) < 0) {
-    printf("usbDTristateW_USB1208HS: error in libusb_control_transfer().\n");
+    printf("usbDTristateW_USB1608FS_Plus: error in libusb_control_transfer().\n");
   }
   return;
 }
@@ -311,7 +311,7 @@ int usbAInScanRead_USB1608FS_Plus(libusb_device_handle *udev, int nScan, int nCh
 				perror("usbAInScanRead_USB1608FS_Plus: error in usb_bulk_transfer.");
       }
       if (transferred != 2) {
-				fprintf(stderr, "usbAInScanRead_USB1608_Plus: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
+				fprintf(stderr, "usbAInScanRead_USB1608FS_Plus: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
       }
     }
   } else { 
@@ -320,7 +320,7 @@ int usbAInScanRead_USB1608FS_Plus(libusb_device_handle *udev, int nScan, int nCh
       perror("usbAInScanRead_USB1608FS_Plus: error in usb_bulk_transfer.");
     }
     if (transferred != nbytes) {
-      fprintf(stderr, "usbAInScanRead_USB1608_Plus: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
+      fprintf(stderr, "usbAInScanRead_USB1608FS_Plus: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
       status = usbStatus_USB1608FS_Plus(udev);
       if ((status & AIN_SCAN_OVERRUN)) {
 				fprintf(stderr, "Analog AIn scan overrun.\n");
@@ -442,7 +442,7 @@ void usbReadCalMemory_USB1608FS_Plus(libusb_device_handle *udev, uint16_t addres
   }
 
   if (address > 0x2ff) {
-    printf("usbCalMemoryR_USB1608FS_Plus: address must be in the range 0 - 0x2ff.\n");
+    printf("usbReadCalMemory_USB1608FS_Plus: address must be in the range 0 - 0x2ff.\n");
     return;
   }
   libusb_control_transfer(udev, requesttype, CAL_MEMORY, address, 0x0, (unsigned char *) data, count, HS_DELAY);
@@ -540,7 +540,7 @@ void usbWriteMBDMemory_USB1608FS_Plus(libusb_device_handle *udev, uint16_t addre
   }
 
   if (address > 0x3ff) {
-    printf("usbWriteUserMemory_USB1608FS_Plus: address must be in the range 0 - 0x3ff");
+    printf("usbWriteMBDMemory_USB1608FS_Plus: address must be in the range 0 - 0x3ff");
     return;
   }
   libusb_control_transfer(udev, requesttype, USER_MEMORY, address, 0x0, (unsigned char *) data, count, HS_DELAY);
