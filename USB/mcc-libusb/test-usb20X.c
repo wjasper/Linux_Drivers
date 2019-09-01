@@ -264,7 +264,7 @@ start:
           printf("Analog Output not supported for this device.\n");
           break;
 	}
-	printf("Input channel [0-1]: ");
+	printf("Enter output channel [0-1]: ");
 	scanf("%hhd", &channel);
 	printf("Input value [0-4095]: ");
 	scanf("%hd", &value);

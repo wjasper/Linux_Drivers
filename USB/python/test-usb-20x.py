@@ -125,17 +125,47 @@ def main():
       channels = 0
       for i in range(nchan):
         channels |= (0x1 << i)
-
       usb20x.AInScanStart(count, frequency, channels, options, 0, 0)
       dataAIn = usb20x.AInScanRead(count)
       for scan in range(count):
         for channel in range(nchan):
           ii = scan*nchan + channel
           dataAIn[ii] = round(dataAIn[ii]*usb20x.table_AIn[channel].slope + usb20x.table_AIn[channel].intercept)
-          print("Channel {0:d}  Sample[{1:d}] = ".format(channel, i), hex(dataAIn[ii])," Volts = {0:7.4f}".format(usb20x.volts(dataAIn[ii])))
+          print("Channel {0:d}  Sample[{1:d}] = ".format(channel, ii), hex(dataAIn[ii])," Volts = {0:7.4f}".format(usb20x.volts(dataAIn[ii])))
+    elif ch == 'C':
+      print('Testing USB-20X Analog Input Scan in Continuous mode')
+      nchan = int(input('Enter number of channels [1-8]: '))
+      frequency = float(input('Enter sampling frequency [Hz]: '))
+      print('Hit any key to exit')
+      if frequency < 100:
+        options = usb20x.IMMEDIATE_TRANSFER_MODE
+      else:
+        options = 0x0
+      for i in range(nchan):
+        channels |= (0x1 << i)
+      usb20x.AInScanStop()
+      usb20x.AInScanClearFIFO()
+      usb20x.AInScanStart(0, frequency, channels, options, 0, 0)
+      flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      j = 0
+      while True:
+        raw_data = usb20x.AInScanRead(128)
+        print('Scan =', j, 'samples returned =', len(raw_data))
+        j += 1
+        c = sys.stdin.readlines()
+        if (len(c) != 0):
+          break
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+      usb20x.AInScanStop()
     elif ch == 'e':
       usb20x.udev.close()
       exit(0)
+    elif ch == 'o':
+      # supported on models USB-202 and USB-205
+      channel = int(input('Enter output channel [0-1]: '))
+      value = int(input('Enter value [0-4095]: '))
+      usb20x.AOut(channel, value)
     elif ch == 's':
       print('Serial Number: ', usb20x.getSerialNumber())
     elif ch == 'S':

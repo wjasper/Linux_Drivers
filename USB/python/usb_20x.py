@@ -94,6 +94,10 @@ class usb_20x(mccUSB):
   | 0x040 - 0x3ff | Available for MBD use                             |
   |===================================================================|
    """
+  USB_201_PID = 0x0113
+  USB_202_PID = 0x12b
+  USB_204_PID = 0x0114
+  USB_205_PID = 0x12c
     
   # Commands and Report ID for USB-CTR
   ###########################################
@@ -213,6 +217,7 @@ class usb_20x(mccUSB):
     # get the hour
     address = 0x43
     hour ,= unpack('B', self.CalMemoryR(address, 1))
+    hour += 1              # seems off by one hour
     
     # get the minute
     address = 0x44
@@ -314,7 +319,7 @@ class usb_20x(mccUSB):
      value:   12 bits of data, right justified.
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0x0
+    wValue = channel
     wIndex = 0x0
     value ,= unpack('H',self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 2, timeout = 100))
     data = round(float(value)*self.table_AIn[channel].slope + self.table_AIn[channel].intercept)
@@ -491,42 +496,6 @@ class usb_20x(mccUSB):
     wValue = count
     wIndex = 0x0
     self.udev.controlWrite(request_type, request, wValue, wIndex,[0x0], self.HS_DELAY)
-    
-  #############################################
-  #        Analog Output Commands             #
-  #############################################
-
-  def AOut(self, channel, value):
-    """
-    This command writes the values of an analog output channel
-
-      channel: the channel to write (0-1)
-      value:   the value to write (0-4095)
-    """
-
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    request = self.AOUT
-    wValue = value & 0xffff
-    wIndex = channel & 0xff
-
-    if channel > 2 or channel < 0:
-      raise ValueError('AOut: channel must be 0 or 1.')
-      return
-    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
-
-  def AOutR(self, channel=0):
-    """
-    This command reads the value of  both  analog output channels
-    """
-    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    request = self.AOUT
-    wValue = 0
-    wIndex = 0
-    channels = unpack('HH',self.udev.controlRead(request_type, request, wValue, wIndex, 4, timeout = 100))
-    if channel == 0:
-      return channels[0]
-    else:
-      return channels[1]
     
   #############################################
   #           Counter Commands                #
@@ -774,8 +743,9 @@ class usb_20x(mccUSB):
     volt = ((value - 2048)*10.)/2048.
     return volt
 
+####################################################################################
+
 class usb_201(usb_20x):
-  USB_201_PID = 0x0113
 
   def __init__(self, serial=None):
     self.productID = self.USB_201_PID    # usb-201
@@ -786,7 +756,6 @@ class usb_201(usb_20x):
     usb_20x.__init__(self)
 
 class usb_202(usb_20x):
-  USB_202_PID = 0x12b
 
   def __init__(self, serial=None):
     self.productID = self.USB_202_PID    # usb-202
@@ -796,8 +765,43 @@ class usb_202(usb_20x):
       return
     usb_20x.__init__(self)
 
+  #############################################
+  #        Analog Output Commands             #
+  #############################################
+
+  def AOut(self, channel, value):
+    """
+    This command writes the values of an analog output channel
+
+      channel: the channel to write (0-1)
+      value:   the value to write (0-4095)
+    """
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AOUT
+    wValue = value & 0xffff
+    wIndex = channel & 0xff
+
+    if channel > 2 or channel < 0:
+      raise ValueError('AOut: channel must be 0 or 1.')
+      return
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def AOutR(self, channel=0):
+    """
+    This command reads the value of  both  analog output channels
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AOUT
+    wValue = 0
+    wIndex = 0
+    channels = unpack('HH',self.udev.controlRead(request_type, request, wValue, wIndex, 4, timeout = 100))
+    if channel == 0:
+      return channels[0]
+    else:
+      return channels[1]
+
 class usb_204(usb_20x):
-  USB_204_PID = 0x0114
 
   def __init__(self, serial=None):
     self.productID = self.USB_204_PID    # usb-204
@@ -808,7 +812,6 @@ class usb_204(usb_20x):
     usb_20x.__init__(self)
 
 class usb_205(usb_20x):
-  USB_205_PID = 0x12c
 
   def __init__(self, serial=None):
     self.productID = self.USB_205_PID    # usb-205
@@ -819,3 +822,39 @@ class usb_205(usb_20x):
     usb_20x.__init__(self)
 
   
+  #############################################
+  #        Analog Output Commands             #
+  #############################################
+
+  def AOut(self, channel, value):
+    """
+    This command writes the values of an analog output channel
+
+      channel: the channel to write (0-1)
+      value:   the value to write (0-4095)
+    """
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AOUT
+    wValue = value & 0xffff
+    wIndex = channel & 0xff
+
+    if channel > 2 or channel < 0:
+      raise ValueError('AOut: channel must be 0 or 1.')
+      return
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def AOutR(self, channel=0):
+    """
+    This command reads the value of  both  analog output channels
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AOUT
+    wValue = 0
+    wIndex = 0
+    channels = unpack('HH',self.udev.controlRead(request_type, request, wValue, wIndex, 4, timeout = 100))
+    if channel == 0:
+      return channels[0]
+    else:
+      return channels[1]
+    
