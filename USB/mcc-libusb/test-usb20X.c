@@ -168,7 +168,6 @@ start:
         break;
       case 'I':
 	printf("Testing USB-20X Analog Input Scan.\n");
-	usbAInScanStop_USB20X(udev);
         printf("Enter number of scans: ");
         scanf("%d", &count);
 	printf("Enter number of channels [1-8]: ");

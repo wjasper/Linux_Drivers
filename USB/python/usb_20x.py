@@ -138,6 +138,29 @@ class usb_20x(mccUSB):
   AIN_SCAN_RUNNING        = 0x1 << 1
   AIN_SCAN_OVERRUN        = 0x1 << 2
 
+  # Analog Input Scan Options
+  IMMEDIATE_TRANSFER_MODE = 0x1
+  BLOCK_TRANSFER_MODE     = 0x0
+  STALL_ON_OVERRUN        = 0x0
+  CONTINUOUS              = 0x1 << 6
+  INHIBIT_STALL           = 0x1 << 7
+  NO_TRIGGER              = 0x0
+  TRIGGER                 = 0x1
+  EDGE_RISING             = 0x0
+  EDGE_FALLING            = 0x1
+  LEVEL_HIGH              = 0x2
+  LEVEL_LOW               = 0x3
+  CHAN0                   = 0x1
+  CHAN1                   = 0x2
+  CHAN2                   = 0x4
+  CHAN3                   = 0x8
+  CHAN4                   = 0x10
+  CHAN5                   = 0x20
+  CHAN6                   = 0x40
+  CHAN7                   = 0x80
+
+  HS_DELAY = 2000
+
   def __init__(self, serial=None):
 
     # need to get wMaxPacketSize
@@ -218,7 +241,7 @@ class usb_20x(mccUSB):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
-    value = self.udev.controlRead(request_type, self.DTRISTATE, wValue, wIndex, 1, self.HS_DELAY)
+    value ,= self.udev.controlRead(request_type, self.DTRISTATE, wValue, wIndex, 1, self.HS_DELAY)
     return value
 
   def DTristateW(self, value):
@@ -242,7 +265,7 @@ class usb_20x(mccUSB):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
-    value = self.udev.controlRead(request_type, self.DPORT, wValue, wIndex, 1, self.HS_DELAY)
+    value ,= self.udev.controlRead(request_type, self.DPORT, wValue, wIndex, 1, self.HS_DELAY)
     return value
 
   def DPortW(self):
@@ -400,6 +423,43 @@ class usb_20x(mccUSB):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     scanPacket = pack('IIBBBB', count, pacer_period, channels, options, trigger_source, trigger_mode)
     result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
+
+  def AInScanRead(self, nScan):
+    nSamples = int(nScan * self.nChan)
+    if self.options & self.IMMEDIATE_TRANSFER_MODE:
+      for i in range(self.nSamples):
+        try:
+          timeout = int(1000*self.nChan/self.frequency + 100)
+          data.extend(unpack('H',self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2*self.nChan, timeout)))
+        except:
+          print('AInScanRead: error in bulk transfer in immmediate transfer mode.')
+          return
+    else:
+      try:
+        timeout = int(1000*self.nChan*nScan/self.frequency + 1000)
+        data =  unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, int(2*nSamples), timeout))
+      except:
+        print('AInScanRead: error in bulek transfer!', len(data), nSamples)
+        return
+
+    status = self.Status()
+    try:
+      if status & self.AIN_SCAN_OVERRUN:
+        raise OverrunERROR
+    except:
+      print('AInScanRead: Overrun Error')
+      return
+    
+    if self.continuous_mode:
+      return list(data)
+
+    # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
+    if ((int(nSamples*2) % self.wMaxPacketSize) == 0 and  not(status & self.AIN_SCAN_RUNNING)):
+      data2 = self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2, 100)
+    
+    self.AInScanStop()
+    self.AInScanClearFIFO()
+    return list(data)
 
   def AInScanStop(self):
     """
@@ -706,6 +766,13 @@ class usb_20x(mccUSB):
     wIndex = 0
     self.udev.controlWrite(request_type, self.DFU, wValue, wIndex, [0x0], timeout = 100)
 
+  def volts(self, value):
+    """
+    Convert 12 bit raw value to volts.
+    All values single ended +/- 10V.
+    """
+    volt = ((value - 2048)*10.)/2048.
+    return volt
 
 class usb_201(usb_20x):
   USB_201_PID = 0x0113

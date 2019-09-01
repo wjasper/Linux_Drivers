@@ -65,15 +65,82 @@ def main():
     print("\nUSB-200 Testing")
     print("----------------")
     print("Hit 'b' to blink LED.")
+    print("Hit 'c' to test counter")
+    print("Hit 'd' to test digital I/O")
+    print("Hit 'i' to test Analog Input")
+    print("Hit 'I' to test Analog Input Scan")
+    print("Hit 'C' to test continuous sampling.")
+    print("Hit 'o' to test Analog Output (202/205 only).")
+    print("Hit 'r' to reset the device")
+    print("Hit 's' to get serial number")
+    print("Hit 'S' to get Status")
+    print("Hit 'e' to exit")
 
     ch = input('\n')
 
     if ch == 'b':
       count = int(input('Enter number of times to blink: '))
       usb20x.BlinkLED(count)
+    elif ch == 'c':
+      usb20x.ResetCounter()
+      usb20x.DTristateW(0xf0)
+      print('Connect DIO0 to CTR0')
+      usb20x.DLatchW(0x0)
+      toContinue()
+      for i in range(100):
+        usb20x.DLatchW(0x1)
+        usb20x.DLatchW(0x0)
+      count = usb20x.Counter()
+      print("Count = ", count, "    Should read 100.")
+    elif ch == 'd':
+      print("Testing Digital I/O ...")
+      print("connect pins DIO[0-3] <--> DIO[4-7]")
+      usb20x.DTristateW(0xf0)
+      print("Digital Port Tristate Register = ", hex(usb20x.DTristateR()))
+      while True:
+        value = int(input('Enter a byte number [0-0xf]: '),16) & 0xf
+        usb20x.DLatchW(value)
+        value2 = usb20x.DLatchR()
+        value3 = usb20x.DPort() >> 4
+        print("The number you entered: ", hex(value3), "  Latched value: ", hex(value2))
+        if toContinue() != True:
+          break
+    elif ch == 'i':
+      channel = int(input("Input channel DE [0-7]: "))
+      for i in range(20):
+        value = usb20x.AIn(channel)
+        print("Channel = {0:d},  Sample[{1:d}] = 0x{2:x}    Volts = {3:.4f}"\
+              .format(channel, i, value, usb20x.volts(value)))
+    elif ch == 'I':
+      print('Testing USB-20X Analog Input Scan')
+      count = int(input('Enter number of scans: '))
+      nchan = int(input('Enter number of channels [1-8]: '))
+      frequency = float(input('Enter sampling frequency: '))
+      if frequency < 100:
+        options = usb20x.IMMEDIATE_TRANSFER_MODE
+      else:
+        options = 0x0
+      usb20x.AInScanStop()
+      usb20x.AInScanClearFIFO()
+      channels = 0
+      for i in range(nchan):
+        channels |= (0x1 << i)
+
+      usb20x.AInScanStart(count, frequency, channels, options, 0, 0)
+      dataAIn = usb20x.AInScanRead(count)
+      for scan in range(count):
+        for channel in range(nchan):
+          ii = scan*nchan + channel
+          dataAIn[ii] = round(dataAIn[ii]*usb20x.table_AIn[channel].slope + usb20x.table_AIn[channel].intercept)
+          print("Channel {0:d}  Sample[{1:d}] = ".format(channel, i), hex(dataAIn[ii])," Volts = {0:7.4f}".format(usb20x.volts(dataAIn[ii])))
     elif ch == 'e':
       usb20x.udev.close()
       exit(0)
+    elif ch == 's':
+      print('Serial Number: ', usb20x.getSerialNumber())
+    elif ch == 'S':
+      status = usb20x.Status()
+      print("Status:", hex(status))
         
 if __name__ == "__main__":
   main()
