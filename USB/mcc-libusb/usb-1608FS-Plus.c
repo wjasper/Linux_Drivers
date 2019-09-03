@@ -308,10 +308,10 @@ int usbAInScanRead_USB1608FS_Plus(libusb_device_handle *udev, int nScan, int nCh
     for (i = 0; i < nbytes/2; i++) {
       ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|1, (unsigned char *) &data[i], 2, &transferred, 2000);
       if (ret < 0) {
-				perror("usbAInScanRead_USB1608FS_Plus: error in usb_bulk_transfer.");
+	perror("usbAInScanRead_USB1608FS_Plus: error in usb_bulk_transfer.");
       }
       if (transferred != 2) {
-				fprintf(stderr, "usbAInScanRead_USB1608FS_Plus: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
+	fprintf(stderr, "usbAInScanRead_USB1608FS_Plus: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
       }
     }
   } else { 
@@ -323,9 +323,9 @@ int usbAInScanRead_USB1608FS_Plus(libusb_device_handle *udev, int nScan, int nCh
       fprintf(stderr, "usbAInScanRead_USB1608FS_Plus: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
       status = usbStatus_USB1608FS_Plus(udev);
       if ((status & AIN_SCAN_OVERRUN)) {
-				fprintf(stderr, "Analog AIn scan overrun.\n");
-				usbAInScanStop_USB1608FS_Plus(udev);
-				usbAInScanClearFIFO_USB1608FS_Plus(udev);
+	fprintf(stderr, "Analog AIn scan overrun.\n");
+	usbAInScanStop_USB1608FS_Plus(udev);
+	usbAInScanClearFIFO_USB1608FS_Plus(udev);
       }
       return ret;
     }
