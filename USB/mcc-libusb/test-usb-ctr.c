@@ -192,10 +192,10 @@ int main (int argc, char **argv)
 	for (i = 0; i < count; i++) {
 	  for (counter = 0; counter < 4; counter++) {
 	    offset = i*16 + counter*4;
-            counter_data[counter] =  (long) data[offset];
-	    counter_data[counter] += ((long) (data[offset+1] & 0xffff)) << 16;
-	    counter_data[counter] += ((long) (data[offset+2] & 0xffff)) << 32;
-	    counter_data[counter] += ((long) (data[offset+3] & 0xffff)) << 48;
+            counter_data[counter] =  (uint64_t) data[offset];
+	    counter_data[counter] += ((uint64_t) (data[offset+1] & 0xffff)) << 16;
+	    counter_data[counter] += ((uint64_t) (data[offset+2] & 0xffff)) << 32;
+	    counter_data[counter] += ((uint64_t) (data[offset+3] & 0xffff)) << 48;
 	  }
 	  printf("Scan: %d     %ld  %ld  %ld  %ld\n", i, counter_data[0], counter_data[1], counter_data[2], counter_data[3]);
 	}
