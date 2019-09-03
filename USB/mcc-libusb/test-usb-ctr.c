@@ -197,7 +197,8 @@ int main (int argc, char **argv)
 	    counter_data[counter] += ((uint64_t) (data[offset+2] & 0xffff)) << 32;
 	    counter_data[counter] += ((uint64_t) (data[offset+3] & 0xffff)) << 48;
 	  }
-	  printf("Scan: %d     %ld  %ld  %ld  %ld\n", i, counter_data[0], counter_data[1], counter_data[2], counter_data[3]);
+	  printf("Scan: %d     %lld  %lld  %lld  %lld\n", i, (long long) counter_data[0], (long long) counter_data[1],
+		 (long long) counter_data[2], (long long) counter_data[3]);
 	}
 	break;
       case 'd':
