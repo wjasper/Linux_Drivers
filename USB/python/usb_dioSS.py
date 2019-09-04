@@ -108,7 +108,7 @@ class usb_dioSS:      # solid state relays
     and its address range is 0x0400-0x04FF.
     """
     if (count > 62):
-      print('MemRead: max count is 62')
+      raise ValueError('MemRead: max count is 62')
       return
     self.h.write([self.MEM_READ, address&0xff, (address >>8)&0xff, 0, count])
     try:
@@ -127,10 +127,11 @@ class usb_dioSS:      # solid state relays
     """
 
     if (count > 59):
-      print('MemWrite: max count is 59')
+      raise ValueError('MemWrite: max count is 59')
       return
     if (address <= 0x7f):
-      print('MemWrite: Locations 0x00-0x7F are reserved for firmware and my not be written.')
+      raise ValueError('MemWrite: Locations 0x00-0x7F are reserved for firmware and my not be written.')
+      return
     self.h.write([self.MEM_Write, address & 0xff, (address>>8) & 0xff, count, data[0:count]])
 
   #################################
@@ -214,14 +215,14 @@ class usb_dioSS:      # solid state relays
     """
 
     if (count > 32):
-      print('WriteCode: count greater than 32')
+      raise ValueError('WriteCode: count greater than 32')
       return
     self.h.write([self.WRITE_CODE, address&0xff, (address>>8)&0xff, (address>>16)&0xff, count, data[0:count]])
 
   def ReadCode(self, address, count):
     # This command reads from program memory.
     if (count > 62):
-      print('ReadCode: count greater than 62')
+      raise ValueError('ReadCode: count greater than 62')
       return
     self.h.write([self.h.read_CODE, address&0xff, (address>>8)&0xff, (address>>16)&0xff, count])
     value = self.h.read(count+1, 500)

@@ -67,6 +67,7 @@ int main (int argc, char **argv)
   int channel;
   uint8_t gain;
   float voltage;
+  float table_AIN[NCHAN_1608HS][NGAINS_1608HS][2];
 
   udev = NULL;
 
@@ -85,8 +86,18 @@ int main (int argc, char **argv)
     printf("Failure, did not find a USB 1608HS!\n");
     return 0;
   }
-  // some initialization
 
+  // some initialization
+  printf("Building calibration table.  This may take a while ...\n");
+  usbBuildGainTable_USB1608HS(udev, table_AIN);
+  
+  // print the table
+  for (i = 0; i < NCHAN_1608HS; i++) {
+    for (j = 0; j < NGAINS_1608HS; j++) {
+      printf("Calibration Table: Channel = %d, Range = %d   Slope = %f   Offset = %f\n", 
+	     i, j, table_AIN[i][j][0], table_AIN[i][j][1]);
+    }	
+  }
   //print out the wMaxPacketSize. Should be 512.
   printf("wMaxPacketSize = %d\n\n", usb_get_max_packet_size(udev,0));
 
@@ -180,7 +191,7 @@ int main (int argc, char **argv)
 	printf("Input beginning channel number [0-7]: ");
 	scanf("%hhd", &chan);
 	channel = chan;
-	printf("Enter number of channels to scan - 1 [0-7]: ");
+	printf("Enter number of channels to scan - 1  [0-7]: ");
 	scanf("%hhd", &nchan);
 	printf("Input sampling frequency [Hz]: ");
 	scanf("%f", &freq);

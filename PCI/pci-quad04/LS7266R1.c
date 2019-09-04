@@ -48,10 +48,18 @@
 #include "LS7266R1_3_10_11.c"
 #endif
 
-#if LINUX_VERSION_CODE >= VERSION_CODE(4,0,0) && LINUX_VERSION_CODE < VERSION_CODE(4,20,0)
+#if LINUX_VERSION_CODE >= VERSION_CODE(4,0,0) && LINUX_VERSION_CODE < VERSION_CODE(4,17,0)
 #include "LS7266R1_4_0_8.c"
 #endif
 
-#if LINUX_VERSION_CODE >= VERSION_CODE(4,20,0)
+#if LINUX_VERSION_CODE >= VERSION_CODE(4,17,0) && LINUX_VERSION_CODE < VERSION_CODE(5,0,0)
+#include "LS7266R1_4_17_0.c"
+#endif
+
+#if LINUX_VERSION_CODE >= VERSION_CODE(5,0,0) && LINUX_VERSION_CODE < VERSION_CODE(5,5,0)
+#include "LS7266R1_5_00_0.c"
+#endif
+
+#if LINUX_VERSION_CODE >= VERSION_CODE(5,5,0)
 #error "Your kernel is too new for the current driver.  It may work but is untested."
 #endif

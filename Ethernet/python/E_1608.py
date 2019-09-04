@@ -17,7 +17,7 @@
 
 from datetime import datetime
 from struct import *
-from mccPy import *
+from mccEthernet import *
 
 E1608_PID = 0x012F  # Product code for the MCC E-1608
 
@@ -217,19 +217,18 @@ class E_1608:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DIN_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('DIn: timeout error.\n')
+      raise TimeoutError('DIn: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -266,19 +265,18 @@ class E_1608:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DOUT_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('DOut_R: timeout error.\n')
+      raise TimeoutError('DOut_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -316,19 +314,18 @@ class E_1608:
     s_buffer[MSG_INDEX_DATA]           = value
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('DOut: timeout error.\n')
+      raise TimeoutError('DOut: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -362,19 +359,18 @@ class E_1608:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_DCONF_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('DConfig_R: timeout error.\n')
+      raise TimeoutError('DConfig_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -412,19 +408,18 @@ class E_1608:
     s_buffer[MSG_INDEX_DATA]           = value
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('DConfig_W: timeout error.\n')
+      raise TimeoutError('DConfig_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -466,19 +461,18 @@ class E_1608:
     s_buffer[MSG_INDEX_DATA+1]         = gain
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('AIn: timeout error.\n')
+      raise TimeoutError('AIn: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -541,7 +535,7 @@ class E_1608:
     more details.
   
     Scan data will be acquired until an overrun occurs, the specified
-    count is reached, or an AInScanStop command is sent.  the scan
+    count is reached, or an AInScanStop command is sent. The scan
     data will be in the format:
   
     First channel sample 0: second channel sample 0: .. : last channel sample 0
@@ -559,7 +553,7 @@ class E_1608:
     detected then betgin sampling data at the specified rate.  No
     data will be available until the trigger is detected.
    
-       count:      The total number or scan to scquire, 0 for continuous scan
+       count:      The total number of scans to acquire, 0 for continuous scan
        frequency:  the sampling frequency.  Use 0 for external clock.
        options:    Bit field that controls scan options
                    bits 0-1:   Reserved
@@ -602,7 +596,7 @@ class E_1608:
     s_buffer[MSG_INDEX_DATA+8]         = options & 0xff
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
@@ -614,13 +608,12 @@ class E_1608:
 
     self.device.scan_timeout = 0.1 + count/frequency
     self.device.sock.settimeout(.01)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('AInScanStart: timeout error.\n')
+      raise TimeoutError('AInScanStart: timeout error.')
       return
 
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
@@ -642,24 +635,24 @@ class E_1608:
     # send ACK to start scan
     data = bytearray(1)
     data[0] = 0x0
-    self.device.sock.send(data)  # send a single byte
+    self.device.sendMessage(data)  # send a single byte
 
   def AInScanRead(self, nScan, nChan):
-    count = nScan*nChan   # total number of 2-byte samples
+    count = 2*nScan*nChan   # total number of 2-byte samples
     self.device.scan_sock.settimeout(self.device.scan_timeout)
-    data = bytearray(2*count)
+    data = bytearray(count)
     corrected_data = []
+    value = []
+    bytesReceived = 0
 
-    try:
-      data = self.device.scan_sock.recv(2*count)
-    except socket.timeout:
-      raise
-      print('AInScanRead: timeout error.\n')
-    if len(data) != 2*count:
-      print('AInScanRead: Number of bytes returned incorrect. ',len(data), 2*count)
-      return False
-       
-    value = unpack('H'*(len(data)//2), data)        # convert to unsigned short
+    while (bytesReceived  < count):
+      try:
+        data = self.device.scan_sock.recv(count - bytesReceived)
+      except socket.timeout:
+        raise TimeoutError('AInScanRead: timeout error.')
+      bytesReceived += len(data)
+      value[bytesReceived:] = unpack('H'*(len(data)//2), data)  # convert to unsigned short
+
     for i in range(nScan):                          # scan count
       for j in range(nChan):
         k = i*nChan + j                             # sample number
@@ -695,19 +688,18 @@ class E_1608:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_AIN_QUEUE_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('AInQueue_R: timeout error.\n')
+      raise TimeoutError('AInQueue_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -751,19 +743,18 @@ class E_1608:
     for i in range(dataCount):
       s_buffer[MSG_INDEX_DATA+i]       = self.queue[i]
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('AInQueue_W: timeout error.\n')
+      raise TimeoutError('AInQueue_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -798,19 +789,18 @@ class E_1608:
     s_buffer[MSG_INDEX_DATA]           = close_socket
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('AInScanStop: timout error.\n')
+      raise TimeoutError('AInScanStop: timout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -850,19 +840,18 @@ class E_1608:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_AOUT_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('AOut_R: timeout error.\n')
+      raise TimeoutError('AOut_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -891,7 +880,7 @@ class E_1608:
     This command writes the value of the analog output channel.
     
       channel: the channel to write (0-1)
-      value:   the value to write
+      value:   the value to write (0-4095)
     """
 
     dataCount = 3
@@ -908,19 +897,18 @@ class E_1608:
     s_buffer[MSG_INDEX_DATA+1]         = value & 0xff
     s_buffer[MSG_INDEX_DATA+2]         = (value>>8) & 0xff
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('AOut: timeout error.\n')
+      raise TimeoutError('AOut: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -957,24 +945,23 @@ class E_1608:
     s_buffer[MSG_INDEX_DATA]           = count
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send    
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('blink: timout error.\n')
+      raise TimeoutError('Blink: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
          r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-        r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                                and \
+         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
          r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
          r_buffer[MSG_INDEX_COUNT_LOW] == replyCount & 0xff                     and \
          r_buffer[MSG_INDEX_COUNT_HIGH] == (replyCount >> 8) & 0xff             and \
@@ -1000,19 +987,18 @@ class E_1608:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_RESET
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('reset: timout error.\n')
+      raise TimeoutError('Reset: timout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1047,19 +1033,18 @@ class E_1608:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_STATUS
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(16)
     except socket.timeout:
-      raise
-      print('status: timout error.\n')
+      raise TimeoutError('Status: timout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1094,19 +1079,18 @@ class E_1608:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_NETWORK_CONF
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('networkConfig: timout error.\n')
+      raise TimeoutError('NetworkConfig: timout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1146,19 +1130,18 @@ class E_1608:
     s_buffer[MSG_INDEX_DATA+1]         = 0xad                     # key
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('firmwareUpgrade: timout error.\n')
+      raise TimeoutError('FirmwareUpgrade: timout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1178,7 +1161,7 @@ class E_1608:
   #################################
   #       Counter Commands        #
   #################################
-  def counter(self):
+  def Counter(self):
     """
     This command read the event counter
     """
@@ -1192,19 +1175,18 @@ class E_1608:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_COUNTER_R
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('counter: timeout error.\n')
+      raise TimeoutError('Counter: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1220,12 +1202,12 @@ class E_1608:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in counter E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in Counter E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
       return -1
 
     return value
   
-  def resetCounter(self):
+  def ResetCounter(self):
     """
     This command resets the event counter.  On a write, the
     counter will be reset to 0.
@@ -1240,19 +1222,18 @@ class E_1608:
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_COUNTER_W
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(64)
     except socket.timeout:
-      raise
-      print('restCounter: timeout error.\n')
+      raise TimeoutError('ResetCounter: timeout error.\n')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1290,25 +1271,24 @@ class E_1608:
     r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
     s_buffer[MSG_INDEX_COMMAND]        = self.CMD_CAL_MEMORY_R
-    s_buffer[MSG_INDEX_DATA]           = address & 0xff
-    s_buffer[MSG_INDEX_DATA+1]         = (address>>8) & 0xff
-    s_buffer[MSG_INDEX_DATA+2]         = count & 0xff
-    s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
+    s_buffer[MSG_INDEX_DATA]           = address & 0xff                # low byte
+    s_buffer[MSG_INDEX_DATA+1]         = (address >> 8) & 0xff         # high byte
+    s_buffer[MSG_INDEX_DATA+2]         = count & 0xff                  # low byte
+    s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff             # high byte
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('CalMemory_R: timeout error.\n')
+      raise TimeoutError('CalMemory_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1358,19 +1338,18 @@ class E_1608:
       s_buffer[MSG_INDEX_DATA+2+i] = data[i]
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('CalMemory_W: timeout error.\n')
+      raise TimeoutError('CalMemory_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1412,19 +1391,18 @@ class E_1608:
     s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('UserMemory_R: timeout error.\n')
+      raise TimeoutError('UserMemory_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1469,19 +1447,18 @@ class E_1608:
       s_buffer[MSG_INDEX_DATA+2+i] = data[i]
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('UserMemory_W: timeout error.\n')
+      raise TimeoutError('UserMemory_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1523,19 +1500,18 @@ class E_1608:
     s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('SettingsMemory_R: timeout error.\n')
+      raise TimeoutError('SettingsMemory_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1581,19 +1557,18 @@ class E_1608:
       s_buffer[MSG_INDEX_DATA+2+i] = data[i]
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('SettingsMemory_W: timeout error.\n')
+      raise TimeoutError('SettingsMemory_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1639,19 +1614,18 @@ class E_1608:
     s_buffer[MSG_INDEX_DATA+3]         = (count>>8) & 0xff
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('BootloaderMemory_R: timeout error.\n')
+      raise TimeoutError('BootloaderMemory_R: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1715,19 +1689,18 @@ class E_1608:
       s_buffer[MSG_INDEX_DATA+2+i] = data[i]
     s_buffer[MSG_INDEX_START]          = MSG_START
     s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID += 1                                      # increment frame ID with every send
+    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
     s_buffer[MSG_INDEX_STATUS]         = 0
     s_buffer[MSG_INDEX_COUNT_LOW]      = (dataCount & 0xff)
     s_buffer[MSG_INDEX_COUNT_HIGH]     = ((dataCount>>8) & 0xff)
     s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
     self.device.sock.settimeout(.1)
-    self.device.sock.send(s_buffer)
+    self.device.sendMessage(s_buffer)
 
     try:
       r_buffer = self.device.sock.recv(1024)
     except socket.timeout:
-      raise
-      print('BootloaderMemory_W: timeout error.\n')
+      raise TimeoutError('BootloaderMemory_W: timeout error.')
       return
     if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
       if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
@@ -1802,7 +1775,7 @@ class E_1608:
     elif gain == BP_1V:
       volt = (value - 0x8000)*1.0/32768
     else:
-      print('volts: unkown gain.', gain)
+      raise ValueError('volts: unkown gain.')
       return False
     return volt
 

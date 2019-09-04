@@ -20,30 +20,9 @@ import usb1
 import time
 import sys
 from struct import *
+from mccUSB import *
 
-class Error(Exception):
-  ''' Base class for other exceptions.'''
-  pass
-
-class OverrunError(Error):
-  ''' Raised when overrun on AInScan'''
-  pass
-
-class UnderrunError(Error):
-  ''' Raised when underrun on AOutScan'''
-  pass
-
-class SaturationError(Error):
-  ''' Raised when DAC is saturated '''
-  pass
-
-# Base class for lookup tables of calibration coefficients (slope and offset)
-class table:
-  def __init__(self):
-    self.slope = 0.0
-    self.intercept = 0.0
-
-class usb_1608FS:
+class usb_1608FS(mccUSB):
 
   # Gain Ranges
   BP_10_00V   = 0x0         # Differential +/- 10.0 V
@@ -63,6 +42,8 @@ class usb_1608FS:
 
   EEPROM             = 0    # read from EEPROM
   SRAM               = 1    # read from SRAM
+  NCHAN              = 8    # max number of A/D channels in the device
+  NGAIN              = 8    # max number of gain levels (0-7)
 
   # Option values for AInScan
   AIN_EXECUTION      = 0x1  # 1 = single execution, 0 = continuous execution
@@ -119,9 +100,11 @@ class usb_1608FS:
   EEPROM_VERSION_1_0 = False  # only set True for older version of the EEPROM
 
   def __init__(self, serial=None):
+    print("initializing\n")
     self.productID = 0x007d                            # MCC USB-1608FS
-    self.context = usb1.USBContext()
-    self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+#    self.context = usb1.USBContext()
+#    self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+    self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
       raise IOError("MCC USB-1608FS not found")
     for i in range(7):
@@ -315,9 +298,9 @@ class usb_1608FS:
       # Read in the internal reference for +/- 10V at 0x80 in the EEPROM  (+5.0 Nonminal)
       addr = 0x80
       v1 ,= unpack('f', self.MemRead(addr, self.EEPROM, 4))
-      y1 = v0*65536./20. + 0x8000    # Calculate the corresponding calibrated value y0
+      y1 = v1*65536./20. + 0x8000    # Calculate the corresponding calibrated value y0
 
-      addr = 0b0                    # +/- 10V Uncalibrated readings
+      addr = 0xb0                    # +/- 10V Uncalibrated readings
       data = unpack('H'*16, self.MemRead(addr, self.EEPROM, 32))
 
       for j in range(8):
@@ -386,14 +369,14 @@ class usb_1608FS:
         x0 = data[2*j]             # offset
         x1 = data[2*j + 1]         # positive gain
 
-        self.Cal[j][self.BP_1_00V].slope = (y1 - y0)/(x1 - x0)            # slope
-        self.Cal[j][self.BP_1_00V].intercept = (y0*x1 - y1*x0)/(x1 - x0)  # intercept
-        self.Cal[j][self.BP_1_25V].slope = (y1 - y0)/(x1 - x0)            # slope
-        self.Cal[j][self.BP_1_25V].intercept = (y0*x1 - y1*x0)/(x1 - x0)  # intercept
+        self.Cal[j][self.BP_1_00V].slope = (y1 - y0)/(x1 - x0)             # slope
+        self.Cal[j][self.BP_1_00V].intercept = (y0*x1 - y1*x0)/(x1 - x0)   # intercept
+        self.Cal[j][self.BP_1_25V].slope = (y1 - y0)/(x1 - x0)             # slope
+        self.Cal[j][self.BP_1_25V].intercept = (y0*x1 - y1*x0)/(x1 - x0)   # intercept
         self.Cal[j][self.BP_0_625V].slope = (y1 - y0)/(x1 - x0)            # slope
         self.Cal[j][self.BP_0_625V].intercept = (y0*x1 - y1*x0)/(x1 - x0)  # intercept
-        self.Cal[j][self.BP_0_3125V].slope = (y1 - y0)/(x1 - x0)            # slope
-        self.Cal[j][self.BP_0_3126V].intercept = (y0*x1 - y1*x0)/(x1 - x0)  # intercept
+        self.Cal[j][self.BP_0_3125V].slope = (y1 - y0)/(x1 - x0)           # slope
+        self.Cal[j][self.BP_0_3125V].intercept = (y0*x1 - y1*x0)/(x1 - x0) # intercept
     
   #################################
   #     Digital I/O  Commands     #
@@ -511,7 +494,7 @@ class usb_1608FS:
     wIndex = 0                     # interface
 
     if channel < 0 or channel > 7:
-      print('AIn: channel out of range.')
+      raise ValueError('AIn: channel out of range.')
       return
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.AIN, channel, gain], timeout = 100)
     value = unpack('BBB',self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 2, 3, timeout = 1000))    
@@ -533,7 +516,8 @@ class usb_1608FS:
     return value
 
   def AInScan(self, lowchannel, hichannel, gains, count, frequency, options):
-    """This command scans a range of analog input channels and sends the
+    """
+    This command scans a range of analog input channels and sends the
     readings in interrupt transfers. The gain ranges that are
     currently set on the desired channels will be used (these may be
     changed with AIn or ALoadQueue.
@@ -624,14 +608,14 @@ class usb_1608FS:
     wIndex = 0                          # interface
 
     if hichannel > 7:
-      print('AInScan: hichannel out of range')
+      raise ValueError('AInScan: hichannel out of range')
       return
     if lowchannel > 7:
-      print('AInScan: lowchannel out of range')
+      raise ValueError('AInScan: lowchannel out of range')
       return
 
     if frequency <= 0:
-      print('AInScan: frequency must be positive.')
+      raise ValueError('AInScan: frequency must be positive.')
       return
     
     nchan = hichannel - lowchannel + 1    # total number of channels in a scan
@@ -646,7 +630,7 @@ class usb_1608FS:
         break
 
     if prescale == 9 or preload == 0:
-      print('AInScan: frequency out of range')
+      raise ValueError('AInScan: frequency out of range')
       return
 
     if frequency < 150.:
@@ -734,9 +718,9 @@ class usb_1608FS:
     request = 0x9                          # HID Set_Report
     wValue =  (2 << 8) | self.ALOAD_QUEUE  # HID output
     wIndex = 0                             # interface
-    buf = [0]*9
-    buf[0] = self.ALOAD_QUEUE
-    for i in range(8):
+    buf = [0]*(self.NCHAN+1)
+    buf[0] = self.ALOAD_QUEUE              # first byte is the report ID.
+    for i in range(self.NCHAN):
       buf[i+1] = gain[i]
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, buf, timeout = 100)
 
@@ -755,7 +739,7 @@ class usb_1608FS:
     request = 0x9                    # HID Set_Report
     wValue =  (2 << 8) | self.CINIT  # HID output
     wIndex = 0                       # interface
-    value = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.CINIT], timeout = 100)
+    value = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.CINIT], timeout = 1000)
 
   def CIn(self):
     """
@@ -769,8 +753,8 @@ class usb_1608FS:
     request = 0x9                  # HID Set_Report
     wValue =  (2 << 8) | self.CIN  # HID output
     wIndex = 0                     # interface
-    ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.CIN], timeout = 100)
-    value = unpack('BBBBB',self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 2, 5, timeout = 100))    
+    ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.CIN], timeout = 1000)
+    value = unpack('BBBBB',self.udev.interruptRead(libusb1.LIBUSB_ENDPOINT_IN | 2, 5, timeout = 1000))    
     return (value[1] | (value[2]<<8) | (value[3]<<16) | (value[4]<<24))
     
   #################################
@@ -783,7 +767,7 @@ class usb_1608FS:
     All of the memory may be read
 
     Address 0x000 - 0x07F are reserved for firmware data
-    Addresses 0x080 - 0x3FF are available for use as calibration or user data
+    Address 0x080 - 0x3FF are available for use as calibration or user data
     
      address:  the start addess for the read
      mem_type: the memory type to read (0 = EEPROM, 1 = SRAM)
@@ -801,7 +785,7 @@ class usb_1608FS:
     value = bytearray(count)
 
     if (count > 62):
-      print('MemRead: max count is 62')
+      raise ValueError('MemRead: max count is 62')
       return
     buf = [self.MEM_READ, address & 0xff, (address >> 8) & 0xff, mem_type, count] 
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, buf, timeout = 5000)
@@ -840,14 +824,15 @@ class usb_1608FS:
     wIndex = 0                           # interface
 
     if (count > 59):
-      print('MemWrite: max count is 59')
+      raise ValueError('MemWrite: max count is 59')
+      return
 
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.MEM_WRITE,address, data[:count]], timeout = 100)
-
 
   #################################
   #     Miscellaneous Commands    #
   #################################
+
   def Blink(self):
     """
     This command causes the LED to blink.
@@ -967,7 +952,6 @@ class usb_1608FS:
     wIndex = 0                         # interface
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.SET_CAL, setting], timeout = 100)
 
-  
   #################################
   #     Code Update Commands      #
   #################################
@@ -1014,7 +998,7 @@ class usb_1608FS:
     wIndex = 0                            # interface
 
     if (count > 32):
-      print('WriteCode: count greater than 32')
+      raise ValueError('WriteCode: count greater than 32')
       return
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, \
             [self.WRITE_CODE, address&0xff, (address>>8)&0xff, (address>>16)&0xff, count, data[0:count]], timeout = 100)
@@ -1029,7 +1013,7 @@ class usb_1608FS:
     wIndex = 0                           # interface
 
     if (count > 62):
-      print('ReadCode: count greater than 62')
+      raise ValueError('ReadCode: count greater than 62')
       return
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, \
              [self.READ_CODE, address&0xff, (address>>8)&0xff, (address>>16)&0xff, count], timeout = 100)                
@@ -1089,26 +1073,3 @@ class usb_1608FS:
     if status & self.UPDATE_MODE:
       print('    Program memory update mode')
 
-  def getSerialNumber(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getSerialNumber())
-
-  def getProduct(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getProduct())
-
-  def getManufacturer(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getManufacturer())
-
-  def getMaxPacketSize(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getMaxPacketSize0())

@@ -74,8 +74,7 @@ Special Notes on compiling the libusb version.
 Note:  These drivers have been tested under Fedora Core, Ubuntu, and on the Raspberry Pi (Raspbian). 
        It should work on any version of Linux.  If they don't drop me a line.
 
-       There is also limited Python support.  Google Python MCC.  One source is:
-       https://pypi.python.org/pypi/mccdaq_linux
+       There is also limited Python 3 support.  Just go one directory up.
        
 5. Plug in your device and run the test program (e.g. test-usb1608FS) associated with that device.
      You should see an options menu to test out the features of the device. 

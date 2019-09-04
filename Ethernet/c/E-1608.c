@@ -448,7 +448,7 @@ bool AInScanStart_E1608(DeviceInfo_E1608 *device_info, uint32_t nScan, double fr
      more details.
 
      Scan data will be acquired until an overrun occurs, the specified
-     count is reached, or an AInScanStop command is sent.  the scan
+     count is reached, or an AInScanStop command is sent.  The scan
      data will be in the format:
 
      First channel sample 0: second channel sample 0: .. : last channel sample 0

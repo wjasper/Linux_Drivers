@@ -89,7 +89,7 @@ int main (int argc, char **argv)
     printf("----------------\n");
     printf("Hit 'b' to blink LED\n");
     printf("Hit 'c' to test counter\n");
-    printf("Hit 'C' for conitnuous sampling\n");
+    printf("Hit 'C' for continuous sampling\n");
     printf("Hit 'd' to read digital word\n");
     printf("Hit 'e' to exit\n");
     printf("Hit 'g' to test analog input scan\n");    
@@ -97,7 +97,7 @@ int main (int argc, char **argv)
     printf("Hit 'r' to reset\n");
     printf("Hit 'S' to get Status\n");
     printf("Hit 's' to get serial number\n");
-    printf("Hit 'w' to write digtial word\n");
+    printf("Hit 'w' to write digitial word\n");
 
     while((ch = getchar()) == '\0' ||
 	  ch == '\n');
@@ -133,7 +133,7 @@ int main (int argc, char **argv)
       printf("Port = %#hx\n", wvalue);
       break;
     case 'C':
-     printf("USB-1608FS Continuous sampling.  Hit 's' to stop\n");
+      printf("USB-1608FS Continuous sampling.  Hit 's' to stop\n");
       printf("Enter desired frequency [Hz]: ");
       scanf("%f", &freq);
       gain = BP_10_00V;

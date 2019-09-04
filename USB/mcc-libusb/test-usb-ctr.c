@@ -46,7 +46,6 @@ int main (int argc, char **argv)
 {
   libusb_device_handle *udev = NULL;
 
-  double frequency;
   int ch;
   int i; 
   int temp;
@@ -54,6 +53,7 @@ int main (int argc, char **argv)
   int device;
   uint32_t period;
   uint16_t version;
+  uint16_t status;
 
   char serial[9];
   uint8_t input;
@@ -61,6 +61,18 @@ int main (int argc, char **argv)
   uint8_t timer;
   uint8_t debounce;
 
+  int count;
+  int counter;
+  int bank;
+  int offset;
+  double frequency;
+  double timer_frequency;
+
+  TimerParams timerParameters[4];
+  CounterParams counterParameters[8];
+  ScanList scanList;
+  uint16_t data[32000];
+  uint64_t counter_data[4];
 
   udev = NULL;
 
@@ -95,12 +107,16 @@ int main (int argc, char **argv)
     printf("----------------\n");
     printf("Hit 'b' to blink\n");
     printf("Hit 'c' to test counter\n");
-    printf("Hit 'd' to test digital IO\n");
+    printf("Hit 'P' to print out the counter parameters\n");
+    printf("Hit 'i' for scan input\n");
+    printf("Hit 'd' to test digital I/O\n");
     printf("Hit 'D' to set counter debounce\n");
     printf("Hit 'r' to reset the device\n");
     printf("Hit 's' to get serial number\n");
     printf("Hit 'S' to get Status\n");
     printf("Hit 't' to test the timers\n");
+    printf("Hit 'T' to print out the timer parameters\n");
+    printf("Hit 'L' to print out the scan list\n");
     printf("Hit 'v' to get version numbers\n");
     printf("Hit 'e' to exit\n");
 
@@ -125,7 +141,66 @@ int main (int argc, char **argv)
 	  usbDLatchW_USB_CTR(udev, 0x1);
         }
         printf("Count = %lld.  Should read 100.\n", (long long) usbCounter_USB_CTR(udev, 0));
-        break;      
+        break;
+      case 'P':
+	for (i = 0; i < NCOUNTER; i++) {
+	  usbCounterParamsR_USB_CTR(udev, i, &counterParameters[i]);
+	  printf("Counter: %d\t Mode Options: %#x\tCounter Options: %#x\tGate Options: %#x\tOutputOptions: %#x\tdebounce: %#x\n",
+		 i, counterParameters[i].modeOptions, counterParameters[i].counterOptions, counterParameters[i].gateOptions,
+		 counterParameters[i].outputOptions, counterParameters[i].debounce);
+	}
+	break;
+      case 'i':
+	printf("Testing scan input\n");
+	printf("Connect Timer 1 to Counter 1\n");
+	count = 100;       // total number of scans to perform
+	frequency = 1000;  // scan rate at 1000 Hz
+
+	// Set up the scan list (use 4 counter 0-3)
+	for (counter = 0; counter < 4; counter++) {
+	  for (bank = 0; bank < 4; bank++) {
+	    scanList.scanList[4*counter + bank] = (counter & 0x7) | (bank & 0x3) << 3 | (0x2 << 5);
+	  }
+	}
+	scanList.lastElement = 15;
+	usbScanConfigW_USB_CTR(udev,scanList.lastElement, scanList);
+	usbScanConfigR_USB_CTR(udev, scanList.lastElement, &scanList);
+
+	// set up the counters
+	for (counter = 0; counter < 4; counter++) {
+	  usbCounterSet_USB_CTR(udev, counter, 0x0);       // set counter to 0
+	  usbCounterModeW_USB_CTR(udev, counter, 0x0);
+	  usbCounterOptionsW_USB_CTR(udev, counter, 0);    // count on rising edge
+	  usbCounterGateConfigW_USB_CTR(udev, counter, 0); // deable gate
+	  usbCounterOutConfigW_USB_CTR(udev, counter, 0);  // output off
+	}
+
+	// set up the timer to generate some pulses
+	timer = 1;
+	timer_frequency = 4000.;
+	period = 96.E6/timer_frequency - 1;	
+	usbTimerPeriodW_USB_CTR(udev, timer, period);
+	usbTimerPulseWidthW_USB_CTR(udev, timer, period / 2);
+	usbTimerCountW_USB_CTR(udev, timer, 0);
+	usbTimerDelayW_USB_CTR(udev, timer, 0);
+	usbTimerControlW_USB_CTR(udev, timer, 0x1);
+
+	usbScanStart_USB_CTR(udev, count, 0, frequency, 0);
+        usbScanRead_USB_CTR(udev, count, scanList.lastElement, data);
+	usbTimerControlW_USB_CTR(udev, timer, 0x0);
+
+	for (i = 0; i < count; i++) {
+	  for (counter = 0; counter < 4; counter++) {
+	    offset = i*16 + counter*4;
+            counter_data[counter] =  (uint64_t) data[offset];
+	    counter_data[counter] += ((uint64_t) (data[offset+1] & 0xffff)) << 16;
+	    counter_data[counter] += ((uint64_t) (data[offset+2] & 0xffff)) << 32;
+	    counter_data[counter] += ((uint64_t) (data[offset+3] & 0xffff)) << 48;
+	  }
+	  printf("Scan: %d     %lld  %lld  %lld  %lld\n", i, (long long) counter_data[0], (long long) counter_data[1],
+		 (long long) counter_data[2], (long long) counter_data[3]);
+	}
+	break;
       case 'd':
         printf("\nTesting Digital I/O...\n");
 	printf("connect pins DIO[0-3] <--> DIO[4-7]\n");
@@ -189,7 +264,23 @@ int main (int argc, char **argv)
         printf("Serial number = %s\n", serial);
         break;
       case 'S':
-        printf("Status = %#x\n", usbStatus_USB_CTR(udev));
+	status = usbStatus_USB_CTR(udev);
+        printf("Status = %#x\n", status);
+	if (status & PACER_RUNNING) {
+	  printf("USB-CTR: Pacer running.\n");
+	}
+	if (status & SCAN_OVERRUN) {
+	  printf("USB-CTR: Scan overrun.\n");
+	}
+	if (status & SCAN_DONE) {
+	  printf("USB-CTR: Scan done.\n");
+	}
+	if (status & FPGA_CONFIGURED) {
+	  printf("USB-CTR: FPGA configured.\n");
+	}
+	if (status & FPGA_CONFIG_MODE) {
+	  printf("USB-CTR: FPGA config mode.\n");
+	}
 	break;
       case 't':
         printf("Enter frequency of timer: ");
@@ -205,12 +296,28 @@ int main (int argc, char **argv)
 	toContinue();
 	usbTimerControlW_USB_CTR(udev, timer, 0x0);
         break;
+      case 'T':
+	for (i = 0; i < 4; i++) {
+  	  usbTimerParamsR_USB_CTR(udev, i, &timerParameters[i]);
+	  printf("Timer: %d   period: %#x   pulseWidth: %#x    count: %#x    delay: %#x\n",
+		 i, timerParameters[i].period, timerParameters[i].pulseWidth,
+		 timerParameters[i].count, timerParameters[i].delay);
+	}
+	break;
       case 'v':
 	version = 0xbeef;
         usbFPGAVersion_USB_CTR(udev, &version);
 	printf("FPGA version %02x.%02x\n", version >> 0x8, version & 0xff);
-	break;
-    default:
+      	break;
+      case 'L':
+	usbScanConfigR_USB_CTR(udev, 33, &scanList);
+	printf("Scan List: ");
+	for (i = 0; i < 33; i++) {
+	  printf("%#x ", scanList.scanList[i]);
+	}
+        printf("\n");
+        break;    
+      default:
         break;
     }
   }

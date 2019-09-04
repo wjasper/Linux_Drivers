@@ -72,7 +72,7 @@
 #define MBD_COMMAND      (0x80)     // Text-baseed MBD command
 #define MBD_RAW          (0x81)     // Raw MBD response
 
-#define HS_DELAY 1000
+#define HS_DELAY 100
 
 // Globals
 Thermocouple_Data ThermocoupleData[8];
@@ -148,7 +148,6 @@ void usbCalDate_USB2408(libusb_device_handle *udev, struct tm *date)
   time = mktime(date);
   date = localtime(&time);
 }
-
 
 /***********************************************
  *            Digital I/O                      *
@@ -469,9 +468,9 @@ uint8_t  usbAOutScanStatus_USB2408_2AO(libusb_device_handle *udev, uint16_t *dep
   struct AOutStatus_t {
     uint16_t depth;    // number of samples currently in the FIFO (max 512)
     uint8_t status;    // bit 0: 1 = scan running
-                    // bit 1: 1 = scan overrun due to fifo full
-                    // bit 2: 1 = scan overrun due to pacer period too short for queue
-                    // bit 3-7: reserved
+                       // bit 1: 1 = scan overrun due to fifo full
+                       // bit 2: 1 = scan overrun due to pacer period too short for queue
+                       // bit 3-7: reserved
   } AOutStatus;
   libusb_control_transfer(udev, requesttype, AOUT_SCAN_STATUS, 0x0, 0x0, (unsigned char *) &AOutStatus, sizeof(AOutStatus), HS_DELAY);
   *depth =  AOutStatus.depth;
@@ -490,7 +489,7 @@ void usbAOutScanStart_USB2408_2AO(libusb_device_handle *udev, double frequency, 
      until the AOutScanStop command is issued by the host; if it is nonzero, the scan
      will stop automatically after the specified number of scans have been output.
      The channels in the scan are selected in the options bit field.  "Scans" refers to
-     the number of updates to the channels (if all channels are used, one scan s an
+     the number of updates to the channels (if all channels are used, one scan is an
      update to all 2 channels).
 
      period = 50kHz / frequency
@@ -512,19 +511,28 @@ void usbAOutScanStart_USB2408_2AO(libusb_device_handle *udev, double frequency, 
      the FIFO).  Data will be output until reaching the specified number of scans (in single
      execution mode)or an AOutScanStop command is sent.
   */
-  uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
-  struct scanPacket_t {
-    uint16_t pacer_period; // pacer timer period = 50 kHz / (scan frequency)
-    uint8_t scans[2];      // the total number of scans to perform (0 = continuous)
-    uint8_t options;       // bit 0: 1 = include channel 0 in output scan
-		  	   // bit 1: 1 = include channel 1 in output scan
-			   // bit 2: 1 = include channel 2 in output scan
-			   // bit 3: 1 = include channel 3 in output scan
-			   // bits 4-7 reserved
-  } scanPacket;
+  int ret;
+  uint32_t pacer_period = 0x0;
   uint16_t depth;
-  
-  scanPacket.pacer_period = (uint16_t) rint(50000./frequency);
+  uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+
+  struct scanPacket_t {
+    uint8_t pacer_period[4]; // pacer timer period = 50 kHz / (scan frequency)
+    uint8_t scans[2];        // the total number of scans to perform (0 = continuous)
+    uint8_t options;         // bit 0: 1 = include channel 0 in output scan
+		  	     // bit 1: 1 = include channel 1 in output scan
+			     // bits 2-7 reserved
+  } scanPacket;
+
+  if (frequency <= 0.0) {
+    printf("usbAOutScanStart_USB2408_2AO: frequency must be positive.\n");
+    return;
+  } else if (frequency > 50000.) {
+    printf("usbAOutScanStart_USB2408_2AO: frequency must be less than 50 kHz.\n");
+  } else {
+    pacer_period = (uint32_t) rint(50000./frequency);
+  }
+  memcpy(scanPacket.pacer_period, &pacer_period, 4);
   memcpy(scanPacket.scans, &scans, 2);
   scanPacket.options = options;
 
@@ -532,7 +540,11 @@ void usbAOutScanStart_USB2408_2AO(libusb_device_handle *udev, double frequency, 
     printf("There are currently %d samples in the Output FIFO buffer.\n", depth);
     return;
   }
-  libusb_control_transfer(udev, requesttype, AOUT_SCAN_START, 0x0, 0x0, (unsigned char *) &scanPacket, sizeof(scanPacket), HS_DELAY);
+  ret = libusb_control_transfer(udev, requesttype, AOUT_SCAN_START, 0x0, 0x0,
+		       (unsigned char *) &scanPacket, sizeof(scanPacket), HS_DELAY);
+  if (ret < 0) {
+    perror("usbAOutScanStart_USB2408_2A0: error in writing packet");
+  }
 }
 
 void usbAOut_USB2408_2AO(libusb_device_handle *udev, int channel, double voltage, double table_AO[NCHAN_AO_2408][2])
@@ -574,7 +586,7 @@ void usbAOut_USB2408_2AO(libusb_device_handle *udev, int channel, double voltage
   } else if (dvalue <= 0) {
     value = 0x0;
   } else {
-    value = (short int) dvalue;
+    value = (uint16_t) dvalue;
   }
 
   memcpy(aOut.value, &value, 2);
@@ -652,9 +664,7 @@ void usbBlink_USB2408(libusb_device_handle *udev, uint8_t bcount)
     This command will blink the device LED "count" number of times
   */
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
-  uint8_t cmd = BLINK_LED;
 
-  printf("Blinking LED (%x) for %d counts\n", cmd, bcount);
   libusb_control_transfer(udev, requesttype, BLINK_LED, 0x0, 0x0, (unsigned char *) &bcount, 1, HS_DELAY);
   return;
 }
@@ -750,8 +760,8 @@ void usbWriteMemory_USB2408(libusb_device_handle *udev, uint16_t length,  uint16
 void usbReset_USB2408(libusb_device_handle *udev)
 {
   /*
-    This function causes the device to perform a reset.  The device disconnects from the USB bus and resets
-    its microcontroller.
+    This function causes the device to perform a reset.  The device
+    disconnects from the USB bus and resets its microcontroller.
   */
 
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
@@ -852,21 +862,21 @@ void cleanup_USB2408( libusb_device_handle *udev )
   }
 }
 
-void voltsTos16_USB2408_2AO(double *voltage, int16_t *data, int nSamples, double table_AO[])
+void voltsToUint16_USB2408_2AO(double *voltage, uint16_t *data, int nSamples, double table_AO[])
 {
-  /* This routine converts an array of voltages (-10 to 10 volts) to singed 24 bit ints for the DAC */
+  /* This routine converts an array of voltages (-10 to 10 volts) to signed 16 bit ints for the DAC */
   int i;
   double dvalue;
 
   for (i = 0; i < nSamples; i++) {
-    dvalue = voltage[i]*(1<<15)/10.;                             /* convert voltage to signed value */
+    dvalue = voltage[i]*32768./10. + 32768;
     dvalue = dvalue*table_AO[0] + table_AO[1];                   /* correct for calibration errors */
-    if (dvalue >= 32767.) {
-      data[i] = 0x7fff;
-    } else if (dvalue <= -32768.) {
-      data[i] = 0x8000;
+    if (dvalue >= 0xffff) {
+      data[i] = 0xffff;
+    } else if (dvalue <= 0.) {
+      data[i] = 0x0;
     } else {
-      data[i] = (short int) dvalue;
+      data[i] = (uint16_t) dvalue;
     }
   }
 }
@@ -892,13 +902,13 @@ double volts_USB2408(const int gain, const int value)
       volt = value * 0.625 / 0x7fffff;
       break;
     case BP_312V:
-      volt = value * 0.312 / 0x7fffff;
+      volt = value * 0.3125 / 0x7fffff;
       break;
     case BP_156V:
-      volt = value * 0.156 / 0x7fffff;
+      volt = value * 0.15625 / 0x7fffff;
       break;
     case BP_078V:
-      volt = value * 0.078 / 0x7fffff;
+      volt = value * 0.078125 / 0x7fffff;
       break;
   }
   return volt;
@@ -924,7 +934,7 @@ double tc_temperature_USB2408(libusb_device_handle *udev, int tc_type, uint8_t c
     return -1;
   }
   // Apply calibration offset from Gain Table (EEPROM) address 0x0130 (slope) and 0x0138 (offset)
-  value = value*table_AI[BP_078V][0] + table_AI[BP_078V][1];
+  value = value*table_AI[9][0] + table_AI[9][1];
   // Calculate the TC voltage from the corrected values
   tc_voltage = (value * 2. * 0.078125) / 16777216.;
   // Read the correct CJC block from the array

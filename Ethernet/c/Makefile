@@ -14,9 +14,9 @@
 #############################################################################
 #  Current Version of the driver
 VERSION=1.04
-SRCS =	ethernet.c E-1608.c E-DIO24.c E-TC32.c E-TC.c
+SRCS =	mccEthernet.c E-1608.c E-DIO24.c E-TC32.c E-TC.c
 
-HEADERS = ethernet.h E-1608.h E-DIO24.h E-TC32.h E-TC.h
+HEADERS = mccEthernet.h E-1608.h E-DIO24.h E-TC32.h E-TC.h
 
 OBJS = $(SRCS:.c=.o)   # same list as SRCS with extension changed
 CC=gcc
@@ -33,7 +33,7 @@ TARGETS=libmcceth.$(SHARED_EXT) libmcceth.a test-E-1608 test-E-DIO24 test-E-TC32
 
 ID=MCCLIBETH
 DIST_NAME=$(ID).$(VERSION).tgz
-DIST_FILES={README,Makefile,ethernet.h,ethernet.c,E-1608.h,E-1608.c,test-E-1608.c,E-DIO24.h,E-DIO24.c,test-E-DIO24.c,E-TC32.h,E-TC32.c,test-E-TC32.c,E-TC.h,E-TC.c,test-E-TC.c}
+DIST_FILES={README,Makefile,mccEthernet.h,mccEthernet.c,E-1608.h,E-1608.c,test-E-1608.c,E-DIO24.h,E-DIO24.c,test-E-DIO24.c,E-TC32.h,E-TC32.c,test-E-TC32.c,E-TC.h,E-TC.c,test-E-TC.c}
 ###### RULES
 all: $(TARGETS)
 

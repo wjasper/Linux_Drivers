@@ -168,7 +168,6 @@ start:
         break;
       case 'I':
 	printf("Testing USB-20X Analog Input Scan.\n");
-	usbAInScanStop_USB20X(udev);
         printf("Enter number of scans: ");
         scanf("%d", &count);
 	printf("Enter number of channels [1-8]: ");
@@ -265,7 +264,7 @@ start:
           printf("Analog Output not supported for this device.\n");
           break;
 	}
-	printf("Input channel [0-1]: ");
+	printf("Enter output channel [0-1]: ");
 	scanf("%hhd", &channel);
 	printf("Input value [0-4095]: ");
 	scanf("%hd", &value);

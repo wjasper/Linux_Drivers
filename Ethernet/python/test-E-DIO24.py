@@ -64,13 +64,13 @@ def main():
       print('connect P2D6 to P2D7')
       mask = 0xc00000
       edio24.DConfig_W(mask, 0x800000) # set pins P2D6 output, counter pin P2D7 input
-      edio24.resetCounter()            # reset the counter
+      edio24.ResetCounter()            # reset the counter
       for i in range(20):
         edio24.DOut(mask, 0x400000)    # set P2D6 HI
         time.sleep(.05)
         edio24.DOut(mask, 0x000000)    # set P2D6 LOW
         time.sleep(.05)
-        count = edio24.counter()
+        count = edio24.Counter()
         print('Counter = ', count)
     elif ch == 'C':
       mask = int(input('Enter mask (which bits to configure): '),16)

@@ -11,6 +11,11 @@
 *.pyc
 __pycache__
 
+# Backup files #
+##########################
+\#*
+*~
+
 # Compiled test programs #
 ##########################
 test-usb1608G
@@ -52,6 +57,11 @@ test-usb-dio32HS
 test-usb-tc32
 test-bth1208LS
 test-minilab1008
+test-bth1208LS
+test-E-DIO24
+test-E-TC
+test-E-TC32
+test-E-1608
 
 # Packages #
 ############

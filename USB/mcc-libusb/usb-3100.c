@@ -241,8 +241,9 @@ void usbAOut_USB31XX(hid_device *hid, uint8_t channel, uint16_t value, uint8_t u
         I_out = ----  * ----       for a 0-20mA range.  
                 2^16    249 Ohm
 
-	The current output is independent of the range selection.  k is the value written to the device.  A
-        current and voltage are always output for a given value.
+	The current output is independent of the range selection.  k
+        is the value written to the device.  A current and voltage are
+        always output for a given value.
   */
 
   double dvalue;

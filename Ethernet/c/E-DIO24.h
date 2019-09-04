@@ -23,7 +23,7 @@
 extern "C" { 
 #endif
 
-#include "ethernet.h"
+#include "mccEthernet.h"
 
 #define EDIO24_PID       0x0137
 

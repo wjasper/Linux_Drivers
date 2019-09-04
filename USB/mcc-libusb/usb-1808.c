@@ -638,8 +638,6 @@ int usbAOutScanConfigW_USB1808(libusb_device_handle *udev, uint8_t scanQueue[3],
     Analog Out 0 :   0
     Analog Out 1 :   1
     DIO:             2
-
-
   */
 
   int ret;

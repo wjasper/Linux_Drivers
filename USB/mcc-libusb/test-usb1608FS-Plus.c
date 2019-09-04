@@ -221,7 +221,6 @@ start:
       case 'C':
       	printf("Testing USB-1608FS_Plus Analog Input Scan in Continuous mode 8 channels\n");
         printf("Hit any key to exit\n");
-	usbAInScanStop_USB1608FS_Plus(udev);
         count = 0;        // for continuous mode
 	printf("Enter sampling frequency [Hz]: ");
 	scanf("%lf", &frequency);

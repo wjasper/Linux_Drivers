@@ -70,8 +70,8 @@ int main (int argc, char **argv)
   double temperature;
   double frequency;
   double sine[512];
-  int16_t sdata[512];  // holds 16 bit signed analog output data
-  int32_t idata[512];  // holds 24 bit signed analog input data
+  uint16_t sdata[512];  // holds 16 bit unsigned analog output data
+  int32_t idata[512];   // holds 24 bit signed analog input data
   uint8_t status;
   uint16_t depth;
   uint16_t count;
@@ -149,7 +149,7 @@ int main (int argc, char **argv)
         break;
       case 'c':
         usbCounterInit_USB2408(udev, COUNTER0);
-        printf("Connect DO0 to CTR0\n");
+        printf("Connect DIO0 to CTR0\n");
         toContinue();
         for (i = 0; i < 100; i++) {
 	  usbDOut_USB2408(udev, 0x0, 0);
@@ -182,7 +182,7 @@ int main (int argc, char **argv)
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
         j = 0;
 	do {
-	  usbAInScanRead_USB2408(udev, 512, 8, idata, 1);
+	  usbAInScanRead_USB2408(udev, 64, 8, idata, 1);          // 512 = 64 scans * 8 channels / scan
 	  for (i = 0; i < 512; i++) {
 	    queue_index = idata[i] >> 24;                         // MSB of data contains the queue index;
 	    gain = scanQueue.queue[queue_index].range;
@@ -218,7 +218,7 @@ int main (int argc, char **argv)
       case 'i':
         printf("Input channel [0-7]: ");
         scanf("%hhd", &channel);
-	printf("Gain Range for channel %d:  1 = 10V  2 = 5V  2 = 2.5V Differential: ", channel);
+	printf("Gain Range for channel %d:  1 = 10V  2 = 5V  3 = 2.5V Differential: ", channel);
 	while((ch = getchar()) == '\0' || ch == '\n');
 	switch(ch) {
   	  case '1': gain = BP_10V; break;
@@ -265,11 +265,11 @@ int main (int argc, char **argv)
 
 	usbAInScanQueueWrite_USB2408(udev, &scanQueue);
 	usbAInScanStart_USB2408(udev, 900, count, 15);
-	usbAInScanRead_USB2408(udev, count, 1, idata, 0);
+	usbAInScanRead_USB2408(udev, count, scanQueue.count, idata, 0);
 	usbAInScanStop_USB2408(udev);
 
 	usbAInScanQueueRead_USB2408(udev, &scanQueue);
-	for (i = 0; i < count; i++) {
+	for (i = 0; i < count*scanQueue.count; i++) {
 	  queue_index = idata[i] >> 24;                         // MSB of data contains the queue index;
 	  gain = scanQueue.queue[queue_index].range;
 	  channel = scanQueue.queue[queue_index].channel;
@@ -294,19 +294,25 @@ int main (int argc, char **argv)
         channel = 0;
 	printf("Test of Analog Output Scan.\n");
 	printf("Hook scope up to VDAC 0\n");
-	printf("Enter desired frequency of sine wave [Hz]: ");
+	printf("Enter desired frequency of sine wave [Hz] [10 - 256 Hz]: ");
 	scanf("%lf", &frequency);
-	for (i = 0; i < 512; i ++) {
-	  sine[i] = 10*sin(2.*M_PI*i/128.);
+	for (i = 0; i < 512; i++) {
+	  sine[i] = 10.*sin(2.*M_PI*i/64.);
 	}
-	voltsTos16_USB2408_2AO(sine, sdata, 512, table_AO[channel]);
+	voltsToUint16_USB2408_2AO(sine, sdata, 512, table_AO[channel]);
 	usbAOutScanStop_USB2408_2AO(udev);
-	usbAOutScanStart_USB2408_2AO(udev, 128.*frequency, 0, (1 << channel));
-	printf("Hit \'s <CR>\' to stop ");
+	usbAOutScanStart_USB2408_2AO(udev, frequency, 0, (0x1 << channel));
+	printf("Hit \'s <CR>\' to stop\n ");
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
+	j = 0;
 	do {
-	  libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_OUT|1, (unsigned char *) sdata, sizeof(sdata), &transferred, 1000);
+	  ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_OUT|1, (unsigned char *) sdata, sizeof(sdata), &transferred, 10000);
+	  if (ret < 0) {
+	    perror("Error in bulk write tansfer");
+	    printf("Scan %d: Wrote %d bytes  sizeof(sdata) = %zu\n", j++, transferred, sizeof(sdata));
+	    return -1;
+	  } 
 	} while (!isalpha(getchar()));
 	fcntl(fileno(stdin), F_SETFL, flag);
 	usbAOutScanStop_USB2408_2AO(udev);
@@ -369,8 +375,11 @@ int main (int argc, char **argv)
 	    tc_type = TYPE_B; break;
 	  default: tc_type = TYPE_J; break;
 	}
-	temperature = tc_temperature_USB2408(udev, tc_type, channel);
-	printf("Temperature = %.3f C  %.3f F\n", temperature, temperature*9./5. + 32.);
+	for (i = 0; i < 20; i++) {
+	  temperature = tc_temperature_USB2408(udev, tc_type, channel);
+	  printf("Temperature = %.3f C  %.3f F\n", temperature, temperature*9./5. + 32.);
+	  sleep(1);
+	}
         break;
       case 'v':
         usbGetVersion_USB2408(udev, version);

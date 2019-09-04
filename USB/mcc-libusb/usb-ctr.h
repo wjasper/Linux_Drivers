@@ -32,7 +32,7 @@ extern "C" {
 #define NTIMER    4        // Number of PWM Timers
 #define NCOUNTER  8        // Number of Counters
 
-  /* Status bit values */
+// Status bit values 
 #define PACER_RUNNING      (0x1 << 1)
 #define SCAN_OVERRUN       (0x1 << 2)
 #define SCAN_DONE          (0x1 << 5)
@@ -138,7 +138,7 @@ void usbCounterParamsW_USB_CTR(libusb_device_handle *udev, uint8_t counter, Coun
 
 void usbScanConfigR_USB_CTR(libusb_device_handle *udev, uint8_t lastElement, ScanList *scanList);
 void usbScanConfigW_USB_CTR(libusb_device_handle *udev, uint8_t lastElement, ScanList scanList);
-void usbScanStart_USB_CTR(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, uint32_t pacer_period, uint8_t options);
+void usbScanStart_USB_CTR(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, double frequency, uint8_t options);
 void usbScanStop_USB_CTR(libusb_device_handle *udev);
 void usbScanClearFIFO_USB_CTR(libusb_device_handle *udev);
 void usbScanBulkFlush_USB_CTR(libusb_device_handle *udev, uint8_t count);

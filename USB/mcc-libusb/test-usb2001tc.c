@@ -65,7 +65,7 @@ int main (int argc, char **argv)
   }
 
   if ((udev = usb_device_find_USB_MCC(USB_2001_TC_PID, NULL))) {
-    printf("Success, found a USB-2100-TC!\n");
+    printf("Success, found a USB-2001-TC!\n");
   } else {
     printf("Failure, did not find a USB-2100-TC!\n");
     return 0;

@@ -20,28 +20,10 @@ import usb1
 import time
 import sys
 from struct import *
-
-class Error(Exception):
-  ''' Base class for other exceptions.'''
-  pass
-
-class OverrunError(Error):
-  ''' Raised when overrun on AInScan'''
-  pass
-
-class UnderrunError(Error):
-  ''' Raised when underrun on AOutScan'''
-  pass
-
-# Base class for lookup tables of calibration coefficients (slope and offset)
-class table:
-  def __init__(self):
-    self.slope = 0.0
-    self.intercept = 0.0
+from mccUSB import *
 
 
-class usb_1408FS:
-
+class usb_1408FS(mccUSB):
   # Gain Ranges
   SE_10_00V   = 0x9         # Single Ended 0-10.0 V
   BP_20_00V   = 0x0         # Differential +/- 20.0 V
@@ -120,8 +102,7 @@ class usb_1408FS:
 
   def __init__(self, serial=None):
     self.productID = 0x00a1                            # MCC USB-1408FS
-    self.context = usb1.USBContext()
-    self.udev = self.context.openByVendorIDAndProductID(0x9db, self.productID)
+    self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
       raise IOError("MCC USB-1408FS not found")
     for i in range(4):
@@ -233,12 +214,11 @@ class usb_1408FS:
     wIndex = 0                     # interface
 
     if channel < 0 or channel > 7:
-      print('AIn: channel out of range.')
+      raise ValueError('AIn: channel out of range.')
       return
     if gain == self.SE_10_00V:
       # offset channels by 8
       # set range value to 0 (+/-10V)
-      print('Single Ended mode')
       ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.AIN, channel+8, 0x0], timeout = 100)
     else:
       ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.AIN, channel, gain], timeout = 100)
@@ -343,10 +323,10 @@ class usb_1408FS:
     wIndex = 0                          # interface
 
     if hichannel > 7:
-      print('AInScan: hichannel out of range')
+      raise ValueError('AInScan: hichannel out of range')
       return
     if lowchannel > 7:
-      print('AInScan: lowchannel out of range')
+      raise ValueError('AInScan: lowchannel out of range')
       return
 
     nSamples = count
@@ -358,7 +338,7 @@ class usb_1408FS:
         break
 
     if prescale == 9 or preload == 0:
-      print('AInScan: frequency out of range')
+      raise ValueError('AInScan: frequency out of range')
       return
 
     # Load the gain queue
@@ -535,13 +515,13 @@ class usb_1408FS:
     wIndex = 0                           # interface
 
     if (hichannel > 1):
-      print('AOutScan: hichannel out of range')
+      raise ValueError('AOutScan: hichannel out of range')
       return
     if (lowchannel > 1):
-      print('AOutScan: lowchannel out of range')
+      raise ValueError('AOutScan: lowchannel out of range')
       return
     if (lowchannel > hichannel):
-      print('AOutScan: lowchannel greater than hichannel')
+      raise ValueError('AOutScan: lowchannel greater than hichannel')
       return
     if lowchannel == hichannel:
       count = len(data)
@@ -557,13 +537,13 @@ class usb_1408FS:
     elif frequency == 0:      # external sync
       preload = 0xff
     else:
-      print('AOutScan: frequency out of range.')
+      raise ValueError('AOutScan: frequency out of range.')
       return
 
     preload = int(preload)
 
     if prescale == 9 or preload == 0:
-      print('AOutScan: frequency out of range.')
+      raise ValueError('AOutScan: frequency out of range.')
 
     nSamples = len(data)
     timeout = int((nSamples*1000)/frequency + 1000)
@@ -685,7 +665,7 @@ class usb_1408FS:
     value = bytearray(count)
 
     if (count > 62):
-      print('MemRead: max count is 62')
+      raise ValueError('MemRead: max count is 62')
       return
     buf = [self.MEM_READ, address & 0xff, (address >> 8) & 0xff, 0x0, count]
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, buf, timeout = 5000)
@@ -723,7 +703,7 @@ class usb_1408FS:
     wIndex = 0                           # interface
 
     if (count > 59):
-      print('MemWrite: max count is 59')
+      raise ValueError('MemWrite: max count is 59')
 
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.MEM_WRITE,address, data[:count]], timeout = 100)
 
@@ -919,7 +899,7 @@ class usb_1408FS:
     wIndex = 0                            # interface
 
     if (count > 32):
-      print('WriteCode: count greater than 32')
+      raise ValueError('WriteCode: count greater than 32')
       return
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, \
             [self.WRITE_CODE, address&0xff, (address>>8)&0xff, (address>>16)&0xff, count, data[0:count]], timeout = 100)
@@ -934,7 +914,7 @@ class usb_1408FS:
     wIndex = 0                           # interface
 
     if (count > 62):
-      print('ReadCode: count greater than 62')
+      raise ValueError('ReadCode: count greater than 62')
       return
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, \
              [self.READ_CODE, address&0xff, (address>>8)&0xff, (address>>16)&0xff, count], timeout = 100)                
@@ -995,27 +975,4 @@ class usb_1408FS:
       print('    Normal sync')
     if status & self.UPDATE_MODE:
       print('    Program memory update mode')
-
-  def getSerialNumber(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getSerialNumber())
-
-  def getProduct(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getProduct())
-
-  def getManufacturer(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getManufacturer())
-
-  def getMaxPacketSize(self):
-    with usb1.USBContext() as context:
-      for device in context.getDeviceIterator(skip_on_error=True):
-        if device.getVendorID() == 0x9db and device.getProductID() == self.productID:
-          return(device.getMaxPacketSize0())
+      

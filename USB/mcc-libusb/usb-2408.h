@@ -75,8 +75,8 @@ extern "C" {
 #define COUNTER1         0x1       //  Counter 1
   
 #define NCHAN_2408      16       // max number of A/D channels in the device (8 Differential)
-#define nCJCGrad_2408    8       // max number of CJC Gradient array elecments
-#define NGAINS_2408      9       // max number of gain levels (analog input)
+#define nCJCGrad_2408    8       // max number of CJC Gradient array elements
+#define NGAINS_2408     10       // max number of gain levels (analog input)
 #define MAX_QUEUE_SIZE  64       // max number of entries in the AIN scan queue
 #define NCHAN_AO_2408    2       // number of analog output channels
 
@@ -134,7 +134,7 @@ void usbAOutScanStop_USB2408_2AO(libusb_device_handle *udev);
 void usbAOutScanStart_USB2408_2AO(libusb_device_handle *udev, double frequency, uint16_t scans, uint8_t options);
 uint8_t  usbAOutScanStatus_USB2408_2AO(libusb_device_handle *udev, uint16_t *depth);
 void usbAOut_USB2408_2AO(libusb_device_handle *udev, int channel, double voltage, double table_A0[NCHAN_AO_2408][2]);
-void voltsTos16_USB2408_2AO(double *voltage, int16_t *data, int nSamples, double table_AO[]);
+void voltsToUint16_USB2408_2AO(double *voltage, uint16_t *data, int nSamples, double table_AO[]);
 double usbAInMinPacerPeriod_USB2408(libusb_device_handle *udev);
 int  int24ToInt(int int24val);
 double tc_temperature_USB2408(libusb_device_handle *udev, int tc_type, uint8_t channel);

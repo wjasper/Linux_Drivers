@@ -655,7 +655,7 @@ int usbAInScan_USB1208FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
       i += 31;
       break;
       }
-    pipe = (pipe)%3 + 1;  //pipe should take the values 1, 2 or 3
+    pipe = pipe%3 + 1;  //pipe should take the values 1, 2 or 3
   }
 
   usbAInStop_USB1208FS(udev);

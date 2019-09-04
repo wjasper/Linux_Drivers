@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 #include <time.h>
-#include "ethernet.h"
+#include "mccEthernet.h"
 
 #define ETC_PID    0x0138
 

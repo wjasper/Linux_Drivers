@@ -363,6 +363,8 @@ static int das1602_init_one(struct pci_dev *pdev, const struct pci_device_id *en
     device_create(das1602_class, NULL, MKDEV(MajorNumber, minor), NULL, name);
   }
 
+  printk("das1602_init_one: created devices in /dev.\n");
+
   BoardData[NumBoards].nonBlockFile = NULL;
 
   BoardData[NumBoards].nSpare1 = (GATE_EN);
@@ -380,15 +382,19 @@ static int das1602_init_one(struct pci_dev *pdev, const struct pci_device_id *en
   spin_lock_init(&das1602_lock);
 
   BoardData[NumBoards].buf_phy_size = ALIGN_ADDRESS(ADC_BUFF_PHY_SIZE, PAGE_SIZE);
-  BoardData[NumBoards].buf_virt_addr = (u16 *) pci_alloc_consistent( 0,
+  printk("das1602_init_one: getting physical buffer size. = %#x\n", BoardData[NumBoards].buf_phy_size);
+
+  BoardData[NumBoards].buf_virt_addr = (u16 *) pci_alloc_consistent( pdev,
 			                    BoardData[NumBoards].buf_phy_size,
 			                    &BoardData[NumBoards].buf_bus_addr);
+  printk("das1602_init_one: getting virtual address = %p\n", BoardData[NumBoards].buf_virt_addr);
   if (BoardData[NumBoards].buf_virt_addr == 0x0) return -ENOMEM;
 
   /* set PG_reserved flag on DMA memory pages. 
      This protects them from the VM system after they're mmap()'d  
   */
-
+  
+  printk("das1602_init_one: reserving DMA memory pages.\n");
   page = virt_to_page(BoardData[NumBoards].buf_virt_addr);
   for (i = 0; i < BoardData[NumBoards].buf_phy_size/PAGE_SIZE; i++) {
     SetPageReserved(&page[i]);
@@ -412,7 +418,7 @@ static int das1602_init_one(struct pci_dev *pdev, const struct pci_device_id *en
   BoardData[NumBoards].ADC_acqtype = ADC_ACQ_NORMAL;
   #ifdef DEBUG
   printk("das1602_init-one: Board %d: ringbuf_vaddr = %p ringbuf_size: %d\n",
-	 NumBoards, BoardData[Numboards].ringbuf_vaddr, BoardData[NumBoards].rb_size);
+	 NumBoards, BoardData[NumBoards].ringbuf_vaddr, BoardData[NumBoards].rb_size);
   #endif
 
   printk("%s: BADR0=%#x BADR1=%#x BADR2=%#x BADR3=%#x BADR4=%#x\n",
@@ -477,7 +483,7 @@ static void das1602_remove_one(struct pci_dev *pdev)
     ClearPageReserved(&page[i]);
   }
 
-  pci_free_consistent(0,
+  pci_free_consistent(pdev,
 		      BoardData[NumBoards].buf_phy_size,
 		      BoardData[NumBoards].buf_virt_addr,
 		      BoardData[NumBoards].buf_bus_addr);
@@ -1253,7 +1259,7 @@ static int das1602_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
   vmf->page = virt_to_page(v_addr);
 
   #ifdef DEBUG
-    printk ("pcim-das1602_fault mapped address %p to %p\n", vmf->address, v_addr);
+    printk ("pcim-das1602_fault mapped address %ld to %p\n", vmf->address, v_addr);
   #endif
   return 0;
 }

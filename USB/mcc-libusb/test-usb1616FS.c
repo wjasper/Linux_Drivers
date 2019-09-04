@@ -256,7 +256,6 @@ int main (int argc, char **argv) {
 	for (i = 0; i <= 6; i++) {
 	  libusb_release_interface(udev, i);
 	}
-	usbReset_USB1616FS(udev);
 	libusb_close(udev);
 	return 0;
 	break;

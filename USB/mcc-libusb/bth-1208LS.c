@@ -293,6 +293,10 @@ int usbAInScanRead_BTH1208LS(libusb_device_handle *udev, uint32_t count, uint16_
   uint16_t status;
   unsigned char value[MAX_PACKET_SIZE];
 
+  if (count == 0) {  // in continuous mode
+    nbytes = 256;
+  }
+
   if (options & IMMEDIATE_TRANSFER_MODE) {
     for (i = 0; i < nbytes/2; i++) {
       ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|1, (unsigned char *) &data[i], 2, &transferred, 2000);
@@ -314,16 +318,20 @@ int usbAInScanRead_BTH1208LS(libusb_device_handle *udev, uint32_t count, uint16_
   }
 
   status = usbStatus_BTH1208LS(udev);
+  if ((status & AIN_SCAN_OVERRUN)) {
+    printf("Analog AIn scan overrun.\n");
+  }
+
+  if (count == 0) {
+    return nbytes/2;
+  }
+
   // if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
   if ((nbytes%wMaxPacketSize) == 0 && !(status & AIN_SCAN_RUNNING)) {
     libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|1, (unsigned char *) value, 2, &ret, 100);
   }
 
-  if ((status & AIN_SCAN_OVERRUN)) {
-    printf("Analog AIn scan overrun.\n");
-  }
-
-  return nbytes;
+  return nbytes/2;
 }
 
 void usbAInScanStop_BTH1208LS(libusb_device_handle *udev)
@@ -337,7 +345,7 @@ void usbAInScanStop_BTH1208LS(libusb_device_handle *udev)
   }
 }
 
-void usbAInScanConfig_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4])
+void usbAInConfigW_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4])
 {
   /* This command reads or writes the analog input ranges used for
      AInScan in differential mode.  The command will result in a bus
@@ -348,17 +356,17 @@ void usbAInScanConfig_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4])
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
   if (libusb_control_transfer(udev, requesttype, AIN_CONFIG, 0x0, 0x0, (unsigned char *) &ranges[0], 4, LS_DELAY) < 0) {
-    perror("usbAInConfig_BTH1208LS error in writing configuration ranges.");
+    perror("usbAInConfigW_BTH1208LS error in writing configuration ranges.");
   }
 }
 
-void usbAInScanConfigR_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4])
+void usbAInConfigR_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4])
 {
   
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
   if (libusb_control_transfer(udev, requesttype, AIN_CONFIG, 0x0, 0x0, (unsigned char *) &ranges[0], 4, LS_DELAY) < 0) {
-    perror("usbAInScanConfigR_BTH1208LS error in reading configuration ranges.");
+    perror("usbAInConfigR_BTH1208LS error in reading configuration ranges.");
   }
 }
 
@@ -409,9 +417,9 @@ uint16_t usbAOutR_BTH1208LS(libusb_device_handle *udev, uint8_t channel)
   }
 }
 
-/***********************************************
- *            Counter/Timer                    *
- ***********************************************/
+/***************************************
+ *            Counter                  *
+ ***************************************/
 void usbCounter_BTH1208LS(libusb_device_handle *udev, uint32_t *counter)
 {
   /* The command reads the event counter. */
@@ -422,7 +430,7 @@ void usbCounter_BTH1208LS(libusb_device_handle *udev, uint32_t *counter)
   }
 }
 
-void usbCounterReset_BTH1208LS(libusb_device_handle *udev)
+void usbResetCounter_BTH1208LS(libusb_device_handle *udev)
 {
   /* This command resets the event counter to 0 */
   
@@ -633,8 +641,7 @@ uint16_t usbStatus_BTH1208LS(libusb_device_handle *udev)
 void usbInitRadio_BTH1208LS(libusb_device_handle *udev)
 {
   /* This command sets the radio module to factory default settings.
-     This should be used during manufacgturing to initialize the
-     radio.
+     This should be used during manufacturing to initialize the radio.
   */
   
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);

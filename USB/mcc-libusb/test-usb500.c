@@ -773,7 +773,7 @@ int main( void )
   udev = usb_device_find_USB500(USB500_VID, USB500_PID);
   if (udev) {
     printf("Success, found a USB 500!\n");
-    printf("Size of configuration block: %d\n", (int) sizeof(cb));
+    printf("Size of configuration block: %zu\n", sizeof(cb));
   } else {
     printf("Failure, did not find a USB 500!\n");
     return 0;

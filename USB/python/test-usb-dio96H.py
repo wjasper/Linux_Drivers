@@ -27,9 +27,18 @@ def toContinue():
     return False
 
 def main():
-# dev = usb_dio96H()    # USB-DIO96H
-# dev = usb_dio96H_50() # USB-DIO96H-50
-  dev = usb_1096HFS()   # USB-1096HFS
+  # initalize the class
+  try:
+     dev = usb_dio96H()       # USB-DIO96H
+  except:
+    try:
+      dev = usb_dio96H_50()   # USB-DIO96H-50
+    except:
+      try:
+        dev = usb_1096HFS()   # USB-1096HFS
+      except:
+        print('No device found')
+      return
 
   while True :
     print("\nUSB-DIO96H/USB_DIO96H-50/USB-1096HFS Testing")

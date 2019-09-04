@@ -74,7 +74,6 @@ extern "C" {
 #define TRIG_LEVEL_HIGH         (0x3 << 2)
 #define TRIG_LEVEL_LOW          (0x4 << 2)
 #define RETRIGGER_MODE          (0x1 << 5)
-#define STALL_ON_OVERRUN        (0x0)
 #define INHIBIT_STALL           (0x1 << 7)
 
  /* Ranges */
@@ -109,8 +108,8 @@ void usbAInScanStart_BTH1208LS(libusb_device_handle *udev, uint32_t count, uint3
 			       double frequency, uint8_t channel, uint8_t options);
 int usbAInScanRead_BTH1208LS(libusb_device_handle *udev, uint32_t count, uint16_t *data, uint8_t options);
 void usbAInScanStop_BTH1208LS(libusb_device_handle *udev);
-void usbAInScanConfig_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4]);
-void usbAInScanConfigR_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4]);
+void usbAInConfigW_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4]);
+void usbAInConfigR_BTH1208LS(libusb_device_handle *udev, uint8_t ranges[4]);
 void usbAInScanClearFIFO_BTH1208LS(libusb_device_handle *udev);
 void usbBlinkLED_BTH1208LS(libusb_device_handle *udev, uint8_t count);
 void usbReset_BTH1208LS(libusb_device_handle *udev);
@@ -128,7 +127,7 @@ void usbCalMemoryW_BTH1208LS(libusb_device_handle *udev, uint16_t address, uint1
 void usbAOut_BTH1208LS(libusb_device_handle *udev, uint8_t channel, uint16_t value);
 uint16_t usbAOutR_BTH1208LS(libusb_device_handle *udev, uint8_t channel);
 void usbCounter_BTH1208LS(libusb_device_handle *udev, uint32_t *counter);
-void usbCounterReset_BTH1208LS(libusb_device_handle *udev);
+void usbResetCounter_BTH1208LS(libusb_device_handle *udev);
 void cleanup_BTH1208LS(libusb_device_handle *udev);
 double volts_BTH1208LS(uint16_t value, uint8_t range);
   

@@ -109,7 +109,7 @@ void usbUpdateData_USB1608HS(libusb_device_handle *udev, uint16_t length, uint8_
 uint16_t usbUpdateVersion_USB1608HS(libusb_device_handle *udev);
 uint16_t usbUpdateChecksum_USB1608HS(libusb_device_handle *udev);
 void usbUpdateChecksumReset_USB1608HS(libusb_device_handle *udev);
-void usbBuildGainTable_USB1608HS(libusb_device_handle *udev, float *table[NCHAN_1608HS][NGAINS_1608HS][2]);
+void usbBuildGainTable_USB1608HS(libusb_device_handle *udev, float table[NCHAN_1608HS][NGAINS_1608HS][2]);
 float volts_USB1608HS(libusb_device_handle *udev, const int channel, const int gain, const uint16_t value);
 void cleanup_USB1608HS(libusb_device_handle *udev);
 

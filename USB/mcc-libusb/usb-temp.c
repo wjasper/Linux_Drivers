@@ -156,7 +156,7 @@ void usbTin_USBTEMP(hid_device *hid, uint8_t channel, uint8_t units, float *valu
 {
   /*
     This command reads the value from the specified input channel.  The return
-    value is a 32-bit floating point value in the units configured fro the
+    value is a 32-bit floating point value in the units configured for the
     channel.  CJC readings will always be in Celsius.
   */
 
@@ -498,7 +498,7 @@ void usbWriteCode_USBTEMP(hid_device *hid, uint32_t address, uint8_t count, uint
   /*
     This command writes to the program memory in the device.  This command is not accepted
     unless the device is in update mode.  This command will normally be used when downloading
-    a nex hex file, so it supports memory ranges that may be found in the hex file.  The
+    a new hex file, so it supports memory ranges that may be found in the hex file.  The
     microcontroller that is being written to is selected with the "Prepare Download" command.
 
     The address ranges are:
