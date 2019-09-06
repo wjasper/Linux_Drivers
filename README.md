@@ -71,6 +71,7 @@ I have written drivers for the following boards:
 
 **Bluetooth**
 1. BTH-1208LS (C/Python)
+
 **New**:heavy_exclamation_mark: Python drivers for BTH-1208LS
 
 **USB**
