@@ -47,9 +47,10 @@ int main (int argc, char **argv)
   libusb_device_handle *udev = NULL;
 
   int ch;
-  int i; 
+  int i, j; 
   int temp;
   int ret;
+  int flag;
   int device;
   uint32_t period;
   uint16_t version;
@@ -109,6 +110,7 @@ int main (int argc, char **argv)
     printf("Hit 'c' to test counter\n");
     printf("Hit 'P' to print out the counter parameters\n");
     printf("Hit 'i' for scan input\n");
+    printf("Hit 'C' for continuous scan input\n");
     printf("Hit 'd' to test digital I/O\n");
     printf("Hit 'D' to set counter debounce\n");
     printf("Hit 'r' to reset the device\n");
@@ -177,7 +179,7 @@ int main (int argc, char **argv)
 
 	// set up the timer to generate some pulses
 	timer = 1;
-	timer_frequency = 4000.;
+	timer_frequency = 1000.;
 	period = 96.E6/timer_frequency - 1;	
 	usbTimerPeriodW_USB_CTR(udev, timer, period);
 	usbTimerPulseWidthW_USB_CTR(udev, timer, period / 2);
@@ -200,6 +202,55 @@ int main (int argc, char **argv)
 	  printf("Scan: %d     %lld  %lld  %lld  %lld\n", i, (long long) counter_data[0], (long long) counter_data[1],
 		 (long long) counter_data[2], (long long) counter_data[3]);
 	}
+	break;
+      case 'C':
+	printf("Testing continuous scan input\n");
+	printf("Connect Timer 1 to Counter 1\n");
+	count = 0;          // set to 0 for continuous scan.  Returns 256 samples per read
+	frequency = 100;    // scan rate at 100 Hz
+
+	// Set up the scan list (use 4 counter 0-3)
+	for (counter = 0; counter < 4; counter++) {
+	  for (bank = 0; bank < 4; bank++) {
+	    scanList.scanList[4*counter + bank] = (counter & 0x7) | (bank & 0x3) << 3 | (0x2 << 5);
+	  }
+	}
+	scanList.lastElement = 15;
+	usbScanConfigW_USB_CTR(udev,scanList.lastElement, scanList);
+	usbScanConfigR_USB_CTR(udev, scanList.lastElement, &scanList);
+
+	// set up the counters
+	for (counter = 0; counter < 4; counter++) {
+	  usbCounterSet_USB_CTR(udev, counter, 0x0);       // set counter to 0
+	  usbCounterModeW_USB_CTR(udev, counter, 0x0);
+	  usbCounterOptionsW_USB_CTR(udev, counter, 0);    // count on rising edge
+	  usbCounterGateConfigW_USB_CTR(udev, counter, 0); // deable gate
+	  usbCounterOutConfigW_USB_CTR(udev, counter, 0);  // output off
+	}
+
+	// set up the timer to generate some pulses
+	timer = 1;
+	timer_frequency = 100.;
+	period = 96.E6/timer_frequency - 1;	
+	usbTimerPeriodW_USB_CTR(udev, timer, period);
+	usbTimerPulseWidthW_USB_CTR(udev, timer, period / 2);
+	usbTimerCountW_USB_CTR(udev, timer, 0);
+	usbTimerDelayW_USB_CTR(udev, timer, 0);
+	usbTimerControlW_USB_CTR(udev, timer, 0x1);
+
+	usbScanStart_USB_CTR(udev, count, 0, frequency, 0);
+	flag = fcntl(fileno(stdin), F_GETFL);
+	fcntl(0, F_SETFL, flag | O_NONBLOCK);
+        j = 0;
+	do {
+          ret = usbScanRead_USB_CTR(udev, count, scanList.lastElement, data);
+	  printf("Scan: %d  samples read: %d\n", j++, ret);
+	} while (!isalpha(getchar()));
+	fcntl(fileno(stdin), F_SETFL, flag);
+	usbScanStop_USB_CTR(udev);
+	usbScanClearFIFO_USB_CTR(udev);
+	usbScanBulkFlush_USB_CTR(udev, 5);
+	usbTimerControlW_USB_CTR(udev, timer, 0x0);
 	break;
       case 'd':
         printf("\nTesting Digital I/O...\n");
