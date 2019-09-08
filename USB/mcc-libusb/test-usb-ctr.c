@@ -143,7 +143,7 @@ int main (int argc, char **argv)
         printf("Count = %lld.  Should read 100.\n", (long long) usbCounter_USB_CTR(udev, 0));
         break;
       case 'P':
-	for (i = 0; i < NCOUNTER; i++) {
+	for (i = 0; i < USB_CTR_NCOUNTER; i++) {
 	  usbCounterParamsR_USB_CTR(udev, i, &counterParameters[i]);
 	  printf("Counter: %d\t Mode Options: %#x\tCounter Options: %#x\tGate Options: %#x\tOutputOptions: %#x\tdebounce: %#x\n",
 		 i, counterParameters[i].modeOptions, counterParameters[i].counterOptions, counterParameters[i].gateOptions,
@@ -185,7 +185,7 @@ int main (int argc, char **argv)
 	usbTimerDelayW_USB_CTR(udev, timer, 0);
 	usbTimerControlW_USB_CTR(udev, timer, 0x1);
 
-	usbScanStart_USB_CTR(udev, count, 0, frequency, 0);
+	usbScanStart_USB_CTR(udev, count, 0, frequency, 0, 0);
         usbScanRead_USB_CTR(udev, count, scanList.lastElement, data);
 	usbTimerControlW_USB_CTR(udev, timer, 0x0);
 
@@ -266,19 +266,19 @@ int main (int argc, char **argv)
       case 'S':
 	status = usbStatus_USB_CTR(udev);
         printf("Status = %#x\n", status);
-	if (status & PACER_RUNNING) {
+	if (status & USB_CTR_PACER_RUNNING) {
 	  printf("USB-CTR: Pacer running.\n");
 	}
-	if (status & SCAN_OVERRUN) {
+	if (status & USB_CTR_SCAN_OVERRUN) {
 	  printf("USB-CTR: Scan overrun.\n");
 	}
-	if (status & SCAN_DONE) {
+	if (status & USB_CTR_SCAN_DONE) {
 	  printf("USB-CTR: Scan done.\n");
 	}
-	if (status & FPGA_CONFIGURED) {
+	if (status & USB_CTR_FPGA_CONFIGURED) {
 	  printf("USB-CTR: FPGA configured.\n");
 	}
-	if (status & FPGA_CONFIG_MODE) {
+	if (status & USB_CTR_FPGA_CONFIG_MODE) {
 	  printf("USB-CTR: FPGA config mode.\n");
 	}
 	break;
