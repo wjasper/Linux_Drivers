@@ -725,8 +725,8 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, int count, int lastElement, 
     fprintf(stderr, "usbScanRead_USB_CTR: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
   }
 
-  if (count == 0) {
-    return ret;
+  if (count == 0) { // continuous mode
+    return transferred;
   }
 
   int dummy;
@@ -743,7 +743,7 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, int count, int lastElement, 
     usbScanBulkFlush_USB_CTR(udev, 5);
   }
 
-  return ret;
+  return transferred;
 }
   
 

@@ -54,6 +54,7 @@ def main():
     print("Hit 'c' to test counter")
     print("Hit 'P' to read the counter parameters")
     print("Hit 'i' for scan input")
+    print("Hit 'C' for continuous scan")
     print("Hit 't' to test the timers")
     print("Hit 'T' to read timer parameters")
     print("Hit 'L' to read the scan list")
@@ -138,7 +139,7 @@ def main():
         ctr.CounterOutConfigW(counter, 0)   # output off
 
       # set up the timer to generate some pulses
-      timer_frequency = 4000   # 4 pulses per scan
+      timer_frequency = 1000   # 4 pulses per scan
       period = int(96.E6/timer_frequency - 1)
       timer = 1
       ctr.TimerPeriodW(timer, period)
@@ -159,6 +160,54 @@ def main():
           counter_data[counter] += (data[offset+3] & 0xffff) << 48
         print("Scan:", scan, "   ", counter_data[0], counter_data[1], counter_data[2], counter_data[3])
       ctr.TimerControlW(timer, 0x0)
+    elif ch == 'C':
+      print("Testing Continuous scan input")
+      print("Connect Timer 1 to Counter 1")
+      count = 0                  # for continuous scan
+      frequency = 100            # scan rate at 100 Hz
+
+      # Set up the scan list (use 4 counters 0-3)
+      for counter in  range(4):  # use the first 4 counters
+        for bank in range(4):    # each counter has 4 banks of 16-bit registers to be scanned
+          ctr.scanList[4*counter + bank] = (counter & 0x7) | (bank & 0x3) << 3 | (0x2 << 5)
+      ctr.lastElement = 15        # depth of scan list [0-32]
+      ctr.ScanConfigW()
+      ctr.ScanConfigR()
+      
+      # set up the counters
+      for counter in  range(4):  # use the first 4 counters
+        ctr.CounterSet(counter, 0x0)        # set counter to 0
+        ctr.CounterModeW(counter, 0x0)
+        ctr.CounterOptionsW(counter, 0)     # count on rising edge
+        ctr.CounterGateConfigW(counter, 0)  # disable gate
+        ctr.CounterOutConfigW(counter, 0)   # output off
+
+      # set up the timer to generate some pulses
+      timer_frequency = 100          # 1 pulses per scan
+      period = int(96.E6/timer_frequency - 1)
+      timer = 1
+      ctr.TimerPeriodW(timer, period)
+      ctr.TimerPulseWidthW(timer, int(period/2))
+      ctr.TimerCountW(timer, 0)
+      ctr.TimerStartDelayW(timer,0)
+      ctr.TimerControlW(timer, 0x1)
+
+      ctr.ScanStart(count, 0, frequency, 0)
+      flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      scan = 0
+      while True:
+        data = ctr.ScanRead(count)
+        scan += 1
+        print("Scan =", scan, "samples returned =", len(data))
+        c = sys.stdin.readlines()
+        if (len(c) != 0):
+          ctr.ScanStop()
+          break
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)        
+      ctr.TimerControlW(timer, 0x0)
+      ctr.ScanClearFIFO()
+      ctr.BulkFlush(5)
     elif ch == 'P':
       for counter in range(ctr.NCOUNTER):
         ctr.CounterParamsR(counter)

@@ -450,9 +450,7 @@ class usb_3100(mccUSB):    # HID USB-31XX devices
 class usb_3101(usb_3100):
   def __init__(self, serial=None):
     self.productID = 0x009A              # MCC USB-3101
-
     usb_3100.__init__(self)
-
     try:
       self.h.open(0x09db, self.productID, serial)
     except:

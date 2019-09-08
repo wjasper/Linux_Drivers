@@ -696,12 +696,12 @@ class usb_ctr(mccUSB):
     else:
       self.continuous_mode = False
 
-    data = pack('IIIBB', count, retrig_count, pacer_period, (self.wMaxPacketSize-1)&0xff, options&0xff)
+    data = pack('IIIBB', count, retrig_count, pacer_period, (self.wMaxPacketSize//2-1)&0xff, options&0xff)
     self.udev.controlWrite(request_type, request, wValue, wIndex, data, self.HS_DELAY)
 
   def ScanRead(self, count):
     if self.continuous_mode:
-      nSamples = int(self.wMaxPacketSize/2)
+      nSamples = int(self.wMaxPacketSize//2)
     else:
       nSamples = count*(self.lastElement+1)
     time_delay = int(self.HS_DELAY + 1000*nSamples/self.frequency)
