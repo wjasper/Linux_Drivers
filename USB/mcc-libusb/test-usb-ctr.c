@@ -179,7 +179,7 @@ int main (int argc, char **argv)
 
 	// set up the timer to generate some pulses
 	timer = 1;
-	timer_frequency = 1000.;
+	timer_frequency = 100000.;
 	period = 96.E6/timer_frequency - 1;	
 	usbTimerPeriodW_USB_CTR(udev, timer, period);
 	usbTimerPulseWidthW_USB_CTR(udev, timer, period / 2);
@@ -244,7 +244,19 @@ int main (int argc, char **argv)
         j = 0;
 	do {
           ret = usbScanRead_USB_CTR(udev, count, scanList.lastElement, data);
-	  printf("Scan: %d  samples read: %d\n", j++, ret);
+	  printf("Scan: %d  samples read: %d  ", j++, ret/8);  // note 8 bytes per counter
+	  // print out the first four values
+	  offset = 0;
+	  for (counter = 0; counter < 4; counter++) {
+	    offset = counter*4;
+            counter_data[counter] =  (uint64_t) data[offset];
+  	    counter_data[counter] += ((uint64_t) (data[offset+1] & 0xffff)) << 16;
+	    counter_data[counter] += ((uint64_t) (data[offset+2] & 0xffff)) << 32;
+	    counter_data[counter] += ((uint64_t) (data[offset+3] & 0xffff)) << 48;
+	  }
+	  printf("  %lld  %lld  %lld  %lld\n", (long long) counter_data[0], (long long) counter_data[1],
+		 (long long) counter_data[2], (long long) counter_data[3]);
+
 	} while (!isalpha(getchar()));
 	fcntl(fileno(stdin), F_SETFL, flag);
 	usbScanStop_USB_CTR(udev);

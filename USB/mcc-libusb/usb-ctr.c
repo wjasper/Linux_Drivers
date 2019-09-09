@@ -719,9 +719,11 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, int count, int lastElement, 
 
   if (ret < 0) {
     perror("usbScanRead_USB_CTR: error in usb_bulk_transfer.");
+    return ret;
   }
   if (transferred != nbytes) {
     fprintf(stderr, "usbScanRead_USB_CTR: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
+    return transferred;
   }
 
   if (count == 0) { // continuous mode
