@@ -138,11 +138,11 @@ void usbCounterParamsW_USB_CTR(libusb_device_handle *udev, uint8_t counter, Coun
 
 void usbScanConfigR_USB_CTR(libusb_device_handle *udev, uint8_t lastElement, ScanList *scanList);
 void usbScanConfigW_USB_CTR(libusb_device_handle *udev, uint8_t lastElement, ScanList scanList);
-void usbScanStart_USB_CTR(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, double frequency, uint8_t options);
+void usbScanStart_USB_CTR(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, double frequency, uint8_t options, uint8_t scanListSize);
 void usbScanStop_USB_CTR(libusb_device_handle *udev);
 void usbScanClearFIFO_USB_CTR(libusb_device_handle *udev);
 void usbScanBulkFlush_USB_CTR(libusb_device_handle *udev, uint8_t count);
-int usbScanRead_USB_CTR(libusb_device_handle *udev, int count, int lastElement, uint16_t *data);
+int usbScanRead_USB_CTR(libusb_device_handle *udev, int count, uint16_t *data, uint8_t scanListSize);
 
 #ifdef __cplusplus
 } /* closing brace for extern "C" */
