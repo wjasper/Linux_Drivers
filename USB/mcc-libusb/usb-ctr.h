@@ -77,10 +77,29 @@ typedef struct timerParams_t {
   uint32_t delay;
 } TimerParams;
 
-typedef struct scanList_t {
-  uint8_t lastElement;    // the last element of the scan list
+#define CONTINUOUS_SCAN (0x1)
+#define SINGLEIO        (0x2)
+
+typedef struct scanData_t {
   uint8_t scanList[33];   // the channel configuration
-} ScanList;
+  uint8_t lastElement;    // the last element of the scan list [0-32]
+  uint32_t count;         // the total number of scans to perform (0 for continuous scan)
+  uint32_t retrig_count;  // the number of scans to perform for each trigger in retrigger mode
+  double frequency;       // frequency of the scan  (0 for external clock)
+  uint8_t options;        /*   bit 0:   1 = Maintain counter value on scan start, 0 = Clear counter value on scan start
+                               bit 1:   Reserved
+                               bit 2:   Reserved
+                               bit 3:   1 = use trigger
+                               bit 4:   Reserved
+                               bit 5:   Reserved
+                               bit 6:   1 = retrigger mode,  0 = normal trigger
+                               bit 7:   Reserved */
+  uint8_t mode;            /* mode bits:
+                               bit 0:   0 = counting mode,  1 = CONTINUOUS_SCAN
+                               bit 1:   packet_size = 0xff, 1 = SINGLEIO
+			   */
+  uint8_t packet_size;     // number of samples to return - 1 from FIFO
+} ScanData;
 
 
 /* function prototypes for the USB-CTR */
@@ -136,13 +155,14 @@ void usbCounterLimitValuesW_USB_CTR(libusb_device_handle *udev, uint8_t counter,
 void usbCounterParamsR_USB_CTR(libusb_device_handle *udev, uint8_t counter, CounterParams *params);
 void usbCounterParamsW_USB_CTR(libusb_device_handle *udev, uint8_t counter, CounterParams params);
 
-void usbScanConfigR_USB_CTR(libusb_device_handle *udev, uint8_t lastElement, ScanList *scanList);
-void usbScanConfigW_USB_CTR(libusb_device_handle *udev, uint8_t lastElement, ScanList scanList);
-void usbScanStart_USB_CTR(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, double frequency, uint8_t packet_size, uint8_t options);
+void usbScanConfigR_USB_CTR(libusb_device_handle *udev, ScanData *scanData);
+void usbScanConfigW_USB_CTR(libusb_device_handle *udev, ScanData scanData);
+void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData);
+int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t *data);
 void usbScanStop_USB_CTR(libusb_device_handle *udev);
 void usbScanClearFIFO_USB_CTR(libusb_device_handle *udev);
 void usbScanBulkFlush_USB_CTR(libusb_device_handle *udev, uint8_t count);
-int usbScanRead_USB_CTR(libusb_device_handle *udev, int count, int lastElement, uint16_t *data);
+
 
 #ifdef __cplusplus
 } /* closing brace for extern "C" */

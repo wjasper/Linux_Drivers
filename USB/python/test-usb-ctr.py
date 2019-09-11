@@ -139,7 +139,7 @@ def main():
         ctr.CounterOutConfigW(counter, 0)   # output off
 
       # set up the timer to generate some pulses
-      timer_frequency = 1000   # 4 pulses per scan
+      timer_frequency = 1000000   # 100 pulses per scan
       period = int(96.E6/timer_frequency - 1)
       timer = 1
       ctr.TimerPeriodW(timer, period)
@@ -196,10 +196,20 @@ def main():
       flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
       scan = 0
+      counter_data = [0, 0, 0, 0]
       while True:
         data = ctr.ScanRead(count)
         scan += 1
-        print("Scan =", scan, "samples returned =", len(data))
+        print("Scan =", scan, "counter values returned =", len(data)//4, end='')
+        # print out the first four values
+        offset = 0
+        for counter in range(4):
+          offset = counter*4   # there are 4 banks of 16-bit values per counter
+          counter_data[counter] = data[offset] & 0xffff
+          counter_data[counter] += (data[offset+1] & 0xffff) << 16
+          counter_data[counter] += (data[offset+2] & 0xffff) << 32
+          counter_data[counter] += (data[offset+3] & 0xffff) << 48
+        print("   ", counter_data[0], counter_data[1], counter_data[2], counter_data[3])
         c = sys.stdin.readlines()
         if (len(c) != 0):
           ctr.ScanStop()
