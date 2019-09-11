@@ -73,7 +73,7 @@ int main (int argc, char **argv)
 
   TimerParams timerParameters[4];
   CounterParams counterParameters[8];
-  ScanList scanList;
+  ScanData scanData;
   uint16_t data[32000];
   uint64_t counter_data[8];     // 64 bit counts
 
@@ -159,16 +159,17 @@ int main (int argc, char **argv)
 	printf("Connect Timer 1 to Counter 1\n");
 	count = 100;       // total number of scans to perform
 	frequency = 1000;  // scan rate at 1000 Hz
+	numCounters = 4;
 
 	// Set up the scan list (use 4 counter 0-3)
 	for (counter = 0; counter < numCounters; counter++) {
 	  for (bank = 0; bank < numBanks; bank++) {
-	    scanList.scanList[numBanks*counter + bank] = (counter & 0x7) | (bank & 0x3) << 3 | (0x2 << 5);
+	    scanData.scanList[numBanks*counter + bank] = (counter & 0x7) | (bank & 0x3) << 3 | (0x2 << 5);
 	  }
 	}
-	scanList.lastElement = numCounters*numBanks - 1;
-	usbScanConfigW_USB_CTR(udev,scanList.lastElement, scanList);
-	usbScanConfigR_USB_CTR(udev, scanList.lastElement, &scanList);
+	scanData.lastElement = numCounters*numBanks - 1;
+	usbScanConfigW_USB_CTR(udev,scanData);
+	usbScanConfigR_USB_CTR(udev, &scanData);
 
 	// set up the counters
 	for (counter = 0; counter < numCounters; counter++) {
@@ -188,8 +189,15 @@ int main (int argc, char **argv)
 	usbTimerCountW_USB_CTR(udev, timer, 0);
 	usbTimerDelayW_USB_CTR(udev, timer, 0);
 	usbTimerControlW_USB_CTR(udev, timer, 0x1);
-	usbScanStart_USB_CTR(udev, count, 0, frequency, 0, scanList.lastElement+1);
-        usbScanRead_USB_CTR(udev, count, data, scanList.lastElement+1);
+
+	scanData.count = count;
+	scanData.retrig_count = 0;
+	scanData.frequency = frequency;
+	scanData.options = 0x0;
+	scanData.mode = 0x0;
+
+	usbScanStart_USB_CTR(udev, &scanData);
+        usbScanRead_USB_CTR(udev, scanData, data);
 	usbTimerControlW_USB_CTR(udev, timer, 0x0);
 
 	for (i = 0; i < count; i++) {
@@ -210,20 +218,20 @@ int main (int argc, char **argv)
       case 'C':
 	printf("Testing continuous scan input\n");
 	printf("Connect Timer 1 to Counter 1\n");
-	count = 0;           // set to 0 for continuous scan.  Returns 256 samples per read
-	frequency = 10000;   // scan rate at 10000 Hz
+	count = 0;          // set to 0 for continuous scan.  Returns 256 samples per read
+	frequency = 10;     // scan rate at 10000 Hz
 	numCounters = 7;
         numBanks = 4;
 
 	// Set up the scan list 
 	for (counter = 0; counter < numCounters; counter++) {
 	  for (bank = 0; bank < numBanks; bank++) {
-	    scanList.scanList[numBanks*counter + bank] = (counter & 0x7) | (bank & 0x3) << 3 | (0x2 << 5);
+	    scanData.scanList[numBanks*counter + bank] = (counter & 0x7) | (bank & 0x3) << 3 | (0x2 << 5);
 	  }
 	}
-	scanList.lastElement = numCounters*numBanks - 1;
-	usbScanConfigW_USB_CTR(udev,scanList.lastElement, scanList);
-	usbScanConfigR_USB_CTR(udev, scanList.lastElement, &scanList);
+	scanData.lastElement = numCounters*numBanks - 1;
+	usbScanConfigW_USB_CTR(udev, scanData);
+	usbScanConfigR_USB_CTR(udev, &scanData);
 
 	// set up the counters
 	for (counter = 0; counter < numCounters; counter++) {
@@ -244,12 +252,18 @@ int main (int argc, char **argv)
 	usbTimerDelayW_USB_CTR(udev, timer, 0);
 	usbTimerControlW_USB_CTR(udev, timer, 0x1);
 
-	usbScanStart_USB_CTR(udev, count, 0, frequency, 0, scanList.lastElement+1);
+	scanData.count = count;
+	scanData.retrig_count = 0;
+	scanData.frequency = frequency;
+	scanData.options = 0x0;
+	scanData.mode = CONTINUOUS_SCAN;
+
+	usbScanStart_USB_CTR(udev, &scanData);
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
         j = 0;
 	do {
-          ret = usbScanRead_USB_CTR(udev, count, data, scanList.lastElement+1);
+          ret = usbScanRead_USB_CTR(udev, scanData, data);
 	  printf("Scan: %d  samples read: %d  ", j++, ret/8);  // note 8 bytes per counter
 	  // print out the first four values
 	  for (counter = 0; counter < numCounters; counter++) {
@@ -261,7 +275,7 @@ int main (int argc, char **argv)
 	  }
 	  printf("  %lld  %lld  %lld  %lld\n", (long long) counter_data[0], (long long) counter_data[1],
 		 (long long) counter_data[2], (long long) counter_data[3]);
-	  if (j == 500) break;
+	  if (j == 100) break;
 	} while (!isalpha(getchar()));
 	fcntl(fileno(stdin), F_SETFL, flag);
 	usbScanStop_USB_CTR(udev);
@@ -378,12 +392,15 @@ int main (int argc, char **argv)
 	printf("FPGA version %02x.%02x\n", version >> 0x8, version & 0xff);
       	break;
       case 'L':
-	usbScanConfigR_USB_CTR(udev, 33, &scanList);
+	usbScanConfigR_USB_CTR(udev, &scanData);
 	printf("Scan List: ");
 	for (i = 0; i < 33; i++) {
-	  printf("%#x ", scanList.scanList[i]);
+	  printf("%#x ", scanData.scanList[i]);
 	}
         printf("\n");
+	printf("lastElement = %d   count = %d   retrig_count = %d   frequency = %lf  options = %#x   mode = %#x\n",
+	       scanData.lastElement, scanData.count, scanData.retrig_count, scanData.frequency, scanData.options, scanData.mode);
+	printf("packet_size = %d\n", scanData.packet_size);
         break;    
       default:
         break;
