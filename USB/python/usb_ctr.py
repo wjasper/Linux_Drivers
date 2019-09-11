@@ -709,7 +709,7 @@ class usb_ctr(mccUSB):
     try:
      data = unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(nSamples*2), time_delay))
     except:
-      print("Error in ScanRead.  Bytes received = ", len(data), "nSamples = ", nSamples)
+      print("Error in ScanRead.  words received = ", len(data), "nSamples = ", nSamples)
 
     status = self.Status()
     if status & self.SCAN_OVERRUN:
