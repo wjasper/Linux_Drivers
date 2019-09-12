@@ -726,9 +726,7 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t 
   uint16_t status;
 
 
-  if ( (scanData.mode & USB_CTR_CONTINUOUS_READOUT) && (scanData.mode & USB_CTR_SINGLEIO) ) {
-    nbytes = 2*(scanData.lastElement + 1);
-  } else if (scanData.mode & USB_CTR_CONTINUOUS_READOUT) {
+  if ((scanData.mode & USB_CTR_CONTINUOUS_READOUT) || (scanData.mode & USB_CTR_SINGLEIO)) {
     nbytes = 2*(scanData.packet_size);
   } else {
     nbytes = scanData.count*(scanData.lastElement+1)*2;
