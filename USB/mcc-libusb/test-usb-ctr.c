@@ -256,7 +256,7 @@ int main (int argc, char **argv)
 	scanData.retrig_count = 0;
 	scanData.frequency = frequency;
 	scanData.options = 0x0;
-	scanData.mode = USB_CTR_CONTINUOUS_SCAN;
+	scanData.mode = USB_CTR_CONTINUOUS_READOUT;
 
 	usbScanStart_USB_CTR(udev, &scanData);
 	flag = fcntl(fileno(stdin), F_GETFL);
