@@ -659,18 +659,18 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData)
     pacer_period = rint((96.E6/scanData->frequency) - 1);
   }
 
-  if ( scanData->frequency < 10 || (scanData->mode & SINGLEIO) ) {
-    packet_size = (scanData->lastElement+1)*2 - 1;
-  } else if (scanData->mode & CONTINUOUS_SCAN) {
+  if ( scanData->frequency < 10 || (scanData->mode & USB_CTR_SINGLEIO) ) {
+    packet_size = (scanData->lastElement+1) - 1;
+  } else if (scanData->mode & USB_CTR_CONTINUOUS_SCAN) {
     packet_size = (((wMaxPacketSize/(scanData->lastElement+1))*(scanData->lastElement+1)) / 2) - 1;
   } else {
     packet_size = wMaxPacketSize/2 - 1;
   }
   scanData->packet_size = packet_size;
 
-  if (scanData->mode & CONTINUOUS_SCAN || scanData->count == 0) {
+  if (scanData->mode & USB_CTR_CONTINUOUS_SCAN || scanData->count == 0) {
     scanData->count = 0;
-    scanData->mode |= CONTINUOUS_SCAN;
+    scanData->mode |= USB_CTR_CONTINUOUS_SCAN;
   }
 
   memcpy(&data[0], &scanData->count, 4);
@@ -725,9 +725,9 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t 
   uint16_t status;
 
 
-  if ( (scanData.mode & CONTINUOUS_SCAN) && (scanData.mode & SINGLEIO) ) {
+  if ( (scanData.mode & USB_CTR_CONTINUOUS_SCAN) && (scanData.mode & USB_CTR_SINGLEIO) ) {
     nbytes = 2*(scanData.lastElement + 1);
-  } else if (scanData.mode & CONTINUOUS_SCAN) {
+  } else if (scanData.mode & USB_CTR_CONTINUOUS_SCAN) {
     nbytes = 2*(scanData.packet_size+1);
   } else {
     nbytes = scanData.count*(scanData.lastElement+1)*2;
@@ -745,7 +745,7 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t 
     return ret;
   }
 
-  if (scanData.mode & CONTINUOUS_SCAN) { // continuous mode
+  if (scanData.mode & USB_CTR_CONTINUOUS_SCAN) { // continuous mode
     return transferred;
   }
 

@@ -77,8 +77,8 @@ typedef struct timerParams_t {
   uint32_t delay;
 } TimerParams;
 
-#define CONTINUOUS_SCAN (0x1)
-#define SINGLEIO        (0x2)
+#define USB_CTR_CONTINUOUS_SCAN (0x1)
+#define USB_CTR_SINGLEIO        (0x2)
 
 typedef struct scanData_t {
   uint8_t scanList[33];   // the channel configuration
