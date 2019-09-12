@@ -649,7 +649,7 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData)
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
   uint8_t data[14];
   uint32_t pacer_period;    //  pacer timer period value (0 for external clock)
-  uint8_t packet_size;      //  number of samples - 1 to transfer at a time.
+  uint16_t packet_size;     //  number of samples to transfer at a time.
 
   int ret;
 
@@ -659,24 +659,25 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData)
     pacer_period = rint((96.E6/scanData->frequency) - 1);
   }
 
-  if ( scanData->frequency < 10 || (scanData->mode & USB_CTR_SINGLEIO) ) {
-    packet_size = (scanData->lastElement+1) - 1;
-  } else if (scanData->mode & USB_CTR_CONTINUOUS_SCAN) {
-    packet_size = (((wMaxPacketSize/(scanData->lastElement+1))*(scanData->lastElement+1)) / 2) - 1;
+  if (scanData->mode & USB_CTR_FORCE_PACKET_SIZE) {
+    packet_size = scanData->packet_size;
+  } else if (scanData->mode & USB_CTR_SINGLEIO) {
+    packet_size = scanData->lastElement+1;
+  } else if (scanData->mode & USB_CTR_CONTINUOUS_READOUT) {
+    packet_size = (((wMaxPacketSize/(scanData->lastElement+1))*(scanData->lastElement+1)) / 2);
   } else {
-    packet_size = wMaxPacketSize/2 - 1;
+    packet_size = wMaxPacketSize/2;
   }
   scanData->packet_size = packet_size;
 
-  if (scanData->mode & USB_CTR_CONTINUOUS_SCAN || scanData->count == 0) {
-    scanData->count = 0;
-    scanData->mode |= USB_CTR_CONTINUOUS_SCAN;
+  if (scanData->count == 0) {
+    scanData->mode |= USB_CTR_CONTINUOUS_READOUT;
   }
 
   memcpy(&data[0], &scanData->count, 4);
   memcpy(&data[4], &scanData->retrig_count, 4);
   memcpy(&data[8], &pacer_period, 4);
-  data[12] = packet_size;
+  data[12] = packet_size-1;
   data[13] = scanData->options;
 
   ret = libusb_control_transfer(udev, requesttype, SCAN_START, 0x0, 0x0,(unsigned char *) data, sizeof(data), HS_DELAY);
@@ -725,10 +726,10 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t 
   uint16_t status;
 
 
-  if ( (scanData.mode & USB_CTR_CONTINUOUS_SCAN) && (scanData.mode & USB_CTR_SINGLEIO) ) {
+  if ( (scanData.mode & USB_CTR_CONTINUOUS_READOUT) && (scanData.mode & USB_CTR_SINGLEIO) ) {
     nbytes = 2*(scanData.lastElement + 1);
-  } else if (scanData.mode & USB_CTR_CONTINUOUS_SCAN) {
-    nbytes = 2*(scanData.packet_size+1);
+  } else if (scanData.mode & USB_CTR_CONTINUOUS_READOUT) {
+    nbytes = 2*(scanData.packet_size);
   } else {
     nbytes = scanData.count*(scanData.lastElement+1)*2;
   }
@@ -745,7 +746,7 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t 
     return ret;
   }
 
-  if (scanData.mode & USB_CTR_CONTINUOUS_SCAN) { // continuous mode
+  if (scanData.mode & USB_CTR_CONTINUOUS_READOUT) { // continuous mode
     return transferred;
   }
 
