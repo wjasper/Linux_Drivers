@@ -77,8 +77,9 @@ typedef struct timerParams_t {
   uint32_t delay;
 } TimerParams;
 
-#define USB_CTR_CONTINUOUS_SCAN (0x1)
-#define USB_CTR_SINGLEIO        (0x2)
+#define USB_CTR_CONTINUOUS_READOUT (0x1)
+#define USB_CTR_SINGLEIO           (0x2)
+#define USB_CTR_FORCE_PACKET_SIZE  (0x4)
 
 typedef struct scanData_t {
   uint8_t scanList[33];   // the channel configuration
@@ -95,10 +96,11 @@ typedef struct scanData_t {
                                bit 6:   1 = retrigger mode,  0 = normal trigger
                                bit 7:   Reserved */
   uint8_t mode;            /* mode bits:
-                               bit 0:   0 = counting mode,  1 = CONTINUOUS_SCAN
-                               bit 1:   packet_size = 0xff, 1 = SINGLEIO
+                               bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
+                               bit 1:   1 = SINGLEIO
+                               bit 2:   1 = use packet size passed scanData->packet_size
 			   */
-  uint8_t packet_size;     // number of samples to return - 1 from FIFO
+  uint16_t packet_size;    // number of samples to return from FIFO
 } ScanData;
 
 
