@@ -55,6 +55,7 @@ def main():
     print("Hit 'P' to read the counter parameters")
     print("Hit 'i' for scan input")
     print("Hit 'C' for continuous scan")
+    print("Hit 'f' for frequency count")
     print("Hit 't' to test the timers")
     print("Hit 'T' to read timer parameters")
     print("Hit 'L' to read the scan list")
@@ -139,7 +140,7 @@ def main():
         ctr.CounterOutConfigW(counter, 0)   # output off
 
       # set up the timer to generate some pulses
-      timer_frequency = 1000000   # 100 pulses per scan
+      timer_frequency = 100000   # 100 pulses per scan
       period = int(96.E6/timer_frequency - 1)
       timer = 1
       ctr.TimerPeriodW(timer, period)
@@ -164,7 +165,7 @@ def main():
       print("Testing Continuous scan input")
       print("Connect Timer 1 to Counter 1")
       count = 0                  # for continuous scan
-      frequency = 100            # scan rate at 100 Hz
+      frequency = 1000           # scan rate at 1000 Hz
 
       # Set up the scan list (use 4 counters 0-3)
       for counter in  range(4):  # use the first 4 counters
@@ -183,7 +184,7 @@ def main():
         ctr.CounterOutConfigW(counter, 0)   # output off
 
       # set up the timer to generate some pulses
-      timer_frequency = 100          # 1 pulses per scan
+      timer_frequency = 100000          
       period = int(96.E6/timer_frequency - 1)
       timer = 1
       ctr.TimerPeriodW(timer, period)
@@ -200,6 +201,8 @@ def main():
       while True:
         data = ctr.ScanRead(count)
         scan += 1
+        if scan == 100:
+          break
         print("Scan =", scan, "counter values returned =", len(data)//4, end='')
         # print out the first four values
         offset = 0
@@ -218,6 +221,36 @@ def main():
       ctr.TimerControlW(timer, 0x0)
       ctr.ScanClearFIFO()
       ctr.BulkFlush(5)
+    elif ch == 'f':
+      print("Testing frequency count")
+      print("Connect Timer 1 to Counter 1")
+
+      # set up the timer to generate some pulses
+      timer_frequency = 1000   # 10000 Hz
+      period = int(96.E6/timer_frequency - 1)
+      timer = 1
+      ctr.TimerPeriodW(timer, period)
+      ctr.TimerPulseWidthW(timer, int(period/2))
+      ctr.TimerCountW(timer, 0)
+      ctr.TimerStartDelayW(timer,0)
+      ctr.TimerControlW(timer, 0x1)
+
+      # configure counter 1
+      counter = 1
+      ctr.CounterSet(counter, 0x0)        # set counter to 0
+      ctr.CounterModeW(counter, ctr.PERIOD | ctr.PERIOD_MODE_1000X)
+      ctr.CounterOptionsW(counter, 0)     # count on rising edge
+      ctr.CounterGateConfigW(counter, 0)  # disable gate
+      ctr.CounterOutConfigW(counter, 0)   # output off
+
+      time.sleep(2.0)                     
+      count = ctr.Counter(counter)
+      period = count*20.83E-9/1000.
+      frequency = 1/period
+      print("count =", count, "   period =", period, "   frequency = {0:.1f} Hz".format(frequency), \
+            "   timer frequency =", timer_frequency, "Hz")
+        
+      ctr.TimerControlW(timer, 0x0)
     elif ch == 'P':
       for counter in range(ctr.NCOUNTER):
         ctr.CounterParamsR(counter)

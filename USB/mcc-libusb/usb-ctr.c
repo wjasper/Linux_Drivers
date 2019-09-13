@@ -599,7 +599,6 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData)
       bit 5:   Reserved
       bit 6:   1 = retrigger mode,  0 = normal trigger
       bit 7:   Reserved
-    scanQueueSize:  The size of the scan queue which is lastElement + 1 [1-33];
  
     Notes:
 
@@ -658,6 +657,10 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData)
   } else {
     pacer_period = rint((96.E6/scanData->frequency) - 1);
   }
+  
+  if (scanData->count == 0) {
+    scanData->mode |= USB_CTR_CONTINUOUS_READOUT;
+  }
 
   if (scanData->mode & USB_CTR_FORCE_PACKET_SIZE) {
     packet_size = scanData->packet_size;
@@ -669,10 +672,6 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData)
     packet_size = wMaxPacketSize/2;
   }
   scanData->packet_size = packet_size;
-
-  if (scanData->count == 0) {
-    scanData->mode |= USB_CTR_CONTINUOUS_READOUT;
-  }
 
   memcpy(&data[0], &scanData->count, 4);
   memcpy(&data[4], &scanData->retrig_count, 4);
@@ -724,7 +723,6 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t 
   int nbytes;              // number of bytes to read;
   int transferred;
   uint16_t status;
-
 
   if ((scanData.mode & USB_CTR_CONTINUOUS_READOUT) || (scanData.mode & USB_CTR_SINGLEIO)) {
     nbytes = 2*(scanData.packet_size);

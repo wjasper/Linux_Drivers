@@ -128,11 +128,16 @@ class usb_ctr(mccUSB):
   FPGA_VERSION         = 0x52 # Read FPGA version
 
   HS_DELAY = 2000
+  CONTINUOUS_READOUT = 0x1
+  SINGLEIO           = 0x2
+  FORCE_PACKET_SIZE  = 0x4
 
   def __init__(self):
     self.scanList = bytearray(33)
     self.lastElement = 0         # the last element of the scanlist
-    self.continuous_mode = False
+    self.mode = 0
+    self.options = 0
+    self.packet_size = 256
 
     # Find the maxPacketSize for bulk transfers
     self.wMaxPacketSize = self.getMaxPacketSize(libusb1.LIBUSB_ENDPOINT_IN | 0x6)  #EP IN 6
@@ -618,22 +623,26 @@ class usb_ctr(mccUSB):
     self.udev.controlWrite(request_type, request, wValue, wIndex, self.scanList, self.HS_DELAY)
     return
 
-  def ScanStart(self, count, retrig_count, frequency, options):
+  def ScanStart(self, count, retrig_count, frequency, options, mode=0):
     """
     count:         the total number of scans to perform (0 for continuous scan)
     retrig_count:  the number of scans to perform for each trigger in retrigger mode
     pacer_period:  pacer timer period value (0 for external clock)
-    packet_size:   number of samples - 1 to transfer at a time.
+    frequency:     the frequency of the scan
+    packet_size:   number of samples to transfer at a time [1 - 256]
     options:       bit field that controls various options
-      bit 0:   1 = Maintain counter value on scan start, 0 = Clear counter value on scan start
-      bit 1:   Reserved
-      bit 2:   Reserved
-      bit 3:   1 = use trigger
-      bit 4:   Reserved
-      bit 5:   Reserved
-      bit 6:   1 = retrigger mode,  0 = normal trigger
-      bit 7:   Reserved
- 
+                     bit 0:   1 = Maintain counter value on scan start, 0 = Clear counter value on scan start
+                     bit 1:   Reserved
+                     bit 2:   Reserved
+                     bit 3:   1 = use trigger
+                     bit 4:   Reserved
+                     bit 5:   Reserved
+                     bit 6:   1 = retrigger mode,  0 = normal trigger
+                     bit 7:   Reserved
+    mode:          bit field to control the mode of the scan     
+                     bit 0: 1 = 0 = counting mode,  1 = CONTINUOUS_READOUT
+                     bit 1:   1 = SINGLEIO
+                     bit 2:   1 = use packet size in self.packet_size
     Notes:
 
     The pacer rate is set by an internal 32-bit incrementing timer
@@ -685,6 +694,8 @@ class usb_ctr(mccUSB):
 
     self.frequency = frequency
     self.options = options
+    self.count = count
+    self.retrig_count = retrig_count
 
     if frequency == 0:
       pacer_period = 0
@@ -692,16 +703,31 @@ class usb_ctr(mccUSB):
       pacer_period = int((96.E6/frequency) - 1)
 
     if count == 0:    # continuous mode
-      self.continuous_mode = True
+      self.mode |= self.CONTINUOUS_READOUT
     else:
-      self.continuous_mode = False
+      self.mode &= ~self.CONTINUOUS_READOUT
 
-    data = pack('IIIBB', count, retrig_count, pacer_period, (self.wMaxPacketSize//2-1)&0xff, options&0xff)
-    self.udev.controlWrite(request_type, request, wValue, wIndex, data, self.HS_DELAY)
+    if self.mode & self.FORCE_PACKET_SIZE:
+      packet_size = self.packet_size
+    elif self.mode & self.SINGLEIO:
+      packet_size = self.lastElement + 1
+    elif self.mode & self.CONTINUOUS_READOUT:
+      packet_size = int(((self.wMaxPacketSize//(self.lastElement+1))*(self.lastElement+1)) // 2) ;
+    else:
+      packet_size = self.wMaxPacketSize//2
+
+    self.packet_size = packet_size
+    
+    data = pack('IIIBB', count, retrig_count, pacer_period, (packet_size - 1)&0xff, options&0xff)
+
+    try:
+      self.udev.controlWrite(request_type, request, wValue, wIndex, data, self.HS_DELAY)
+    except:
+      print("ScanStart: Error in control write")
 
   def ScanRead(self, count):
-    if self.continuous_mode:
-      nSamples = int(self.wMaxPacketSize//2)
+    if (self.mode & self.CONTINUOUS_READOUT) or (self.mode & self.SINGLEIO):
+      nSamples = self.packet_size
     else:
       nSamples = count*(self.lastElement+1)
     time_delay = int(self.HS_DELAY + 1000*nSamples/self.frequency)
@@ -715,7 +741,7 @@ class usb_ctr(mccUSB):
     if status & self.SCAN_OVERRUN:
       raise OverrunERROR
 
-    if self.continuous_mode:
+    if self.mode & self.CONTINUOUS_READOUT:
       return list(data)
 
     # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
