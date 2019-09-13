@@ -313,8 +313,8 @@ int main (int argc, char **argv)
 	Count = usbCounter_USB_CTR(udev, counter);
 	Period = Count*20.83E-9/1000.;
 	Frequency = 1./Period;
-	printf("count = %ld    period = %f    frequency = %.1lf Hz  timer frequency = %.1f Hz\n",
-	       Count, Period, Frequency, timer_frequency);
+	printf("count = %lld    period = %f    frequency = %.1lf Hz  timer frequency = %.1lf Hz\n",
+	       (long long) Count, Period, Frequency, timer_frequency);
 	break;
       case 'd':
         printf("\nTesting Digital I/O...\n");
