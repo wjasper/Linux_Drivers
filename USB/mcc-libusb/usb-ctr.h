@@ -29,36 +29,36 @@ extern "C" {
 #define USB_CTR08_PID      (0x0127)
 #define USB_CTR04_PID      (0x012E)
 
-#define NTIMER    4        // Number of PWM Timers
-#define NCOUNTER  8        // Number of Counters
+#define USB_CTR_NTIMER    4        // Number of PWM Timers
+#define USB_CTR_NCOUNTER  8        // Number of Counters
 
 // Status bit values 
-#define PACER_RUNNING      (0x1 << 1)
-#define SCAN_OVERRUN       (0x1 << 2)
-#define SCAN_DONE          (0x1 << 5)
-#define FPGA_CONFIGURED    (0x1 << 8)
-#define FPGA_CONFIG_MODE   (0x1 << 9)
+#define USB_CTR_PACER_RUNNING      (0x1 << 1)
+#define USB_CTR_SCAN_OVERRUN       (0x1 << 2)
+#define USB_CTR_SCAN_DONE          (0x1 << 5)
+#define USB_CTR_FPGA_CONFIGURED    (0x1 << 8)
+#define USB_CTR_FPGA_CONFIG_MODE   (0x1 << 9)
 
 // Mode Register
-#define TOTALIZE            (0x0)
-#define PERIOD              (0x1)
-#define PULSEWIDTH          (0x2)
-#define TIMING              (0x3)
-#define PERIOD_MODE_1X      (0x0)
-#define PERIOD_MODE_10X     (0x1 << 2)
-#define PERIOD_MODE_100X    (0x2 << 2)
-#define PERIOD_MODE_1000X   (0x3 << 2)
-#define TICK_SIZE_20_83ns   (0x0)
-#define TICK_SIZE_208_3ns   (0x1 << 4)
-#define TICK_SIZE_2083_3ns  (0x2 << 4)
-#define TICK_SIZE_20833_3ns (0x3 << 4)  
+#define USB_CTR_TOTALIZE            (0x0)
+#define USB_CTR_PERIOD              (0x1)
+#define USB_CTR_PULSEWIDTH          (0x2)
+#define USB_CTR_TIMING              (0x3)
+#define USB_CTR_PERIOD_MODE_1X      (0x0)
+#define USB_CTR_PERIOD_MODE_10X     (0x1 << 2)
+#define USB_CTR_PERIOD_MODE_100X    (0x2 << 2)
+#define USB_CTR_PERIOD_MODE_1000X   (0x3 << 2)
+#define USB_CTR_TICK_SIZE_20_83ns   (0x0)
+#define USB_CTR_TICK_SIZE_208_3ns   (0x1 << 4)
+#define USB_CTR_TICK_SIZE_2083_3ns  (0x2 << 4)
+#define USB_CTR_TICK_SIZE_20833_3ns (0x3 << 4)  
 
 // Options Register
-#define CLEAR_ON_READ (0x1 << 0)
-#define NO_RECYCLE    (0x1 << 1)
-#define COUNT_DOWN    (0x1 << 2)
-#define RANGE_LIMIT   (0x1 << 3)
-#define FALLING_EDGE  (0x1 << 4)
+#define USB_CTR_CLEAR_ON_READ (0x1 << 0)
+#define USB_CTR_NO_RECYCLE    (0x1 << 1)
+#define USB_CTR_COUNT_DOWN    (0x1 << 2)
+#define USB_CTR_RANGE_LIMIT   (0x1 << 3)
+#define USB_CTR_FALLING_EDGE  (0x1 << 4)
 
 typedef struct counterParams_t {
   uint8_t counter;
@@ -77,8 +77,9 @@ typedef struct timerParams_t {
   uint32_t delay;
 } TimerParams;
 
-#define CONTINUOUS_SCAN (0x1)
-#define SINGLEIO        (0x2)
+#define USB_CTR_CONTINUOUS_READOUT (0x1)
+#define USB_CTR_SINGLEIO           (0x2)
+#define USB_CTR_FORCE_PACKET_SIZE  (0x4)
 
 typedef struct scanData_t {
   uint8_t scanList[33];   // the channel configuration
@@ -95,10 +96,11 @@ typedef struct scanData_t {
                                bit 6:   1 = retrigger mode,  0 = normal trigger
                                bit 7:   Reserved */
   uint8_t mode;            /* mode bits:
-                               bit 0:   0 = counting mode,  1 = CONTINUOUS_SCAN
-                               bit 1:   packet_size = 0xff, 1 = SINGLEIO
+                               bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
+                               bit 1:   1 = SINGLEIO
+                               bit 2:   1 = use packet size passed scanData->packet_size
 			   */
-  uint8_t packet_size;     // number of samples to return - 1 from FIFO
+  uint16_t packet_size;    // number of samples to return from FIFO
 } ScanData;
 
 

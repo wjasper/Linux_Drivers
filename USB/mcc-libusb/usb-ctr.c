@@ -95,16 +95,16 @@ void usbInit_CTR(libusb_device_handle *udev)
     perror("usbInit_1608G: error in getting wMaxPacketSize");
   }
 
-  if (!(usbStatus_USB_CTR(udev) & FPGA_CONFIGURED)) {
+  if (!(usbStatus_USB_CTR(udev) & USB_CTR_FPGA_CONFIGURED)) {
     usbFPGAConfig_USB_CTR(udev);
-    if (usbStatus_USB_CTR(udev) & FPGA_CONFIG_MODE) {
+    if (usbStatus_USB_CTR(udev) & USB_CTR_FPGA_CONFIG_MODE) {
       for (i = 0; i <= (sizeof(FPGA_data) - 64); i += 64) {
 	usbFPGAData_USB_CTR(udev, &FPGA_data[i], 64);
       }
       if (sizeof(FPGA_data) % 64) {
 	usbFPGAData_USB_CTR(udev, &FPGA_data[i], sizeof(FPGA_data)%64);
       }
-      if (!(usbStatus_USB_CTR(udev) & FPGA_CONFIGURED)) {
+      if (!(usbStatus_USB_CTR(udev) & USB_CTR_FPGA_CONFIGURED)) {
 	printf("Error: FPGA for the USB-CTR is not configured.  status = %#x\n", usbStatus_USB_CTR(udev));
 	return;
       }
@@ -214,8 +214,8 @@ void usbCounterSet_USB_CTR(libusb_device_handle *udev, uint8_t counter, uint64_t
   */
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterSet_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterSet_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   libusb_control_transfer(udev, requesttype, COUNTER, 0x0, counter, (unsigned char *) &count, sizeof(count), HS_DELAY);
@@ -227,8 +227,8 @@ uint64_t usbCounter_USB_CTR(libusb_device_handle *udev, uint8_t counter)
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
   uint64_t count;
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounter_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounter_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return 0;
   }
   libusb_control_transfer(udev, requesttype, COUNTER, 0x0, counter, (unsigned char *) &count, sizeof(count), HS_DELAY);
@@ -259,8 +259,8 @@ void usbCounterModeR_USB_CTR(libusb_device_handle *udev, uint8_t counter, uint8_
   */
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterModeR_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterModeR_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   libusb_control_transfer(udev, requesttype, COUNTER_MODE, 0x0, counter, (unsigned char *) mode, 0x1, HS_DELAY);
@@ -270,8 +270,8 @@ void usbCounterModeW_USB_CTR(libusb_device_handle *udev, uint8_t counter, uint8_
 {
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterModeW_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterModeW_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   libusb_control_transfer(udev, requesttype, COUNTER_MODE, mode, counter, NULL, 0x0, HS_DELAY);
@@ -293,8 +293,8 @@ void usbCounterOptionsR_USB_CTR(libusb_device_handle *udev, uint8_t counter, uin
       
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterOptionsR_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterOptionsR_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   libusb_control_transfer(udev, requesttype, COUNTER_OPTIONS, 0x0, counter, (unsigned char *) options, 0x1, HS_DELAY);
@@ -304,8 +304,8 @@ void usbCounterOptionsW_USB_CTR(libusb_device_handle *udev, uint8_t counter, uin
 {
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterOptionsW_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterOptionsW_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   libusb_control_transfer(udev, requesttype, COUNTER_OPTIONS, options, counter, NULL, 0x0, HS_DELAY);
@@ -339,8 +339,8 @@ void usbCounterDebounceR_USB_CTR(libusb_device_handle *udev, uint8_t counter, ui
       
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterDebounceR_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterDebounceR_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   libusb_control_transfer(udev, requesttype, COUNTER_DEBOUNCE, 0x0, counter, (unsigned char *) debounce, 0x1, HS_DELAY);
@@ -350,8 +350,8 @@ void usbCounterDebounceW_USB_CTR(libusb_device_handle *udev, uint8_t counter, ui
 {
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterDebounceW_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterDebounceW_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   libusb_control_transfer(udev, requesttype, COUNTER_DEBOUNCE, debounce, counter, NULL, 0x0, HS_DELAY);
@@ -376,8 +376,8 @@ void usbCounterGateConfigR_USB_CTR(libusb_device_handle *udev, uint8_t counter, 
   */
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
   
-  if (counter >= NCOUNTER) {
-    printf("usbCounterGateConfigR_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterGateConfigR_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   libusb_control_transfer(udev, requesttype, COUNTER_GATE_CONFIG, 0x0, counter, (unsigned char *) options, 0x1, HS_DELAY);
@@ -387,8 +387,8 @@ void usbCounterGateConfigW_USB_CTR(libusb_device_handle *udev, uint8_t counter, 
 {
     uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterGateConfigW_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterGateConfigW_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   libusb_control_transfer(udev, requesttype, COUNTER_GATE_CONFIG, options, counter, NULL, 0x0, HS_DELAY);
@@ -405,8 +405,8 @@ void usbCounterOutConfigR_USB_CTR(libusb_device_handle *udev, uint8_t counter, u
   */
 uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
   
-  if (counter >= NCOUNTER) {
-    printf("usbCounterOutConfigR_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterOutConfigR_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   libusb_control_transfer(udev, requesttype, COUNTER_OUT_CONFIG, 0x0, counter, (unsigned char *) options, 0x1, HS_DELAY);
@@ -416,8 +416,8 @@ void usbCounterOutConfigW_USB_CTR(libusb_device_handle *udev, uint8_t counter, u
 {
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterOutConfigW_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterOutConfigW_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   libusb_control_transfer(udev, requesttype, COUNTER_OUT_CONFIG, options, counter, NULL, 0x0, HS_DELAY);
@@ -433,8 +433,8 @@ void usbCounterOutValuesR_USB_CTR(libusb_device_handle *udev, uint8_t counter, u
   */
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterOutValuesR_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterOutValuesR_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   if (index >= 2) {
@@ -450,8 +450,8 @@ void usbCounterOutValuesW_USB_CTR(libusb_device_handle *udev, uint8_t counter, u
 {
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterOutValuesW_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterOutValuesW_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   if (index >= 2) {
@@ -472,8 +472,8 @@ void usbCounterLimitValuesR_USB_CTR(libusb_device_handle *udev, uint8_t counter,
   */
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterLimitValuesR_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterLimitValuesR_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   if (index >= 2) {
@@ -487,8 +487,8 @@ void usbCounterLimitValuesW_USB_CTR(libusb_device_handle *udev, uint8_t counter,
 {
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterLimitValuesW_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterLimitValuesW_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   if (index >= 2) {
@@ -507,8 +507,8 @@ void usbCounterParamsR_USB_CTR(libusb_device_handle *udev, uint8_t counter, Coun
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
   uint8_t data[5];
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterParamsR_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterParamsR_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
   libusb_control_transfer(udev, requesttype, COUNTER_PARAMETERS, 0x0, counter, (unsigned char *) data, sizeof(data), HS_DELAY);
@@ -526,8 +526,8 @@ void usbCounterParamsW_USB_CTR(libusb_device_handle *udev, uint8_t counter, Coun
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
   uint8_t data[5];
 
-  if (counter >= NCOUNTER) {
-    printf("usbCounterParamsW_USB_CTR: counter > %d\n", NCOUNTER);
+  if (counter >= USB_CTR_NCOUNTER) {
+    printf("usbCounterParamsW_USB_CTR: counter > %d\n", USB_CTR_NCOUNTER);
     return;
   }
 
@@ -649,7 +649,7 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData)
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
   uint8_t data[14];
   uint32_t pacer_period;    //  pacer timer period value (0 for external clock)
-  uint8_t packet_size;      //  number of samples - 1 to transfer at a time.
+  uint16_t packet_size;     //  number of samples to transfer at a time.
 
   int ret;
 
@@ -659,24 +659,25 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData)
     pacer_period = rint((96.E6/scanData->frequency) - 1);
   }
 
-  if ( scanData->frequency < 10 || (scanData->mode & SINGLEIO) ) {
-    packet_size = (scanData->lastElement+1)*2 - 1;
-  } else if (scanData->mode & CONTINUOUS_SCAN) {
-    packet_size = (((wMaxPacketSize/(scanData->lastElement+1))*(scanData->lastElement+1)) / 2) - 1;
+  if (scanData->mode & USB_CTR_FORCE_PACKET_SIZE) {
+    packet_size = scanData->packet_size;
+  } else if (scanData->mode & USB_CTR_SINGLEIO) {
+    packet_size = scanData->lastElement+1;
+  } else if (scanData->mode & USB_CTR_CONTINUOUS_READOUT) {
+    packet_size = (((wMaxPacketSize/(scanData->lastElement+1))*(scanData->lastElement+1)) / 2);
   } else {
-    packet_size = wMaxPacketSize/2 - 1;
+    packet_size = wMaxPacketSize/2;
   }
   scanData->packet_size = packet_size;
 
-  if (scanData->mode & CONTINUOUS_SCAN || scanData->count == 0) {
-    scanData->count = 0;
-    scanData->mode |= CONTINUOUS_SCAN;
+  if (scanData->count == 0) {
+    scanData->mode |= USB_CTR_CONTINUOUS_READOUT;
   }
 
   memcpy(&data[0], &scanData->count, 4);
   memcpy(&data[4], &scanData->retrig_count, 4);
   memcpy(&data[8], &pacer_period, 4);
-  data[12] = packet_size;
+  data[12] = packet_size-1;
   data[13] = scanData->options;
 
   ret = libusb_control_transfer(udev, requesttype, SCAN_START, 0x0, 0x0,(unsigned char *) data, sizeof(data), HS_DELAY);
@@ -725,10 +726,8 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t 
   uint16_t status;
 
 
-  if ( (scanData.mode & CONTINUOUS_SCAN) && (scanData.mode & SINGLEIO) ) {
-    nbytes = 2*(scanData.lastElement + 1);
-  } else if (scanData.mode & CONTINUOUS_SCAN) {
-    nbytes = 2*(scanData.packet_size+1);
+  if ((scanData.mode & USB_CTR_CONTINUOUS_READOUT) || (scanData.mode & USB_CTR_SINGLEIO)) {
+    nbytes = 2*(scanData.packet_size);
   } else {
     nbytes = scanData.count*(scanData.lastElement+1)*2;
   }
@@ -745,17 +744,18 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t 
     return ret;
   }
 
-  if (scanData.mode & CONTINUOUS_SCAN) { // continuous mode
+  if (scanData.mode & USB_CTR_CONTINUOUS_READOUT) { // continuous mode
     return transferred;
   }
 
+  int dummy;
   // if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
   if ((nbytes%wMaxPacketSize) == 0) {
-    libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) value, 2, &ret, 100);
+    libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) value, 2, &dummy, 100);
   }
 
   status = usbStatus_USB_CTR(udev);
-  if ((status & SCAN_OVERRUN)) {
+  if ((status & USB_CTR_SCAN_OVERRUN)) {
     printf("Scan overrun.\n");
     usbScanStop_USB_CTR(udev);
     usbScanClearFIFO_USB_CTR(udev);
@@ -782,8 +782,8 @@ void usbTimerControlR_USB_CTR(libusb_device_handle *udev, uint8_t timer,  uint8_
   */
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (timer > NTIMER) {
-    printf("usbTimerControlR_USB_CTR: timer >= %d\n", NTIMER);
+  if (timer > USB_CTR_NTIMER) {
+    printf("usbTimerControlR_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
   libusb_control_transfer(udev, requesttype, TIMER_CONTROL, 0x0, timer, (unsigned char *) control, sizeof(control), HS_DELAY);
@@ -794,8 +794,8 @@ void usbTimerControlW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint8_t
   /* This command reads/writes the timer control register */
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (timer > NTIMER) {
-    printf("usbTimerControlW_USB_CTR: timer >= %d\n", NTIMER);
+  if (timer > USB_CTR_NTIMER) {
+    printf("usbTimerControlW_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
   libusb_control_transfer(udev, requesttype, TIMER_CONTROL, control, timer, NULL, 0x0, HS_DELAY);
@@ -815,8 +815,8 @@ void usbTimerPeriodR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t
   */
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (timer > NTIMER) {
-    printf("usbTimerPeriodR_USB_CTR: timer >= %d\n", NTIMER);
+  if (timer > USB_CTR_NTIMER) {
+    printf("usbTimerPeriodR_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
   libusb_control_transfer(udev, requesttype, TIMER_PERIOD, 0x0, timer, (unsigned char *) period, sizeof(period), HS_DELAY);
@@ -826,8 +826,8 @@ void usbTimerPeriodW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t
 {
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (timer > NTIMER) {
-    printf("usbTimerControlW_USB_CTR: timer >= %d\n", NTIMER);
+  if (timer > USB_CTR_NTIMER) {
+    printf("usbTimerControlW_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
   libusb_control_transfer(udev, requesttype, TIMER_PERIOD, 0x0, timer, (unsigned char *) &period, sizeof(period),  HS_DELAY);
@@ -848,8 +848,8 @@ void usbTimerPulseWidthR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint
 
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (timer > NTIMER) {
-    printf("usbTimerPulseWidthR_USB_CTR: timer >= %d\n", NTIMER);
+  if (timer > USB_CTR_NTIMER) {
+    printf("usbTimerPulseWidthR_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
   libusb_control_transfer(udev, requesttype, TIMER_PULSE_WIDTH, 0x0, timer, (unsigned char *) pulseWidth, sizeof(pulseWidth), HS_DELAY);
@@ -858,8 +858,8 @@ void usbTimerPulseWidthR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint
 void usbTimerPulseWidthW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t pulseWidth)
 {
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
-  if (timer > NTIMER) {
-    printf("usbTimerPulseWidthW_USB_CTR: timer >= %d\n", NTIMER);
+  if (timer > USB_CTR_NTIMER) {
+    printf("usbTimerPulseWidthW_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
   libusb_control_transfer(udev, requesttype, TIMER_PULSE_WIDTH, 0x0, timer, (unsigned char *) &pulseWidth, sizeof(pulseWidth), HS_DELAY);
@@ -876,8 +876,8 @@ void usbTimerCountR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t 
   */
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (timer > NTIMER) {
-    printf("usbTimerCountR_USB_CTR: timer >= %d\n", NTIMER);
+  if (timer > USB_CTR_NTIMER) {
+    printf("usbTimerCountR_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
   libusb_control_transfer(udev, requesttype, TIMER_COUNT, 0x0, timer, (unsigned char *) count, sizeof(count), HS_DELAY);
@@ -887,8 +887,8 @@ void usbTimerCountW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t 
 {
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (timer > NTIMER) {
-    printf("usbTimerCountW_USB_CTR: timer >= %d\n", NTIMER);
+  if (timer > USB_CTR_NTIMER) {
+    printf("usbTimerCountW_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
   libusb_control_transfer(udev, requesttype, TIMER_COUNT, 0x0, timer, (unsigned char *) &count, sizeof(count), HS_DELAY);
@@ -905,8 +905,8 @@ void usbTimerDelayR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t 
   */
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (timer > NTIMER) {
-    printf("usbTimerDelayR_USB_CTR: timer >= %d\n", NTIMER);
+  if (timer > USB_CTR_NTIMER) {
+    printf("usbTimerDelayR_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
   libusb_control_transfer(udev, requesttype, TIMER_START_DELAY, 0x0, timer, (unsigned char *) delay, sizeof(delay), HS_DELAY);
@@ -916,8 +916,8 @@ void usbTimerDelayW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t 
 {
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (timer > NTIMER) {
-    printf("usbTimerDelayW_USB_CTR: timer >= %d\n", NTIMER);
+  if (timer > USB_CTR_NTIMER) {
+    printf("usbTimerDelayW_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
   libusb_control_transfer(udev, requesttype, TIMER_START_DELAY, 0x0, timer, (unsigned char *) &delay, sizeof(delay), HS_DELAY);
@@ -931,8 +931,8 @@ void usbTimerParamsR_USB_CTR(libusb_device_handle *udev, uint8_t timer, TimerPar
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
   uint8_t data[16];
 
-  if (timer > NTIMER) {
-    printf("usbTimerParamsR_USB_CTR: timer >= %d\n", NTIMER);
+  if (timer > USB_CTR_NTIMER) {
+    printf("usbTimerParamsR_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
   libusb_control_transfer(udev, requesttype, TIMER_PARAMETERS, 0x0, timer, (unsigned char *) data, sizeof(data), HS_DELAY);
@@ -954,8 +954,8 @@ void usbTimerParamsW_USB_CTR(libusb_device_handle *udev, uint8_t timer, TimerPar
   memcpy(&data[8], &params.count, 4);
   memcpy(&data[12], &params.delay, 4);
 
-  if (timer > NTIMER) {
-    printf("usbTimerParamsW_USB_CTR: timer >= %d\n", NTIMER);
+  if (timer > USB_CTR_NTIMER) {
+    printf("usbTimerParamsW_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
   libusb_control_transfer(udev, requesttype, TIMER_PARAMETERS, 0x0, timer, (unsigned char *) data, sizeof(data), HS_DELAY);
