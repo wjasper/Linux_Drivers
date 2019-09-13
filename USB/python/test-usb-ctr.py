@@ -149,7 +149,7 @@ def main():
       ctr.TimerStartDelayW(timer,0)
       ctr.TimerControlW(timer, 0x1)
 
-      ctr.ScanStart(count, 0, frequency, 0)
+      ctr.ScanStart(count, 0, frequency, 0, 0)
       data = ctr.ScanRead(count)
       counter_data = [0, 0, 0, 0]
       for scan in range(count):          # total number of scans

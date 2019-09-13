@@ -135,8 +135,8 @@ class usb_ctr(mccUSB):
   def __init__(self):
     self.scanList = bytearray(33)
     self.lastElement = 0         # the last element of the scanlist
-    self.mode = 0
-    self.options = 0
+    self.scan_mode = 0
+    self.scan_options = 0
     self.packet_size = 256
 
     # Find the maxPacketSize for bulk transfers
@@ -692,10 +692,11 @@ class usb_ctr(mccUSB):
     wValue = 0x0
     wIndex = 0x0
 
-    self.frequency = frequency
-    self.options = options
-    self.count = count
-    self.retrig_count = retrig_count
+    self.scan_frequency = frequency
+    self.scan_options = options
+    self.scan_count = count
+    self.scan_retrig_count = retrig_count
+    self.scan_mode = mode
 
     if frequency == 0:
       pacer_period = 0
@@ -703,19 +704,16 @@ class usb_ctr(mccUSB):
       pacer_period = int((96.E6/frequency) - 1)
 
     if count == 0:    # continuous mode
-      self.mode |= self.CONTINUOUS_READOUT
-    else:
-      self.mode &= ~self.CONTINUOUS_READOUT
+      self.scan_mode |= self.CONTINUOUS_READOUT
 
-    if self.mode & self.FORCE_PACKET_SIZE:
+    if mode & self.FORCE_PACKET_SIZE:
       packet_size = self.packet_size
-    elif self.mode & self.SINGLEIO:
+    elif mode & self.SINGLEIO:
       packet_size = self.lastElement + 1
-    elif self.mode & self.CONTINUOUS_READOUT:
+    elif mode & self.CONTINUOUS_READOUT:
       packet_size = int(((self.wMaxPacketSize//(self.lastElement+1))*(self.lastElement+1)) // 2) ;
     else:
       packet_size = self.wMaxPacketSize//2
-
     self.packet_size = packet_size
     
     data = pack('IIIBB', count, retrig_count, pacer_period, (packet_size - 1)&0xff, options&0xff)
@@ -726,11 +724,11 @@ class usb_ctr(mccUSB):
       print("ScanStart: Error in control write")
 
   def ScanRead(self, count):
-    if (self.mode & self.CONTINUOUS_READOUT) or (self.mode & self.SINGLEIO):
+    if (self.scan_mode & self.CONTINUOUS_READOUT) or (self.scan_mode & self.SINGLEIO):
       nSamples = self.packet_size
     else:
       nSamples = count*(self.lastElement+1)
-    time_delay = int(self.HS_DELAY + 1000*nSamples/self.frequency)
+    time_delay = int(self.HS_DELAY + 1000*nSamples/self.scan_frequency)
     data = []
     try:
      data = unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(nSamples*2), time_delay))
@@ -741,7 +739,7 @@ class usb_ctr(mccUSB):
     if status & self.SCAN_OVERRUN:
       raise OverrunERROR
 
-    if self.mode & self.CONTINUOUS_READOUT:
+    if self.scan_mode & self.CONTINUOUS_READOUT:
       return list(data)
 
     # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
