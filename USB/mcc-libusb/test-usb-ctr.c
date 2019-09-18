@@ -61,6 +61,7 @@ int main (int argc, char **argv)
   uint8_t options;
   uint8_t timer;
   uint8_t debounce;
+  uint8_t control;
 
   int count;
   int numCounters = 4;
@@ -223,7 +224,7 @@ int main (int argc, char **argv)
       case 'C':
 	printf("Testing continuous scan input\n");
 	printf("Connect Timer 1 to Counter 1\n");
-	count = 0;             // set to 0 for continuous scan.  Returns 256 samples per read
+	count = 0;             // set to 0 for continuous scan.  Returns 63 samples per read
 	frequency = 10000;     // scan rate at 10000 Hz
 	numCounters = 7;
         numBanks = 4;
@@ -408,8 +409,12 @@ int main (int argc, char **argv)
 	usbTimerCountW_USB_CTR(udev, timer, 0);
 	usbTimerDelayW_USB_CTR(udev, timer, 0);
 	usbTimerControlW_USB_CTR(udev, timer, 0x1);
+	usbTimerControlR_USB_CTR(udev, timer, &control);
+	printf("Timer control = %hhd\n", control);
 	toContinue();
 	usbTimerControlW_USB_CTR(udev, timer, 0x0);
+	usbTimerControlR_USB_CTR(udev, timer, &control);
+	printf("Timer control = %hhd\n", control);
         break;
       case 'T':
 	for (i = 0; i < 4; i++) {

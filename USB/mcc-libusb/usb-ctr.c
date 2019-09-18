@@ -676,7 +676,7 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData)
   memcpy(&data[0], &scanData->count, 4);
   memcpy(&data[4], &scanData->retrig_count, 4);
   memcpy(&data[8], &pacer_period, 4);
-  data[12] = packet_size-1;
+  data[12] = (uint8_t) packet_size - 1;  // force to uint8_t since in the range 0-255.
   data[13] = scanData->options;
 
   ret = libusb_control_transfer(udev, requesttype, SCAN_START, 0x0, 0x0,(unsigned char *) data, sizeof(data), HS_DELAY);
@@ -779,12 +779,16 @@ void usbTimerControlR_USB_CTR(libusb_device_handle *udev, uint8_t timer,  uint8_
                bits 3-7: reserved
   */
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+  int ret;
 
   if (timer > USB_CTR_NTIMER) {
     printf("usbTimerControlR_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
-  libusb_control_transfer(udev, requesttype, TIMER_CONTROL, 0x0, timer, (unsigned char *) control, sizeof(control), HS_DELAY);
+  ret = libusb_control_transfer(udev, requesttype, TIMER_CONTROL, 0x0, timer, (unsigned char *) control, sizeof(uint8_t), HS_DELAY);
+  if (ret < 0) {
+    perror("usbTimerControlR_USB_CTR: error in reading timer control byte.");
+  }
 }
 
 void usbTimerControlW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint8_t control)
