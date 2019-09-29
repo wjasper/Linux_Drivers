@@ -81,6 +81,9 @@ typedef struct timerParams_t {
 #define USB_CTR_SINGLEIO           (0x2)
 #define USB_CTR_FORCE_PACKET_SIZE  (0x4)
 
+#define USB_CTR_SCAN_DIO           (0x10)
+#define USB_CTR_ZERO_FILL          (0x20)
+
 typedef struct scanData_t {
   uint8_t scanList[33];   // the channel configuration
   uint8_t lastElement;    // the last element of the scan list [0-32]

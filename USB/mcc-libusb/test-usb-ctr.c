@@ -165,14 +165,21 @@ int main (int argc, char **argv)
 	printf("Connect Timer 1 to Counter 1\n");
 	count = 100;       // total number of scans to perform
 	frequency = 1000;  // scan rate at 1000 Hz
-	numCounters = 4;
+	numCounters = 5;   // 4 counters and 1 DIO padded with zeros
 
 	// Set up the scan list (use 4 counter 0-3)
-	for (counter = 0; counter < numCounters; counter++) {
+	for (counter = 0; counter < numCounters-1; counter++) {
 	  for (bank = 0; bank < numBanks; bank++) {
 	    scanData.scanList[numBanks*counter + bank] = (counter & 0x7) | (bank & 0x3) << 3 | (0x2 << 5);
 	  }
 	}
+	counter = numCounters - 1;
+
+	//	scanData.scanList[counter*numBanks]   =  USB_CTR_ZERO_FILL;
+        scanData.scanList[counter*numBanks]   =  USB_CTR_SCAN_DIO;
+	scanData.scanList[counter*numBanks+1] =  USB_CTR_ZERO_FILL;
+	scanData.scanList[counter*numBanks+2] =  USB_CTR_ZERO_FILL;
+	scanData.scanList[counter*numBanks+3] =  USB_CTR_ZERO_FILL;
 	scanData.lastElement = numCounters*numBanks - 1;
 	usbScanConfigW_USB_CTR(udev,scanData);
 	usbScanConfigR_USB_CTR(udev, &scanData);
@@ -215,9 +222,11 @@ int main (int argc, char **argv)
              }
 	  }
 	  printf("Scan: %d     ", i);
-	  for (counter = 0; counter < numCounters; counter++) {
+	  for (counter = 0; counter < numCounters-1; counter++) {
             printf("%lld   ", (long long)counter_data[counter]);
           }
+	  offset = (i+1)*numCounters*numBanks - numBanks;
+	  printf("    %#x %#x %#x %#x", data[offset], data[offset+1], data[offset+2], data[offset+3]);
           printf("\n");
 	}
 	break;
