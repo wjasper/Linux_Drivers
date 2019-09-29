@@ -647,9 +647,9 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData)
 
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
   uint8_t data[14];
-  uint32_t pacer_period;    //  pacer timer period value (0 for external clock)
-  uint16_t packet_size;     //  number of samples to transfer at a time.
-
+  uint32_t pacer_period;                           //  pacer timer period value (0 for external clock)
+  uint16_t packet_size;                            //  number of samples to transfer at a time.
+  int bytesPerScan = (scanData->lastElement+1)*2;  // number of bytes transferred in one scan
   int ret;
 
   if (scanData->frequency == 0) {
@@ -667,7 +667,7 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData)
   } else if (scanData->mode & USB_CTR_SINGLEIO) {
     packet_size = scanData->lastElement+1;
   } else if (scanData->mode & USB_CTR_CONTINUOUS_READOUT) {
-    packet_size = (((wMaxPacketSize/(scanData->lastElement+1))*(scanData->lastElement+1)) / 2);
+    packet_size = (( (wMaxPacketSize/bytesPerScan) * bytesPerScan) / 2);
   } else {
     packet_size = wMaxPacketSize/2;
   }
