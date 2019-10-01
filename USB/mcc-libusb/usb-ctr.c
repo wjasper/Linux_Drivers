@@ -683,6 +683,7 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData)
   if (ret < 0) {
     perror("usbScanStart_USB_CTR: error in starting scan");
   }
+  scanData->status = usbStatus_USB_CTR(udev);
 }
 
 void usbScanStop_USB_CTR(libusb_device_handle *udev)
@@ -723,6 +724,11 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t 
   int nbytes;              // number of bytes to read;
   int transferred;
   uint16_t status;
+
+  if ((scanData.status & USB_CTR_PACER_RUNNING) == 0x0) {
+    fprintf(stderr, "usbScanRead_USB_CTR: pacer must be running to read from buffer\n");
+    return -1;
+  }
 
   if ((scanData.mode & USB_CTR_CONTINUOUS_READOUT) || (scanData.mode & USB_CTR_SINGLEIO)) {
     nbytes = 2*(scanData.packet_size);
@@ -1054,6 +1060,17 @@ uint16_t usbStatus_USB_CTR(libusb_device_handle *udev)
 {
   /*
     This command retrieves the status of the device.
+       Bit 0: reserved
+       Bit 1: 1 = Pacer running
+       Bit 2: 1 = Scan overrun
+       Bit 3: reserved
+       Bit 4: reserved
+       Bit 5: 1 = Scan done
+       Bit 6: reserved
+       Bit 7: reserved
+       Bit 8: 1 = FPGA is configured
+       Bit 9: 1 = In FPGA config mode
+       Bits 10-15: reserved
   */
 
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);

@@ -102,6 +102,7 @@ int main (int argc, char **argv)
   }
   // some initialization
   usbInit_CTR(udev);
+  scanData.status = usbStatus_USB_CTR(udev);
 
   //print out the wMaxPacketSize.  Should be 512
   printf("wMaxPacketSize = %d\n", usb_get_max_packet_size(udev, 0));

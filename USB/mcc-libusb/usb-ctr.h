@@ -104,6 +104,7 @@ typedef struct scanData_t {
                                bit 2:   1 = use packet size passed scanData->packet_size
 			   */
   uint16_t packet_size;    // number of samples to return from FIFO
+  uint16_t status;         // status word of the device
 } ScanData;
 
 
