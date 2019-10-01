@@ -177,9 +177,9 @@ int main (int argc, char **argv)
 
 	//	scanData.scanList[counter*numBanks]   =  USB_CTR_ZERO_FILL;
         scanData.scanList[counter*numBanks]   =  USB_CTR_SCAN_DIO;
-	scanData.scanList[counter*numBanks+1] =  USB_CTR_ZERO_FILL;
-	scanData.scanList[counter*numBanks+2] =  USB_CTR_ZERO_FILL;
-	scanData.scanList[counter*numBanks+3] =  USB_CTR_ZERO_FILL;
+	scanData.scanList[counter*numBanks+1] =  USB_CTR_PADZERO;
+	scanData.scanList[counter*numBanks+2] =  USB_CTR_PADZERO;
+	scanData.scanList[counter*numBanks+3] =  USB_CTR_PADZERO;
 	scanData.lastElement = numCounters*numBanks - 1;
 	usbScanConfigW_USB_CTR(udev,scanData);
 	usbScanConfigR_USB_CTR(udev, &scanData);
