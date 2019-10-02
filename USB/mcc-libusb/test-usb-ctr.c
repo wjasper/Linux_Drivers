@@ -211,7 +211,7 @@ int main (int argc, char **argv)
 	scanData.mode = 0x0;
 
 	usbScanStart_USB_CTR(udev, &scanData);
-        usbScanRead_USB_CTR(udev, scanData, data);
+        usbScanRead_USB_CTR(udev, &scanData, data);
 	usbTimerControlW_USB_CTR(udev, timer, 0x0);
 
 	for (i = 0; i < count; i++) {
@@ -279,7 +279,7 @@ int main (int argc, char **argv)
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
         j = 0;
 	do {
-          ret = usbScanRead_USB_CTR(udev, scanData, data);
+          ret = usbScanRead_USB_CTR(udev, &scanData, data);
 	  printf("Scan: %d  samples read: %d  ", j++, ret/8);  // note 8 bytes per counter
 	  // print out the first four values
 	  for (counter = 0; counter < numCounters; counter++) {

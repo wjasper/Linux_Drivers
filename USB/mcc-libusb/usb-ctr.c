@@ -660,6 +660,9 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData)
   
   if (scanData->count == 0) {
     scanData->mode |= USB_CTR_CONTINUOUS_READOUT;
+    scanData->bytesToRead = -1;                                 // disable and sample forever
+  } else {
+    scanData->bytesToRead = scanData->count*(scanData->lastElement+1)*2;  // total number of bytes to read
   }
 
   if (scanData->mode & USB_CTR_FORCE_PACKET_SIZE) {
@@ -717,7 +720,7 @@ void usbScanBulkFlush_USB_CTR(libusb_device_handle *udev, uint8_t count)
   libusb_control_transfer(udev, requesttype, BULK_FLUSH, count, 0x0, NULL, 0x0, HS_DELAY);
 }
 
-int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t *data)
+int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData *scanData, uint16_t *data)
 {
   char value[64];
   int ret = -1;
@@ -725,15 +728,17 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t 
   int transferred;
   uint16_t status;
 
-  if ((scanData.status & USB_CTR_PACER_RUNNING) == 0x0) {
+  if ((scanData->status & USB_CTR_PACER_RUNNING) == 0x0) {
     fprintf(stderr, "usbScanRead_USB_CTR: pacer must be running to read from buffer\n");
     return -1;
   }
 
-  if ((scanData.mode & USB_CTR_CONTINUOUS_READOUT) || (scanData.mode & USB_CTR_SINGLEIO)) {
-    nbytes = 2*(scanData.packet_size);
+  if (scanData->bytesToRead > 0 && scanData->bytesToRead <= 2*(scanData->packet_size)) {
+    nbytes = scanData->bytesToRead;
+  } else if ((scanData->mode & USB_CTR_CONTINUOUS_READOUT) || (scanData->mode & USB_CTR_SINGLEIO)) {
+    nbytes = 2*(scanData->packet_size);
   } else {
-    nbytes = scanData.count*(scanData.lastElement+1)*2;
+    nbytes = scanData->count*(scanData->lastElement+1)*2;
   }
 
   ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) data, nbytes, &transferred, HS_DELAY);
@@ -741,6 +746,12 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t 
   if (transferred != nbytes) {
     fprintf(stderr, "usbScanRead_USB_CTR: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
     return transferred;
+  } else {
+    scanData->bytesToRead -= transferred;
+  }
+
+  if (scanData->bytesToRead  == 0) {  // should be all done
+    scanData->status = usbStatus_USB_CTR(udev);
   }
 
   if (ret < 0) {
@@ -748,7 +759,7 @@ int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t 
     return ret;
   }
 
-  if (scanData.mode & USB_CTR_CONTINUOUS_READOUT) { // continuous mode
+  if (scanData->mode & USB_CTR_CONTINUOUS_READOUT) { // continuous mode
     return transferred;
   }
 

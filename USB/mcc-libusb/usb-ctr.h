@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-
 #ifndef USB_CTR_H
 
 #define USB_CTR_H
@@ -105,6 +104,7 @@ typedef struct scanData_t {
 			   */
   uint16_t packet_size;    // number of samples to return from FIFO
   uint16_t status;         // status word of the device
+  int bytesToRead;         // number of bytes left to read in the scan
 } ScanData;
 
 
@@ -164,7 +164,7 @@ void usbCounterParamsW_USB_CTR(libusb_device_handle *udev, uint8_t counter, Coun
 void usbScanConfigR_USB_CTR(libusb_device_handle *udev, ScanData *scanData);
 void usbScanConfigW_USB_CTR(libusb_device_handle *udev, ScanData scanData);
 void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData);
-int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData scanData, uint16_t *data);
+int usbScanRead_USB_CTR(libusb_device_handle *udev, ScanData *scanData, uint16_t *data);
 void usbScanStop_USB_CTR(libusb_device_handle *udev);
 void usbScanClearFIFO_USB_CTR(libusb_device_handle *udev);
 void usbScanBulkFlush_USB_CTR(libusb_device_handle *udev, uint8_t count);
