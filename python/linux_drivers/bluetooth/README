@@ -1,0 +1,40 @@
+			Warren J. Jasper
+			wjasper@ncsu.edu
+			March 14, 2016
+
+This file will hopefully guide you on using the bluetooth package
+that will interface to Measurement Computing data acquisition devices.
+You will need to do pairing manually (once), for example using a applet like
+Blueman.  Once pairing is done, the test program will either do
+discovery, or the user can supply the baddr as an optional argument.
+
+
+To connect to  the device:
+./test-bth1208LS                         or
+./test-bth1208LS XX:XX:XX:XX:XX:XX
+
+where XX:XX:XX:XX:XX:XX is the bluetooth address, for example: 00:06:71:50:E3
+
+To compile the library, you need to add the bluez-libs-devel package.
+
+On Fedora 22:                sudo dnf install bluez-libs-devel bluez-tools
+On Raspian/Ubuntu/Debian:    sudo apt-get install libbluetooth-dev bluez-tools
+Other distributions:         You are on your own ....
+
+To run python scipts:
+sudo apt-get install bluez python-bluez
+sudo pip3 install pybluez
+
+The package assumes you have the bluez stack installed on your
+computer.  This should be standard on most versions of Linux.  You
+also need the program bt-device which is usually found in
+/usr/bin/bt-device.
+
+Now you are ready to compile and install the library.
+
+cd ~/Linux_Drivers/Bluetooth/c
+make
+sudo make install
+./test-bth1208LS
+
+

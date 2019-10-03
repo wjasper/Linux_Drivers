@@ -1,0 +1,42 @@
+			Warren J. Jasper
+			wjasper@ncsu.edu
+			August 23, 2018
+
+This file will hopefully guide you on using the mcc-ethernet package
+(C and Python) that will interface to the Measurement Computing data
+acquisition devices.  There are three scenarios for interfacing to the
+E-series devices:
+
+1. The device is connected to a network where it is configured via dhcp.  To access the device
+   run:   for C                       for Python
+       ./test-E-1608                ./test-E-1608.py
+       ./test-E-DIO24               ./test-E-DIO24.py
+       ./test-E-TC                  ./test-E-TC.py
+       ./test-E-TC32                ./test-E-TC32.py
+
+2. The device is configured with an ip and is on the internet.  To access the device, run
+   ./test-E-1608 <ip_address>          ./test-E-1608.py 'ip address'
+   ./test-E-DIO24 <ip_address>         ./test-E-DIO24.py 'ip address'
+   ./test-E-TC <ip_address>            ./test-E-TC.py 'ip address'
+   ./test-E-TC32 <ip_address>          ./test-E-TC32.py 'ip address'
+
+3. The device is connected directly to the host PC (link-local).  On the Raspberry Pi, 
+   edit the file /etc/network/interfaces as follows:
+
+   iface eth0 inet static
+   address 192.168.0.10
+   netmask 255.255.255.0
+   broadcast 192.168.0.255
+   network 192.168.0.0
+   gateway 192.168.0.1
+
+  After saving the file, release any dhcp leases by typing
+  sudo rm /var/dhcp/*
+
+  reboot
+
+
+
+
+
+

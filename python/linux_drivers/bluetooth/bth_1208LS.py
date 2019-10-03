@@ -15,10 +15,9 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-import bluetooth
 import time
 from struct import *
-from mccBluetooth import *
+from linux_drivers.bluetooth.mccBluetooth import *
 from datetime import datetime
 
 BTH1208LS_PID = 6883

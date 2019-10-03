@@ -82,6 +82,16 @@ test-E-1608
 *.sql
 *.sqlite
 
+# IDE generated files #
+#######################
+.vscode
+
+# Python packaging files #
+##########################
+python/*.egg-info
+python/build
+python/dist
+
 # OS generated files #
 ######################
 .DS_Store
