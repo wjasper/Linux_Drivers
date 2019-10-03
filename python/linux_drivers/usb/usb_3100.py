@@ -18,7 +18,7 @@
 import hid
 import time
 from struct import *
-from mccUSB import *
+from linux_drivers.usb.mccUSB import *
     
 class usb_3100(mccUSB):    # HID USB-31XX devices
   DIO_DIR_IN   = 0x1  # input direction

@@ -17,7 +17,7 @@
 
 from datetime import datetime
 from struct import *
-from mccEthernet import *
+from linux_drivers.ethernet.mccEthernet import *
 
 """
     Configuration memory map

@@ -21,7 +21,7 @@ import time
 import sys
 from struct import *
 from datetime import datetime
-from mccUSB import *
+from linux_drivers.usb.mccUSB import *
 
 class CounterParameters:
   def __init__(self):
@@ -150,7 +150,7 @@ class usb_ctr(mccUSB):
     # Configure the FPGA
     if  not (self.Status() & self.FPGA_CONFIGURED) :
       # load the FPGA data into memory
-      from usb_ctr_rbf import FPGA_data
+      from linux_drivers.usb.usb_ctr_rbf import FPGA_data
       print("Configuring FPGA.  This may take a while ...")
       self.FPGAConfig()
       if self.Status() & self.FPGA_CONFIG_MODE:

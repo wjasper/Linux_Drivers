@@ -23,7 +23,7 @@ import sys
 from struct import *
 from datetime import datetime
 from thermocouple import *
-from mccUSB import *
+from linux_drivers.usb.mccUSB import *
 
 
 # Base class for AIn scan queue

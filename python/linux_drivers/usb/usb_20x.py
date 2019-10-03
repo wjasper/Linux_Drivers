@@ -21,7 +21,7 @@ import time
 import sys
 from struct import *
 from datetime import datetime
-from mccUSB import *
+from linux_drivers.usb.mccUSB import *
 
 class usb_20x(mccUSB):
   """

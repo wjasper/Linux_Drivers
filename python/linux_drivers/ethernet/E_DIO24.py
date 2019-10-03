@@ -17,7 +17,7 @@
 
 from datetime import datetime
 from struct import *
-from mccEthernet import *
+from linux_drivers.ethernet.mccEthernet import *
 
 EDIO24_PID = 0x0137  # Product code for the MCC E-DIO24
 

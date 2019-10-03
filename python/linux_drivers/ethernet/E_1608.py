@@ -17,7 +17,7 @@
 
 from datetime import datetime
 from struct import *
-from mccEthernet import *
+from linux_drivers.ethernet.mccEthernet import *
 
 E1608_PID = 0x012F  # Product code for the MCC E-1608
 

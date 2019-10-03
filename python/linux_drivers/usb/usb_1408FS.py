@@ -20,7 +20,7 @@ import usb1
 import time
 import sys
 from struct import *
-from mccUSB import *
+from linux_drivers.usb.mccUSB import *
 
 
 class usb_1408FS(mccUSB):

@@ -18,7 +18,7 @@
 import hid
 import time
 from struct import *
-from mccUSB import *
+from linux_drivers.usb.mccUSB import *
 
 class usb_1208(mccUSB):
 
