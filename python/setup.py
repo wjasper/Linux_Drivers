@@ -9,14 +9,14 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='linux-drivers',
-    version='1.0.0',
+    version='0.0.3',
     description='Open source Linux device drivers for Python 3.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/wjasper/Linux_Drivers',
     author='Warren J. Jasper',
     author_email='wjasper@ncsu.edu',
-    packages=find_packages(include=['linux-drivers', 'linux-drivers.*']),
+    packages=find_packages(),
     python_requires='>=3.6',
     install_requires=[
         'pybluez'
