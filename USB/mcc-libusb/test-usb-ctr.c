@@ -118,6 +118,7 @@ int main (int argc, char **argv)
     printf("Hit 'c' to test counter\n");
     printf("Hit 'P' to print out the counter parameters\n");
     printf("Hit 'i' for scan input\n");
+    printf("Hit 'I' for scan input with continuous readout\n");
     printf("Hit 'C' for continuous scan input\n");
     printf("Hit 'f' for frequency count\n");
     printf("Hit 'd' to test digital I/O\n");
@@ -230,6 +231,85 @@ int main (int argc, char **argv)
 	  printf("    %#x %#x %#x %#x", data[offset], data[offset+1], data[offset+2], data[offset+3]);
           printf("\n");
 	}
+	break;
+      case 'I':
+	printf("Testing scan input with continuous readout\n");
+	printf("Connect Timer 1 to Counter 1\n");
+	count = 100;       // total number of scans to perform
+	frequency = 1000;  // scan rate at 1000 Hz
+	numCounters = 3;   // 3 counters fails; 4 works but prints error message because final buffer is smaller than 512 bytes
+	numBanks = 4;
+
+	// Set up the scan list (use 4 counter 0-3)
+	for (counter = 0; counter < numCounters; counter++) {
+	  for (bank = 0; bank < numBanks; bank++) {
+	    scanData.scanList[numBanks*counter + bank] = (counter & 0x7) | (bank & 0x3) << 3 | (0x2 << 5);
+	  }
+	}
+	scanData.lastElement = numCounters*numBanks - 1;
+	usbScanConfigW_USB_CTR(udev,scanData);
+	usbScanConfigR_USB_CTR(udev, &scanData);
+
+	// set up the counters
+	for (counter = 0; counter < numCounters; counter++) {
+	  usbCounterSet_USB_CTR(udev, counter, 0x0);       // set counter to 0
+	  usbCounterModeW_USB_CTR(udev, counter, 0x0);
+	  usbCounterOptionsW_USB_CTR(udev, counter, 0);    // count on rising edge
+	  usbCounterGateConfigW_USB_CTR(udev, counter, 0); // disable gate
+	  usbCounterOutConfigW_USB_CTR(udev, counter, 0);  // output off
+	}
+
+	// set up the timer to generate some pulses
+	timer = 1;
+	timer_frequency = 1000.;
+	period = 96.E6/timer_frequency - 1;	
+	usbTimerPeriodW_USB_CTR(udev, timer, period);
+	usbTimerPulseWidthW_USB_CTR(udev, timer, period / 2);
+	usbTimerCountW_USB_CTR(udev, timer, 0);
+	usbTimerDelayW_USB_CTR(udev, timer, 0);
+	usbTimerControlW_USB_CTR(udev, timer, 0x1);
+      
+	scanData.count = count;
+	scanData.retrig_count = 0;
+	scanData.frequency = frequency;
+	scanData.options = 0x0;
+	scanData.mode = USB_CTR_CONTINUOUS_READOUT;
+	//scanData.mode = 0x0;
+      
+	// Make sure the FIFO is cleared
+	usbScanStop_USB_CTR(udev);
+	usbScanClearFIFO_USB_CTR(udev);
+	usbScanBulkFlush_USB_CTR(udev, 5);
+
+	usbScanStart_USB_CTR(udev, &scanData);
+	printf("scanData: lastElement=%d, packet_size=%d, options=0x%x, mode=0x%x\n", 
+	       scanData.lastElement, scanData.packet_size, scanData.options, scanData.mode);
+	int currentCounter = 0;
+	while (currentCounter < count) {
+	  int numBytesRead = usbScanRead_USB_CTR(udev, &scanData, data);
+	  if (numBytesRead <= 0) {
+	    printf("Error, usbScanRead_USB_CTR returned %d bytes\n", numBytesRead);
+	    break;
+	  }
+	  int numSamples = numBytesRead/(numCounters * numBanks * 2);
+	  printf("numBytesRead=%d, numSamples=%d\n", numBytesRead, numSamples); 
+	  for (i = 0; i < numSamples; i++) {
+	    for (counter = 0; counter < numCounters; counter++) {
+	      offset = i*numCounters*numBanks + counter*numBanks;
+	      counter_data[counter] = 0;
+	      for (bank = 0; bank < numBanks; bank++) {
+		counter_data[counter] +=  (uint64_t) (data[offset+bank] & 0xffff) << (16*bank);
+	      }
+	    }
+	    printf("Scan: %d     ", currentCounter);
+	    for (counter = 0; counter < numCounters; counter++) {
+	      printf("%lld   ", (long long)counter_data[counter]);
+	    }
+	    printf("\n");
+	    currentCounter++;
+	  }
+	}
+	usbTimerControlW_USB_CTR(udev, timer, 0x0);
 	break;
       case 'C':
 	printf("Testing continuous scan input\n");
