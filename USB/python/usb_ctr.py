@@ -132,12 +132,17 @@ class usb_ctr(mccUSB):
   SINGLEIO           = 0x2
   FORCE_PACKET_SIZE  = 0x4
 
+  SCAN_DIO           = 0x20
+  PADZERO            = 0x40  
+
   def __init__(self):
-    self.scanList = bytearray(33)
-    self.lastElement = 0         # the last element of the scanlist
+    self.scanList = bytearray(33)    # depth of the scan queue is 33
+    self.lastElement = 0             # the last element of the scanlist
     self.scan_mode = 0
     self.scan_options = 0
     self.packet_size = 256
+    self.status = 0
+    self.samplesToRead = -1            # number of bytes left to read from a scan
 
     # Find the maxPacketSize for bulk transfers
     self.wMaxPacketSize = self.getMaxPacketSize(libusb1.LIBUSB_ENDPOINT_IN | 0x6)  #EP IN 6
@@ -697,6 +702,7 @@ class usb_ctr(mccUSB):
     self.scan_count = count
     self.scan_retrig_count = retrig_count
     self.scan_mode = mode
+    bytesPerScan = (self.lastElement+1)*2
 
     if frequency == 0:
       pacer_period = 0
@@ -705,35 +711,57 @@ class usb_ctr(mccUSB):
 
     if count == 0:    # continuous mode
       self.scan_mode |= self.CONTINUOUS_READOUT
+      self.samplesToRead = -1
+    else:
+      self.samplesToRead = count*(self.lastElement+1)
 
     if mode & self.FORCE_PACKET_SIZE:
       packet_size = self.packet_size
     elif mode & self.SINGLEIO:
       packet_size = self.lastElement + 1
     elif mode & self.CONTINUOUS_READOUT:
-      packet_size = int(((self.wMaxPacketSize//(self.lastElement+1))*(self.lastElement+1)) // 2) ;
+      packet_size = int(( (self.wMaxPacketSize//bytesPerScan) * bytesPerScan) // 2)
     else:
       packet_size = self.wMaxPacketSize//2
     self.packet_size = packet_size
     
-    data = pack('IIIBB', count, retrig_count, pacer_period, (packet_size - 1)&0xff, options&0xff)
+    if mode & self.CONTINUOUS_READOUT:
+      data = pack('IIIBB', 0x0, retrig_count, pacer_period, (packet_size - 1)&0xff, options&0xff)
+    else:
+      data = pack('IIIBB', count, retrig_count, pacer_period, (packet_size - 1)&0xff, options&0xff)
 
     try:
       self.udev.controlWrite(request_type, request, wValue, wIndex, data, self.HS_DELAY)
     except:
       print("ScanStart: Error in control write")
 
+    self.status = self.Status()    # The scan should be running
+
   def ScanRead(self, count):
+    if (self.status & self.PACER_RUNNING) == 0x0:
+      print("ScanRead: pacer must be running to read from buffer\n");
+      return -1
+
     if (self.scan_mode & self.CONTINUOUS_READOUT) or (self.scan_mode & self.SINGLEIO):
       nSamples = self.packet_size
     else:
       nSamples = count*(self.lastElement+1)
+
     time_delay = int(self.HS_DELAY + 1000*nSamples/self.scan_frequency)
     data = []
     try:
      data = unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(nSamples*2), time_delay))
     except:
       print("Error in ScanRead.  words received = ", len(data), "nSamples = ", nSamples)
+
+    if self.samplesToRead > nSamples:
+      self.samplesToRead -= nSamples
+    elif self.samplesToRead > 0 and self.samplesToRead < nSamples: # should be all done
+      self.ScanStop()
+      self.ScanClearFIFO()
+      self.BulkFlush(5)
+      self.status = self.Status()
+      return list(data)
 
     status = self.Status()
     if status & self.SCAN_OVERRUN:

@@ -54,6 +54,7 @@ def main():
     print("Hit 'c' to test counter")
     print("Hit 'P' to read the counter parameters")
     print("Hit 'i' for scan input")
+    print("Hit 'I' for for scan input with continuous readout")
     print("Hit 'C' for continuous scan")
     print("Hit 'f' for frequency count")
     print("Hit 't' to test the timers")
@@ -160,6 +161,67 @@ def main():
           counter_data[counter] += (data[offset+2] & 0xffff) << 32
           counter_data[counter] += (data[offset+3] & 0xffff) << 48
         print("Scan:", scan, "   ", counter_data[0], counter_data[1], counter_data[2], counter_data[3])
+      ctr.TimerControlW(timer, 0x0)
+    elif ch == 'I':
+      print("Testing scan input with continuous readout")
+      print("Connect Timer 1 to Counter 1")
+      count = 100                # total number of scans to perform
+      frequency = 1000           # scan rate at 1000 Hz
+      numCounters = 3
+      numBanks = 4
+
+      # Set up the scan list (use 4 counters 0-3)
+      for counter in  range(numCounters):            # use the first 4 counters
+        for bank in range(numBanks):                 # each counter has 4 banks of 16-bit registers to be scanned
+          ctr.scanList[numBanks*counter + bank] = (counter & 0x7) | (bank & 0x3) << 3 | (0x2 << 5)
+      ctr.lastElement = numCounters*numBanks - 1     # depth of scan list [0-32]
+      ctr.ScanConfigW()
+      ctr.ScanConfigR()
+      
+      # set up the counters
+      for counter in  range(numCounters):  # use the first 4 counters
+        ctr.CounterSet(counter, 0x0)        # set counter to 0
+        ctr.CounterModeW(counter, 0x0)
+        ctr.CounterOptionsW(counter, 0)     # count on rising edge
+        ctr.CounterGateConfigW(counter, 0)  # disable gate
+        ctr.CounterOutConfigW(counter, 0)   # output off
+
+      # set up the timer to generate some pulses
+      timer_frequency = 100000   # 100 pulses per scan
+      period = int(96.E6/timer_frequency - 1)
+      timer = 1
+      ctr.TimerPeriodW(timer, period)
+      ctr.TimerPulseWidthW(timer, int(period/2))
+      ctr.TimerCountW(timer, 0)
+      ctr.TimerStartDelayW(timer,0)
+      ctr.TimerControlW(timer, 0x1)
+
+      # Make sure the FIFO is cleared
+      ctr.ScanStop()
+      ctr.ScanClearFIFO()
+      ctr.BulkFlush(5)
+
+      ctr.ScanStart(count, 0, frequency, 0, ctr.CONTINUOUS_READOUT)
+      print("lastElement =", ctr.lastElement, "   packet_size =", ctr.packet_size, "  options =", ctr.scan_options,
+            "mode = ", ctr.scan_mode)
+      counter_data = [0, 0, 0, 0, 0, 0, 0, 0]
+      currentCounter = 0
+      while (currentCounter < count):
+        data = ctr.ScanRead(count)
+        numSamplesRead = len(data)
+        numScansRead = numSamplesRead//(numCounters * numBanks)
+        for scan in range(numScansRead):
+          for counter in range(numCounters):
+            offset = scan*numCounters*numBanks + counter*numBanks   # there are 4 banks of 16-bit values per counter
+            counter_data[counter] = 0
+            for bank in range(numBanks):
+              counter_data[counter] += (data[offset+bank] & 0xffff) << (16*bank)
+          print("Scan:", currentCounter, end="")
+          for counter in range(numCounters):
+            print("   ",counter_data[counter], " ", end="")
+          print("")
+          currentCounter += 1
+
       ctr.TimerControlW(timer, 0x0)
     elif ch == 'C':
       print("Testing Continuous scan input")
