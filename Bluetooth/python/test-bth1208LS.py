@@ -51,6 +51,8 @@ def main():
     print("Can not open device. Could be in charging mode.")
     exit(0)
 
+  print("Found a BTH-1208LS.  address =",device[0].address)
+
   # initalize the class
   bth1208LS = BTH_1208LS(device[0])
 

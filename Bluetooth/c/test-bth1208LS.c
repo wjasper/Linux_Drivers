@@ -80,7 +80,7 @@ int main(int argc, char**argv)
     printf("Error openeing device\n");
     exit(-1);
   } else {
-    printf("Found a Bluetooth BTH-1208LS.\n");
+    printf("Found a Bluetooth BTH-1208LS.  Address = %s\n", device_info.device.baddr);
   }
 
   // some initialization
