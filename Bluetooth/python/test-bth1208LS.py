@@ -29,33 +29,12 @@ def toContinue():
     return False
 
 def main():
-  target_name = "BTH-1208LS-6833"
-  device = []
 
   if len(sys.argv) == 2:
-    device.append(mccBluetoothDevice(sys.argv[1]))
+    bth1208LS = BTH_1208LS(sys.argv[1])
   else:
-    # Discover a BTH-1208LS device
-    device.append(mccBluetoothDevice(discoverDevice(target_name)))
-
-  if (len(device) > 0):
-    print('Number of devices found = ', len(device))
-  else:
-    print('No device', target_name, 'found')
-    exit(0)
-
-  # Open the device
-  try:
-    device[0].openDevice()
-  except:
-    print("Can not open device. Could be in charging mode.")
-    exit(0)
-
-  print("Found a BTH-1208LS.  address =",device[0].address)
-
-  # initalize the class
-  bth1208LS = BTH_1208LS(device[0])
-
+    bth1208LS = BTH_1208LS()
+    
   # allow charging with Bluetooth connected.
   data = [1]
   bth1208LS.SettingsMemoryW(0xe, 1, data)
@@ -82,6 +61,10 @@ def main():
   # print last known calibration date:
   mdate = bth1208LS.CalDate()
   print('\nMFG Calibration date: ', mdate)
+
+  # print out the bluetooth address
+  print("Bluetooth address = ", bth1208LS.address)
+
 
   while True:
     print("\nBTH-1208LS Testing")
@@ -208,7 +191,7 @@ def main():
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
       bth1208LS.AInScanStop()
     elif ch == 'e':
-      bth1208LS.device.sock.close()
+      bth1208LS.sock.close()
       exit(0)
     elif ch == 's':
       print('Serial Number:',bth1208LS.GetSerialNumber())

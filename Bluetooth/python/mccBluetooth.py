@@ -35,35 +35,35 @@ class ResultError(Error):
   pass
     
 
-# Global constants
-MSG_SUCCESS =         0  # Command succeeded
-MSG_ERROR_PROTOCOL =  1  # Command failed due to improper protocol (number of expected data bytes did not match protocol definition)
-MSG_ERROR_PARAMETER = 2  # Command failed due to invalid parameters (the data contents were incorrect)
-MSG_ERROR_BUSY =      3  # Command failed because resource was busy
-MSG_ERROR_READY =     4  # Command failed due to FIFO overrun
-
-MSG_INDEX_START =      0
-MSG_INDEX_COMMAND =    1
-MSG_INDEX_FRAME =      2
-MSG_INDEX_STATUS =     3
-MSG_INDEX_COUNT =      4  # The maximum value for count is 0x256
-MSG_INDEX_DATA =       5
-
-MSG_HEADER_SIZE =     5
-MSG_CHECKSUM_SIZE =   1
-
-MSG_REPLY =           0x80
-MSG_START =           0xDB
-
 # Definitions for basic MCC Bluetooth Device class    
 class mccBluetoothDevice:
+
+  # Global constants
+  MSG_SUCCESS =         0  # Command succeeded
+  MSG_ERROR_PROTOCOL =  1  # Command failed due to improper protocol (number of expected data bytes did not match protocol definition)
+  MSG_ERROR_PARAMETER = 2  # Command failed due to invalid parameters (the data contents were incorrect)
+  MSG_ERROR_BUSY =      3  # Command failed because resource was busy
+  MSG_ERROR_READY =     4  # Command failed due to FIFO overrun
+
+  MSG_INDEX_START =      0
+  MSG_INDEX_COMMAND =    1
+  MSG_INDEX_FRAME =      2
+  MSG_INDEX_STATUS =     3
+  MSG_INDEX_COUNT =      4  # The maximum value for count is 0x256
+  MSG_INDEX_DATA =       5
+
+  MSG_HEADER_SIZE =     5
+  MSG_CHECKSUM_SIZE =   1
+
+  MSG_REPLY =           0x80
+  MSG_START =           0xDB
 
   frameID = 0      # current frame id
   sock = 0         # Bluetooth socket
   address = None   # address
 
   def __init__(self, device_address=None):
-    self.address = device_address
+    self.address = str(device_address)
     return
 
   def receiveMessage(self, length):
@@ -116,6 +116,6 @@ def discoverDevice(target_name):
       return address
   # No device found
   retval = p.wait()
-  return
+  return None
 
 

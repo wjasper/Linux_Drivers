@@ -21,9 +21,7 @@ from struct import *
 from mccBluetooth import *
 from datetime import datetime
 
-BTH1208LS_PID = 6883
-
-class BTH_1208LS:
+class BTH_1208LS(mccBluetoothDevice):
   """
     Settings memory map
   |===========================================================================================|
@@ -67,7 +65,6 @@ class BTH_1208LS:
   | 0x00F - 0x3FF | Unused                                                                    |
   |===========================================================================================|
   """
-
 
   # Commands and Report ID for BTH-1208LS
   # Digital I/O
@@ -152,8 +149,24 @@ class BTH_1208LS:
   nChan = 0          # number of channels in the scan
   continuous_mode = False
 
-  def __init__(self, device):
-    self.device = device        # inherit values from mccBluetoothDevice
+  BTH1208LS_PID = 6883
+
+  def __init__(self, address=None):
+    self.target_name = "BTH-1208LS-6833"
+    self.address = address    # defined in mccBluetoothDevice class
+
+    if address == None:
+      self.address = discoverDevice(self.target_name)
+      if self.address == None:
+        print('No device', self.target_name, 'found')
+        return -1
+
+    # Open the device
+    try:
+      self.openDevice()
+    except:
+      print("Can not open device. Could be in charging mode or wrong Bluetooth address.")
+      exit(0)
 
     # Build a lookup table of calibration coefficients to translate values into voltages:
     # The calibration coefficients are stored in the onboard FLASH memory on the device in
@@ -280,39 +293,39 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 1
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.DIN_R
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID 
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.DIN_R
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID 
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('DIn: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
-        data = r_buffer[MSG_INDEX_DATA]
+        data = r_buffer[self.MSG_INDEX_DATA]
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in DIn BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in DIn BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
       return -1
 
     return data
@@ -327,40 +340,40 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 1
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.DOUT_R
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.DOUT_R
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
+      r_buffer = self.receiveMessage(len(r_buffer))
     except:
       print("DOutR: Error in receiveMessage")
       return -1
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
-        data = r_buffer[MSG_INDEX_DATA]
+        data = r_buffer[self.MSG_INDEX_DATA]
 
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in DOutR BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in DOutR BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
     return data
 
       
@@ -374,40 +387,40 @@ class BTH_1208LS:
     dataCount = 1
     replyCount = 0
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.DOUT_W
-    s_buffer[MSG_INDEX_DATA]           = value
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.DOUT_W
+    s_buffer[self.MSG_INDEX_DATA]           = value
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('DOut: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
 
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in DOut BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in DOut BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
     
   #############################################
   #        Analog Input Commands              #
@@ -428,42 +441,42 @@ class BTH_1208LS:
     dataCount = 3
     replyCount = 2
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.AIN
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_DATA]           = channel
-    s_buffer[MSG_INDEX_DATA+1]         = mode
-    s_buffer[MSG_INDEX_DATA+2]         = gain
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.AIN
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_DATA]           = channel
+    s_buffer[self.MSG_INDEX_DATA+1]         = mode
+    s_buffer[self.MSG_INDEX_DATA+2]         = gain
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('AIn: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
-        value = (r_buffer[MSG_INDEX_DATA] | (r_buffer[MSG_INDEX_DATA+1]<<8))
+        value = (r_buffer[self.MSG_INDEX_DATA] | (r_buffer[self.MSG_INDEX_DATA+1]<<8))
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in AIn BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in AIn BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
       
     if mode == self.SINGLE_ENDED:    # single ended
       data = round(float(value)*self.table_AInSE[channel].slope + self.table_AInSE[channel].intercept)
@@ -583,53 +596,53 @@ class BTH_1208LS:
     dataCount = 14
     replyCount = 0
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.AIN_SCAN_START
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_DATA]           = count & 0xff
-    s_buffer[MSG_INDEX_DATA+1]         = (count >> 8) & 0xff
-    s_buffer[MSG_INDEX_DATA+2]         = (count >> 16) & 0xff
-    s_buffer[MSG_INDEX_DATA+3]         = (count >> 24) & 0xff
-    s_buffer[MSG_INDEX_DATA+4]         = retrig_count & 0xff
-    s_buffer[MSG_INDEX_DATA+5]         = (retrig_count >> 8) & 0xff
-    s_buffer[MSG_INDEX_DATA+6]         = (retrig_count >> 16) & 0xff
-    s_buffer[MSG_INDEX_DATA+7]         = (retrig_count >> 24) & 0xff
-    s_buffer[MSG_INDEX_DATA+8]         = pacer_period & 0xff
-    s_buffer[MSG_INDEX_DATA+9]         = (pacer_period >> 8) & 0xff
-    s_buffer[MSG_INDEX_DATA+10]        = (pacer_period >> 16) & 0xff
-    s_buffer[MSG_INDEX_DATA+11]        = (pacer_period >> 24) & 0xff
-    s_buffer[MSG_INDEX_DATA+12]        = channels
-    s_buffer[MSG_INDEX_DATA+13]        = options
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.AIN_SCAN_START
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_DATA]           = count & 0xff
+    s_buffer[self.MSG_INDEX_DATA+1]         = (count >> 8) & 0xff
+    s_buffer[self.MSG_INDEX_DATA+2]         = (count >> 16) & 0xff
+    s_buffer[self.MSG_INDEX_DATA+3]         = (count >> 24) & 0xff
+    s_buffer[self.MSG_INDEX_DATA+4]         = retrig_count & 0xff
+    s_buffer[self.MSG_INDEX_DATA+5]         = (retrig_count >> 8) & 0xff
+    s_buffer[self.MSG_INDEX_DATA+6]         = (retrig_count >> 16) & 0xff
+    s_buffer[self.MSG_INDEX_DATA+7]         = (retrig_count >> 24) & 0xff
+    s_buffer[self.MSG_INDEX_DATA+8]         = pacer_period & 0xff
+    s_buffer[self.MSG_INDEX_DATA+9]         = (pacer_period >> 8) & 0xff
+    s_buffer[self.MSG_INDEX_DATA+10]        = (pacer_period >> 16) & 0xff
+    s_buffer[self.MSG_INDEX_DATA+11]        = (pacer_period >> 24) & 0xff
+    s_buffer[self.MSG_INDEX_DATA+12]        = channels
+    s_buffer[self.MSG_INDEX_DATA+13]        = options
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('AInScanStart: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
 
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in AInScanStart BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in AInScanStart BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
 
     return result
 
@@ -670,34 +683,34 @@ class BTH_1208LS:
       print("AInScanSendData: count greater than 255\n")
       raise ResultError
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.AIN_SCAN_SEND_DATA
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.AIN_SCAN_SEND_DATA
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
+      r_buffer = self.receiveMessage(len(r_buffer))
     except:
       print('AInScanResendError: receiveMessage')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
-        data = unpack('H'*count, r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount])
+        data = unpack('H'*count, r_buffer[self.MSG_INDEX_DATA:self.MSG_INDEX_DATA+replyCount])
     else:
       # We did not get enough data.
       data = self.AInScanResendData(count)
@@ -707,7 +720,7 @@ class BTH_1208LS:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in AInScanSendData BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in AInScanSendData BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
 
     return data
 
@@ -728,47 +741,47 @@ class BTH_1208LS:
     replyCount = count*2
     if (replyCount > 255):
       replyCount = 255          # 255 the maximum number of bytes transmitted in a frame
-    self.device.frameID -= 1    # decrement to the previous frame that needs resending.
+    self.frameID -= 1    # decrement to the previous frame that needs resending.
     
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.AIN_SCAN_RESEND_DATA
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.AIN_SCAN_RESEND_DATA
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
+      r_buffer = self.receiveMessage(len(r_buffer))
     except:
       print('AInScanResendData: receiveMessage.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
-        data = unpack('H'*count, r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount])
+        data = unpack('H'*count, r_buffer[self.MSG_INDEX_DATA:self.MSG_INDEX_DATA+replyCount])
     else:
-      print("AInScanResendData: Error in length of return buffer.", len(r_buffer), MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount)
-      error = MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount - len(r_buffer)
-      data = unpack('H'*round((replyCount-error)/2) , r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+(replyCount-error)])
+      print("AInScanResendData: Error in length of return buffer.", len(r_buffer), self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount)
+      error = self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount - len(r_buffer)
+      data = unpack('H'*round((replyCount-error)/2) , r_buffer[self.MSG_INDEX_DATA:self.MSG_INDEX_DATA+(replyCount-error)])
       return data
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in AInScanResendData BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in AInScanResendData BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
     return data
 
   def AInScanStop(self):
@@ -779,39 +792,39 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 0
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.AIN_SCAN_STOP
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.AIN_SCAN_STOP
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('AInScanStop: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
 
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in AInScanStop BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in AInScanStop BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
 
   def AInConfigR(self):
     """
@@ -822,39 +835,39 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 4
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.AIN_CONFIG_R
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.AIN_CONFIG_R
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('AInConfigR: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
-        data = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
+        data = r_buffer[self.MSG_INDEX_DATA:self.MSG_INDEX_DATA+replyCount]
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in AInConfigR BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in AInConfigR BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
 
     return data
 
@@ -871,43 +884,43 @@ class BTH_1208LS:
     dataCount = 4
     replyCount = 0
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.AIN_CONFIG_W
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_DATA]           = ranges[0] & 0Xff
-    s_buffer[MSG_INDEX_DATA+1]         = ranges[1] & 0xff
-    s_buffer[MSG_INDEX_DATA+2]         = ranges[2] & 0xff
-    s_buffer[MSG_INDEX_DATA+3]         = ranges[3] & 0xff
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.AIN_CONFIG_W
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_DATA]           = ranges[0] & 0Xff
+    s_buffer[self.MSG_INDEX_DATA+1]         = ranges[1] & 0xff
+    s_buffer[self.MSG_INDEX_DATA+2]         = ranges[2] & 0xff
+    s_buffer[self.MSG_INDEX_DATA+3]         = ranges[3] & 0xff
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('AInConfigW: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
 
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in AInConfigW BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in AInConfigW BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
 
   def AInScanClearFIFO(self):
     """
@@ -917,39 +930,39 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 0
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.AIN_SCAN_CLEAR_FIFO
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.AIN_SCAN_CLEAR_FIFO
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('AInScanClearFIFO: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
 
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in AInScanClearFIFO BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in AInScanClearFIFO BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
 
   
   #############################################
@@ -967,40 +980,40 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 4
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.AOUT_R
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.AOUT_R
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('AOutR: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
-        data = unpack_from('H'*2, r_buffer, MSG_INDEX_DATA)
+        data = unpack_from('H'*2, r_buffer, self.MSG_INDEX_DATA)
 
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in AOutR BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in AOutR BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
 
     return data
 
@@ -1015,42 +1028,42 @@ class BTH_1208LS:
     dataCount = 3
     replyCount = 0
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.AOUT_W
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_DATA]           = channel
-    s_buffer[MSG_INDEX_DATA+1]         = value & 0xff          # low byte
-    s_buffer[MSG_INDEX_DATA+2]         = (value>>8) & 0xff     # high byte
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.AOUT_W
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_DATA]           = channel
+    s_buffer[self.MSG_INDEX_DATA+1]         = value & 0xff          # low byte
+    s_buffer[self.MSG_INDEX_DATA+2]         = (value>>8) & 0xff     # high byte
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('AOut: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
 
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in AOut BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in AOut BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
 
 
   #############################################
@@ -1064,40 +1077,40 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 4
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.COUNTER_R
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.COUNTER_R
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('Counter: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
-        value ,= unpack_from('I', r_buffer, MSG_INDEX_DATA)
+        value ,= unpack_from('I', r_buffer, self.MSG_INDEX_DATA)
 
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in Counter BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in Counter BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
 
     return value
 
@@ -1110,37 +1123,37 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 0
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.COUNTER_W
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256              # increment frame ID with every send
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] = 0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.COUNTER_W
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256              # increment frame ID with every send
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] = 0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('ResetCounter: timeout error.')
       return
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
            result = True
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in RestCounter_R E-1608.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in RestCounter_R E-1608.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
     
 
   #############################################
@@ -1164,41 +1177,41 @@ class BTH_1208LS:
     dataCount = 3
     replyCount = count
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.CAL_MEMORY_R
-    s_buffer[MSG_INDEX_DATA]           = address & 0xff        # low byte
-    s_buffer[MSG_INDEX_DATA+1]         = (address >> 8) & 0xff # high byte    
-    s_buffer[MSG_INDEX_DATA+2]         = count
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.CAL_MEMORY_R
+    s_buffer[self.MSG_INDEX_DATA]           = address & 0xff        # low byte
+    s_buffer[self.MSG_INDEX_DATA+1]         = (address >> 8) & 0xff # high byte    
+    s_buffer[self.MSG_INDEX_DATA+2]         = count
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
+      r_buffer = self.receiveMessage(len(r_buffer))
     except:
       print("Error in CalMemoryR BTH-1208LS receiveMessage")
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
-        data = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
+        data = r_buffer[self.MSG_INDEX_DATA:self.MSG_INDEX_DATA+replyCount]
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in CalMemoryR BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in CalMemoryR BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
       return -1
 
     return data
@@ -1221,42 +1234,42 @@ class BTH_1208LS:
     dataCount = 3
     replyCount = count
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.USER_MEMORY_R
-    s_buffer[MSG_INDEX_DATA]           = address & 0xff        # low byte
-    s_buffer[MSG_INDEX_DATA+1]         = (address >> 8) & 0xff # high byte    
-    s_buffer[MSG_INDEX_DATA+2]         = count
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.USER_MEMORY_R
+    s_buffer[self.MSG_INDEX_DATA]           = address & 0xff        # low byte
+    s_buffer[self.MSG_INDEX_DATA+1]         = (address >> 8) & 0xff # high byte    
+    s_buffer[self.MSG_INDEX_DATA+2]         = count
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('UserMemoryR: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
-        data = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
+        data = r_buffer[self.MSG_INDEX_DATA:self.MSG_INDEX_DATA+replyCount]
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in UserMemoryR BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in UserMemoryR BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
       return -1
 
     return data
@@ -1279,42 +1292,42 @@ class BTH_1208LS:
     dataCount = count + 2
     replyCount = 0
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.USER_MEMORY_W
-    s_buffer[MSG_INDEX_DATA]           = address & 0xff       # low byte
-    s_buffer[MSG_INDEX_DATA+1]         = (address >> 8)& 0xff # high byte
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.USER_MEMORY_W
+    s_buffer[self.MSG_INDEX_DATA]           = address & 0xff       # low byte
+    s_buffer[self.MSG_INDEX_DATA+1]         = (address >> 8)& 0xff # high byte
     for i in range(count):
-      s_buffer[MSG_INDEX_DATA+2+i] = data[i]
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+      s_buffer[self.MSG_INDEX_DATA+2+i] = data[i]
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('UserMemoryW: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in UserMemoryW BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in UserMemoryW BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
     
   def SettingsMemoryR(self, address, count):
     """
@@ -1334,42 +1347,42 @@ class BTH_1208LS:
     dataCount = 3
     replyCount = count
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.SETTINGS_MEMORY_R
-    s_buffer[MSG_INDEX_DATA]           = address & 0xff        # low byte
-    s_buffer[MSG_INDEX_DATA+1]         = (address >> 8) & 0xff # high byte    
-    s_buffer[MSG_INDEX_DATA+2]         = count
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.SETTINGS_MEMORY_R
+    s_buffer[self.MSG_INDEX_DATA]           = address & 0xff        # low byte
+    s_buffer[self.MSG_INDEX_DATA+1]         = (address >> 8) & 0xff # high byte    
+    s_buffer[self.MSG_INDEX_DATA+2]         = count
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('SettingsMemoryR: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
-        data = r_buffer[MSG_INDEX_DATA:MSG_INDEX_DATA+replyCount]
+        data = r_buffer[self.MSG_INDEX_DATA:self.MSG_INDEX_DATA+replyCount]
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in SettingsMemoryR BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in SettingsMemoryR BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
       return -1
 
     return data
@@ -1393,42 +1406,42 @@ class BTH_1208LS:
     dataCount = count + 2
     replyCount = 0
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.SETTINGS_MEMORY_W
-    s_buffer[MSG_INDEX_DATA]           = address & 0xff       # low byte
-    s_buffer[MSG_INDEX_DATA+1]         = (address >> 8)& 0xff # high byte
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.SETTINGS_MEMORY_W
+    s_buffer[self.MSG_INDEX_DATA]           = address & 0xff       # low byte
+    s_buffer[self.MSG_INDEX_DATA+1]         = (address >> 8)& 0xff # high byte
     for i in range(count):
-      s_buffer[MSG_INDEX_DATA+2+i] = data[i]
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+      s_buffer[self.MSG_INDEX_DATA+2+i] = data[i]
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('SettingsMemoryW: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in SettingsMemoryW BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in SettingsMemoryW BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
     
                          
   #############################################
@@ -1443,40 +1456,40 @@ class BTH_1208LS:
     dataCount = 1
     replyCount = 0
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.BLINK_LED
-    s_buffer[MSG_INDEX_DATA]           = count
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.BLINK_LED
+    s_buffer[self.MSG_INDEX_DATA]           = count
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('Blink: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
 
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in Blink BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in Blink BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
 
   def GetSerialNumber(self):
     """
@@ -1488,43 +1501,43 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 8
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.SERIAL
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.SERIAL
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('GetSerialNumber: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
 
     try:
       if (result == False):
         raise ResultError
       else:
-        serial = unpack_from('8s',r_buffer,offset=MSG_INDEX_DATA)
+        serial = unpack_from('8s',r_buffer,offset=self.MSG_INDEX_DATA)
         serial = serial[0].decode()
         return  serial
     except ResultError:
-      print('Error in GetSerialNumber BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in GetSerialNumber BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
 
   def Reset(self):
     """
@@ -1533,39 +1546,39 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 0
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.RESET
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.RESET
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID   
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('Reset: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
 
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in Reset BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in Reset BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
       
   def Status(self):
     """
@@ -1587,43 +1600,43 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 2
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.STATUS
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.STATUS
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID   
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('Status: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
 
     try:
       if (result == False):
         raise ResultError
       else:
-        status = unpack_from('H',r_buffer,offset=MSG_INDEX_DATA)
+        status = unpack_from('H',r_buffer,offset=self.MSG_INDEX_DATA)
         self.status = status[0]
         return  (status[0])
     except ResultError:
-      print('Error in Status BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in Status BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
 
   def Ping(self):
     """
@@ -1635,39 +1648,39 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 0
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.PING
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.PING
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID   
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('Ping: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
 
     try:
       if (result == False):
         raise ResultError
     except ResultError:
-      print('Error in Ping BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in Ping BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
     return result
 
   def FirmwareVersion(self):
@@ -1680,42 +1693,42 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 2
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.FIRMWARE_VERSION
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.FIRMWARE_VERSION
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID   
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('FrimwareVersion: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
 
     try:
       if (result == False):
         raise ResultError
       else:
-        version = unpack_from('H',r_buffer,offset=MSG_INDEX_DATA)
+        version = unpack_from('H',r_buffer,offset=self.MSG_INDEX_DATA)
         return version[0]
     except ResultError:
-      print('Error in FirmwareVersion BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in FirmwareVersion BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
 
   def RadioFirmwareVersion(self):
     """
@@ -1727,42 +1740,42 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 2
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.RADIO_FIRMWARE_VERSION
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.RADIO_FIRMWARE_VERSION
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID   
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('RadioFrimwareVersion: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
 
     try:
       if (result == False):
         raise ResultError
       else:
-        version = unpack_from('H',r_buffer,offset=MSG_INDEX_DATA)
+        version = unpack_from('H',r_buffer,offset=self.MSG_INDEX_DATA)
         return version[0]
     except ResultError:
-      print('Error in RadioFirmwareVersion BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in RadioFirmwareVersion BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
 
   def BatteryVoltage(self):
     """
@@ -1772,41 +1785,41 @@ class BTH_1208LS:
     dataCount = 0
     replyCount = 2
     result = False
-    s_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+dataCount)  # send buffer
-    r_buffer = bytearray(MSG_HEADER_SIZE+MSG_CHECKSUM_SIZE+replyCount) # reply buffer
+    s_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+dataCount)  # send buffer
+    r_buffer = bytearray(self.MSG_HEADER_SIZE+self.MSG_CHECKSUM_SIZE+replyCount) # reply buffer
 
-    s_buffer[MSG_INDEX_COMMAND]        = self.BATTERY_VOLTAGE
-    s_buffer[MSG_INDEX_START]          = MSG_START
-    s_buffer[MSG_INDEX_FRAME]          = self.device.frameID   
-    self.device.frameID = (self.device.frameID + 1) % 256      # increment frame ID with every send    
-    s_buffer[MSG_INDEX_STATUS]         = 0
-    s_buffer[MSG_INDEX_COUNT]          =  (dataCount & 0xff)
-    s_buffer[MSG_INDEX_DATA+dataCount] =  0xff - self.device.calcChecksum(s_buffer, MSG_INDEX_DATA+dataCount)
+    s_buffer[self.MSG_INDEX_COMMAND]        = self.BATTERY_VOLTAGE
+    s_buffer[self.MSG_INDEX_START]          = self.MSG_START
+    s_buffer[self.MSG_INDEX_FRAME]          = self.frameID   
+    self.frameID = (self.frameID + 1) % 256      # increment frame ID with every send    
+    s_buffer[self.MSG_INDEX_STATUS]         = 0
+    s_buffer[self.MSG_INDEX_COUNT]          =  (dataCount & 0xff)
+    s_buffer[self.MSG_INDEX_DATA+dataCount] =  0xff - self.calcChecksum(s_buffer, self.MSG_INDEX_DATA+dataCount)
 
-    self.device.sendMessage(s_buffer)
+    self.sendMessage(s_buffer)
 
     try:
-      r_buffer = self.device.receiveMessage(len(r_buffer))
-    except self.device.sock.socket.timeout:
+      r_buffer = self.receiveMessage(len(r_buffer))
+    except self.sock.socket.timeout:
       raise TimeoutError('BatteryVoltage: timeout error.')
       return
 
-    if len(r_buffer) == MSG_HEADER_SIZE + MSG_CHECKSUM_SIZE + replyCount:
-      if r_buffer[MSG_INDEX_START] == s_buffer[0]                               and \
-         r_buffer[MSG_INDEX_COMMAND] == s_buffer[MSG_INDEX_COMMAND] | MSG_REPLY and \
-         r_buffer[MSG_INDEX_FRAME] == s_buffer[2]                               and \
-         r_buffer[MSG_INDEX_STATUS] == MSG_SUCCESS                              and \
-         r_buffer[MSG_INDEX_COUNT] == replyCount & 0xff                         and \
-         r_buffer[MSG_INDEX_DATA+replyCount] + self.device.calcChecksum(r_buffer,(MSG_HEADER_SIZE+replyCount)) == 0xff :
+    if len(r_buffer) == self.MSG_HEADER_SIZE + self.MSG_CHECKSUM_SIZE + replyCount:
+      if r_buffer[self.MSG_INDEX_START] == s_buffer[0]                               and \
+         r_buffer[self.MSG_INDEX_COMMAND] == s_buffer[self.MSG_INDEX_COMMAND] | self.MSG_REPLY and \
+         r_buffer[self.MSG_INDEX_FRAME] == s_buffer[2]                               and \
+         r_buffer[self.MSG_INDEX_STATUS] == self.MSG_SUCCESS                              and \
+         r_buffer[self.MSG_INDEX_COUNT] == replyCount & 0xff                         and \
+         r_buffer[self.MSG_INDEX_DATA+replyCount] + self.calcChecksum(r_buffer,(self.MSG_HEADER_SIZE+replyCount)) == 0xff :
         result = True
 
     try:
       if (result == False):
         raise ResultError
       else:
-        voltage = unpack_from('H',r_buffer,offset=MSG_INDEX_DATA)
+        voltage = unpack_from('H',r_buffer,offset=self.MSG_INDEX_DATA)
         self.voltage = voltage[0]
         return voltage[0]
     except ResultError:
-      print('Error in BatteryVoltage BTH-1208LS.  Status =', hex(r_buffer[MSG_INDEX_STATUS]))
+      print('Error in BatteryVoltage BTH-1208LS.  Status =', hex(r_buffer[self.MSG_INDEX_STATUS]))
  
