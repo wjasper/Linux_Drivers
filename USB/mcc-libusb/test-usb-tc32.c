@@ -231,12 +231,12 @@ int main (int argc, char **argv)
         break;
       case 'v':
 	usbVersion_TC32(udev, &version);
-	printf("Communications micro firmware version = %#x\n", version.version_comms);
-	printf("Communcations mico bootloader firmware version = %#x\n", version.boot_version_comms);
-	printf("Base measurement micro firmware version = %#x\n", version.version_base);
-	printf("Base measurement micro bootloader firmware version = %#x\n", version.boot_version_base);
-	printf("EXP measurement micro firmware version = %#x\n", version.version_exp);
-	printf("EXP measurement micro bootloader firmware version = %#x\n\n", version.boot_version_exp);
+	printf("Communications micro firmware version = %x.%x\n", version.version_comms>>8,version.version_comms&0xff);
+	printf("Communcations mico bootloader firmware version = %x.%x\n", version.boot_version_comms>>8, version.boot_version_comms&0xff);
+	printf("Base measurement micro firmware version = %x.%x\n", version.version_base>>8,version.version_base&0xff);
+	printf("Base measurement micro bootloader firmware version = %x.%x\n", version.boot_version_base>>8,version.boot_version_base&0xff);
+	printf("EXP measurement micro firmware version = %x.%x\n", version.version_exp>>8,version.version_exp&&0xff);
+	printf("EXP measurement micro bootloader firmware version = %x.%x\n\n", version.boot_version_exp>>8,version.boot_version_exp&0xff);
 	usbCalDate_TC32(udev, &date_base, &date_exp);
 	printf("Calibration date = %s\n", asctime(&date_base));
 	break;
