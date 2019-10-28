@@ -213,6 +213,7 @@ int main(int argc, char **argv) {
           usbTin_USBTC(hid, CH0, 0, &temperature);
   	  printf("%.2f degress Celsius or %.2f degrees Fahrenheit.\n", temperature,
 		 celsius2fahr(temperature));
+	  fflush(stdout);
   	  sleep(1);
 	} while (!isalpha(getchar()));
 	fcntl(fileno(stdin), F_SETFL, flag);
