@@ -20,15 +20,20 @@ E-series devices:
    ./test-E-TC <ip_address>            ./test-E-TC.py 'ip address'
    ./test-E-TC32 <ip_address>          ./test-E-TC32.py 'ip address'
 
-3. The device is connected directly to the host PC (link-local).  On the Raspberry Pi, 
-   edit the file /etc/network/interfaces as follows:
+3. The device is connected directly to the host PC (link-local).
 
-   iface eth0 inet static
-   address 192.168.0.10
-   netmask 255.255.255.0
-   broadcast 192.168.0.255
-   network 192.168.0.0
-   gateway 192.168.0.1
+    a) Try the command:
+       ip route add 192.168.0.0/24 dev eth0
+
+    b) If that does not work try:
+       edit the file /etc/network/interfaces as follows:
+
+     iface eth0 inet static
+       address 192.168.0.10
+       netmask 255.255.255.0
+       broadcast 192.168.0.255
+       network 192.168.0.0
+       gateway 192.168.0.1
 
   After saving the file, release any dhcp leases by typing
   sudo rm /var/dhcp/*
