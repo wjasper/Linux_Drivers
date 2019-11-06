@@ -38,12 +38,14 @@ extern "C" {
 #define COUNTER1         0x1     //  Counter 1
 
 /* Aanalog Input */
-#define SINGLE_ENDED   0
-#define DIFFERENTIAL   1
-#define CALIBRATION    3
-#define LAST_CHANNEL   (0x80)
-#define PACKET_SIZE    512       // max bulk transfer size in bytes
-#define CONTINUOUS     1         // continuous input mode
+#define SINGLE_ENDED       0
+#define DIFFERENTIAL       1
+#define CALIBRATION        3
+#define LAST_CHANNEL       (0x80)
+#define PACKET_SIZE        512       // max bulk transfer size in bytes
+#define AIN_SCAN_BURST     0x1       // 1 = burst mode   0 = normal
+#define AIN_SCAN_TRIGGER   0x8       // 1 = use trigger
+#define AIN_SCAN_RETRIGGER 0x40      // 1 = retrigger mode, 0 = normal trigger
   
 /* Ananlog Output Scan Options */
 #define AO_CHAN0       0x1   // Include Channel 0 in output scan
@@ -86,14 +88,29 @@ typedef struct ScanList_t {
   uint8_t channel;
 } ScanList;
 
+#define USB_CONTINUOUS_READOUT (0x1)
+#define USB_SINGLEIO           (0x2)
+#define USB_FORCE_PACKET_SIZE  (0x4)
+
 typedef struct usbDevice1608G_t {
-  libusb_device_handle *udev;         // libusb 1.0 handle
-  float table_AIn[NGAINS_1608G][2];   // calibration coefficients
+  float table_AIn[NGAINS_1608G][2];    // calibration coefficients
   float table_AOut[NCHAN_AO_1608GX][2];
   ScanList list[NCHAN_1608G];
-  uint8_t scan_list[NCHAN_1608G];     // scan list
+  uint8_t scan_list[NCHAN_1608G];      // scan list
+  int lastElement;                     // last element of the scan list
+  uint32_t count;
+  uint32_t retrig_count;
   uint8_t options;
   int nChannels;
+  double frequency;                    // frequency of the scan  (0 for external clock)
+  uint16_t packet_size;                // number of samples to return from FIFO
+  uint16_t status;                     // status word of the device
+  int bytesToRead;                     // number of bytes left to read in the scan
+  uint8_t mode;                        /* mode bits:
+                                        bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
+                                        bit 1:   1 = SINGLEIO
+                                        bit 2:   1 = use packet size passed scanData->packet_size
+                                       */
 } usbDevice1608G;
 
 /* function prototypes for the USB-1608G */
@@ -138,12 +155,14 @@ void usbTriggerConfigR_USB1608G(libusb_device_handle *udev, uint8_t *options);
 void usbTemperature_USB1608G(libusb_device_handle *udev, float *temperature);
 void usbGetSerialNumber_USB1608G(libusb_device_handle *udev, char serial[9]);
 uint16_t usbAIn_USB1608G(libusb_device_handle *udev, uint16_t channel);
-void usbAInScanStart_USB1608G(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, double frequency, uint8_t options);
+
+void usbAInScanStart_USB1608G(libusb_device_handle *udev, usbDevice1608G *usb1608G);
+int usbAInScanRead_USB1608G(libusb_device_handle *udev, usbDevice1608G *usb1608G,  uint16_t *data);
 void usbAInScanStop_USB1608G(libusb_device_handle *udev);
-int usbAInScanRead_USB1608G(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, unsigned int timeout, int options);
-void usbAInConfig_USB1608G(libusb_device_handle *udev, ScanList scanList[NCHAN_1608G]);
-int usbAInConfigR_USB1608G(libusb_device_handle *udev, uint8_t *scanList);
+void usbAInConfig_USB1608G(libusb_device_handle *udev, usbDevice1608G *usb1608G);
+int usbAInConfigR_USB1608G(libusb_device_handle *udev, usbDevice1608G *usb1608G);
 void usbAInScanClearFIFO_USB1608G(libusb_device_handle *udev);
+
 void usbBuildGainTable_USB1608G(libusb_device_handle *udev, float table[NGAINS_1608G][2]);
 double volts_USB1608G(const uint8_t gain, uint16_t value);
 void usbBuildGainTable_USB1608GX_2AO(libusb_device_handle *udev, float table_AO[NCHAN_AO_1608GX][2]);

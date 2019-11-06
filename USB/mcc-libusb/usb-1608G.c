@@ -82,8 +82,6 @@
 
 static int wMaxPacketSize = 0;          // will be the same for all devices of this type so
                                         // no need to be reentrant. 
-static uint8_t scan_list[NCHAN_1608G];  // scan list
-
 
 void usbBuildGainTable_USB1608G(libusb_device_handle *udev, float table[NGAINS_1608G][2])
 {
@@ -306,12 +304,31 @@ uint16_t usbAIn_USB1608G(libusb_device_handle *udev, uint16_t channel)
   return value;
 }
 
-void usbAInScanStart_USB1608G(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, double frequency,uint8_t options)
+void usbAInScanStart_USB1608G(libusb_device_handle *udev, usbDevice1608G *usb1608G)
 {
   /* This command starts the analog input channel scan.  The gain
      ranges that are currently set on the desired channels will be
      used (these may be changed with AInConfig) This command will
      result in a bus stall if an AInScan is currently running.
+
+     count:        the total number of scans to perform (0 for continuous scan)
+     retrig_count: the number of scan to perform for each trigger in retrigger mode
+     pacer_period: pacer timer period value (0 for AI_CLK_IN)
+     frequency:    pacer frequency in Hz
+     packet_size:  number of samples to transfer at a time
+     options:      bit field that controls various options
+                   bit 0: 1 = burst mode, 0 = normal mode
+                   bit 1: Reserved
+                   bit 2: Reserved
+                   bit 3: 1 = use trigger  0 = no trigger
+                   bit 4: Reserved
+                   bit 5: Reserved
+                   bit 6: 1 = retrigger mode, 0 = normal trigger
+                   bit 7: Reserved
+    mode:  mode bits:
+           bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
+           bit 1:   1 = SINGLEIO
+           bit 2:   1 = use packet size passed dusbDevice1608G->packet_size
 
      Notes:
 
@@ -379,70 +396,103 @@ void usbAInScanStart_USB1608G(libusb_device_handle *udev, uint32_t count, uint32
     uint8_t pad[2];
   } AInScan;
 
+  uint16_t packet_size;
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
-  int i;
+  int bytesPerScan = (usb1608G->lastElement+1)*2;    // number of bytes transferred in one scan;
 
-  AInScan.count = count;
-  AInScan.retrig_count = retrig_count;
-  if (frequency == 0.0) {
+  if (usb1608G->frequency == 0.0) {
     AInScan.pacer_period = 0; // use external pacer
   } else {
-    AInScan.pacer_period = rint((64.E6 / frequency) - 1);
-  }
-  AInScan.options = options;
-
-  for (i = 0; i < NCHAN_1608G; i++) {
-    if (scan_list[i] & LAST_CHANNEL) break;
+    AInScan.pacer_period = rint((64.E6 / usb1608G->frequency) - 1);
   }
 
-  if (count == 0) {
-    AInScan.packet_size = 0xff;
-  } else if (((i+1)*count) < wMaxPacketSize/2) {
-    AInScan.packet_size = (i+1)*count - 1;
+  if (usb1608G->count == 0) {
+    usb1608G->mode |= USB_CONTINUOUS_READOUT;
+    usb1608G->bytesToRead = -1;                                          // disable and sample forever
   } else {
-    AInScan.packet_size = wMaxPacketSize/2 - 1;
+    usb1608G->bytesToRead = usb1608G->count*(usb1608G->lastElement+1)*2;  // total number of bytes to read
   }
+
+  if (usb1608G->mode & USB_FORCE_PACKET_SIZE) {
+    packet_size = usb1608G->packet_size;
+  } else if (usb1608G->mode & USB_SINGLEIO) {
+    packet_size = usb1608G->lastElement + 1;
+  } else if (usb1608G->mode & USB_CONTINUOUS_READOUT) {
+    packet_size = (( (wMaxPacketSize/bytesPerScan) * bytesPerScan) / 2);
+  } else {
+    packet_size = wMaxPacketSize/2;
+  }
+  usb1608G->packet_size = packet_size;
+
+  if (usb1608G->mode & USB_CONTINUOUS_READOUT) {
+    AInScan.count = 0;
+  } else {
+    AInScan.count = usb1608G->count;
+  }
+  AInScan.retrig_count = usb1608G->retrig_count;
+  AInScan.packet_size = (uint8_t) packet_size - 1;   // force to uint8_t since in range 0-255
+  AInScan.options = usb1608G->options;
 
   /* Pack the data into 14 bytes */
   if (libusb_control_transfer(udev, requesttype, AIN_SCAN_START, 0x0, 0x0, (unsigned char *) &AInScan, 14, HS_DELAY) < 0) {
     perror("usbAInScanStart_USB1608G: Error");
   }
+  usb1608G->status = usbStatus_USB1608G(udev);
 }
 
-int usbAInScanRead_USB1608G(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, unsigned int timeout, int options)
+ int usbAInScanRead_USB1608G(libusb_device_handle *udev, usbDevice1608G *usb1608G,  uint16_t *data)
 {
   char value[PACKET_SIZE];
   int ret = -1;
-  int nbytes = nChan*nScan*2;    // number of bytes to read;
+  int nbytes;     // number of bytes to read;
   int transferred;
-  uint8_t status;
 
-  ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) data, nbytes, &transferred, timeout);
+  if ((usb1608G->status & AIN_SCAN_RUNNING) == 0x0) {
+    perror("usbScanRead_USB1608G: pacer must be running to read from buffer");
+    return -1;
+  }
+
+  if ((usb1608G->mode & USB_CONTINUOUS_READOUT) || (usb1608G->mode & USB_SINGLEIO)) {
+    nbytes = 2*(usb1608G->packet_size);
+  } else {
+    nbytes = usb1608G->count*(usb1608G->lastElement+1)*2;
+  }
+
+  ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) data, nbytes, &transferred, HS_DELAY);
+
+  if (transferred != nbytes) {
+    fprintf(stderr, "usbAInScanRead_USB1608G: number of bytes transferred = %d, nbytes = %d   bytesToRead = %d\n",
+	    transferred, nbytes, usb1608G->bytesToRead);
+    return transferred;
+  }
 
   if (ret < 0) {
     perror("usbAInScanRead_USB1608G: error in libusb_bulk_transfer.");
-  }
-  if (transferred != nbytes) {
-    fprintf(stderr, "usbAInScanRead_USB1608G: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
-    status = usbStatus_USB1608G(udev);
-    if ((status & AIN_SCAN_OVERRUN)) {
-      fprintf(stderr, "usbAInScanRead: Analog In scan overrun.\n");
-      usbAInScanStop_USB1608G(udev);
-      usbAInScanClearFIFO_USB1608G(udev);
-    }
     return ret;
   }
 
-  if (options & CONTINUOUS) return transferred;
-
-  status = usbStatus_USB1608G(udev);
-  // if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
-  if ((nbytes%wMaxPacketSize) == 0 && !(status & AIN_SCAN_RUNNING)) {
-    libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) value, 2, &ret, 100);
+  if (usb1608G->bytesToRead > transferred) {
+    usb1608G->bytesToRead -= transferred;
+  } else if (usb1608G->bytesToRead > 0 && usb1608G->bytesToRead < transferred) {  // all done
+    usbAInScanStop_USB1608G(udev);
+    usbAInScanClearFIFO_USB1608G(udev);
+    usb1608G->status = usbStatus_USB1608G(udev);
+    return usb1608G->bytesToRead;
   }
 
-  if ((status & AIN_SCAN_OVERRUN)) {
-    printf("usbAInScanRead: Analog In scan overrun.\n");
+  if (usb1608G->mode & USB_CONTINUOUS_READOUT) { // continuous mode
+    return transferred;
+  }
+
+  int dummy;
+  // if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
+  if ((nbytes%wMaxPacketSize) == 0) {
+    libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) value, 2, &dummy, 100);
+  }
+
+  usb1608G->status = usbStatus_USB1608G(udev);
+  if ((usb1608G->status & AIN_SCAN_OVERRUN)) {
+    perror("Scan overrun.");
     usbAInScanStop_USB1608G(udev);
     usbAInScanClearFIFO_USB1608G(udev);
   }
@@ -450,7 +500,8 @@ int usbAInScanRead_USB1608G(libusb_device_handle *udev, int nScan, int nChan, ui
   return transferred;
 }
 
-void usbAInConfig_USB1608G(libusb_device_handle *udev, ScanList scanList[NCHAN_1608G])
+
+void usbAInConfig_USB1608G(libusb_device_handle *udev, usbDevice1608G *usb1608G)
 {
   /*
     This command reads or writes the analog input channel
@@ -474,29 +525,30 @@ void usbAInConfig_USB1608G(libusb_device_handle *udev, ScanList scanList[NCHAN_1
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
   for (i = 0; i < NCHAN_1608G; i++) {
-    if ((scanList[i].mode & 0x3) == SINGLE_ENDED && scanList[i].channel >= 0 && scanList[i].channel < 8) {
-      scan_list[i] = (0x20 | (scanList[i].channel & 0x7));
-    } else if ((scanList[i].mode & 0x3) == SINGLE_ENDED && scanList[i].channel >= 8 && scanList[i].channel < 16) {
-      scan_list[i] = (0x40 | (scanList[i].channel & 0x7));
-    } else if ((scanList[i].mode & 0x3) == DIFFERENTIAL && scanList[i].channel >= 0 && scanList[i].channel < 8) {
-      scan_list[i] =  (scanList[i].channel & 0x7);
-    } else if ((scanList[i].mode & 0x3) == CALIBRATION) {
-      scan_list[i] = 0x60;
+    if ((usb1608G->list[i].mode & 0x3) == SINGLE_ENDED && usb1608G->list[i].channel >= 0 && usb1608G->list[i].channel < 8) {
+      usb1608G->scan_list[i] = (0x20 | (usb1608G->list[i].channel & 0x7));
+    } else if ((usb1608G->list[i].mode & 0x3) == SINGLE_ENDED && usb1608G->list[i].channel >= 8 && usb1608G->list[i].channel < 16) {
+      usb1608G->scan_list[i] = (0x40 | (usb1608G->list[i].channel & 0x7));
+    } else if ((usb1608G->list[i].mode & 0x3) == DIFFERENTIAL && usb1608G->list[i].channel >= 0 && usb1608G->list[i].channel < 8) {
+      usb1608G->scan_list[i] =  (usb1608G->list[i].channel & 0x7);
+    } else if ((usb1608G->list[i].mode & 0x3) == CALIBRATION) {
+      usb1608G->scan_list[i] = 0x60;
     } else {
       printf("Error in Scan List[%d]  mode = %#x   channel = %d  range = %#x\n",
-	     i, scanList[i].mode, scanList[i].channel, scanList[i].range);
+	     i, usb1608G->list[i].mode, usb1608G->list[i].channel, usb1608G->list[i].range);
       return;
     }
     
-    scan_list[i] |= (scanList[i].range << 3);
+    usb1608G->scan_list[i] |= (usb1608G->list[i].range << 3);
 
     /*
     printf("Scan List[%d]  mode = %#x   channel = %d  range = %#x  raw = %#x\n",
 	   i, scanList[i].mode, scanList[i].channel, scanList[i].range, scan_list[i]);
     */
 
-    if (scanList[i].mode & LAST_CHANNEL) {
-      scan_list[i] |= LAST_CHANNEL;
+    if (usb1608G->list[i].mode & LAST_CHANNEL) {
+      usb1608G->scan_list[i] |= LAST_CHANNEL;
+      usb1608G->lastElement = i;
       break;
     }
   }
@@ -505,34 +557,32 @@ void usbAInConfig_USB1608G(libusb_device_handle *udev, ScanList scanList[NCHAN_1
     usbAInScanStop_USB1608G(udev);
   }
 
-  ret = libusb_control_transfer(udev, requesttype, AIN_CONFIG, 0x0, 0x0, (unsigned char*) &scan_list[0], 16, HS_DELAY);
+  ret = libusb_control_transfer(udev, requesttype, AIN_CONFIG, 0x0, 0x0, (unsigned char*) &usb1608G->scan_list[0], 16, HS_DELAY);
   if (ret < 0) {
-    perror("usbAinConfig_USB1608G Error.");
+    perror("usbAInConfig_USB1608G Error.");
   }
 }
 
-int usbAInConfigR_USB1608G(libusb_device_handle *udev, uint8_t *scanList)
+int usbAInConfigR_USB1608G(libusb_device_handle *udev, usbDevice1608G *usb1608G)
 {
-  int i;
-/*
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
   int ret;
+  int i;
 
   if (usbStatus_USB1608G(udev) | AIN_SCAN_RUNNING) {
     usbAInScanStop_USB1608G(udev);
   }
   
-  ret = libusb_control_transfer(udev, requesttype, AIN_CONFIG, 0x0, 0x0, (unsigned char *) scanList, 15, HS_DELAY);
+  ret = libusb_control_transfer(udev, requesttype, AIN_CONFIG, 0x0, 0x0, (unsigned char *) usb1608G->scan_list, 15, HS_DELAY);
   if (ret < 0) {
-    perror("usbAinConfigR_USB1608G Error.");
+    perror("usbAInConfigR_USB1608G Error.");
   }
-*/
 
-  memcpy(scanList, scan_list, NCHAN_1608G);
   for (i = 0; i < NCHAN_1608G; i++) {
-    if (scan_list[i] & LAST_CHANNEL) return i+1;
+    if (usb1608G->scan_list[i] & LAST_CHANNEL) break;
   }
-  return -1;
+  usb1608G->lastElement = i;
+  return ret;
 }
 
 void usbAInScanStop_USB1608G(libusb_device_handle *udev)

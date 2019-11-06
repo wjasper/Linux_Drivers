@@ -51,9 +51,7 @@ int main (int argc, char **argv)
   double voltage;
   double frequency, duty_cycle;
   float temperature;
-  float table_AIN[NGAINS_1608G][2];
-  float table_AO[NCHAN_AO_1608GX][2];
-  ScanList list[NCHAN_1608G];  // scan list used to configure the A/D channels.
+  usbDevice1608G usb1608G;
 
   int ch;
   int i, j, m, k, nchan, repeats;
@@ -112,16 +110,16 @@ int main (int argc, char **argv)
   //print out the wMaxPacketSize.  Should be 512
   printf("wMaxPacketSize = %d\n", usb_get_max_packet_size(udev,0));
 
-  usbBuildGainTable_USB1608G(udev, table_AIN);
+  usbBuildGainTable_USB1608G(udev, usb1608G.table_AIn);
   for (i = 0; i < NGAINS_1608G; i++) {
-    printf("Gain: %d   Slope = %f   Offset = %f\n", i, table_AIN[i][0], table_AIN[i][1]);
+    printf("Gain: %d   Slope = %f   Offset = %f\n", i, usb1608G.table_AIn[i][0], usb1608G.table_AIn[i][1]);
   }
 
   if (usb1608GX_2AO) {
-    usbBuildGainTable_USB1608GX_2AO(udev, table_AO);
+    usbBuildGainTable_USB1608GX_2AO(udev, usb1608G.table_AOut);
     printf("\n");
     for (i = 0; i < NCHAN_AO_1608GX; i++) {
-      printf("VDAC%d:    Slope = %f    Offset = %f\n", i, table_AO[i][0], table_AO[i][1]);
+      printf("VDAC%d:    Slope = %f    Offset = %f\n", i, usb1608G.table_AOut[i][0], usb1608G.table_AOut[i][1]);
     }
   }
 
@@ -205,8 +203,8 @@ int main (int argc, char **argv)
 	usbDLatchW_USB1608G(udev, 0x0);                  // zero out the DIO
 	if (usb1608GX_2AO) {
 	  usbAOutScanStop_USB1608GX_2AO(udev);
-	  usbAOut_USB1608GX_2AO(udev, 0, 0x0, table_AO);
-	  usbAOut_USB1608GX_2AO(udev, 1, 0x0, table_AO);
+	  usbAOut_USB1608GX_2AO(udev, 0, 0x0, usb1608G.table_AOut);
+	  usbAOut_USB1608GX_2AO(udev, 1, 0x0, usb1608G.table_AOut);
 	}
         cleanup_USB1608G(udev);
         return 0;
@@ -232,10 +230,10 @@ int main (int argc, char **argv)
 	  default:  gain = BP_10V; break;
 	}
 	mode |= LAST_CHANNEL ; 
-	list[0].range = gain;
-        list[0].mode = mode;
-	list[0].channel = channel;
-	usbAInConfig_USB1608G(udev, list);
+	usb1608G.list[0].range = gain;
+        usb1608G.list[0].mode = mode;
+	usb1608G.list[0].channel = channel;
+	usbAInConfig_USB1608G(udev,&usb1608G);
 	for (i = 0; i < 20; i++) {
 	  value = usbAIn_USB1608G(udev, channel);
 	  if (value >=  0xfffd) {
@@ -243,10 +241,10 @@ int main (int argc, char **argv)
 	  } else if  (value <= 0x60) {
 	    printf("DAC is saturated at -FS\n");
 	  } else {
-	    value = rint(value*table_AIN[gain][0] + table_AIN[gain][1]);
+	    value = rint(value*usb1608G.table_AIn[gain][0] + usb1608G.table_AIn[gain][1]);
 	  }
 	  printf("Channel %d  Mode = %#x  Gain = %d Sample[%d] = %#x Volts = %lf\n",
-		 list[0].channel, list[0].mode, list[0].range, i, value, volts_USB1608G(gain, value));
+		 usb1608G.list[0].channel, usb1608G.list[0].mode, usb1608G.list[0].range, i, value, volts_USB1608G(gain, value));
 	  usleep(50000);	  
 	}
         break;
@@ -269,10 +267,13 @@ int main (int argc, char **argv)
 	}	  
         printf("Enter number of scans: ");
         scanf("%d", &nScans);
+	usb1608G.count = nScans;
+	usb1608G.retrig_count = 0;
         printf("Enter number of repeats: ");
         scanf("%d", &repeats);
         printf("Enter sampling frequency [Hz]: ");
 	scanf("%lf", &frequency);
+	usb1608G.frequency = frequency;
         for (channel = 0; channel < nchan; channel++) {
 	  printf("Gain Range for channel %d: 1 = +/-10V  2 = +/- 5V  3 = +/- 2V  4 = +/- 1V: ",channel);
 	  while((ch = getchar()) == '\0' || ch == '\n');
@@ -283,12 +284,13 @@ int main (int argc, char **argv)
 	    case '4': gain = BP_1V; break;
 	    default:  gain = BP_10V; break;
 	  }
-	  list[channel].range = gain;  
-	  list[channel].mode = mode;
-	  list[channel].channel = channel;
+	  usb1608G.list[channel].range = gain;  
+	  usb1608G.list[channel].mode = mode;
+	  usb1608G.list[channel].channel = channel;
 	}
-        list[nchan-1].mode |= LAST_CHANNEL;
-	usbAInConfig_USB1608G(udev, list);
+        usb1608G.list[nchan-1].mode |= LAST_CHANNEL;
+	usbAInConfig_USB1608G(udev, &usb1608G);
+	usb1608G.mode = 0x0;
         if ((sdataIn = malloc(2*nchan*nScans)) == NULL) {
 	  perror("Can not allocate memory for sdataIn");
 	  break;
@@ -296,20 +298,20 @@ int main (int argc, char **argv)
         for (m = 0; m < repeats; m++) {
 	  printf("\n\n---------------------------------------");
 	  printf("\nrepeat: %d\n", m);
-	  usbAInScanStart_USB1608G(udev, nScans, 0, frequency, 0x0);
-	  ret = usbAInScanRead_USB1608G(udev, nScans, nchan, sdataIn, 20000, 0);
+	  usbAInScanStart_USB1608G(udev, &usb1608G);
+	  ret = usbAInScanRead_USB1608G(udev, &usb1608G, sdataIn);
 	  printf("Number bytes read = %d  (should be %d)\n", ret, 2*nchan*nScans);
 	  for (i = 0; i < nScans; i++) {
 	    printf("%6d", i);
 	    for (j = 0; j < nchan; j++) {
-              gain = list[j].range;
+              gain = usb1608G.list[j].range;
 	      k = i*nchan + j;
 	      if (sdataIn[k] >= 0xfffd) {
 		printf("DAC is saturated at +FS\n");
 	      } else if (sdataIn[k] <= 0x60) {
 		printf("DAC is saturated at -FS\n");
 	      } else {
-		data = rint(sdataIn[k]*table_AIN[gain][0] + table_AIN[gain][1]);
+		data = rint(sdataIn[k]*usb1608G.table_AIn[gain][0] + usb1608G.table_AIn[gain][1]);
 	      }
 	      printf(", %8.4lf", volts_USB1608G(gain, data));
 	    }
@@ -332,12 +334,12 @@ int main (int argc, char **argv)
 	mode = SINGLE_ENDED;
 
         for (channel = 0; channel < nchan; channel++) {
-	  list[channel].range = gain;
-	  list[channel].mode = mode;
-	  list[channel].channel = channel;
+	  usb1608G.list[channel].range = gain;
+	  usb1608G.list[channel].mode = mode;
+	  usb1608G.list[channel].channel = channel;
 	}
-	list[nchan-1].mode |= LAST_CHANNEL;
-	usbAInConfig_USB1608G(udev, list);
+	usb1608G.list[nchan-1].mode |= LAST_CHANNEL;
+	usbAInConfig_USB1608G(udev, &usb1608G);
 
 	nread = 256;
 	if ((sdataIn = malloc(2*nchan*nread)) == NULL) {
@@ -345,12 +347,16 @@ int main (int argc, char **argv)
 	  break;
 	}
 	sleep(1);
+	usb1608G.count = 0;
+	usb1608G.retrig_count = 0;
+	usb1608G.frequency = frequency;
+	usb1608G.options = 0x1;
         i = 0;
-        usbAInScanStart_USB1608G(udev, nScans, 0, frequency, 0x1);
+        usbAInScanStart_USB1608G(udev, &usb1608G);
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
         do {
-	  usbAInScanRead_USB1608G(udev, nread, nchan, sdataIn, 2000, CONTINUOUS);
+	  usbAInScanRead_USB1608G(udev, &usb1608G, sdataIn);
           if (i%100 == 0) {
             printf("Scan = %d\n", i);
 	  }
@@ -369,8 +375,8 @@ int main (int argc, char **argv)
         }
         printf("Enter voltage: ");
 	scanf("%lf", &voltage);
-	usbAOut_USB1608GX_2AO(udev, 0, voltage, table_AO);
-	usbAOutR_USB1608GX_2AO(udev, 0, &voltage, table_AO);
+	usbAOut_USB1608GX_2AO(udev, 0, voltage, usb1608G.table_AOut);
+	usbAOutR_USB1608GX_2AO(udev, 0, &voltage, usb1608G.table_AOut);
 	printf("Analog Output Voltage = %f V\n", voltage);
         break;
       case 'O':
@@ -387,7 +393,7 @@ int main (int argc, char **argv)
 	for (i = 0; i < 512; i++) {
 	  voltage = 10.*sin(2.*M_PI*i/512.);
           voltage = (voltage/10.*32768. + 32768.);
-	  sdataOut[i] = voltage*table_AO[channel][0] + table_AO[channel][1];
+	  sdataOut[i] = voltage*usb1608G.table_AOut[channel][0] + usb1608G.table_AOut[channel][1];
 	}
         usbAOutScanStop_USB1608GX_2AO(udev);
 	usbAOutScanStart_USB1608GX_2AO(udev, 0, 0, frequency,  AO_CHAN0);
