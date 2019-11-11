@@ -9,6 +9,9 @@
 *.so
 *.a
 *.pyc
+*.mod.c
+modules.order
+Module.symvers
 __pycache__
 
 # Backup files #
