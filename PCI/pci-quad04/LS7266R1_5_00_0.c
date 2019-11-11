@@ -237,6 +237,7 @@ static int quad04_init_one(struct pci_dev *pdev, const struct pci_device_id *ent
   outb(BoardData[NumBoards].pic_B, PIC_B_REG);
   
   outb_p(CONFIG_0, ISCR_REG);          // default to 4 24 bit counters
+  outb_p(0x0f, IRCR_REG);
 
   for (i = 0; i < NCOUNTERS; i++) {
     minor = (NumBoards << 0x3) + i;
@@ -307,7 +308,7 @@ static int quad04_init_one(struct pci_dev *pdev, const struct pci_device_id *ent
   }
 
   printk("%s: address=%#x IRQ=%d.",ADAPTER_ID, BoardData[NumBoards].base2, BoardData[NumBoards].irq);
-  printk(" 8/8/2015 wjasper@ncsu.edu\n");
+  printk(" 11/11/2019 wjasper@ncsu.edu\n");
 
   NumBoards++;
   return 0;
