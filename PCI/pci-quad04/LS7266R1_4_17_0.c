@@ -237,7 +237,7 @@ static int quad04_init_one(struct pci_dev *pdev, const struct pci_device_id *ent
   outb(BoardData[NumBoards].pic_B, PIC_B_REG);
   
   outb_p(CONFIG_0, ISCR_REG);          // default to 4 24 bit counters
-  outb_p(0xf, IRCR_REG);
+  outb_p(0xf, IRCR_REG);               // IDxSEL for all counters
 
   for (i = 0; i < NCOUNTERS; i++) {
     minor = (NumBoards << 0x3) + i;

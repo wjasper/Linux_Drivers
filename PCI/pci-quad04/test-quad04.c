@@ -1,5 +1,5 @@
 /***************************************************************************
- Copyright (C) 2010  Warren J. Jasper <wjasper@ncsu.edu>
+ Copyright (C) 2019  Warren J. Jasper <wjasper@ncsu.edu>
  All rights reserved.
 
  This program, PCI-QUAD04, is free software; you can redistribute it
@@ -44,7 +44,6 @@ char *DevName = "/dev/quad04/channel0_1";
 int fd_channel1 = -1;
 int fd_channel2 = -1;
 
-
 void DoOpenDevices()
 {
   char str[80];
@@ -69,7 +68,6 @@ void Domenu()
   int count = 0;
   unsigned int value;
   int flag = 0;
-  
 
   printf("\n\n Connect the following pins: \n");
   printf("          Encoder 1                   Encoder 2   \n");

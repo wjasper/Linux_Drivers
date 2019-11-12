@@ -27,8 +27,8 @@
 #ifndef QUAD04_H
 #define QUAD04_H
 
-#define DEBUG 1
-#define  ADAPTER_ID "PCI-QUAD04.v1.4"
+// #define DEBUG 1
+#define  ADAPTER_ID "PCI-QUAD04.v1.5"
 
 /*****************************
  *     Useful Macros         *
@@ -89,7 +89,6 @@
                              // Note that this bit only has an effect when in high polarity mode.  The
 			     // interrupt is always level-sensitive when low polarity is selected.
 #define INTCLR  0x400        // Clear the Interrupt when in edge-triggered triggered configuration.
-
 
 /**************************************
  * Input Signal Control (SIGCTRL_REG) *
