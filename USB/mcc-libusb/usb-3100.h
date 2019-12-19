@@ -50,14 +50,14 @@ void usbDConfigPort_USB31XX(hid_device *hid, uint8_t direction);
 int usbDConfigPort_USB31XX_Error_Return(hid_device *hid, uint8_t direction);
 void usbDIn_USB31XX(hid_device *hid, uint8_t* din_value);
 void usbDOut_USB31XX(hid_device *hid, uint8_t value);
-int usbDOut_USB31XX_Error_Return(hid_device *hid, uint8_t value)
+int usbDOut_USB31XX_Error_Return(hid_device *hid, uint8_t value);
 void usbDBitIn_USB31XX(hid_device *hid, uint8_t bit_num, uint8_t* value);
 void usbDBitOut_USB31XX(hid_device *hid, uint8_t bit_num, uint8_t value);
 
 void usbAOutConfig_USB31XX(hid_device *hid, uint8_t channel, uint8_t range);
 int usbAOutConfig_USB31XX_Error_Return(hid_device *hid, uint8_t channel, uint8_t range);
 void usbAOut_USB31XX(hid_device *hid, uint8_t channel, uint16_t value, uint8_t update);
-int usbAOut_USB31XX_Error_Return(hid_device *hid, uint8_t channel, uint16_t value, uint8_t update)
+int usbAOut_USB31XX_Error_Return(hid_device *hid, uint8_t channel, uint16_t value, uint8_t update);
 void usbAOutSync_USB31XX(hid_device *hid);
 
 void usbInitCounter_USB31XX(hid_device *hid);
