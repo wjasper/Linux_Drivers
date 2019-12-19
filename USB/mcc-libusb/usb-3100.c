@@ -241,7 +241,7 @@ int usbAOutConfig_USB31XX_Error_Return(hid_device *hid, uint8_t channel, uint8_t
 /* writes to analog out */
 void usbAOut_USB31XX(hid_device *hid, uint8_t channel, uint16_t value, uint8_t update)
 {
-	usbAOut_USB31XX_Error_Return(hid, channel, value, update)
+	usbAOut_USB31XX_Error_Return(hid, channel, value, update);
 }
 
 int usbAOut_USB31XX_Error_Return(hid_device *hid, uint8_t channel, uint16_t value, uint8_t update)
