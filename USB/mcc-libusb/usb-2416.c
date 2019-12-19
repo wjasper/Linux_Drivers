@@ -89,7 +89,7 @@ static const double CJCGradients[32] =
 
 void usbBuildGainTable_USB2416(libusb_device_handle *udev, double table[NGAINS_2416][2])
 {
-	usbBuildGainTable_USB2416_Error_Return(udev, table[NGAINS_2416][2]);
+	usbBuildGainTable_USB2416_Error_Return(udev, table);
 }
 
 int usbBuildGainTable_USB2416_Error_Return(libusb_device_handle *udev, double table[NGAINS_2416][2])
@@ -104,7 +104,7 @@ int usbBuildGainTable_USB2416_Error_Return(libusb_device_handle *udev, double ta
 
   for (j = 0; j < NGAINS_2416; j++) {
     for (k = 0; k < 2; k++) {
-      ret = usbReadMemory_USB2416(udev, 8, address, (uint8_t *) &table[j][k]);
+      ret = usbReadMemory_USB2416_Error_Return(udev, 8, address, (uint8_t *) &table[j][k]);
 	  if (ret < 0)
 		  return ret;
       address += 0x8;
@@ -114,7 +114,7 @@ int usbBuildGainTable_USB2416_Error_Return(libusb_device_handle *udev, double ta
   if (usbStatus_USB2416(udev) & EXP) {
     expansion_board = 1;
   }
-  return;
+  return 0;
 }
 
 void usbBuildGainTable_USB2416_4AO(libusb_device_handle *udev, double table_AO[NCHAN_AO_2416][2])
@@ -846,8 +846,8 @@ int cleanup_USB2416_Error_Return( libusb_device_handle *udev )
 		return -1;
     if(libusb_release_interface(udev, 0) < 0)
 		return -1;
-    if(libusb_close(udev) < 0)
-		return -1;
+    
+	libusb_close(udev);
   }
   return 0;
 }
