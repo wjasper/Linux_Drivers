@@ -89,17 +89,24 @@ static const double CJCGradients[32] =
 
 void usbBuildGainTable_USB2416(libusb_device_handle *udev, double table[NGAINS_2416][2])
 {
+	usbBuildGainTable_USB2416_Error_Return(udev, table[NGAINS_2416][2]);
+}
+
+int usbBuildGainTable_USB2416_Error_Return(libusb_device_handle *udev, double table[NGAINS_2416][2])
+{
   /*
     Builds a lookup table of calibration coefficents to translate values into voltages:
          voltage = value*table[gain#][0] + table[gain#][1]
     only needed for fast lookup.
   */
-  int j, k;
+  int j, k, ret;
   uint16_t address = 0x00A0;
 
   for (j = 0; j < NGAINS_2416; j++) {
     for (k = 0; k < 2; k++) {
-      usbReadMemory_USB2416(udev, 8, address, (uint8_t *) &table[j][k]);
+      ret = usbReadMemory_USB2416(udev, 8, address, (uint8_t *) &table[j][k]);
+	  if (ret < 0)
+		  return ret;
       address += 0x8;
     }
   }
@@ -251,7 +258,8 @@ int usbAIn_USB2416(libusb_device_handle *udev, uint8_t channel, uint8_t mode, ui
     return -1;
   }
 
-  libusb_control_transfer(udev, requesttype, AIN, wValue, wIndex, (unsigned char *) &data, sizeof(data), HS_DELAY);
+  if (libusb_control_transfer(udev, requesttype, AIN, wValue, wIndex, (unsigned char *) &data, sizeof(data), HS_DELAY) < 0)
+	  return -1;
   //  printf("wValue = %#x    wIndex = %#x    data = %#x\n", wValue, wIndex, data);
   *flags = (data >> 24);
   data &= 0x00ffffff;
@@ -724,6 +732,11 @@ void usbGetVersion_USB2416(libusb_device_handle *udev, uint16_t version[4])
 
 void usbReadMemory_USB2416(libusb_device_handle *udev, uint16_t length,  uint16_t address, uint8_t *data)
 {
+	usbReadMemory_USB2416_Error_Return(udev, length,  address, data);
+}
+
+int usbReadMemory_USB2416_Error_Return(libusb_device_handle *udev, uint16_t length,  uint16_t address, uint8_t *data)
+{
   /* This command reads data from the available data EEPROM memory.
      The number of bytes to read is specified in the wLength (for
      writes it is wLength - sizeof(address)).
@@ -731,8 +744,7 @@ void usbReadMemory_USB2416(libusb_device_handle *udev, uint16_t length,  uint16_
 
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  libusb_control_transfer(udev, requesttype, MEMORY, address, 0x0, (unsigned char *) data, length, HS_DELAY);
-  return;
+  return libusb_control_transfer(udev, requesttype, MEMORY, address, 0x0, (unsigned char *) data, length, HS_DELAY);
 }
 
 void usbWriteMemory_USB2416(libusb_device_handle *udev, uint16_t length,  uint16_t address, uint8_t *data)
@@ -822,12 +834,22 @@ void usbTCCalMeasure(libusb_device_handle *udev, uint8_t value)
 
 void cleanup_USB2416( libusb_device_handle *udev )
 {
+	cleanup_USB2416_Error_Return(udev);
+}
+
+int cleanup_USB2416_Error_Return( libusb_device_handle *udev )
+{
   if (udev) {
-    libusb_clear_halt(udev, LIBUSB_ENDPOINT_IN|1);
-    libusb_clear_halt(udev, LIBUSB_ENDPOINT_OUT|1);
-    libusb_release_interface(udev, 0);
-    libusb_close(udev);
+	if (libusb_clear_halt(udev, LIBUSB_ENDPOINT_IN|1) < 0)
+		return -1;
+    if(libusb_clear_halt(udev, LIBUSB_ENDPOINT_OUT|1) < 0)
+		return -1;
+    if(libusb_release_interface(udev, 0) < 0)
+		return -1;
+    if(libusb_close(udev) < 0)
+		return -1;
   }
+  return 0;
 }
 
 void voltsTos16_USB2416_4AO(double *voltage, int16_t *data, int nSamples, double table_AO[])

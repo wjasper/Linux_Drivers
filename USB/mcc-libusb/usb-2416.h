@@ -108,6 +108,7 @@ typedef struct AInScanQueue_t {
 
 
 void cleanup_USB2416(libusb_device_handle *udev);
+int cleanup_USB2416_Error_Return( libusb_device_handle *udev );
 void usbBlink_USB2416(libusb_device_handle *udev,  uint8_t count);
 uint8_t usbDIn_USB2416(libusb_device_handle *udev, uint8_t port);
 void usbDOut_USB2416(libusb_device_handle *udev, uint8_t value, uint8_t port);
@@ -128,12 +129,14 @@ uint32_t usbCounter_USB2416(libusb_device_handle *udev, uint8_t counter);
 uint8_t usbStatus_USB2416(libusb_device_handle *udev);
 void usbCJC_USB2416(libusb_device_handle *udev, float temp[8]);  
 void usbReadMemory_USB2416(libusb_device_handle *udev, uint16_t length,  uint16_t address, uint8_t *data);
+int usbReadMemory_USB2416_Error_Return(libusb_device_handle *udev, uint16_t length,  uint16_t address, uint8_t *data);
 void usbWriteMemory_USB2416(libusb_device_handle *udev, uint16_t length,  uint16_t address, uint8_t *data);
 void usbCalConfig_USB2416(libusb_device_handle *udev, uint8_t value);
 void usbADCal_USB2416(libusb_device_handle *udev);
 void usbTCCalMeasure_USB2416(libusb_device_handle *udev, uint8_t value);
 double volts_USB2416(const int gain, const int value);
 void usbBuildGainTable_USB2416(libusb_device_handle *udev, double table[NGAINS_2416][2]);
+int usbBuildGainTable_USB2416_Error_Return(libusb_device_handle *udev, double table[NGAINS_2416][2]);
 
 /* USB 2416_4AO specific */
 void usbBuildGainTable_USB2416_4AO(libusb_device_handle *udev, double table_AO[NCHAN_AO_2416][2]);

@@ -61,6 +61,11 @@ static USB31XX_CalibrationTable CalTable[NCHAN_31XX];
 /* configures digital port */
 void usbDConfigPort_USB31XX(hid_device *hid, uint8_t direction)
 {
+	usbDConfigPort_USB31XX_Error_Return(hid, direction);
+}
+
+int usbDConfigPort_USB31XX_Error_Return(hid_device *hid, uint8_t direction)
+{
   /* The command sets the direction of the DIO port bits or output. */
 
   struct config_port_t {
@@ -71,7 +76,7 @@ void usbDConfigPort_USB31XX(hid_device *hid, uint8_t direction)
   config_port.reportID = DCONFIG;
   config_port.direction = direction;
 
-  PMD_SendOutputReport(hid, (uint8_t*) &config_port, sizeof(config_port));
+  return PMD_SendOutputReport(hid, (uint8_t*) &config_port, sizeof(config_port));
 }
 
 /* configures digital bit */
@@ -137,6 +142,11 @@ void usbDBitIn_USB31XX(hid_device *hid, uint8_t bit_num, uint8_t* value)
 /* writes digital port */
 void usbDOut_USB31XX(hid_device *hid, uint8_t value)
 {
+	usbDOut_USB31XX_Error_Return(hid, value);
+}
+
+int usbDOut_USB31XX_Error_Return(hid_device *hid, uint8_t value)
+{
   /* This command writes data to the DIO port bits that are configured as outputs. */
 
   struct write_port_t {
@@ -147,7 +157,7 @@ void usbDOut_USB31XX(hid_device *hid, uint8_t value)
   write_port.reportID = DOUT;
   write_port.value = value;
 
-  PMD_SendOutputReport(hid, (uint8_t*) &write_port, sizeof(write_port));
+  return PMD_SendOutputReport(hid, (uint8_t*) &write_port, sizeof(write_port));
 }
 
 /* writes digital bit  */
@@ -231,6 +241,11 @@ int usbAOutConfig_USB31XX_Error_Return(hid_device *hid, uint8_t channel, uint8_t
 /* writes to analog out */
 void usbAOut_USB31XX(hid_device *hid, uint8_t channel, uint16_t value, uint8_t update)
 {
+	usbAOut_USB31XX_Error_Return(hid, channel, value, update)
+}
+
+int usbAOut_USB31XX_Error_Return(hid_device *hid, uint8_t channel, uint16_t value, uint8_t update)
+{
   /* 
      This command writes the value to an analog output channel.  The value is a 16-bit
      unsigned value.  The output range for a channel may be set with AOutConfig.
@@ -282,7 +297,7 @@ void usbAOut_USB31XX(hid_device *hid, uint8_t channel, uint16_t value, uint8_t u
   usbAOut.value[1] = (uint8_t) ((value >> 0x8) & 0xff);  // high byte
   usbAOut.update = update;
 
-  PMD_SendOutputReport(hid, (uint8_t*) &usbAOut, sizeof(usbAOut));
+  return PMD_SendOutputReport(hid, (uint8_t*) &usbAOut, sizeof(usbAOut));
 }
 
 void usbAOutSync_USB31XX(hid_device *hid)
