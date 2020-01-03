@@ -238,6 +238,61 @@ uint32_t  intToInt24(int int32)
 
 int usbAIn_USB2416(libusb_device_handle *udev, uint8_t channel, uint8_t mode, uint8_t range, uint8_t rate, uint8_t *flags)
 {
+  /* This command returns the value from the specfied analog input
+     channel.  The channel configuration is specified in the command.
+     This command will result in a bus stall if an AIn scan is
+     currently running.
+
+  channel:  (wValue low byte)   the input channel to be read (0-31)
+  mode:     (wValue high byte)  the input mode:
+            0: Differential voltage
+            1: Single-ended voltage, high pin
+            2: Single-ended voltage, low pin
+            3: A/D readback voltage
+            4: Thermocouple
+            5: AIn offset calibration
+            6: AIn gain calibration
+            7: TC Offset Calibration
+            8: TC Gain Calibration Positive
+            9: TC Gain Calibration Negative
+           10: Thermocouple no burnout detect
+
+  range:    (wIndex low byte) the input range
+            0: +/- 20V
+            1: +/- 10V
+            2: +/- 5V
+            3: +/- 2.5V
+            4: +/- 1.25V
+            5: +/- 0.625V
+            6: +/- 0.312V
+            7: +/- 0.156V
+            8: +/- 0.078V
+
+  rate:    (wIndex high byte) The A/D data rate for the reading:
+           0:  30,000 S/s
+           1:  15,000 S/s
+           2:  7,500 S/s
+           3:  3,750 S/s
+           4:  2,000 S/s
+           5:  1,000 S/s
+           6:  500 S/s
+           7:  100 S/s
+           8:  60 S/s
+           9:  50 S/s
+          10:  30 S/s
+          11:  25 S/s
+          12:  15 S/s
+          13:  10 S/s
+          14:  5 S/s
+          15:  2.5 S/s
+
+  Input Response:
+    value:  sint24_t  the value read from the analog channel
+    flags:  uint8_t reading flags:
+             bits 0-6: reserved
+             bit 7:   1 = TC open detected, 0 = normal reading
+  */
+            
   uint32_t data;
   uint16_t wValue;
   uint16_t wIndex;
