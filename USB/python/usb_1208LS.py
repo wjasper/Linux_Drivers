@@ -530,29 +530,31 @@ class usb_1208(mccUSB):
       print('Error in reading id, value =', value)
     return(value[0])
 
-  def volts(self, gain, num):
+  def volts(self, gain, value):
     '''
     converts raw values to volts
     '''
     volt = 0.0
     if gain == self.SE_10_00V:
-      volt = num * 10.0 / 0x3ff
+      volt = value * 10.0 / 0x3ff
     elif gain == self.BP_20_00V:
-      volt = num * 20.0 / 0x7ff
+      volt = value * 20.0 / 0x7ff
     elif gain == self.BP_10_00V:
-      volt = num * 10.0 / 0x7ff
+      volt = value * 10.0 / 0x7ff
     elif gain == self.BP_5_00V:
-      volt = num * 5.0 / 0x7ff
+      volt = value * 5.0 / 0x7ff
     elif gain == self.BP_4_00V:
-      volt = num * 4.0 / 0x7ff
+      volt = value * 4.0 / 0x7ff
     elif gain == self.BP_2_50V:
-      volt = num * 2.5 / 0x7ff
+      volt = value * 2.5 / 0x7ff
     elif gain == self.BP_2_00V:
-      volt = num * 2.0 / 0x7ff
+      volt = value * 2.0 / 0x7ff
     elif gain == self.BP_1_25V:
-      volt = num * 1.25 / 0x7ff
+      volt = value * 1.25 / 0x7ff
     elif gain == self.BP_1_00V:
-      volt = num * 1.0 / 0x7ff
+      volt = value * 1.0 / 0x7ff
+    else:
+      raise ValueError('volts: Unknown range.')
     
     return volt
 

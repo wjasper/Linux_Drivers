@@ -247,7 +247,10 @@ class bth_1208LS(mccUSB):
     mdate = datetime(year, month, day, hour, minute, second)
     return mdate
 
-  def volts(self, value, gain):
+  def volts(self, gain, value):
+    """
+    converts raw value to volts
+    """
     volt = 0.0
     if (gain == self.BP_20V):
       volt = (value - 0x800)* 20.0/2048.
@@ -268,7 +271,7 @@ class bth_1208LS(mccUSB):
     elif (gain == self.UP_2_5V):
       volt = value*2.5/4096.             # analog output
     else:
-      raise ValueError('Unknown range.')
+      raise ValueError(volts: 'Unknown range.')
 
     return volt
 

@@ -212,6 +212,10 @@ def main():
       print("Serial No: %s" % usb1608FS.getSerialNumber())
     elif ch == 'S':
       usb1608FS.printStatus()
+    elif ch == 'r':
+      usb1608FS.Reset()
+      usb1608FS.udev.close()
+      exit(0)
 
 if __name__ == "__main__":
   main()

@@ -103,7 +103,7 @@ def main():
       for i in range(20):
         value = bth1208LS.AIn(channel, mode, gain)
         print("Range = {0:d},  Channel = {1:d},  Sample[{2:d}] = {3:x}    Volts = {4:f}"\
-              .format(gain, channel, i, value, bth1208LS.volts(value, gain)))
+              .format(gain, channel, i, value, bth1208LS.volts(gian, value)))
     elif ch == 'I':
       print("Testing BTH-1208LS Analog Input Scan.")
       count = int(input("Enter number of scans: "))
@@ -122,7 +122,7 @@ def main():
       dataAIn = bth1208LS.AInScanRead(count)
       for i in range(count):
         dataAIn[i] = round(dataAIn[i]*bth1208LS.table_AInDE[channel][gain].slope + bth1208LS.table_AInDE[channel][gain].intercept)
-        print("Range {0:d}  Channel {1:d}  Sample[{2:d}] = ".format(gain, channel, i), hex(dataAIn[i])," Volts = {0:7.4f}".format(bth1208LS.volts(dataAIn[i], gain)))
+        print("Range {0:d}  Channel {1:d}  Sample[{2:d}] = ".format(gain, channel, i), hex(dataAIn[i])," Volts = {0:7.4f}".format(bth1208LS.volts(gain, dataAIn[i])))
     elif ch == 'x':
       print("Testing BTH-1208LS Multi-Channel Analog Input Scan.")
       nChan = int(input("Enter number of channels (1-4): "))
@@ -155,7 +155,7 @@ def main():
           for j in range(nChan):
             k = i*nChan + j
             value = round(data[k]*bth1208LS.table_AInDE[j][gain].slope + bth1208LS.table_AInDE[j][gain].intercept)
-            print(" ,{0:8.4f}".format(bth1208LS.volts(value, ranges[0])), end="")
+            print(" ,{0:8.4f}".format(bth1208LS.volts(ranges[0], value)), end="")
           print("")
     elif ch == 'C':
       print('BTH-1208LS Continuous Samping')

@@ -936,26 +936,29 @@ class usb_1408FS(mccUSB):
     wIndex = 0                              # interface
     ret = self.udev.controlWrite(request_type, request, wValue, wIndex, [self.WRITE_SERIAL, serial[0:8]], timeout = 100)
 
-  def volts(self, gain, num):
+  def volts(self, gain, value):
     # converts signed short value to volts
     if gain == self.BP_20_00V:
-      volt = num * 20.0 / 0x1fff
+      volt = value * 20.0 / 0x1fff
     elif gain == self.BP_10_00V:
-      volt = num * 10.0 / 0x1fff
+      volt = value * 10.0 / 0x1fff
     elif gain == self.BP_5_00V:
-      volt = num * 5.0 / 0x1fff
+      volt = value * 5.0 / 0x1fff
     elif gain == self.BP_4_00V:
-      volt = num * 4.0 / 0x1fff
+      volt = value * 4.0 / 0x1fff
     elif gain == self.BP_2_50V:
-      volt = num * 2.5 / 0x1fff
+      volt = value * 2.5 / 0x1fff
     elif gain == self.BP_2_00V:
-      volt = num * 2.0 / 0x1fff
+      volt = value * 2.0 / 0x1fff
     elif gain == self.BP_1_25V:
-      volt = num * 1.25 / 0x1fff
+      volt = value * 1.25 / 0x1fff
     elif gain == self.BP_1_00V:
-      volt = num * 1.0 / 0x1fff
+      volt = value * 1.0 / 0x1fff
     elif gain == self.SE_10_00V:
-      volt = num * 10.0 / 0x1fff + 0.0
+      volt = value * 10.0 / 0x1fff + 0.0
+    else:
+      raise ValueError('volts: Unknown gain value.')
+
     return volt
 
   def printStatus(self):
