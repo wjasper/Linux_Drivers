@@ -452,6 +452,11 @@ class usb_1608FS_Plus(mccUSB):
     wValue = 0x0
     wIndex = 0x0
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+    try:
+      data = self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 64, 100)
+    except:
+      pass
+    
   #############################################
   #           Counter Commands                #
   #############################################
@@ -670,6 +675,50 @@ class usb_1608FS_Plus(mccUSB):
     wValue = 0xADAD
     wIndex = 0
     self.udev.controlWrite(request_type, self.DFU, wValue, wIndex, [0x0], timeout = 100)
+
+  def MBDCommandR(self, nBytes):
+    """
+    This command is the interface for text-based MBD commands and
+    responses.  the length of the string must be passed in wLength for
+    an OUT transfer.
+    """
+
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = 0
+    
+    try:
+      result = self.udev.controlRead(request_type, self.MBD_COMMAND, wValue, wIndex, nBytes, timeout = 100)
+    except:
+      print("MBDCommandR: controlRead error")
+
+    return result
+
+  def MBDCommandW(self, command):
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = address & 0xffff   # force to be 16 bits
+    wIndex = 0
+
+    try:
+      result = self.udev.controlWrite(request_type, self.MBD_COMMAND, wValue, wIndex, command, timeout = 100)
+    except:
+      print("MBDCommandW: controlWrite error")
+
+  def MBDRaw(self, nBytes):
+    """
+    This command is the interface for binary responses to certain MBD commands
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = 0
+    
+    try:
+      result = self.udev.controlRead(request_type, self.MBD_RAW, wValue, wIndex, nBytes, timeout = 100)
+    except:
+      print("MBDRaw: controlRead error")
+
+    return result
+    
 
   def printStatus(self):
     status = self.Status()

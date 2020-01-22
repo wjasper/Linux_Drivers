@@ -183,6 +183,35 @@ def main():
           dataAIn[ii] = round(dataAIn[ii]*usb1608FS_Plus.table_AIn[channel][gain].slope + usb1608FS_Plus.table_AIn[channel][gain].intercept)
           print("Channel {0:d}  Sample[{1:d}] = ".format(channel, ii), hex(dataAIn[ii])," Volts = {0:7.4f}".format(usb1608FS_Plus.volts(gain,dataAIn[ii])))
       usb1608FS_Plus.AInScanStop()
+      usb1608FS_Plus.AInScanClearFIFO()
+    elif ch == 'C':
+      print('Testing USB-1608FS-Plus Analog Input Scan in Continuous mode')
+      nchan = int(input('Enter number of channels [1-8]: '))
+      frequency = float(input('Enter sampling frequency [Hz]: '))
+      print('Hit any key to exit')
+      if frequency < 100:
+        options = usb1608FS_Plus.IMMEDIATE_TRANSFER_MODE
+      else:
+        options = 0x0
+      channels = 0
+      for i in range(nchan):
+        channels |= (0x1 << i)
+      usb1608FS_Plus.AInScanStop()
+      usb1608FS_Plus.AInScanClearFIFO()
+      usb1608FS_Plus.AInScanStart(0, frequency, channels, options)
+      flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      j = 0
+      while True:
+        raw_data = usb1608FS_Plus.AInScanRead(128)
+        print('Scan =', j, 'samples returned =', len(raw_data))
+        j += 1
+        c = sys.stdin.readlines()
+        if (len(c) != 0):
+          break
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+      usb1608FS_Plus.AInScanStop()
+      usb1608FS_Plus.AInScanClearFIFO()
     elif ch == 'I':
       print("Manufacturer: %s" % usb1608FS_Plus.getManufacturer())
       print("Product: %s" % usb1608FS_Plus.getProduct())

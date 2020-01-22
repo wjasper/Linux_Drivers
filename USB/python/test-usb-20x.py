@@ -141,6 +141,7 @@ def main():
         options = usb20x.IMMEDIATE_TRANSFER_MODE
       else:
         options = 0x0
+      channels = 0
       for i in range(nchan):
         channels |= (0x1 << i)
       usb20x.AInScanStop()

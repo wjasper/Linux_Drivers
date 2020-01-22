@@ -636,7 +636,7 @@ class usb_20x(mccUSB):
       return
     
     try:
-      result = self.udev.controlRead(request_type, self.SETTINGS_MEMORY, wValue, wIndex, count, timeout = 100)
+      result = self.udev.controlRead(request_type, self.MBD_MEMORY, wValue, wIndex, count, timeout = 100)
     except:
       print("MBDMemoryR: controlRead error")
 
@@ -657,7 +657,7 @@ class usb_20x(mccUSB):
       return
 
     try:
-      result = self.udev.controlWrite(request_type, self.SETTINGS_MEMORY, wValue, wIndex, data, timeout = 100)
+      result = self.udev.controlWrite(request_type, self.MBD_MEMORY, wValue, wIndex, data, timeout = 100)
     except:
       print("MBDMemoryW: controlWrite error")
     
