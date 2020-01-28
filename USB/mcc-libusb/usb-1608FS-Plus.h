@@ -92,7 +92,7 @@ void usbDFU_USB1608FS_Plus(libusb_device_handle *udev);
 void usbMBDCommand_USB1608FS_Plus(libusb_device_handle *udev, uint8_t str[]);
 void usbMBDRaw_USB1608FS_Plus(libusb_device_handle *udev, uint8_t cmd[], uint16_t size);
 void cleanup_USB1608FS_Plus(libusb_device_handle *udev);
-void usbBuildGainTable_USB1608FS_Plus(libusb_device_handle *udev, float table[NGAINS_USB1608FS_PLUS][NCHAN_USB1608FS_PLUS][2]);
+void usbBuildGainTable_USB1608FS_Plus(libusb_device_handle *udev, float table[NCHAN_USB1608FS_PLUS][NGAINS_USB1608FS_PLUS][2]);
 double volts_USB1608FS_Plus(uint16_t value, uint8_t range);
 void usbCalDate_USB1608FS_Plus(libusb_device_handle *udev, struct tm *date);
 

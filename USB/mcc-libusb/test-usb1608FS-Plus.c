@@ -48,7 +48,7 @@ int main (int argc, char **argv)
   libusb_device_handle *udev2 = NULL;  // second device
   struct tm calDate;
 
-  float table_AIN[NGAINS_USB1608FS_PLUS][NCHAN_USB1608FS_PLUS][2];
+  float table_AIN[NCHAN_USB1608FS_PLUS][NGAINS_USB1608FS_PLUS][2];
 
   int ch;
   int i, j, k, m;
@@ -101,8 +101,8 @@ start:
   printf("wMaxPacketSize = %d\n", usb_get_max_packet_size(udev,0));
 
   usbBuildGainTable_USB1608FS_Plus(udev, table_AIN);
-  for (i = 0; i < NGAINS_USB1608FS_PLUS; i++ ) {
-    for (j = 0; j < NCHAN_USB1608FS_PLUS; j++) {
+  for (i = 0; i < NCHAN_USB1608FS_PLUS; i++) {
+    for (j = 0; j < NGAINS_USB1608FS_PLUS; j++ ) {
       printf("Calibration Table: Range = %d Channel = %d Slope = %f   Offset = %f\n", 
 	     i, j, table_AIN[i][j][0], table_AIN[i][j][1]);
     }
@@ -172,7 +172,7 @@ start:
 	scanf("%hhd", &range);
 	for (i = 0; i < 20; i++) {
 	  value = (int) usbAIn_USB1608FS_Plus(udev, channel, range);
-	  value = rint(value*table_AIN[range][channel][0] + table_AIN[range][channel][1]);
+	  value = rint(value*table_AIN[channel][range][0] + table_AIN[channel][range][1]);
 	  if (value > 0xffff) value = 0xffff;    // check for overflow
 	  if (value < 0) value = 0x0;            // check for underflow
 	  printf("Range %d  Channel %d   Sample[%d] = %#x Volts = %lf\n",
@@ -210,7 +210,7 @@ start:
 	ret = usbAInScanRead_USB1608FS_Plus(udev, count, 1, sdataIn, options);
 	printf("Number samples read = %d\n", ret/2);
 	for (i = 0; i < count; i++) {
-	  value = rint(sdataIn[i]*table_AIN[range][channel][0] + table_AIN[range][channel][1]);
+	  value = rint(sdataIn[i]*table_AIN[channel][range][0] + table_AIN[channel][range][1]);
 	  if (value > 0xffff) value = 0xffff;   // check for overflow
 	  if (value < 0) value = 0;             // check for underflow
 	  sdataIn[i] = (uint16_t) value;
@@ -246,7 +246,7 @@ start:
   	  ret = usbAInScanRead_USB1608FS_Plus(udev, 256, nchan, sdataIn, CONTINUOUS);
           for (scan = 0; scan < 256; scan++) { //for each scan
 	    for (channel = 0; channel < nchan; channel++) {  // for each channel in a scan
-              dataC[scan][channel] = rint(sdataIn[scan*8+channel]*table_AIN[range][channel][0] + table_AIN[range][channel][1]);
+              dataC[scan][channel] = rint(sdataIn[scan*8+channel]*table_AIN[channel][range][0] + table_AIN[channel][range][1]);
 	    }
 	  }
           if (i%100 == 0) {
@@ -298,7 +298,7 @@ start:
 	    printf("%6d", i);
 	    for (j = 0; j < nchan; j++)	{
 	      k = i*nchan + j;
-	      data = rint(sdataIn[k]*table_AIN[range][j][0] + table_AIN[range][j][1]);
+	      data = rint(sdataIn[k]*table_AIN[j][range][0] + table_AIN[j][range][1]);
 	      printf(", %8.4f", volts_USB1608FS_Plus(data, range));
 	    } /* for (j - 0; j < 8, j++) */
 	    printf("\n");

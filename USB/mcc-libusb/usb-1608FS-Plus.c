@@ -65,7 +65,7 @@
 static int wMaxPacketSize;  // will be the same for all devices of this type so
                             // no need to be reentrant. 
 
-void usbBuildGainTable_USB1608FS_Plus(libusb_device_handle *udev, float table[NGAINS_USB1608FS_PLUS][NCHAN_USB1608FS_PLUS][2])
+void usbBuildGainTable_USB1608FS_Plus(libusb_device_handle *udev, float table[NCHAN_USB1608FS_PLUS][NGAINS_USB1608FS_PLUS][2])
 {
   /* Builds a lookup table of calibration coefficents to translate values into voltages:
      The calibration coefficients are stored in onboard FLASH memory on the device in
@@ -80,7 +80,7 @@ void usbBuildGainTable_USB1608FS_Plus(libusb_device_handle *udev, float table[NG
   for (i = 0; i < NGAINS_USB1608FS_PLUS; i++ ) {
     for (j = 0; j < NCHAN_USB1608FS_PLUS; j++) {
       for (k = 0; k < 2; k++) {
-	usbReadCalMemory_USB1608FS_Plus(udev, address, 4, (uint8_t *) &table[i][j][k]);
+	usbReadCalMemory_USB1608FS_Plus(udev, address, 4, (uint8_t *) &table[j][i][k]);
 	address += 4;
       }
     }
