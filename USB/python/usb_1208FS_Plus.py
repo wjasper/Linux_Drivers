@@ -23,38 +23,49 @@ from struct import *
 from datetime import datetime
 from mccUSB import *
 
-class usb_1608FS_Plus(mccUSB):
+class usb_1208FS_Plus(mccUSB):
   # Gain Ranges
-  BP_10_00V   = 0x0         # Differential +/- 10.0 V
-  BP_5_00V    = 0x1         # Differential +/- 5.00 V
-  BP_2_50V    = 0x2         # Differential +/- 2.50 V
-  BP_2_00V    = 0x3         # Differential +/- 2.00 V
-  BP_1_25V    = 0x4         # Differential +/- 1.25 V
-  BP_1_00V    = 0x5         # Differential +/- 1.00 V
-  BP_0_625V   = 0x6         # Differential +/- 0.625 V
-  BP_0_3125V  = 0x7         # Differential +/- 0.3125 V
+  BP_20V   = 0x0   # Differential +/- 20.0 V
+  BP_10V   = 0x1   # Differential +/- 10.0 V
+  BP_5V    = 0x2   # Differential +/- 5.0 V
+  BP_4V    = 0x3   # Differential +/- 4.0 V
+  BP_2_5V  = 0x4   # Differential +/- 2.5 V
+  BP_2V    = 0x5   # Differential +/- 2.0 V
+  BP_1_25V = 0x6   # Differential +/- 1.25 V
+  BP_1V    = 0x7   # Differential +/- 1.0 V
+  UP_5V    = 0x8   # Unipolar   0-5V  (Analog output)
 
-  # Status Bits
-  AIN_SCAN_RUNNING = 0x2    # 1 = AIn scan running
-  AIN_SCAN_OVERRUN = 0x4    # 1 = AIn scan overrun
+  # Analog Input Scan Options
+  IMMEDIATE_TRANSFER_MODE  = 0x1
+  DIFFERENTIAL_MODE    = 0x1 << 1
+  TRIGGER_EDGE_RISING  = 0x1 << 2
+  TRIGGER_EDGE_FALLING = 0x2 << 2
+  TRIGGER_EDGE_HIGH    = 0x3 << 2
+  TRIGGER_EDGE_LOW     = 0x4 << 2
+  RETRIGGER_MODE       = 0x1 << 5
+  INHIBIT_STALL        = 0x1 << 7
+
+  # Status bit values
+  AIN_SCAN_RUNNING   = 0x1 << 1
+  AIN_SCAN_OVERRUN   = 0x1 << 2
+  AOUT_SCAN_RUNNING  = 0x1 << 3
+  AOUT_SCAN_UNDERRUN = 0x1 << 4
   
-  NCHAN              = 8    # max number of A/D channels in the device
-  NGAIN              = 8    # max number of gain levels (0-7)
+  NCHAN_DE = 4     # number of A/D differential input channels
+  NCHAN_SE = 8     # number of A/D differential output channels
+  NCHAN_AOUT = 2   # number of DAC channels
+  NGAIN = 8        # number of gain levels
 
-  # Option values for AInScan
-  IMMEDIATE_TRANSFER_MODE = 0x1
-  BLOCK_TRANSFER_MODE     = 0x0
-  INTERNAL_PACER_ON       = 0x2
-  INTERNAL_PACER_OFF      = 0x0
-  AIN_NO_TRIGGER     = 0x0
-  TRIG_EDGE_RISING   = (0x1 << 2)
-  TRIG_EDGE_FALLING  = (0x2 << 2)
-  TRIG_LEVEL_HIGH    = (0x3 << 2)
-  TRIG_LEVEL_LOW     = (0x4 << 2)
-  DEBUG_MODE         = (0x1 << 5)
-  INHIBIT_STALL      = (0x1 << 7)
+  PORTA = 0           # DIO Port A
+  PORTB = 1           # DIO Port B
 
-  # Commands and Codes for USB1608FS_Plus
+  # Analog Input
+  SINGLE_ENDED = 0
+  DIFFERENTIAL = 1
+  CALIBRATION  = 3
+  LAST_CHANNEL = 0x80
+
+  # Commands and Codes for USB1208FS_Plus
   # Digital I/O Commands
   DTRISTATE           = 0x00  # Read/write digital port tristate register
   DPORT               = 0x01  # Read digital port pins / write output latch register
@@ -66,6 +77,13 @@ class usb_1608FS_Plus(mccUSB):
   AIN_SCAN_STOP       = 0x12  # Stop analog input scan
   AIN_SCAN_CONFIG     = 0x14  # Read/Write analog input configuration
   AIN_SCAN_CLEAR_FIFO = 0x15  # Clear the analog input scan FIFO
+  AIN_BULK_FLUSH      = 0x16  # Flush the bulk IN endpoint with empty packets
+
+  # Analog Output Commands
+  AOUT                = 0x18  # Read/write analog output channel
+  AOUT_SCAN_START     = 0x1A  # Start analog output scan
+  AOUT_SCAN_STOP      = 0x1B  # Stop analog output scan
+  AOU_SCAN_CLEAR_FIFO = 0x1C  # Clear the alalog output scan FIFO
 
   # Counter Commands
   COUNTER             = 0x20  # Read/reset event counter
@@ -90,10 +108,10 @@ class usb_1608FS_Plus(mccUSB):
 
   def __init__(self, serial=None):
     print("initializing\n")
-    self.productID = 0x00ea               # MCC USB-1608FS-Plus
+    self.productID = 0x00e8               # MCC USB-1208FS-Plus
     self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
-      raise IOError("MCC USB-1608FS-Plus not found")
+      raise IOError("MCC USB-1208FS-Plus not found")
     if sys.platform.startswith('linux'):
       if self.udev.kernelDriverActive(0):
         self.udev.detachKernelDriver(0)
@@ -110,23 +128,29 @@ class usb_1608FS_Plus(mccUSB):
     # IEEE-754 4-byte floating point values.
     #
     #   calibrated code = code*slope + intercept
-    #   self.table_AIn[channel][gain]  0 < chan < 7,  0 < gain < 7
+    #   self.table_AIn[channel][gain]  0 < chan < 4,  0 < gain < 7
     self.table_AIn = [[table(), table(), table(), table(), table(), table(), table(), table()], \
-                      [table(), table(), table(), table(), table(), table(), table(), table()], \
-                      [table(), table(), table(), table(), table(), table(), table(), table()], \
-                      [table(), table(), table(), table(), table(), table(), table(), table()], \
-                      [table(), table(), table(), table(), table(), table(), table(), table()], \
                       [table(), table(), table(), table(), table(), table(), table(), table()], \
                       [table(), table(), table(), table(), table(), table(), table(), table()], \
                       [table(), table(), table(), table(), table(), table(), table(), table()]]
 
+    # Range for Single Ended is +/- 10V only.
+    self.table_AInSE = [table(), table(), table(), table(), table(), table(), table(), table()]
+
     address = 0x0
     for gain in range(self.NGAIN):
-      for chan in range(self.NCHAN):
+      for chan in range(self.NCHAN_DE):
         self.table_AIn[chan][gain].slope, = unpack('f', self.CalMemoryR(address, 4))
         address += 4
         self.table_AIn[chan][gain].intercept, = unpack('f', self.CalMemoryR(address, 4))
         address += 4
+
+    address = 0x100
+    for chan in range(self.NCHAN_SE):
+      self.table_AInSE[chan].slope, = unpack('f', self.CalMemoryR(address, 4))
+      address += 4
+      self.table_AInSE[chan].intercept, = unpack('f', self.CalMemoryR(address, 4))
+      address += 4
 
   def CalDate(self):
     """
@@ -166,94 +190,115 @@ class usb_1608FS_Plus(mccUSB):
   #        Digital I/O Commands               #
   #############################################
 
-  # Read/Write digital port tristate register
-  def DTristateR(self):
+    # Read/Write digital port tristate register
+  def DTristateR(self, port=0):
     """
     This command reads the digital port tristate register.  The
     tristate register determines if the latch register value is driven
     onto the port pin.  A '1' in the tristate register makes the
     corresponding pin an input, a '0' makes it an output.  The power
-    on default is all input.
+    on default is all input. This board only supports setting the
+    entire port as input or output.
+
+    port:   the port to set (0 = Port A, 1 = Port B)
     """
 
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
-    wIndex = 0
+    wIndex = port & 0xff
     value ,= self.udev.controlRead(request_type, self.DTRISTATE, wValue, wIndex, 1, self.HS_DELAY)
     return value
 
-  def DTristateW(self, value):
+  def DTristateW(self, value, port=0):
     """
     This command writes the digital port tristate register.  The
     tristate register determines if the latch register value is driven
     onto the port pin.  A '1' in the tristate register makes the
-    corresponding pin an input, a '0' makes it an output.
+    corresponding pin an input, a '0' makes it an output.  The power
+    on default is all input. This board only supports setting the
+    entire port as input or output.
+
+    port:   the port to set (0 = Port A, 1 = Port B)
     """
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    request = self.DTRISTATE
     wValue = value & 0xff
-    wIndex = 0
-    self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], self.HS_DELAY)
+    wIndex = port  & 0xff
+    self.udev.controlWrite(request_type, self.DTRISTATE, wValue, wIndex, [0x0], self.HS_DELAY)
 
-  def DPort(self):
+  def DPortR(self, port=0):
     """
     This command reads the current state of the digital pins.
+    port:   the port to read (0 = Port A, 1 = Port B)
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
-    wIndex = 0
+    wIndex = port & 0xff
     value ,= self.udev.controlRead(request_type, self.DPORT, wValue, wIndex, 1, self.HS_DELAY)
     return value
 
-  def DPortW(self, value):
+  def DPortW(self, value, port=0):
     """
     This command writes to the latch register.
+    port:   the port to write (0 = Port A, 1 = Port B)
     """
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = value & 0xff
-    wIndex = 0
+    wIndex = port  & 0xff
     self.udev.controlWrite(request_type, self.DPORT,  wValue, wIndex, [0x0], self.HS_DELAY)
     return 
 
-  def DLatchR(self):
+  def DLatchR(self, port=0):
     """
     This command reads the digital port latch register.  The power on default is all 0.
+    port:   the port to write (0 = Port A, 1 = Port B)
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
-    wIndex = 0
+    wIndex = port
     value ,= self.udev.controlRead(request_type, self.DLATCH, wValue, wIndex, 1, self.HS_DELAY)
     return value
 
-  def DLatchW(self, value):
+  def DLatchW(self, value, port=0):
     """
     This command writes the digital port latch register.
+    port:   the port to write (0 = Port A, 1 = Port B)
     """
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = value & 0xff
-    wIndex = 0
+    wIndex = port  & 0xff
     self.udev.controlWrite(request_type, self.DLATCH, wValue, wIndex, [0x0], self.HS_DELAY)
     
 
   #############################################
   #        Analog Input Commands              #
   #############################################
-  def AIn(self, channel, gain):
+
+  def AIn(self, channel, mode, gain):
     """
     This command reads the value of an analog input channel.  This
     command will result in a bus stall if an AInScan is currently
     running.  
 
      channel: the channel to read (0-7)
-     gain:    the input gain for the channel (0-7
-     value:   16 bits of data, right justified.
+     mode:    the input mode (0 = single ended, 1 = differential)
+     gain:    the input gain for the channel (0-7)
+     value:   12 bits of data, right justified.
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = channel
+    wValue = (mode << 0x8) | channel
     wIndex = gain
-    value ,= unpack('H',self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 2, timeout = 100))
-    data = round(float(value)*self.table_AIn[channel][gain].slope + self.table_AIn[channel][gain].intercept)
+
+    if (mode == self.DIFFERENTIAL and channel > 3) or channel > 7:
+      raise ValueError('AIn: Error in channel number')
+      return
+    
+    value ,= unpack('H',self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 2, timeout = 200))
+
+    if mode == self.SINGLE_ENDED:
+      data = round(float(value)*self.table_AInSE[channel].slope + self.table_AInSE[channel].intercept)
+    else:
+      data = round(float(value)*self.table_AIn[channel][gain].slope + self.table_AIn[channel][gain].intercept)        
     if (data >= 65536):
       value = 65535
     elif (data < 0):
@@ -262,25 +307,25 @@ class usb_1608FS_Plus(mccUSB):
       value = data
     return value
 
-  def AInScanStart(self, count, frequency, channels, options):
+  def AInScanStart(self, count, retrig_count, frequency, channels, options):
     """
     This command starts an analog input scan. This command will
     result in a bus stall if an AIn scan is currently running. The
     device will not generate an internal pacer faster than 100 kHz;
 
     The pacer rate is set by an internal 32-bit timer running at a
-    base rate of 40 MHz. The timer is controlled by pacer_period. This
+    base rate of 60 MHz. The timer is controlled by pacer_period. This
     value is the period of the the ADC conversions.  A pulse will be
     output at the SYNC pin at every pacer_period interval if SYNC is
     configured as an output. The equation for calculating pacer_period
     is:
    
-          pacer_period = [40 MHz / (sample frequency)] - 1 
+          pacer_period = [60 MHz / (sample frequency)] - 1 
 
     If pacer_period is set to 0 the device does not generate an A/D
     clock. It uses the SYNC pin as an input and the user must
     provide the pacer source. The A/Ds acquire data on every rising
-    edge of SYNC; the maximum allowable input frequency is 100 kHz.
+    edge of SYNC; the maximum allowable input frequency is 52 kHz.
 
     The data will returned in packets utilizing a bulk endpoint  The data will be in the format:
 
@@ -306,8 +351,8 @@ class usb_1608FS_Plus(mccUSB):
     rates, typically under 100 Hz, because overruns will occur if the
     rate is too high.
 
-    There is a 32,768 sample FIFO and scan under 32kS can be performed at up to 100 kHz * 8
-    channels without overrun.
+    There is a 32,768 sample FIFO and scan under 32kS can be performed
+    at up to 100 kHz * 8 channels without overrun.
 
     Overruns are indicated by the device stalling the bulk in
     endpoint during the scan. The host may read the status to verify
@@ -315,8 +360,10 @@ class usb_1608FS_Plus(mccUSB):
     performed.
 
      count:         the total number of scans to perform, 0 for continuous scan
+     retrig_count:  the number of samples to acquire for each trigger in retrigger mode
      pacer_period:  the A/D timer period (0 for external clock)
-     channels:      bit field that selects the channels in the scan
+     channels:      bit field that selects the channels in the scan, the upper 4 bits ignored in
+                    differential mode
         ---------------------------------------------------------
         | Bit7 | Bit6 | Bit5 | Bit4 | Bit3 | Bit2 | Bit1 | Bit0 |
         ---------------------------------------------------------
@@ -325,23 +372,23 @@ class usb_1608FS_Plus(mccUSB):
 
      options:  bit field that controls scan options
        bit 0: 1 = immediate transfer mode, 0 = block transfer mode
-       bit 1: 1 = output internal pacer on SYNC, 0 = do not output internal pacer (ignored wien using external clock for pacing)
+       bit 1: 1 = differnetal mode, 0 = single ended mode
        bits 2-4: Trigger setting
                    0: no trigger
                    1: Edge/rising
                    2: Level/falling
                    3: Level/high
                    4: Level/low
-       bit 5:  1 = debug mode (data returned is incrementing counter), 0 = normal A/D data
+       bit 5:  1 = retrigger mode, 0 = normal trigger mode
        bit 6:  reserved
-       bit 7:  0 = stall bulk pipe on overrun, 1 = inhibit bulk pipe stall
+       bit 7:  0 = stall bulk pipe on overrun, 1 = inhibit stall
 
     """
 
     if frequency > 100000.:
       frequency = 100000
     if frequency > 0:
-      pacer_period = round((40.E6 / frequency) - 1)
+      pacer_period = round((60.E6 / frequency) - 1)
     else:
       pacer_period = 0
 
@@ -353,12 +400,17 @@ class usb_1608FS_Plus(mccUSB):
       self.continuous_mode = False
 
     self.nChan = 0
-    for i in range(self.NCHAN):
-      if (channels & (0x1 << i)) != 0x0:
-        self.nChan += 1
+    if (self.options & self.DIFFERENTIAL_MODE):
+      for i in range(self.NCHAN_DE):
+        if (channels & (0x1 << i)) != 0x0:
+          self.nChan += 1
+    else:
+      for i in range(self.NCHAN_SE):
+        if (channels & (0x1 << i)) != 0x0:
+          self.nChan += 1
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    scanPacket = pack('IIBB', count, pacer_period, channels, options)
+    scanPacket = pack('IIIBB', count, retrig_count, pacer_period, channels, options)
     result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
 
   def AInScanRead(self, nScan):
@@ -404,10 +456,9 @@ class usb_1608FS_Plus(mccUSB):
     """
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    request = self.AIN_SCAN_STOP
     wValue = 0x0
     wIndex = 0x0
-    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+    result = self.udev.controlWrite(request_type, self.AIN_SCAN_STOP, wValue, wIndex, [0x0], timeout = 100)
 
   def AInConfigR(self):
     """
@@ -415,16 +466,17 @@ class usb_1608FS_Plus(mccUSB):
     command will result in a bus stall if an AIn scan is currently
     running.
 
-    ranges  8 bytes channel ranges, each byte corrsponds to an input channel
+    ranges  8 bytes channel ranges, each byte corresponds to an input channel.
+            These values are ignored in single ended mode (only 1 range available).
             Range #     Input range
-             0            +/- 10 V
-             1            +/- 5 V
-             2            +/- 2.5 V
-             3            +/- 2 V
-             4            +/- 1.25 V
-             5            +/- 1 V
-             6            +/- 0.625 V
-             7            +/- 0.3125 V
+             0            +/- 20 V
+             1            +/- 10 V
+             2            +/- 5 V
+             3            +/- 4 V
+             4            +/- 2.5 V
+             5            +/- 2 V
+             6            +/- 1.25 V
+             7            +/- 1 V
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
     request = self.AIN_SCAN_CONFIG
@@ -449,11 +501,128 @@ class usb_1608FS_Plus(mccUSB):
     wValue = 0x0
     wIndex = 0x0
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
-    try:
-      data = self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 64, 100)
-    except:
-      pass
+
+  def AInBulkFlush(self, count=5):
+    """
+    The command will send a specified number of empty Bulk In packets
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request = self.AIN_BULK_FLUSH
+    wValue = 0x0
+    wIndex = 0x0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [count], timeout = 100)
     
+  #############################################
+  #           Analog Output                   #
+  #############################################
+
+  def AOut(self, channel, value):
+    """
+    This command reads or writes the value of an analog output
+    channel.  This command will result in a bus stall if an AOut scan
+    is currently running.
+
+    channel: the channel to write (0-1)
+    value:   The value to write (0-4095)
+
+    V_out = (k/2^12)* V_ref  where 
+      k is the value written to the device.
+      V_ref = 5V
+    """
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = value
+    wIndex = channel & 0x1
+    result = self.udev.controlWrite(request_type, self.AOUT, wValue, wIndex, [0x0], timeout = 100)
+
+  def AOutScanStart(self, count, frequency, options):
+    """
+    This command starts an analog output scan.  This command will
+    result in a bus stall if an AOut scan is currently running.  The
+    device will not generate an internal pacer faster than 50 kHz.
+
+    The pacer rate is set by an internal 32-bit timer running at a
+    base rate of 60 MHz.  The timer is controlled by pacer_period.
+    This value is the period of the scan and the D/As are clocked at
+    this rate.  The equation for calculating pacer_period is:
+
+    pacer_period = [60 MHz / (sample frequency)] - 1
+
+    The data will be sent by the host in packets utilizing the bulk
+    out endpoint.  The data will be in the format
+
+    lowchannel sample 0 : hichannel sample 0 
+    lowchannel sample 1 : hichannel sample 1 
+    ...  
+    lowchannel sample n : hichannel sample n
+
+    The output data is written to an internal FIFO.  The bulk endpoint
+    data is only accepted if there is room in the FIFO.  Output data
+    may be sent to the FIFO before the start of the scan> The FIFO
+    contents may be cleared with the AOutScanClearFIFO command.
+
+    The scan will continue until reaching the specified count or an
+    AOutScanStop command is sent.
+
+    Underruns are indicated by the device stalling the bulk out
+    endpoint during the scan.  The host may read the status to verify
+    and must clear the stall condiditon before further scans can be
+    performed.
+
+    count:     the total number of scans to perform (0 for continuous scan)
+    frequency: the pacer frequency
+    options:   bit field that controls scan options:
+               bit 0: 1 = include channel 0 in output scan
+               bit 1: 1 = include channel 1 in output scan
+               bits 2-6: Reserved
+               bit 7: 0 = stall on underrun, 1 = inhibit stall
+    """
+    if frequency <= 0.:
+      raise ValueError('AOutScanStart: frequency must be positive')
+      return
+    elif frequency > 50000:
+      raise ValueError('AOutScanStart: frequency must be less than 50 kHz')
+      return
+    else:
+      pacer_period = round((60.E6 / frequency) - 1)
+
+    self.frequency_AOut = frequency
+    self.options_AOut = options
+    self.count_AOut = count
+    if count == 0:
+      self.continuous_mode_AOUT = True
+    else:
+      self.continuous_mode_AOUT = False
+
+    self.nChan_AOut = 0
+    for i in range(NCHAN_AOUT):
+      if (options & (0x1 << i)) != 0x0:
+          self.nChan += 1
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    scanPacket = pack('IIB', count, pacer_period, options)
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
+
+  def AInScanStop(self):
+    """
+    This command stops the analog output scan (if running).
+    """
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0x0
+    wIndex = 0x0
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_STOP, wValue, wIndex, [0x0], timeout = 100)
+
+  def AOutScanClearFIFO(self):
+    """
+    The command clears the internal scan endoint FIFOs
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    wValue = 0x0
+    wIndex = 0x0
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CLEAR_FIFO, wValue, wIndex, [0x0], timeout = 100)
+
+
   #############################################
   #           Counter Commands                #
   #############################################
@@ -473,10 +642,9 @@ class usb_1608FS_Plus(mccUSB):
     This command resets the event counter to 0.
     """
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    request = self.COUNTER
     wValue = 0
     wIndex = 0
-    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+    result = self.udev.controlWrite(request_type, self.COUNTER, wValue, wIndex, [0x0], timeout = 100)
     
   #############################################
   #        Memory Commands                    #
@@ -626,10 +794,12 @@ class usb_1608FS_Plus(mccUSB):
     This command retrieves the status of the device.  Writing the command will clear
     the error indicators.
 
-    status:      bit 0:      Reserved
-                 bit 1:      1 = AIn scan running
-                 bit 2:      1 = AIn scan overrun
-                 bits 3-15:   Reserved
+    status:      bit 0:    Reserved
+                 bit 1:    1 = AIn scan running
+                 bit 2:    1 = AIn scan overrun
+                 bit 3:    1 = AOut scan running
+                 bit 4:    1 = AOut scan underrun
+                 bits 5-15:   Reserved
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
@@ -716,33 +886,38 @@ class usb_1608FS_Plus(mccUSB):
 
     return result
     
-
   def printStatus(self):
     status = self.Status()
-    print('**** USB-1608FS Status ****')
+    print('**** USB-1208FS Status ****')
     if status & self.AIN_SCAN_RUNNING:
       print('    Analog Input scan running')
     if status & self.AIN_SCAN_OVERRUN:
       print('    Analong Input scan overrun')
+    if status & self.AOUT_SCAN_RUNNING:
+      print('    Analong Output scan overrun')
+    if status & self.AOUT_SCAN_UNDERRUN:
+      print('    Analong Output scan underrun')
 
   def volts(self, gain, value):
     # converts unsigned short value to volts
-    if gain == self.BP_10_00V:
-      volt = (value - 0x8000) * 10. / 32768
-    elif gain == self.BP_5_00V:
-      volt = (value - 0x8000) * 5. / 32768
-    elif gain == self.BP_2_50V:
-      volt = (value - 0x8000) * 2.5 / 32768
-    elif gain == self.BP_2_00V:
-      volt = (value - 0x8000) * 2. / 32768
+    if gain == self.BP_20V:
+      volt = (value - 0x800) * 20. / 2048
+    elif gain == self.BP_10V:
+      volt = (value - 0x800) * 10. / 2048
+    elif gain == self.BP_5V:
+      volt = (value - 0x800) * 5.0 / 2048
+    elif gain == self.BP_4V:
+      volt = (value - 0x800) * 4.0 / 2048
+    elif gain == self.BP_2_5V:
+      volt = (value - 0x800) * 2.5 / 2048
+    elif gain == self.BP_2V:
+      volt = (value - 0x800) * 2.0 / 2048
     elif gain == self.BP_1_25V:
-      volt = (value - 0x8000) * 1.25 / 32768
-    elif gain == self.BP_1_00V:
-      volt = (value - 0x8000) * 1. / 32768
-    elif gain == self.BP_0_625V:
-      volt = (value - 0x8000) * 0.625 / 32768
-    elif gain == self.BP_0_3125V:
-      volt = (value - 0x8000) * 0.325 / 32768
+      volt = (value - 0x800) * 1.25 / 2048
+    elif gain == self.BP_1V:
+      volt = (value - 0x800) * 1.0 / 32768
+    elif gain == self.UP_5V:
+        volt = value * 5.0 / 4096.0
     else:
       raise ValueError('volts: Unknown range.')
 

@@ -228,6 +228,5 @@ def main():
       print("Serial No: %s" % usb1608FS_Plus.getSerialNumber())
 
 
-
 if __name__ == "__main__":
   main()
