@@ -19,6 +19,7 @@ import time
 import sys
 import fcntl
 import os
+import math
 from usb_1208FS_Plus import *
 
 def toContinue():
@@ -60,12 +61,16 @@ def main():
     print("----------------")
     print("Hit 'b' to blink LED.")
     print("Hit 'c' to test counter. ")
-    print("Hit 'C' for continous sampling")
     print("Hit 'd' to read/write digital port.")
     print("Hit 'e' to exit.")
     print("Hit 'g' to test analog input scan.")
-    print("Hit 'i' to test analog input. (differential)")
-    print("Hit 'I' for information.")
+    print("Hit 'i' to test analog input.")
+    print("Hit 'I' to test Analog Input Scan")
+    print("Hit 'x' to test Analog Input Scan(multi-channel)")
+    print("Hit 'C' for continous sampling")
+    print("Hit 'M' for information.")
+    print("Hit 'o' to test Analog Output.")
+    print("Hit 'O' for Analog Output Scan")
     print("Hit 'r' to reset the device.")
     print("Hit 'S' to get status")
     print("Hit 's' to get serial number.")
@@ -86,7 +91,7 @@ def main():
         usb1208FS_Plus.DLatchW(0x0, usb1208FS_Plus.PORTA)
       count = usb1208FS_Plus.Counter()
       print("Count = ", count, "    Should read 100.")
-    elif ch == 'I':
+    elif ch == 'M':
       print("Manufacturer: %s" % usb1208FS_Plus.getManufacturer())
       print("Product: %s" % usb1208FS_Plus.getProduct())
       print("Serial No: %s" % usb1208FS_Plus.getSerialNumber())
@@ -149,6 +154,61 @@ def main():
         time.sleep(0.01)
         value = usb1208FS_Plus.AIn(chan, mode, gain)
         print('Channel: ',chan,' value =', hex(value),'\t',format(usb1208FS_Plus.volts(gain, value),'.3f'),'V')
+    elif ch == 'o':
+      channel = int(input('Enter output channel [0-1]: '))
+      value = int(input('Enter value [0-4095]: '))
+      usb1208FS_Plus.AOut(channel, value)
+    elif ch == 'I':
+      print("Testing USB-1208FS-Plus Analog Input Scan, Differential Mode")
+      count = int(input("Enter number of scans: "))
+      channel = int(input("Input channel [0-3]: "))
+      frequency = float(input("Enter sampling frequency [Hz]: "))
+      gain = int(input("Enter gain/range [0-7]: "))
+      ranges = [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
+      ranges[channel] = gain
+      if frequency > 100:
+        options = usb1208FS_Plus.DIFFERENTIAL_MODE
+      else:
+        options = usb1208FS_Plus.DIFFERENTIAL_MODE | usb1208FS_Plus.IMMEDIATE_TRANSFER_MODE;
+      usb1208FS_Plus.AInScanStop()
+      usb1208FS_Plus.AInScanClearFIFO()
+      usb1208FS_Plus.AInScanConfigW(ranges)
+      ranges = usb1208FS_Plus.AInScanConfigR()
+      for i in range(4):
+        print("Channel ", i, "range = ", ranges[i])
+      usb1208FS_Plus.AInScanStart(count, 0x0, frequency, (0x1<<channel), options)
+      data = usb1208FS_Plus.AInScanRead(count)
+      print("Number of samples read = ", len(data)//2)
+    elif ch == 'O':
+      options = 0x3   # output channel 0 and 1 output scan
+      print('Test of Analog Ouput Scan')
+      print('Hook up scope to VDAC Channel 0 or 1')
+      frequency = 2*float(input('Enter desired frequency of square wave [Hz]: '))
+      data = [0]*256  # holds 12 bit unsigned analog outout data
+      for i in range(32):
+        data[4*i] = 0X0
+        data[4*i+1] = 0x800
+        data[4*i+2] = 0xfff
+        data[4*i+3] = 0xcff;
+      usb1208FS_Plus.AOutScanStop()
+      usb1208FS_Plus.AOutScanStart(0, frequency, options)
+      print("Hit 's <CR>' to stop")
+      flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      while True:
+        try:
+          usb1208FS_Plus.AOutScanWrite(data)
+        except:
+          fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+          usb1208FS_Plus.AOutScanStop()
+          print("AOutScan exception")
+          break
+        c = sys.stdin.readlines()
+        if (len(c) != 0):
+          fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+          usb1208FS_Plus.AOutScanStop()
+          break
+
       
 if __name__ == "__main__":
   main()

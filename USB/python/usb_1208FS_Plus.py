@@ -415,6 +415,7 @@ class usb_1208FS_Plus(mccUSB):
 
   def AInScanRead(self, nScan):
     nSamples = int(nScan * self.nChan)
+    print("nSamples = ", nSamples)
     if self.options & self.IMMEDIATE_TRANSFER_MODE:
       for i in range(self.nSamples):
         try:
@@ -460,7 +461,7 @@ class usb_1208FS_Plus(mccUSB):
     wIndex = 0x0
     result = self.udev.controlWrite(request_type, self.AIN_SCAN_STOP, wValue, wIndex, [0x0], timeout = 100)
 
-  def AInConfigR(self):
+  def AInScanConfigR(self):
     """
     This command reads or writes the analog input configuration.  This
     command will result in a bus stall if an AIn scan is currently
@@ -485,7 +486,7 @@ class usb_1208FS_Plus(mccUSB):
     ranges = unpack('BBBBBBBB',self.udev.controlRead(request_type, request, wValue, wIndex, 8, timeout = 100))
     return ranges
 
-  def AInConfigW(self, ranges):
+  def AInScanConfigW(self, ranges):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
     request = self.AIN_SCAN_CONFIG
     wValue = 0x0
@@ -594,16 +595,24 @@ class usb_1208FS_Plus(mccUSB):
     else:
       self.continuous_mode_AOUT = False
 
-    self.nChan_AOut = 0
-    for i in range(NCHAN_AOUT):
-      if (options & (0x1 << i)) != 0x0:
-          self.nChan += 1
-
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     scanPacket = pack('IIB', count, pacer_period, options)
     result = self.udev.controlWrite(request_type, self.AOUT_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
 
-  def AInScanStop(self):
+  def AOutScanWrite(self, data):
+    # data is a list of unsigned 16 bit numbers
+    value = [0]*len(data)*2
+    for i in range(len(data)):
+      value[2*i] = data[i] & 0xff
+      value[2*i+1] = (data[i] >> 8) & 0xff
+    try:
+      result = self.udev.bulkWrite(2, value, timeout = 10000)
+    except:
+      print('AOutScanWrite: error in bulkWrite')
+      return
+    
+
+  def AOutScanStop(self):
     """
     This command stops the analog output scan (if running).
     """
