@@ -68,7 +68,7 @@ int main (int argc, char **argv)
   double frequency, voltage;
   int ret;
   uint16_t dataAIn[8*512];  // holds 16 bit unsigned analog input data
-  uint16_t dataAOut[128];   // holds 12 bit unsigned analog input data
+  uint16_t dataAOut[128];   // holds 12 bit unsigned analog output data
   uint16_t data;
   int nchan, repeats;
   int transferred, nread;
@@ -186,7 +186,7 @@ int main (int argc, char **argv)
 	printf("Testing USB-1208FS_Plus Analog Input Scan, Differential Mode.\n");
         printf("Enter number of scans (less than 512): ");
         scanf("%d", &count);
-	printf("Input channel 0-7: ");
+	printf("Input channel 0-3: ");
         scanf("%hhd", &channel);
         printf("Enter sampling frequency [Hz]: ");
 	scanf("%lf", &frequency);
