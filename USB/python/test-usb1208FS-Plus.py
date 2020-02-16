@@ -63,10 +63,8 @@ def main():
     print("Hit 'c' to test counter. ")
     print("Hit 'd' to read/write digital port.")
     print("Hit 'e' to exit.")
-    print("Hit 'g' to test analog input scan.")
     print("Hit 'i' to test analog input.")
     print("Hit 'I' to test Analog Input Scan")
-    print("Hit 'x' to test Analog Input Scan(multi-channel)")
     print("Hit 'C' for continous sampling")
     print("Hit 'M' for information.")
     print("Hit 'o' to test Analog Output.")
@@ -160,25 +158,34 @@ def main():
       usb1208FS_Plus.AOut(channel, value)
     elif ch == 'I':
       print("Testing USB-1208FS-Plus Analog Input Scan, Differential Mode")
-      count = int(input("Enter number of scans: "))
-      channel = int(input("Input channel [0-3]: "))
+      nscan = int(input("Enter number of scans: "))
+      nchan = int(input('Enter number of channels [1-4]: '))
       frequency = float(input("Enter sampling frequency [Hz]: "))
       gain = int(input("Enter gain/range [0-7]: "))
-      ranges = [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
-      ranges[channel] = gain
+      channels = 0
+      gains = [0]*8
+      for chan in range(nchan):
+        gains[chan] = gain
+        channels |= (0x1 << chan)
+      usb1208FS_Plus.AInScanConfigW(gains)
+      ranges = usb1208FS_Plus.AInScanConfigR()
+
       if frequency > 100:
         options = usb1208FS_Plus.DIFFERENTIAL_MODE
       else:
         options = usb1208FS_Plus.DIFFERENTIAL_MODE | usb1208FS_Plus.IMMEDIATE_TRANSFER_MODE;
+
       usb1208FS_Plus.AInScanStop()
       usb1208FS_Plus.AInScanClearFIFO()
-      usb1208FS_Plus.AInScanConfigW(ranges)
-      ranges = usb1208FS_Plus.AInScanConfigR()
-      for i in range(4):
-        print("Channel ", i, "range = ", ranges[i])
-      usb1208FS_Plus.AInScanStart(count, 0x0, frequency, (0x1<<channel), options)
-      data = usb1208FS_Plus.AInScanRead(count)
-      print("Number of samples read = ", len(data)//2)
+      usb1208FS_Plus.AInScanStart(nscan*nchan, 0x0, frequency, channels, options)
+      dataAIn = usb1208FS_Plus.AInScanRead(nscan)
+      for scan in range(nscan):
+        for channel in range(nchan):
+          ii = scan*nchan + channel
+          dataAIn[ii] = round(dataAIn[ii]*usb1208FS_Plus.table_AIn[channel][gain].slope + usb1208FS_Plus.table_AIn[channel][gain].intercept)
+          print("Channel {0:d}  Sample[{1:d}] = ".format(channel, ii), hex(dataAIn[ii])," Volts = {0:7.4f}".format(usb1208FS_Plus.volts(gain,dataAIn[ii])))
+      usb1208FS_Plus.AInScanStop()
+      usb1208FS_Plus.AInScanClearFIFO()
     elif ch == 'O':
       options = 0x3   # output channel 0 and 1 output scan
       print('Test of Analog Ouput Scan')

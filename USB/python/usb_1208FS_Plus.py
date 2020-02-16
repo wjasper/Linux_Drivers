@@ -359,7 +359,7 @@ class usb_1208FS_Plus(mccUSB):
     and must clear the stall condition before further scans can be
     performed.
 
-     count:         the total number of scans to perform, 0 for continuous scan
+     count:         the total number of samples to acquire, 0 for continuous scan
      retrig_count:  the number of samples to acquire for each trigger in retrigger mode
      pacer_period:  the A/D timer period (0 for external clock)
      channels:      bit field that selects the channels in the scan, the upper 4 bits ignored in
@@ -415,7 +415,6 @@ class usb_1208FS_Plus(mccUSB):
 
   def AInScanRead(self, nScan):
     nSamples = int(nScan * self.nChan)
-    print("nSamples = ", nSamples)
     if self.options & self.IMMEDIATE_TRANSFER_MODE:
       for i in range(self.nSamples):
         try:

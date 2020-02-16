@@ -58,9 +58,9 @@ def main():
     print("Hit 'C' for continous sampling")
     print("Hit 'd' to read/write digital port.")
     print("Hit 'e' to exit.")
-    print("Hit 'g' to test analog input scan.")
     print("Hit 'i' to test analog input. (differential)")
-    print("Hit 'I' for information.")
+    print("Hit 'I' to test analog input scan.")
+    print("Hit 'M' for information.")
     print("Hit 'r' to reset the device.")
     print("Hit 'S' to get status")
     print("Hit 's' to get serial number.")
@@ -132,7 +132,7 @@ def main():
         time.sleep(0.01)
         value = usb1608FS_Plus.AIn(chan, gain)
         print('Channel: ',chan,' value =', hex(value),'\t',format(usb1608FS_Plus.volts(gain, value),'.3f'),'V')
-    elif ch == 'g':
+    elif ch == 'I':
       print('Testing Analog input scan')
       frequency = float(input('Enter desired frequency [Hz]: '))
       count = int(input('Enter number of scans [1-1024]: '))
@@ -163,18 +163,20 @@ def main():
       elif gain == 8:
         gain = usb1608FS_Plus.BP_0_3125V
       gains = [0]*8
+      channels = 0
       for chan in range(nchan):
         gains[chan] = gain
+        channels |= (0x1 << chan)
       usb1608FS_Plus.AInConfigW(gains)
+
       if frequency < 100:
         options = usb1608FS_Plus.IMMEDIATE_TRANSFER_MODE
       else:
         options = usb1608FS_Plus.BLOCK_TRANSFER_MODE
+
       usb1608FS_Plus.AInScanStop()
       usb1608FS_Plus.AInScanClearFIFO()
-      channels = 0
-      for i in range(nchan):
-        channels |= (0x1 << i)
+      
       usb1608FS_Plus.AInScanStart(count, frequency, channels, options)
       dataAIn = usb1608FS_Plus.AInScanRead(count)
       for scan in range(count):
@@ -212,7 +214,7 @@ def main():
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
       usb1608FS_Plus.AInScanStop()
       usb1608FS_Plus.AInScanClearFIFO()
-    elif ch == 'I':
+    elif ch == 'M':
       print("Manufacturer: %s" % usb1608FS_Plus.getManufacturer())
       print("Product: %s" % usb1608FS_Plus.getProduct())
       print("Serial No: %s" % usb1608FS_Plus.getSerialNumber())
