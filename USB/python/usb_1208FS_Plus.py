@@ -307,7 +307,7 @@ class usb_1208FS_Plus(mccUSB):
       value = data
     return value
 
-  def AInScanStart(self, count, retrig_count, frequency, channels, options):
+  def AInScanStart(self, nScan, retrig_count, frequency, channels, options):
     """
     This command starts an analog input scan. This command will
     result in a bus stall if an AIn scan is currently running. The
@@ -359,6 +359,7 @@ class usb_1208FS_Plus(mccUSB):
     and must clear the stall condition before further scans can be
     performed.
 
+     nScan:         the total number of scans, 0 for continuous scan
      count:         the total number of samples to acquire, 0 for continuous scan
      retrig_count:  the number of samples to acquire for each trigger in retrigger mode
      pacer_period:  the A/D timer period (0 for external clock)
@@ -394,7 +395,8 @@ class usb_1208FS_Plus(mccUSB):
 
     self.frequency = frequency
     self.options = options & 0xff
-    if count == 0:
+    self.nScan = nScan
+    if nScan == 0:
       self.continuous_mode = True
     else:
       self.continuous_mode = False
@@ -409,17 +411,20 @@ class usb_1208FS_Plus(mccUSB):
         if (channels & (0x1 << i)) != 0x0:
           self.nChan += 1
 
+    self.nSamples = self.nScan * self.nChan
+
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    scanPacket = pack('IIIBB', count, retrig_count, pacer_period, channels, options)
+    scanPacket = pack('IIIBB', nScan*self.nChan, retrig_count, pacer_period, channels, options)
     result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
 
   def AInScanRead(self, nScan):
     nSamples = int(nScan * self.nChan)
     if self.options & self.IMMEDIATE_TRANSFER_MODE:
-      for i in range(self.nSamples):
+      data = []
+      for i in range(nSamples):
         try:
           timeout = int(1000*self.nChan/self.frequency + 100)
-          data.extend(unpack('H',self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2*self.nChan, timeout)))
+          data.extend(unpack('H',self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2, timeout)))
         except:
           print('AInScanRead: error in bulk transfer in immmediate transfer mode.')
           return

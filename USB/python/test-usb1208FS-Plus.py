@@ -169,21 +169,47 @@ def main():
         channels |= (0x1 << chan)
       usb1208FS_Plus.AInScanConfigW(gains)
       ranges = usb1208FS_Plus.AInScanConfigR()
-
       if frequency > 100:
         options = usb1208FS_Plus.DIFFERENTIAL_MODE
       else:
         options = usb1208FS_Plus.DIFFERENTIAL_MODE | usb1208FS_Plus.IMMEDIATE_TRANSFER_MODE;
-
       usb1208FS_Plus.AInScanStop()
       usb1208FS_Plus.AInScanClearFIFO()
-      usb1208FS_Plus.AInScanStart(nscan*nchan, 0x0, frequency, channels, options)
+      usb1208FS_Plus.AInScanStart(nscan, 0x0, frequency, channels, options)
       dataAIn = usb1208FS_Plus.AInScanRead(nscan)
       for scan in range(nscan):
         for channel in range(nchan):
           ii = scan*nchan + channel
           dataAIn[ii] = round(dataAIn[ii]*usb1208FS_Plus.table_AIn[channel][gain].slope + usb1208FS_Plus.table_AIn[channel][gain].intercept)
           print("Channel {0:d}  Sample[{1:d}] = ".format(channel, ii), hex(dataAIn[ii])," Volts = {0:7.4f}".format(usb1208FS_Plus.volts(gain,dataAIn[ii])))
+      usb1208FS_Plus.AInScanStop()
+      usb1208FS_Plus.AInScanClearFIFO()
+    elif ch == 'C':
+      print('Testing USB-1208FS-Plus Analog Input Scan in Continuous mode')
+      nchan = int(input('Enter number of channels [1-4]: '))
+      frequency = float(input('Enter sampling frequency [Hz]: '))
+      print('Hit any key to exit')
+      if frequency > 100:
+        options = usb1208FS_Plus.DIFFERENTIAL_MODE
+      else:
+        options = usb1208FS_Plus.DIFFERENTIAL_MODE | usb1208FS_Plus.IMMEDIATE_TRANSFER_MODE;
+      channels = 0
+      for i in range(nchan):
+        channels |= (0x1 << i)
+      usb1208FS_Plus.AInScanStop()
+      usb1208FS_Plus.AInScanClearFIFO()
+      usb1208FS_Plus.AInScanStart(0, 0, frequency, channels, options)
+      flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      j = 0
+      while True:
+        raw_data = usb1208FS_Plus.AInScanRead(128)
+        print('Scan =', j, 'samples returned =', len(raw_data))
+        j += 1
+        c = sys.stdin.readlines()
+        if (len(c) != 0):
+          break
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
       usb1208FS_Plus.AInScanStop()
       usb1208FS_Plus.AInScanClearFIFO()
     elif ch == 'O':

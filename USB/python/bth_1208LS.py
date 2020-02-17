@@ -463,6 +463,7 @@ class bth_1208LS(mccUSB):
     nSamples = int(nScan * self.nChan)
     
     if self.options & self.IMMEDIATE_TRANSFER_MODE:
+      data = []
       for i in range(self.nSamples):
         try: 
           data.extend(unpack('H',self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2, 2000)))
