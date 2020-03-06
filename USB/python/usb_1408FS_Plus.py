@@ -285,14 +285,17 @@ class usb_1408FS_Plus(mccUSB):
      gain:    the input gain for the channel (0-7)
      value:   12 bits of data, right justified.
     """
-    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = (mode << 0x8) | channel
-    wIndex = gain
 
     if (mode == self.DIFFERENTIAL and channel > 3) or channel > 7:
       raise ValueError('AIn: Error in channel number')
       return
     
+    if mode == self.SINGLE_ENDED: # only +/- 10V supported for single ended
+      gain = self.BP_10V
+
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = (mode << 0x8) | channel
+    wIndex = gain
     value ,= unpack('H',self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 2, timeout = 200))
 
     if mode == self.SINGLE_ENDED:

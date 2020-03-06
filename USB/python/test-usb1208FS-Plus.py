@@ -117,32 +117,37 @@ def main():
       print('Connect pin 1 <-> pin 21')
       mode = int(input('Enter 1 for Differential, 0 for Single Ended: '))
       chan = 0
-      print('\t\t1. +/- 20.V')
-      print('\t\t2. +/- 10.V')
-      print('\t\t3. +/- 5V')
-      print('\t\t4. +/- 4V')
-      print('\t\t5. +/- 2.5V')
-      print('\t\t6. +/- 2V')
-      print('\t\t7. +/- 1.25V')
-      print('\t\t8. +/- 1V')
-      gain = int(input('Select gain [1-8]: '))
-      if gain == 1:
-        gain = usb1208FS_Plus.BP_20V
-      elif gain == 2:
+      if mode == 1:  # differential mode
+        print('\t\t1. +/- 20.V')
+        print('\t\t2. +/- 10.V')
+        print('\t\t3. +/- 5V')
+        print('\t\t4. +/- 4V')
+        print('\t\t5. +/- 2.5V')
+        print('\t\t6. +/- 2V')
+        print('\t\t7. +/- 1.25V')
+        print('\t\t8. +/- 1V')
+        gain = int(input('Select gain [1-8]: '))
+        if gain == 1:
+          gain = usb1208FS_Plus.BP_20V
+        elif gain == 2:
+          gain = usb1208FS_Plus.BP_10V
+        elif gain == 3:
+          gain = usb1208FS_Plus.BP_5V
+        elif gain == 4:
+          gain = usb1208FS_Plus.BP_4V
+        elif gain == 5:
+          gain = usb1208FS_Plus.BP_2_5V
+        elif gain == 6:
+          gain = usb1208FS.BP_Plus_2V
+        elif gain == 7:
+          gain = usb1208FS_Plus.BP_1_25V
+        elif gain == 8:
+          gain = usb1208FS_Plus.BP_1V
+      else: # single ended
         gain = usb1208FS_Plus.BP_10V
-      elif gain == 3:
-        gain = usb1208FS_Plus.BP_5V
-      elif gain == 4:
-        gain = usb1208FS_Plus.BP_4V
-      elif gain == 5:
-        gain = usb1208FS_Plus.BP_2_5V
-      elif gain == 6:
-        gain = usb1208FS.BP_Plus_2V
-      elif gain == 7:
-        gain = usb1208FS_Plus.BP_1_25V
-      elif gain == 8:
-        gain = usb1208FS_Plus.BP_1V
+
       usb1208FS_Plus.DTristateW(0x0, usb1208FS_Plus.PORTA)
+        
       for i in range(20):
         usb1208FS_Plus.DPortW(0,usb1208FS_Plus.PORTA);
         time.sleep(0.01)
