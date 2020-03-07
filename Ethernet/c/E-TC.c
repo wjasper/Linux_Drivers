@@ -349,7 +349,7 @@ bool Tin_E_TC(DeviceInfo_TC *device_info, uint8_t channel_mask, uint8_t units, u
 
   int sock = device_info->device.sock;
   unsigned char buffer[32];
-  unsigned char replyBuffer[32];
+  unsigned char replyBuffer[64];
   bool result = false;
   int length;
   int dataCount = 3;
