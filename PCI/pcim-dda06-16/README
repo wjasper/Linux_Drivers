@@ -1,0 +1,160 @@
+
+                      PCIM-DDA06-16 Version 0.1
+                      --------------------------
+
+ Linux loadable module for the Measurement Computing PCIM-DDA06-16
+ ------------------------------------------------------------------------
+
+NOTE:  kernel 5.5.8 driver is called:  pcim-dda06-16_5_5_8.c
+
+Introduction:
+-------------
+
+This driver was written by Warren J. Jasper at North Carolina State
+University.  It is a driver for the Measurement Computing PCIM-DDA06-16
+adapter.  
+
+Please send comments and bug fixes to wjasper@ncsu.edu.  The source for the
+driver is located at https://github.com/wjasper/Linux_Drivers
+
+
+Distribution contents:
+----------------------
+
+README                  - this file
+Makefile                - Makefile to compile and install the driver
+dda06-16.c              - PCIM-DDA06-16 Driver source.
+dda06-16_5_5_8.c        - PCIM-DDA06-16 Driver source 5.5.8 Kernel
+dda06-16.h              - Driver definitions and constants.
+test-dda06-16.c         - Test program.
+RegMapPCIM-DDA06-16.pdf - Register Map
+
+Building and installing the driver:
+-----------------------------------
+
+1. get the file from the github directory
+       git clone https://github.com/wjasper/Linux_Drivers
+       
+2. The default configuration is for the kernel to dynamically set the
+   major number.  If you wish to override this option and force a particular
+   major number, set the following in dda06-16.h
+
+   #define DEFAULT_MAJOR_DEV  0    /* Default Major Device Number */
+ 
+3. To compile, type:
+
+   make
+
+4. To install the driver type:
+
+    make install
+
+  check that the destination directory is correct.
+
+5. Copy the file 61-mcc.rules to /etc/udev/rules.d,
+ 
+   or inlcude the following rule:
+
+#Enable non-root access to pcim devices
+SUBSYSTEM=="dda06-16", KERNEL=="da[0-9]_[0-7]", NAME="dda06-16/%k", MODE="666"
+SUBSYSTEM=="dda06-16", KERNEL=="dio[0-9]_*",    NAME="dda06-16/%k", MODE="666"
+
+To test your updated rules you can do one of the following:
+1.    /sbin/udevadm control --reload  (or something similar.  type man udevadm)
+2.    Reboot your system
+
+You will be able to search the attributes of the device by
+   /sbin/udevadm info -a -p $(/sbin/udevadm info -q path -n /dev/dda06-16/dio0_0A)
+
+
+Having the driver install at boot:
+----------------------------------
+
+There are 2 ways to do this:
+
+1) To install the driver so that it comes up every time on boot-up, you
+  will need to include the following lines in one of your boot rc files.
+  The one we used is called /etc/rc.d/rc.local. Your setup may vary.
+
+#! /bin/sh
+#
+# rc.local	This does local customization.
+#
+# Author:	Warren Jasper <wjasper@ncsu.edu>
+#
+echo -n "Local customization:"
+
+if [ -x /sbin/insmod -a -r /lib/modules/`uname -r`/kernel/drivers/char/pcim-dda06-16.ko ]; then
+    echo -n " PCIM-DDA06-16"
+    /sbin/insmod -f /lib/modules/`uname -r`/kernel/drivers/char/pcim-dda06-16.ko
+fi
+
+
+2)  add the following line to your /etc/modules.conf or /etc/modprobe.conf
+
+        alias char-major-244  pcim-dda06-16.ko
+
+
+How the driver works:
+---------------------
+
+The driver is fairly straight forward, but since the current version of
+Linux is not 1003.4 compliant (it is not a real-time operating system),
+certain design decisions were made in writing this driver. 
+
+The device name for the driver is:
+
+/dev/dda06-16/da[Board Number]_[Channel Number]
+/dev/dda06-16/dio[Board Number]_[Port Number]
+
+where:
+     Board Number is the number of the board, usually 0 if you only have 1 board
+     Channel Number is the DAC channel number [0-7]
+     Port Number is the 8255 Port name {0A, 0B, 0C, 1A, 1B, 1C}
+
+For example:
+
+fd_1 = open("/dev/dda06-16/da0_0", O_RDWR );
+fd_2 = open("/dev/dda06-16/dio0_0A", O_RDWR );
+
+
+****************************************************************************
+
+The following ioctl() functions have been implemented:
+
+1. ioctl(fd, DIO_SET_DIRECTION, PORT_INPUT);
+   Set the direction of the port to either input or output.  Port C can be split
+   into two levels (4 bits each), while ports A and B are either all input or
+   all output.
+
+2. ioctl(fd, DAC_SET_GAINS, gain);
+   Sets the gain for the given channel.  Allowed values for gain are found in
+   pcim-dda06-16.h and they are:
+  
+          BP_2_5V    +/- 2.5V  Full Scale
+          BP_5_0V    +/- 5.0V  Full Scale
+          BP_10_0V   +/- 10.0V Full Scale
+          UP_2_5V    0 - 2.5V  Full Scale
+          UP_5_0V    0 - 5.0V  Full Scale
+          UP_10_0V   0 - 10.0V Full Scale
+
+3. ioctl(fd, DAC_GET_GAINS, &gain);
+   get the current gain for the channel.
+
+4. ioctl(fd, DAC_ENABLE, 0);
+   Enable the DAC for output.
+
+5. ioctl(fd, DAC_DISABLE, 0);
+   DISABLE the DAC for output.  Output is zero.
+
+6. ioctl(fd, DAC_SIMULT_UPDATE, 0);
+     Updates all the channels simultaneously.
+
+7. ioctl(fd, DAC_SET_SIMULT, value);
+      value = 0 false/disable  1 = true/enable
+      if enabled, that channel will update simultaneously.  See documentation.
+
+8. ioctl(fd, DAC_GET_SIMULT, &value);
+        value = 0 false/disable  1 = true/enable
+
+

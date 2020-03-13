@@ -2,12 +2,12 @@
 #	
 #	Makefile for building:
 #
-#		pci-dda0X-16.o:  PCI-DDA0X/16 adapater Linux loadable module.
-#		test-dda0X-16:   Program to test PCI-DDA0X/16 module
+#		pcim-dda06-16.o: PCIM-DDA06/16 adapater Linux loadable module.
+#		test-dda06-16:   Program to test PCIM-DDA06/16 module
 #
-#               Copyright (C) August 9, 2007
-#               Written by:  Warren J. Jasper
-#                            North Carolina State University
+#               Copyright (C) March 13, 2020
+#               Written by:   Warren J. Jasper
+#                             North Carolina State University
 #
 #
 # This program, PCI-DDA0X/16, is free software; you can redistribute it

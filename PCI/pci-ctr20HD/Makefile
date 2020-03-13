@@ -6,7 +6,7 @@
 #
 #        Copyright (C) 2013
 #        Written by:  Warren J. Jasper <wjasper@ncsu.edu>
-#                     North Carolina State Univerisity
+#                     North Carolina State University
 #
 #
 #

@@ -7,7 +7,7 @@
 #
 #               Copyright (C) May 20, 2005
 #               Written by:  Warren J. Jasper
-#                            North Carolina State Univerisity
+#                            North Carolina State University
 #
 #
 # This program, PCI-DIO96, is free software; you can redistribute it

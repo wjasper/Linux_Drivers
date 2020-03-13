@@ -1,0 +1,1 @@
+cmd_/home/wjj/Linux_Drivers/PCI/pci-quad04/quad04.ko := ld -r -m elf_x86_64  -z max-page-size=0x200000 -T ./scripts/module-common.lds --build-id  -o /home/wjj/Linux_Drivers/PCI/pci-quad04/quad04.ko /home/wjj/Linux_Drivers/PCI/pci-quad04/quad04.o /home/wjj/Linux_Drivers/PCI/pci-quad04/quad04.mod.o ;  true

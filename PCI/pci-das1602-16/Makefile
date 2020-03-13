@@ -6,7 +6,7 @@
 #
 #               Copyright (C) 1997 - 2012
 #               Written by:  Warren J. Jasper <wjasper@ncsu.edu>
-#                            North Carolina State Univerisity
+#                            North Carolina State University
 #
 # This program, PCI-DAS1602-16, is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as

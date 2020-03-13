@@ -107,9 +107,12 @@ SUBSYSTEM=="pcim-das1602-16", KERNEL=="pcim-das1602-16/ad[0-9]_*",     MODE="066
 SUBSYSTEM=="pcim-das1602-16", KERNEL=="pcim-das1602-16/da[0-9]_[0-1]", MODE="0666"
 SUBSYSTEM=="pcim-das1602-16", KERNEL=="pcim-das1602-16/dio[0-9]_*",    MODE="0666"
 
-SUBSYSTEM=="pcim-das16jr",    KERNEL=="das16jr/ad[0-9]_*",     MODE="0666"
+SUBSYSTEM=="pcim-das16jr",    KERNEL=="das16jr/ad[0-9]_*",             MODE="0666"
 
-SUBSYSTEM=="pci-2500",   NAME="db3k/%k", MODE="666"
+SUBSYSTEM="pcim-dda06-16",    KERNEL=="pcim-dda06-16/dio[0-9]_*",      MODE="0666"
+SUBSYSTEM="pcim-dda06-16",    KERNEL=="pcim-dda06-16/da[0-9]_*",       MODE="0666"
+
+SUBSYSTEM=="pci-2500",        NAME="db3k/%k",                MODE="666"
 
 SUBSYSTEM=="das1000",    KERNEL=="das1000/ad[0-9]_*",        MODE="0666"
 SUBSYSTEM=="das1000",    KERNEL=="das1000/dio[0-9]_*",       MODE="0666"

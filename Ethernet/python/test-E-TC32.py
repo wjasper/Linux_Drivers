@@ -199,8 +199,8 @@ def main():
       value = etc32.TinMultiple(wait, units, 0x55555555)
       for i in range(16):
         print('Channel ',2*i,'  Temperature = ', format(value[i],'.2f'))
-      # turn off the LED on the fron pannel
-      etc32.config_measure[0] = 1   # disable the OTC which turn off the LED
+      # turn off the LED on the front pannel
+      etc32.config_measure[0] = 1   # disable the OTC which turns off the LED
       etc32.MeasureConfig_W()
       etc32.config_measure[0] = 0   # enable the OTD
       etc32.MeasureConfig_W()

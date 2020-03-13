@@ -6,9 +6,7 @@
 #
 #               Copyright (C) 2011
 #               Written by:  Warren J. Jasper <wjasper@ncsu.edu>
-#                            North Carolina State Univerisity
-#
-#
+#                            North Carolina State University
 #
 #
 # This program, PCIM-DAS1602/16, is free software; you can redistribute it

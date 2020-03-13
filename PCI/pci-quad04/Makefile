@@ -6,7 +6,7 @@
 #
 #        Copyright (C) 2012
 #        Written by:  Warren J. Jasper <wjasper@ncsu.edu>
-#                     North Carolina State Univerisity
+#                     North Carolina State University
 #
 #
 # This program, PCI-QUAD04, is free software; you can redistribute it

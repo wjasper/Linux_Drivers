@@ -7,7 +7,7 @@
 #
 #               Copyright (C) September 7, 1999
 #               Written by:  Warren J. Jasper
-#                            North Carolina State Univerisity
+#                            North Carolina State University
 #
 #
 # This program, PCI-DIO24H, is free software; you can redistribute it

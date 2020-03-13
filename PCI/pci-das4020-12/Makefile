@@ -6,9 +6,7 @@
 #
 #        Copyright (C) 2004
 #        Written by:  Warren J. Jasper <wjasper@ncsu.edu>
-#                     North Carolina State Univerisity
-#
-#
+#                     North Carolina State University
 #
 #
 # This program, PCI-DAS4020-12, is free software; you can redistribute it

@@ -7,7 +7,7 @@
 #
 #               Copyright (C) August 9, 2007
 #               Written by:  Warren J. Jasper
-#                            North Carolina State Univerisity
+#                            North Carolina State University
 #
 #
 # This program, PCI-DDA0X/12, is free software; you can redistribute it

@@ -7,7 +7,7 @@
 #
 #               Copyright (C) October 4, 1999
 #               Written by:  Warren J. Jasper
-#                            North Carolina State Univerisity
+#                            North Carolina State University
 #
 #
 #
