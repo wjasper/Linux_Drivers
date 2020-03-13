@@ -1,1 +1,0 @@
-cmd_/home/wjj/Linux_Drivers/PCI/pci-das4020-12/das4020-12.o := ld -m elf_x86_64  -z max-page-size=0x200000    -r -o /home/wjj/Linux_Drivers/PCI/pci-das4020-12/das4020-12.o /home/wjj/Linux_Drivers/PCI/pci-das4020-12/a2dc.o 
