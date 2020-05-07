@@ -10,7 +10,7 @@
 #                             North Carolina State University
 #
 #
-# This program, PCI-DDA0X/16, is free software; you can redistribute it
+# This program, PCIM-DDA06/16, is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation; either version 2 of the
 # License, or (at your option) any later version, provided that this
@@ -25,73 +25,73 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+n# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 ###########################################################################
 
 #  Current Version of the driver
-VERSION=0.7
+VERSION=0.1
 
 # To let the kernel know is this not a signed copy.
 CONFIG_MODULE_SIG=n
 CONFIG_MODULE_SIG_ALL=n
 
-#  Number of PCI-DDA0X/16 boards on your system: (1-4)
-#  MUST ALSO CHANGE MAX_BOARDS in dda0X_12.h
+#  Number of PCIM-DDA06/16 boards on your system: (1-4)
+#  MUST ALSO CHANGE MAX_BOARDS in dda06_16.h
 NUM_BOARDS=1
 
-ID=PCI-DDA0X-16
+ID=PCIM-DDA06-16
 DIST_NAME=$(ID).$(VERSION).tgz
 
 ifneq ($(KERNELRELEASE),)
-obj-m	:= dda0X-16.o
-#pci-dda0X-16-objs := dda0X-16.o
+obj-m	:= dda06-16.o
+#pcim-dda06-16-objs := dda06-16.o
 
 # 2.4 kernel compatibility
-modules: pci-dda0X-16.o
+modules: pcim-dda06-16.o
 
-pci-dda0X-16.o: dda0X-16.o
-	$(LD) -r -o $@ dda0X-16.o
+pcim-dda06-16.o: dda06-16.o
+	$(LD) -r -o $@ dda06-16.o
 
-dda0X-16.o: dda0X-16.c
+dda06-16.o: dda06-16.c
 
 else
 
 KDIR	:= /lib/modules/$(shell uname -r)/build
 PWD	:= $(shell pwd)
-TARGETS=pci-dda0X-16.o test-dda0X-16 dda0X-16.ko
+TARGETS=pcim-dda06-16.o test-dda06-16 dda06-16.ko
 MODULE_DIR=/lib/modules/`uname -r`/kernel/drivers/char
-DIST_FILES = {dda0X-16.c,dda0X-16_2_6.c,dda0X-16_3_3_7.c,dda0X-16_3_10_11.c,dda0X-16_4_0_8.c,test-dda0X-16.c,dda0X-16.h,pci-dda0X-16.h,Makefile,README,ModList,License,RegMapPCI-DDA0x-16.pdf}
+DIST_FILES = {dda06-16.c,dda06-16_4_0_8.c,test-dda06-16.c,dda06-16.h,pcim-dda06-16.h,Makefile,README,ModList,License,RegMapPCIM-DDA06-16.pdf}
 
-all: default test-dda0X-16
+all: default test-dda06-16
 
 default:
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
 
-test-dda0X-16:	test-dda0X-16.c
+test-dda06-16:	test-dda06-16.c
 	$(CC) -Wall -g -o $@ $@.c -lm
 
 clean:
-	rm -f *.o *~ \#* .pci-dda0X-16.*.cmd pci-dda0X-16.mod.c .dda0X-16.*.cmd $(TARGETS)
+	rm -f *.o *~ \#* .pcim-dda06-16.*.cmd pcim-dda06-16.mod.c .dda06-16.*.cmd $(TARGETS)
 	rm -rf .tmp_versions
 dist:	
 	make clean
-	cd ..; tar -zcvf $(DIST_NAME) pci-dda0X-16/$(DIST_FILES);
+	cd ..; tar -zcvf $(DIST_NAME) pcim-dda06-16/$(DIST_FILES);
 
 install: 
-	-/sbin/rmmod dda0X-16
-	-/bin/cp ./pci-dda0X-16.h /usr/local/include/pci-dda0X-16.h
-	-/bin/chmod 644 /usr/local/include/pci-dda0X-16.h 
+	-/sbin/rmmod dda06-16
+	-/bin/cp ./pcim-dda06-16.h /usr/local/include/pcim-dda06-16.h
+	-/bin/chmod 644 /usr/local/include/pcim-dda06-16.h 
 	install -d $(MODULE_DIR)
-	if [ -f ./dda0X-16.ko ]; then \
-	/sbin/insmod  dda0X-16.ko; \
-	install -c ./dda0X-16.ko $(MODULE_DIR); \
+	if [ -f ./dda06-16.ko ]; then \
+	/sbin/insmod  dda06-16.ko; \
+	install -c ./dda06-16.ko $(MODULE_DIR); \
 	else \
-	/sbin/insmod  pci-dda0X-16.o; \
-	install -c ./pci-dda0X-16.o $(MODULE_DIR); \
+	/sbin/insmod  pcim-dda06-16.o; \
+	install -c ./pcim-dda07-16.o $(MODULE_DIR); \
 	fi
 
 uninstall:
-	-/sbin/rmmod dda0X-16
-	-rm -f $(MODULE_DIR)/dda0X-16.ko
+	-/sbin/rmmod dda06-16
+	-rm -f $(MODULE_DIR)/dda06-16.ko
 
 endif
