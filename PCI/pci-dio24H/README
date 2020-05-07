@@ -38,9 +38,8 @@ PCI-DIO24x.pdf   - Users Manual
 Building and installing the driver:
 -----------------------------------
 
-1. Untar the tar file:
-
-   tar zxvf PCI-DIO24H.1.11.tgz
+1.  Get the driver from https://github.com/Linux_Drivers/wjasper/pci-dio24H
+   
 
 2. This should create the following files:
     README  
@@ -123,15 +122,28 @@ fi
 
         alias char-major-249 pci-dio24H
 
+Reinstalling the driver on a working system after a kernel upgrade.
+-------------------------------------------------------------------
+1. Go to the original pci-dio24H source folder.
+2. Type "make clean"
+3. Type "make"
+4. Type "sudo make install"
+5. Type "sudo /sbin/depmod -a"
+6. Type "sudo update-initramfs -u"
+7. REBOOT
+8. Type "ls -al /dev/dio*" to ensure that you see "dio0_0A, dio0_0B, dio0_0C" devices on the screen.
+
+Please note that the 8255-pci does not need to be blacklisted
+repeatedly.  Once it is there, it is done.  Type "sudo lspci -vv -s
+01:0i2.0" to verify that the correct kernel driver is in use: "dio24H"
+and not "8255-pci".
+
 
 How the driver works:
 ---------------------
-
 The driver is fairly straight forward, but since the current version of
 Linux is not 1003.4 compliant (it is not a real-time operating system),
 certain design decisions were made in writing this driver. 
-
-
 
 When interrupts are disabled, all the read/write calls to the driver are
 non-blocking.  When interrupts are enabled, all reads are blocked,
@@ -142,7 +154,7 @@ All the devices nodes are automagically created for you by /sysfs and udev. They
 
 /dev/dio24H/dio[Board Number]_0[A-C]
 
-so
+also
 
 /dev/dio24H/dio0_0B would be Board 0,  Port B.  Type
 
