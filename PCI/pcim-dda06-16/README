@@ -127,34 +127,5 @@ The following ioctl() functions have been implemented:
    into two levels (4 bits each), while ports A and B are either all input or
    all output.
 
-2. ioctl(fd, DAC_SET_GAINS, gain);
-   Sets the gain for the given channel.  Allowed values for gain are found in
-   pcim-dda06-16.h and they are:
-  
-          BP_2_5V    +/- 2.5V  Full Scale
-          BP_5_0V    +/- 5.0V  Full Scale
-          BP_10_0V   +/- 10.0V Full Scale
-          UP_2_5V    0 - 2.5V  Full Scale
-          UP_5_0V    0 - 5.0V  Full Scale
-          UP_10_0V   0 - 10.0V Full Scale
-
-3. ioctl(fd, DAC_GET_GAINS, &gain);
-   get the current gain for the channel.
-
-4. ioctl(fd, DAC_ENABLE, 0);
-   Enable the DAC for output.
-
-5. ioctl(fd, DAC_DISABLE, 0);
-   DISABLE the DAC for output.  Output is zero.
-
-6. ioctl(fd, DAC_SIMULT_UPDATE, 0);
-     Updates all the channels simultaneously.
-
-7. ioctl(fd, DAC_SET_SIMULT, value);
-      value = 0 false/disable  1 = true/enable
-      if enabled, that channel will update simultaneously.  See documentation.
-
-8. ioctl(fd, DAC_GET_SIMULT, &value);
-        value = 0 false/disable  1 = true/enable
 
 

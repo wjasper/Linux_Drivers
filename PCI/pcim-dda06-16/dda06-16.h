@@ -80,9 +80,9 @@
 #define DAC4_MSB_REG      (base3+9)    /* D/A 4 Data MSB */
 #define DAC5_LSB_REG      (base3+10)   /* D/A 5 Data LSB */
 #define DAC5_MSB_REG      (base3+11)   /* D/A 5 Data MSB */
-#define DIO_PORTA         (base3+12)   /* Port 0A 8 bit I/O of 8255 */
-#define DIO_PORTB         (base3+13)   /* Port 0B 8 bit I/O of 8255 */
-#define DIO_PORTC         (base3+14)   /* Port 0C 4+4 bit of 8255 */
+#define DIO_PORTA         (base3+12)   /* Port A 8 bit I/O of 8255 */
+#define DIO_PORTB         (base3+13)   /* Port B 8 bit I/O of 8255 */
+#define DIO_PORTC         (base3+14)   /* Port C 4+4 bit of 8255 */
 #define DIO_CNTRL_REG     (base3+15)   /* Mode and Direction Control Register 8255 */
 
 typedef struct BOARD_REC {
@@ -104,7 +104,6 @@ typedef struct t_ChanRec_DAC {
   int open;               /* Is channel device open()     */
   u16 value;              /* value of DAC Channel         */
   u16 addr;               /* address of the channel       */
-  u16 cntrl_reg;          /* value of control reg         */
 } ChanRec_DAC;
 
 #endif
