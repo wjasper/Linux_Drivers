@@ -34,8 +34,12 @@
 #  define VERSION_CODE(vers,rel,seq) ( ((vers)<<16) | ((rel)<<8) | (seq) )
 #endif
 
-#if LINUX_VERSION_CODE < VERSION_CODE(5,0,0) 
+#if LINUX_VERSION_CODE < VERSION_CODE(4,0,0) 
 #error "This kernel is too old: not supported by this file"
+#endif
+
+#if LINUX_VERSION_CODE >= VERSION_CODE(4,10,0) && LINUX_VERSION_CODE < VERSION_CODE(4,20,0)
+#include "dda06-16_4_10_0.c"
 #endif
 
 #if LINUX_VERSION_CODE >= VERSION_CODE(5,0,0) && LINUX_VERSION_CODE < VERSION_CODE(5,20,0)
