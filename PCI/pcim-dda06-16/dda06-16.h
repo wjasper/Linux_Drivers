@@ -42,7 +42,6 @@
 #define TRUE  1
 #define FALSE 0
 
-
 #ifndef PCI_VENDOR_ID_CBOARDS
 #define PCI_VENDOR_ID_CBOARDS 0x1307
 #endif
@@ -86,9 +85,10 @@
 #define DIO_CNTRL_REG     (base3+15)   /* Mode and Direction Control Register 8255 */
 
 typedef struct BOARD_REC {
-  u32 device;       /* device ID                        */
-  u16 base3;        /* Base3 address of DDA06-16 board  */
-  u8 dio_reg;       /* status register Group 0          */
+  u32 device;             /* device ID                        */
+  u16 base3;              /* Base3 address of DDA06-16 board  */
+  u8 dio_reg;             /* Status register Group 0          */
+  u8 simultUpdate;        /* Simultanous update               */
 } BoardRec;
 
 /* Values kept for each channel. */
@@ -104,6 +104,7 @@ typedef struct t_ChanRec_DAC {
   int open;               /* Is channel device open()     */
   u16 value;              /* value of DAC Channel         */
   u16 addr;               /* address of the channel       */
+  u8 gain;                /* gain of channel (Set onboard */
 } ChanRec_DAC;
 
 #endif

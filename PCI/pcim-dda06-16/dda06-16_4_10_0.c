@@ -211,6 +211,7 @@ static int dda06_16_init_one(struct pci_dev *pdev, const struct pci_device_id *e
     goto err_out_0;
 
   BoardData[NumBoards].dio_reg = 0x00;
+  BoardData[NumBoards].simultUpdate = 0x0;    // Selectable on the board
 
   printk("%s: VendorID = %#x  BADR3=%#x ",ADAPTER_ID, BoardData[NumBoards].device,  BoardData[NumBoards].base3);
   printk(" 5/8/2020 wjasper@ncsu.edu\n");
@@ -251,6 +252,14 @@ static int dda06_16_init_one(struct pci_dev *pdev, const struct pci_device_id *e
     outb(0x0, Chan_DAC[NumBoards][i].addr);   // LSB
     outb(0x0, Chan_DAC[NumBoards][i].addr+1); // MSB
   }
+
+  /* Set DAC gains.  There are Board Configurable. */
+  Chan_DAC[NumBoards][0].gain = BP_5_0V;
+  Chan_DAC[NumBoards][1].gain = BP_5_0V;
+  Chan_DAC[NumBoards][2].gain = BP_5_0V;
+  Chan_DAC[NumBoards][3].gain = BP_5_0V;
+  Chan_DAC[NumBoards][4].gain = BP_5_0V;
+  Chan_DAC[NumBoards][5].gain = BP_5_0V;
 
   /* create a device in /sys/class/dda06-16/ */
   for (i = 0; i < DAC_PORTS; i++) {
@@ -568,11 +577,27 @@ static long dda06_16_ioctl(struct file *filePtr, unsigned int cmd, unsigned long
           break;
         default:
           #ifdef DEBUG
-          printk("DIO_SET_DIRECTION for Invalid Port\n");
+            printk("DIO_SET_DIRECTION for Invalid Port\n");
           #endif
           return(-EINVAL);
           break;
       }
+      break;
+    case DAC_SET_GAINS:
+      #ifdef DEBUG
+        printk("ioctl DAC_SET_GAINS: Channel = %d, Gain = %#lx\n", minor, arg);
+      #endif
+      Chan_DAC[board][port].gain = (u16) (arg);
+      break;
+    case DAC_GET_GAINS:
+      put_user( (long) (Chan_DAC[board][port].gain), (long*) arg );
+      break;
+    case DAC_SET_SIMULT:
+      BoardData[board].simultUpdate =  (u8) arg;
+      break;
+    case DAC_GET_SIMULT:
+      put_user( (long) (BoardData[board].simultUpdate), (long*) arg );
+      break;
     default:
       return(-EINVAL);
       break;
