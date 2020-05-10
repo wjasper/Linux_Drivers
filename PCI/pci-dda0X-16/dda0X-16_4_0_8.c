@@ -691,7 +691,7 @@ static long dda0X_16_ioctl(struct file *filePtr, unsigned int cmd, unsigned long
 
         default:
           #ifdef DEBUG
-          printk("DIO_SET_DIRECTION for Invalid Port\n");
+            printk("DIO_SET_DIRECTION for Invalid Port\n");
           #endif
           return(-EINVAL);
           break;
