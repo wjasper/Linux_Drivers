@@ -32,7 +32,7 @@
  ***************************************************************************/
 
 char *DevName = "/dev/dda0x-16/da0_0";
-char DevNameIO[20];
+char DevNameIO[80];
 int  Count    = 1;
 int  NoStop   = 0;
 int  Mode     = 0;
@@ -292,7 +292,6 @@ void ChangeDACGains()
 {
   int choice;
   int channel = 0;
-  long gain;
 
   printf("Enter desired channel: ");
   scanf("%d", &channel);
@@ -300,9 +299,9 @@ void ChangeDACGains()
   printf("  1.   Bipolar  +/- 10.00V.\n");
   printf("  2.   Bipolar  +/-  5.00V.\n");
   printf("  3.   Bipolar  +/-  2.50V.\n");
-  printf("  4.   Unipolar +/- 10.00V.\n");
-  printf("  5.   Unipolar +/-  5.00V.\n");
-  printf("  6.   Unipolar +/-  2.50V.\n");
+  printf("  4.   Unipolar 0 - 10.00V.\n");
+  printf("  5.   Unipolar 0 -  5.00V.\n");
+  printf("  6.   Unipolar 0 -  2.50V.\n");
 
   printf("\nOption: ");
   scanf("%d", &choice);
@@ -334,16 +333,14 @@ void ChangeDACGains()
   default:
     printf("Illegal option.\n");
   }
-  ioctl(fd_dac[channel], DAC_GET_GAINS, &gain);
-  printf("Gain Set to %#lx\n\n", gain);
+  ioctl(fd_dac[channel], DAC_SET_GAINS, DAC_Gain[channel]);
+  printf("Gain Set to %#x\n\n", DAC_Gain[channel]);
   sleep(2);
   return;
 }
 
 void testDAC2()
 {
-/* a sine wave for Mike Zhu :) */
-
   int i, j;
   double x;
   unsigned short value = 0;

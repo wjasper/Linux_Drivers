@@ -124,8 +124,8 @@ typedef struct BOARD_REC {
   u32 device;         /* device ID                     */
   u16 base2;          /* Base1 address of DDA0X board  */
   u16 base3;          /* Base2 address of DDA0X board  */
-  u8 dio_reg_0;       /* status register Group 0       */
-  u8 dio_reg_1;       /* status register Group 1       */
+  u8 dio_reg_0;       /* Status register Group 0       */
+  u8 dio_reg_1;       /* Status register Group 1       */
 } BoardRec;
 
 /* Values kept for each channel. */
