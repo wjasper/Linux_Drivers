@@ -417,7 +417,7 @@ static ssize_t dda06_16_read(struct file *filePtr, char *buf, size_t count, loff
   if (port < DAC_PORTS) {
     put_user(Chan_DAC[board][port].value, (u16*) buf );
     inb(Chan_DAC[board][port].addr);  // Initiate simultaneous transfer
-    #ifdef DEBUGa
+    #ifdef DEBUG
     printk("dda06_16_read: %s DAC Port %#x  address = %#x  value = %#x\n", 
 	   ADAPTER_ID, port, Chan_DAC[board][port].addr, Chan_DAC[board][port].value);
      #endif
@@ -460,8 +460,8 @@ static ssize_t dda06_16_write(struct file *filePtr, const char *buf, size_t coun
   if (port < DAC_PORTS) {
     get_user(dac_value, (u16*)buf);
     Chan_DAC[board][port].value = dac_value;
-    outb( dac_value & 0xff, Chan_DAC[board][port].addr);
-    outb((dac_value >> 8) & 0xff, Chan_DAC[board][port].addr+1);
+    outb( dac_value & 0xff, Chan_DAC[board][port].addr);          // low byte
+    outb((dac_value >> 8) & 0xff, Chan_DAC[board][port].addr+1);  // high byte
     #ifdef DEBUG
       printk("dda06_16_write %s DAC Channel %#x  address = %#x  value = %#x \n", 
 	     ADAPTER_ID, port, Chan_DAC[board][port].addr, dac_value);

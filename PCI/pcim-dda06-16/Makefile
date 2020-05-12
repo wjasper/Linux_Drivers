@@ -43,8 +43,8 @@ ID=PCIM-DDA06-16
 DIST_NAME=$(ID).$(VERSION).tgz
 
 ifneq ($(KERNELRELEASE),)
-obj-m	:= dda06-16.o
-#pcim-dda06-16-objs := dda06-16.o
+obj-m	:= pcim-dda06-16.o
+pcim-dda06-16-objs := dda06-16.o
 
 # 2.4 kernel compatibility
 modules: pcim-dda06-16.o
@@ -78,20 +78,17 @@ dist:
 	cd ..; tar -zcvf $(DIST_NAME) pcim-dda06-16/$(DIST_FILES);
 
 install: 
-	-/sbin/rmmod dda06-16
+	-/sbin/rmmod pcim-dda06-16
 	-/bin/cp ./pcim-dda06-16.h /usr/local/include/pcim-dda06-16.h
-	-/bin/chmod 644 /usr/local/include/pcim-dda06-16.h 
-	install -d $(MODULE_DIR)
-	if [ -f ./dda06-16.ko ]; then \
-	/sbin/insmod  dda06-16.ko; \
-	install -c ./dda06-16.ko $(MODULE_DIR); \
-	else \
-	/sbin/insmod  pcim-dda06-16.o; \
-	install -c ./pcim-dda07-16.o $(MODULE_DIR); \
-	fi
+	-/bin/chmod 644 /usr/local/include/pcim-dda06-16.h
+	-/sbin/insmod  ./pcim-dda06-16.ko; \
+	install -c ./pcim-dda06-16.ko $(MODULE_DIR) ; \
 
 uninstall:
-	-/sbin/rmmod dda06-16
-	-rm -f $(MODULE_DIR)/dda06-16.ko
+	-/sbin/rmmod pcim-dda06-16
+	-/bin/rm -rf /dev/pcim-dda06*
+	if [ -f $(MODULE_DIR)/pcim-das06-16.ko ]; then \
+	/bin/rm -f $(MODULE_DIR)/pcim-dda06-16.ko; \
+	fi
 
 endif
