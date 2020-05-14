@@ -65,7 +65,7 @@ DIST_FILES = {dda06-16.c,dda06-16_4_0_8.c,test-dda06-16.c,dda06-16.h,pcim-dda06-
 all: default test-dda06-16
 
 default:
-	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
 test-dda06-16:	test-dda06-16.c
 	$(CC) -Wall -g -o $@ $@.c -lm

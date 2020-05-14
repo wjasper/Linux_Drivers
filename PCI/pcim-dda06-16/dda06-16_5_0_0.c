@@ -211,6 +211,7 @@ static int dda06_16_init_one(struct pci_dev *pdev, const struct pci_device_id *e
     goto err_out_0;
 
   BoardData[NumBoards].dio_reg = 0x00;
+  BoardData[NumBoards].simultUpdate = 0x0;    // Selectable on the board
 
   printk("%s: VendorID = %#x  BADR3=%#x ",ADAPTER_ID, BoardData[NumBoards].device,  BoardData[NumBoards].base3);
   printk(" 5/8/2020 wjasper@ncsu.edu\n");
@@ -251,6 +252,14 @@ static int dda06_16_init_one(struct pci_dev *pdev, const struct pci_device_id *e
     outb(0x0, Chan_DAC[NumBoards][i].addr);   // LSB
     outb(0x0, Chan_DAC[NumBoards][i].addr+1); // MSB
   }
+
+  /* Set DAC gains.  There are Board Configurable. */
+  Chan_DAC[NumBoards][0].gain = BP_5_0V;
+  Chan_DAC[NumBoards][1].gain = BP_5_0V;
+  Chan_DAC[NumBoards][2].gain = BP_5_0V;
+  Chan_DAC[NumBoards][3].gain = BP_5_0V;
+  Chan_DAC[NumBoards][4].gain = BP_5_0V;
+  Chan_DAC[NumBoards][5].gain = BP_5_0V;
 
   /* create a device in /sys/class/dda06-16/ */
   for (i = 0; i < DAC_PORTS; i++) {
@@ -326,14 +335,14 @@ static int dda06_16_open(struct inode *iNode, struct file *filePtr)
      the overhead to check for this may not be worth it.
   */
 
- if (port >= 0 && port < DAC_PORTS {
+  if (port >= 0 && port < DAC_PORTS) {
     if (Chan_DAC[board][port].open == TRUE) {
         return -EBUSY;
     }
     Chan_DAC[board][port].open = TRUE;                 /* The device is open */
     Chan_DAC[board][port].value = 0x0;
-    outb(u8 Chan_DAC[board][port].value, Chan_DAC[board][port].addr);
-    outb(u8 Chan_DAC[board][port].value, Chan_DAC[board][port].addr+1); 
+    outb(0x0, Chan_DAC[board][port].addr);
+    outb(0x0, Chan_DAC[board][port].addr+1); 
     #ifdef DEBUG
       printk("%s: open(): minor %d DAC Channel %d.\n", ADAPTER_ID, minor, port);
     #endif
@@ -408,7 +417,7 @@ static ssize_t dda06_16_read(struct file *filePtr, char *buf, size_t count, loff
   if (port < DAC_PORTS) {
     put_user(Chan_DAC[board][port].value, (u16*) buf );
     inb(Chan_DAC[board][port].addr);  // Initiate simultaneous transfer
-    #ifdef DEBUGa
+    #ifdef DEBUG
     printk("dda06_16_read: %s DAC Port %#x  address = %#x  value = %#x\n", 
 	   ADAPTER_ID, port, Chan_DAC[board][port].addr, Chan_DAC[board][port].value);
      #endif
@@ -451,8 +460,8 @@ static ssize_t dda06_16_write(struct file *filePtr, const char *buf, size_t coun
   if (port < DAC_PORTS) {
     get_user(dac_value, (u16*)buf);
     Chan_DAC[board][port].value = dac_value;
-    outb((u8) dac_value & 0xff, Chan_DAC[board][port].addr);
-    outb((u8) (dac_value >> 8) & 0xff, Chan_DAC[board][port].addr+1);
+    outb( dac_value & 0xff, Chan_DAC[board][port].addr);          // low byte
+    outb((dac_value >> 8) & 0xff, Chan_DAC[board][port].addr+1);  // high byte
     #ifdef DEBUG
       printk("dda06_16_write %s DAC Channel %#x  address = %#x  value = %#x \n", 
 	     ADAPTER_ID, port, Chan_DAC[board][port].addr, dac_value);
@@ -491,7 +500,6 @@ static long dda06_16_ioctl(struct file *filePtr, unsigned int cmd, unsigned long
   int board = 0;
   int port = 0;
   u16 base3;
-  u16 wreg = 0x0;
 
   board = BOARD(minor);    /* get which board */
   port = PORT(minor);      /* get which port  */
@@ -569,11 +577,27 @@ static long dda06_16_ioctl(struct file *filePtr, unsigned int cmd, unsigned long
           break;
         default:
           #ifdef DEBUG
-          printk("DIO_SET_DIRECTION for Invalid Port\n");
+            printk("DIO_SET_DIRECTION for Invalid Port\n");
           #endif
           return(-EINVAL);
           break;
       }
+      break;
+    case DAC_SET_GAINS:
+      #ifdef DEBUG
+        printk("ioctl DAC_SET_GAINS: Channel = %d, Gain = %#lx\n", minor, arg);
+      #endif
+      Chan_DAC[board][port].gain = (u16) (arg);
+      break;
+    case DAC_GET_GAINS:
+      put_user( (long) (Chan_DAC[board][port].gain), (long*) arg );
+      break;
+    case DAC_SET_SIMULT:
+      BoardData[board].simultUpdate =  (u8) arg;
+      break;
+    case DAC_GET_SIMULT:
+      put_user( (long) (BoardData[board].simultUpdate), (long*) arg );
+      break;
     default:
       return(-EINVAL);
       break;
