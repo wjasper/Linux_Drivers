@@ -65,7 +65,7 @@ DIST_FILES = {dda0X-16.c,dda0X-16_2_6.c,dda0X-16_3_3_7.c,dda0X-16_3_10_11.c,dda0
 all: default test-dda0X-16
 
 default:
-	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
 test-dda0X-16:	test-dda0X-16.c
 	$(CC) -Wall -g -o $@ $@.c -lm
