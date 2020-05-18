@@ -55,10 +55,14 @@
 #include "a2dc_3_10_11.c"
 #endif
 
-#if LINUX_VERSION_CODE >= VERSION_CODE(4,0,0) && LINUX_VERSION_CODE < VERSION_CODE(4,20,0)
+#if LINUX_VERSION_CODE >= VERSION_CODE(4,0,0) && LINUX_VERSION_CODE < VERSION_CODE(4,10,0)
 #include "a2dc_4_0_8.c"
 #endif
 
-#if LINUX_VERSION_CODE >= VERSION_CODE(4,20,0)
+#if LINUX_VERSION_CODE >= VERSION_CODE(4,10,0) && LINUX_VERSION_CODE < VERSION_CODE(4,99,0)
+#include "a2dc_4_10_0.c"
+#endif
+
+#if LINUX_VERSION_CODE >= VERSION_CODE(4,99,0)
 #error "Your kernel is too new for the current driver.  It may work but is untested."
 #endif

@@ -70,6 +70,16 @@
 #define PCI_DEVICE_ID_CBOARDS_DAS08 0x0029
 #endif
 
+// timer arguments
+#if LINUX_VERSION_CODE > KERNEL_VERSION(4,10,0)
+  #define from_timer(var, callback_timer, timer_fieldname)  container_of(callback_timer, typeof(*var), timer_fieldname)
+
+  struct timer_data {
+    struct timer_list timer;
+    void * data;
+  };
+#endif
+
 /* I/O Register locations */
 
 /* NOTE: base1 and base2 to be found dynamically at boot time. Not hard coded into driver */
@@ -103,7 +113,7 @@ typedef struct BOARD_REC {
   u16 base1;                     // Base address of ADC board
   u16 base2;                     // Base address of ADC board
   int  busy;                     // busy = TRUE, free = FALSE
-  int  irq;                      // board irq
+  int irq;                       // board irq
   u8 status;                     // Status BYTE
   int wordsToRead;               // Words left to read in the DAQ
   int IRQComplete;
@@ -112,7 +122,11 @@ typedef struct BOARD_REC {
   u16 *buf_virt_addr;            // virtual kernal (cpu) address of dma buffer
   u16 *ADC_KernBuffPtr;          // pointer into the data buffer array
   ADC_ChanRec *ADC_CurrChan;     // Pointer to current channel
-  struct timer_list das08_timer; // kernel timer (in case we don't return from the ISR 
+  #if LINUX_VERSION_CODE > KERNEL_VERSION(4,10,0)
+    struct timer_data *tmd;        // kernel timer_data (in case we don't return from the ISR)
+  #else
+    struct timer_list *data08_timer;
+  #endif
 } BoardRec;
 
 
