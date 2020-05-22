@@ -80,10 +80,10 @@ class usb_1208FS_Plus(mccUSB):
   AIN_BULK_FLUSH      = 0x16  # Flush the bulk IN endpoint with empty packets
 
   # Analog Output Commands
-  AOUT                = 0x18  # Read/write analog output channel
-  AOUT_SCAN_START     = 0x1A  # Start analog output scan
-  AOUT_SCAN_STOP      = 0x1B  # Stop analog output scan
-  AOU_SCAN_CLEAR_FIFO = 0x1C  # Clear the alalog output scan FIFO
+  AOUT                 = 0x18  # Read/write analog output channel
+  AOUT_SCAN_START      = 0x1A  # Start analog output scan
+  AOUT_SCAN_STOP       = 0x1B  # Stop analog output scan
+  AOUT_SCAN_CLEAR_FIFO = 0x1C  # Clear the anlalog output scan FIFO
 
   # Counter Commands
   COUNTER             = 0x20  # Read/reset event counter
