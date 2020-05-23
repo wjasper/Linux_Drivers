@@ -31,10 +31,13 @@ class usb1608G(mccUSB):
   USB_1608GX_2AO_PID = 0x0136
 
   # Gain Ranges
-  BP_10V   = 0x0         # Differential +/- 10.0 V
-  BP_5V    = 0x1         # Differential +/- 5.00 V
-  BP_2V    = 0x2         # Differential +/- 2.00 V
-  BP_1V    = 0x3         # Differential +/- 1.25 V
+  BP_10V   = 0x0       # +/- 10.0 V
+  BP_5V    = 0x1       # +/- 5.00 V
+  BP_2V    = 0x2       # +/- 2.00 V
+  BP_1V    = 0x3       # +/- 1.25 V
+
+  SINGLE_ENDED = 1  # channels 0 - 15
+  DIFFERENTIAL = 0  # channels 0 - 7
 
   # Status Bits
   AIN_SCAN_RUNNING   = 0x2   # AIn pacer running
@@ -46,7 +49,7 @@ class usb1608G(mccUSB):
   FPGA_CONFIGURED    = 0x100 # FPGA is configured
   FPGA_CONFIG_MODE   = 0x200 # FPGA config mode
 
-  NCHAN = 16                 # max number of A/D channels in the device
+  NCHAN = 16                 # max number of A/D channels in the device (single_ended)
   NGAIN = 4                  # max number of gain levels
   MAX_PACKET_SIZE_HS = 512   # max packet size for HS device
   MAX_PACKET_SIZE_FS = 64    # max packet size for HS device
@@ -62,7 +65,6 @@ class usb1608G(mccUSB):
   AIN_SCAN_STOP       = 0x12  # Stop analog input scan
   AIN_SCAN_CONFIG     = 0x14  # Read/Write analog input configuration
   AIN_SCAN_CLEAR_FIFO = 0x15  # Clear the analog input scan FIFO
-
 
   # Analog Output Commands
   AOUT                 = 0x18  # Read/write analog output channel
@@ -112,12 +114,11 @@ class usb1608G(mccUSB):
       print("Configuring FPGA.  This may take a while ...")
       self.FPGAConfig()
       if self.Status() & self.FPGA_CONFIG_MODE:
-        for i in range(0, len(FPGA_V2_data) - 64, 64) :
+        for i in range(0, len(FPGA_V2_data) - len(FPGA_V2_data)%64, 64) :
           self.FPGAData(FPGA_V2_data[i:i+64])
         i += 64
         if len(FPGA_V2_data) % 64 :
           self.FPGAData(FPGA_V2_data[i:i+len(FPGA_V2_data)%64])
-          print(len(FPGA_V2_data), len(FPGA_V2_data)%64)
         if not self.Status() & self.FPGA_CONFIGURED:
           print("Error: FPGA for the USB-1608G is not configured.  status = ", hex(self.Status()))
           return
@@ -273,6 +274,139 @@ class usb1608G(mccUSB):
 
     value = data
     return value
+
+  def AInScanStart(self, count, frequency, channels, options):
+    """
+    This command starts the analog input channel scan.  The gain
+    ranges that are currently set on the desired channels will be
+    used (these may be changed with AInConfig) This command will
+    result in a bus stall if an AInScan is currently running.
+
+    count:        the total number of scans to perform (0 for continuous scan)
+    retrig_count: the number of scan to perform for each trigger in retrigger mode
+    pacer_period: pacer timer period value (0 for AI_CLK_IN)
+    frequency:    pacer frequency in Hz
+    packet_size:  number of samples to transfer at a time
+    options:      bit field that controls various options
+                   bit 0: 1 = burst mode, 0 = normal mode
+                   bit 1: Reserved
+                   bit 2: Reserved
+                   bit 3: 1 = use trigger  0 = no trigger
+                   bit 4: Reserved
+                   bit 5: Reserved
+                   bit 6: 1 = retrigger mode, 0 = normal trigger
+                   bit 7: Reserved
+    mode:  mode bits:
+           bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
+           bit 1:   1 = SINGLEIO
+           bit 2:   1 = use packet size passed dusbDevice1608G->packet_size
+
+    Notes:
+
+    The pacer rate is set by an internal 32-bit incrementing timer
+    running at a base rate of 64 MHz.  The timer is controlled by
+    pacer_period. If burst mode is specified, then this value is the
+    period of the scan and the A/D is clocked at this maximum rate
+    (500 kHz) for each channel in the scan.  If burst mode is not
+    specified, then this value is the period of the A/D readings.  A
+    pulse will be output at the AI_CLK_OUT pin at every pacer_period
+    interval regardless of the mode.
+
+    If pacer_period is set to 0, the device does not generate an A/D
+    clock.  It uses the AI_CLK_IN pin as the pacer source.  Burst
+    mode operates in the same fashion: if specified, the scan starts
+    on every rising edge of AI_CLK_IN and the A/D is clocked at 500 kHz
+    for the number of channels in the scan; if not specified, the A/D
+    is clocked on every rising edge of AI_CLK_IN.
+
+    The timer will be reset and sample acquired when its value equals
+    timer_period.  The equation for calculating timer_period is:
+
+           timer_period = [64MHz / (sample frequency)] - 1
+
+    The data will be returned in packets utilizing a bulk IN endpoint.
+    The data will be in the format:
+
+      lowchannel sample 0: lowchannel + 1 sample 0: ... :hichannel sample 0
+      lowchannel sample 1: lowchannel + 1 sample 1: ... :hichannel sample 1
+      ...
+      lowchannel sample n: lowchannel + 1 sample n: ... :hichannel sample n
+
+    The packet_size parameter is used for low sampling rates to avoid
+    delays in receiving the sampled data. The buffer will be sent,
+    rather than waiting for the buffer to fill.  This mode should
+    not be used for high sample rates in order to avoid data loss.
+
+    The external trigger may be used to start data collection
+    synchronously.  If the bit is set, the device will wait until the
+    appropriate trigger edge is detected, then begin sampling data at
+    the specified rate.  No messages will be sent until the trigger
+    is detected.
+
+    The retrigger mode option and the retrig_count parameter are only
+    used if trigger is used.  This option will cause the trigger to
+    be rearmed after retrig_count samples are acquired, with a total
+    of count samples being returned from the entire scan.
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+
+    if self.productID == USB_1608G_PID and frequency > 250000: # 250k S/s throughput
+      frequency = 250000.
+    elif frequency > 500000: # 500 kS/s throughput
+      frequency = 500000.
+
+    self.frequency = frequency
+    self.options = options & 0ff
+    if count == 0:
+      self.continuous_mode = True
+    else:
+      self.continuous_mode = False
+
+    scanPacket = pack('IIIBB', count, retrig_count, pacer_period, packet_size, options)
+    result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
+        
+  def AInScanStop(self):
+    """
+    This command stops the analog input scan (if running).
+    """
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AIN_SCAN_STOP
+    wValue = 0x0
+    wIndex = 0x0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def AInConfigR(self):
+    """
+    This command reads or writes the analog input channel
+    configurations.  This command will result in a bus stall if an
+    AIn scan is currently running.  The scan list is setup to
+    acquire data from the channels in the order that they are placed
+    in the scan list.
+
+    ScanList[15]  channel configuration:
+      bit 0:  Channel Mux 0
+      bit 1:  Channel Mux 1
+      bit 2:  Channel Mux 2
+      bit 3:  Range Mux 0
+      bit 4:  Range Mux 1
+      bit 5:  Mode Mux 0
+      bit 6:  Mode Mux 1
+      bit 7:  Last Channel
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+  
+    
+  def AInScanClearFIFO(self):
+    """
+    This command clears the analog input firmware buffer.
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request = self.AIN_SCAN_CLEAR_FIFO
+    wValue = 0x0
+    wIndex = 0x0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+  
 
   ##########################################
   #             Timer Commands             #
@@ -667,7 +801,6 @@ class usb1608G(mccUSB):
     request = self.FPGA_DATA
     wValue = 0x0
     wIndex = 0x0
-    print(data)
     self.udev.controlWrite(request_type, request, wValue, wIndex, data, self.HS_DELAY)
 
   def FPGAVersion(self):
@@ -680,6 +813,41 @@ class usb1608G(mccUSB):
     wIndex = 0x0
     version ,= unpack('H',self.udev.controlRead(request_type, self.FPGA_VERSION, wValue, wIndex, 2, self.HS_DELAY))
     return "{0:02x}.{1:02x}".format((version>>8)&0xff, version&0xff)
+
+  def printStatus(self):
+    status = self.Status()
+    print('**** USB-1608G Status ****')
+    if status & self.AIN_SCAN_RUNNING:
+      print('  Analog Input scan running.')
+    if status & self.AIN_SCAN_OVERRUN:
+      print('  Analog Input scan overrun.')
+    if status & self.AOUT_SCAN_RUNNING:
+      print('  Analog Output scan running.')
+    if status & self.AOUT_SCAN_UNDERRUN:
+      print('  Analog Output scan underrun.')
+    if status & self.AIN_SCAN_DONE:
+      print(' Analog Input scan done.')
+    if status & self.AOUT_SCAN_DONE:
+      print(' Analog Outputt scan done.')
+    if status & self.FPGA_CONFIGURED:
+      print('  FPGA is configured.')
+    if status & self.FPGA_CONFIG_MODE:
+      print('  FPGA in configuration mode.')
+
+  def volts(self, gain, value):
+    # converts unsigned short value to volts
+    if gain == self.BP_10V:
+      volt = (value - 0x8000) * 10. / 32768
+    elif gain == self.BP_5V:
+      volt = (value - 0x8000) * 5. / 32768
+    elif gain == self.BP_2V:
+      volt = (value - 0x8000) * 2. / 32768
+    elif gain == self.BP_1V:
+      volt = (value - 0x8000) * 1. / 32768
+    else:
+      raise ValueError('volts: Unknown range.')
+
+    return volt
 
     
 ################################################################################################################
@@ -703,11 +871,25 @@ class usb_1608GX(usb1608G):
     usb1608G.__init__(self)
 
 class usb_1608GX_2AO(usb1608G):
+
+  # Analog Output Commands
+  AOUT                 = 0x18  # Read/write analog output channel
+  AOUT_SCAN_START      = 0x1A  # Start analog output scan
+  AOUT_SCAN_STOP       = 0x1B  # Stop analog output scan
+  AOUT_SCAN_CLEAR_FIFO = 0x1C  # Clear the analog output scan FIFO
+
   def __init__(self, serial=None):
-    self.productID = self.USB_1608GX_2AO_PID   #usb-1608GX_2AO
+    self.productID = self.USB_1608GX_2AO_PID   # usb-1608GX_2AO
     self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
       raise IOError("MCC USB-1608GX_2AO not found")
       return
     usb1608G.__init__(self)
 
+    # Read calibration table for analog out
+    self.table_AOut = [table(), table()]
+    address = 0x7080
+    self.MemAddressW(address)
+    for chan in range(2):
+      self.table_AOut[chan].slope, = unpack('f', self.MemoryR(4))
+      self.table_AOut[chan].intercept, = unpack('f', self.MemoryR(4))

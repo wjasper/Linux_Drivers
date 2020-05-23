@@ -442,7 +442,7 @@ class usb_1608FS_Plus(mccUSB):
 
   def AInScanClearFIFO(self):
     """
-    The command clears the internal scan endoint FIFOs
+    This command clears the internal scan endpoint FIFOs
     """
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
     request = self.AIN_SCAN_CLEAR_FIFO
@@ -719,7 +719,7 @@ class usb_1608FS_Plus(mccUSB):
 
   def printStatus(self):
     status = self.Status()
-    print('**** USB-1608FS Status ****')
+    print('**** USB-1608FS-Plus Status ****')
     if status & self.AIN_SCAN_RUNNING:
       print('    Analog Input scan running')
     if status & self.AIN_SCAN_OVERRUN:

@@ -163,7 +163,7 @@ void usbInit_1608G(libusb_device_handle *udev, int version)
 	for (i = 0; i <= (sizeof(FPGA_V2_data) - 64); i += 64) {
 	  usbFPGAData_USB1608G(udev, &FPGA_V2_data[i], 64);
 	}
-	if (sizeof(FPGA_data) % 64) {
+	if (sizeof(FPGA_V2_data) % 64) {
 	  usbFPGAData_USB1608G(udev, &FPGA_V2_data[i], sizeof(FPGA_V2_data)%64);
 	}
 	if (!(usbStatus_USB1608G(udev) & FPGA_CONFIGURED)) {

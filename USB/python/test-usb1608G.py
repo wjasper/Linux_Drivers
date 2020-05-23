@@ -79,7 +79,7 @@ def main():
     elif ch == 'r':
       usb1608G.Reset()
     elif ch == 'S':
-      print(hex(usb1608G.Status()))
+      print('Status =', hex(usb1608G.Status()))
       usb1608G.printStatus()
     elif ch == 's':
       print("Serial No: %s" % usb1608G.getSerialNumber())
