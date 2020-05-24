@@ -356,7 +356,7 @@ class usb1608G(mccUSB):
       frequency = 500000.
 
     self.frequency = frequency
-    self.options = options & 0ff
+    self.options = options & 0xff
     if count == 0:
       self.continuous_mode = True
     else:
@@ -409,13 +409,33 @@ class usb1608G(mccUSB):
   
 
   ##########################################
-  #             Timer Commands             #
+  #         Counter/Timer Commands         #
   ##########################################
 
-  def TimerControlR(self, timer):
+  def CounterInit(self, counter):
+    """
+    This command initializes the 32-bit event counter.  On a write,
+    the specified counter (0 or 1) will be reset to zero.
+    """
+    requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = counter & 0x1
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, self.COUNTER, wValue, wIndex, [0x0], timeout = 100)
+
+  def Counter(self, counter):
+    """
+    This command reads the 32-bit event counter.  
+    """
+    requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+    wValue = 0
+    wIndex = 0
+    data, = unpack('II',self.udev.controlRead(request_type, self.COUNTER, wValue, wIndex, 8, self.HS_DELAY))
+    return data[counter & 0x1]
+
+  def TimerControlR(self):
+
     """
     This command reads/writes the timer control register
-      timer:     the timer selected (0-3)
       control:   bit 0:    1 = enable timer,  0 = disable timer
                  bit 1:    1 = timer running, 0 = timer stopped
                           (read only, useful when using count)
@@ -423,95 +443,75 @@ class usb1608G(mccUSB):
                            0 = normal output (active high)
                  bits 3-7: reserved
     """
-    if timer > self.NTIMER:
-      raise ValueError('TimerControlR: timer out of range')
-      return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
-    wIndex = timer
+    wIndex = 0
     data, = self.udev.controlRead(request_type, self.TIMER_CONTROL, wValue, wIndex, 1, self.HS_DELAY)
-    self.timerParameters[timer].control = data
+    self.timerParameters.control = data
     return data
 
   def TimerControlW(self, timer, control):
-    if timer > self.NTIMER:
-      raise ValueError('TimerControlW: timer out of range')
-      return
-
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_CONTROL
     wValue = control
-    wIndex = timer
+    wIndex = 0
     self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], self.HS_DELAY)
 
-  def TimerPeriodR(self, timer):
+  def TimerPeriodR(self):
     """
-    This command reads or writes the given timer period register.
+    This command reads or writes the timer period register.
 
-    The timer is based on a 96 MHz input clock and has a 32-bit period register. The
+    The timer is based on a 64 MHz input clock and has a 32-bit period register. The
     frequency of the output is set to:
 
-    frequency = 96 MHz / (period + 1)
+    frequency = 64 MHz / (period + 1)
 
     Note that the value for pulseWidth should always be smaller than the value for
     the period register or you may get unexpected results.  This results in a minimum
-    allowable value for the period of 1, which sets the maximum frequency to 96 MHz/2.
+    allowable value for the period of 1, which sets the maximum frequency to 64 MHz/2.
     """
-    if timer > self.NTIMER:
-      raise ValueError('TimerPeriodR: timer out of range')
-      return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
-    wIndex = timer
+    wIndex = 0
     period ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PERIOD, wValue, wIndex, 4, self.HS_DELAY))
-    self.timerParameters[timer].period = period
+    self.timerParameters.period = period
     return period
 
-  def TimerPeriodW(self, timer, period):
-    if timer > self.NTIMER:
-      raise ValueError('TimerPeriodW: timer out of range')
-      return
-
+  def TimerPeriodW(self, period):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PERIOD
     wValue = 0x0
-    wIndex = timer
+    wIndex = 0x0
     period = pack('I', period)
     self.udev.controlWrite(request_type, request, wValue, wIndex, period, self.HS_DELAY)
 
-  def TimerPulseWidthR(self, timer):
+  def TimerPulseWidthR(self):
     """
     This command reads/writes the timer pulse width register.
-    The timer is based on a 96 MHz input clock and has a 32-bit pulse width register.
+    The timer is based on a 64 MHz input clock and has a 32-bit pulse width register.
     The width of the output pulse is set to:
 
-    pulse width = (pulseWidth + 1) / 96 MHz
+    pulse width = (pulseWidth + 1) / 64 MHz
 
     Note that the value for pulseWidth should always be smaller than the value for
     the period register or you may get unexpected results.
     """
-    if timer > self.NTIMER:
-      raise ValueError('TimerPulseWidthR: timer out of range')
-      return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0
-    wIndex = timer
+    wValue = 0x0
+    wIndex = 0x0
     pulse_width ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PULSE_WIDTH, wValue, wIndex, 4, self.HS_DELAY))
-    self.timerParameters[timer].pulseWidth = pulse_width
+    self.timerParameters.pulseWidth = pulse_width
     return pulse_width
 
-  def TimerPulseWidthW(self, timer, pulse_width):
-    if timer > self.NTIMER:
-      raise ValueError('TimerPulseWidthW: timer out of range')
-      return
+  def TimerPulseWidthW(self, pulse_width):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PULSE_WIDTH
     wValue = 0x0
-    wIndex = timer
+    wIndex = 0x0
     pulse_width = pack('I', pulse_width)
     self.udev.controlWrite(request_type, request, wValue, wIndex, pulse_width, self.HS_DELAY)
     
-  def TimerCountR(self, timer):
+  def TimerCountR(self):
     """
     This command reads/writes the timer count register.
     The number of output pulses can be controlled with the count register.  Setting
@@ -519,30 +519,23 @@ class usb1608G(mccUSB):
     Setting it to a non-zero value will results in the specified number of pulses being
     generated then the output will go low until the timer is disabled.
     """
-    if timer > self.NTIMER:
-      raise ValueError('TimerCountR: timer out of range')
-      return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0
-    wIndex = timer
+    wValue = 0x0
+    wIndex = 0x0
     count ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_COUNT, wValue, wIndex, 4, self.HS_DELAY))
-    self.timerParameters[timer].count = count
+    self.timerParameters.count = count
     return count
 
-  def TimerCountW(self, timer, count):
-    if timer > self.NTIMER:
-      raise ValueError('TimerCountW: timer out of range')
-      return
-
+  def TimerCountW(self, count):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_COUNT
     wValue = 0x0
-    wIndex = timer
+    wIndex = 0x0
     count = pack('I', count)
     self.udev.controlWrite(request_type, request, wValue, wIndex, count, self.HS_DELAY)
     return count
 
-  def TimerStartDelayR(self, timer):
+  def TimerStartDelayR(self):
     """
     This command reads/writes the timer start delay register.  This
     register is the amount of time to delay before starting the timer
@@ -550,25 +543,18 @@ class usb1608G(mccUSB):
     of 64 MHZ clock pulses to delay.  This value may not be written
     while the timer output is enabled.
     """
-    if timer > self.NTIMER:
-      raise ValueError('TimerStartDelayR: timer out of range')
-      return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0
-    wIndex = timer
+    wValue = 0x0
+    wIndex = 0x0
     delay ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_START_DELAY, wValue, wIndex, 4, self.HS_DELAY))
-    self.timerParameters[timer].delay = delay
+    self.timerParameters.delay = delay
     return delay
 
-  def TimerStartDelayW(self, timer, delay):
-    if timer > self.NTIMER:
-      raise ValueError('TimerStartDelayW: timer out of range')
-      return
-
+  def TimerStartDelayW(self, delay):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_START_DELAY
     wValue = 0x0
-    wIndex = timer
+    wIndex = 0x0
     delay = pack('I', delay)
     self.udev.controlWrite(request_type, request, wValue, wIndex, delay, self.HS_DELAY)
 
@@ -578,31 +564,24 @@ class usb1608G(mccUSB):
     See the individual command descriptions for futher information
     on each parameter.
     """
-    if timer > self.NTIMER:
-      raise ValueError('TimerParamsR: timer out of range')
-      return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0
-    wIndex = timer
+    wValue = 0x0
+    wIndex = 0x0
     data = unpack('IIII', self.udev.controlRead(request_type, self.TIMER_PARAMETERS, wValue, wIndex, 16, self.HS_DELAY))
-    self.timerParameters[timer].period = data[0]
-    self.timerParameters[timer].pulseWidth = data[1]
-    self.timerParameters[timer].count = data[2]
-    self.timerParameters[timer].delay = data[3]
-    self.TimerControlW(timer, self.timerParameters[timer].control)
+    self.timerParameters.period = data[0]
+    self.timerParameters.pulseWidth = data[1]
+    self.timerParameters.count = data[2]
+    self.timerParameters.delay = data[3]
+    self.TimerControlW(self.timerParameters.control)
     return 
 
   def TimerParamsW(self, timer):
-    if timer > self.NTIMER:
-      raise ValueError('TimerParamsW: timer out of range')
-      return
-
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_START_DELAY
     wValue = 0x0
-    wIndex = timer
-    barray = pack('IIII', self.timerParameters[timer].period, self.timerParameters[timer].pulseWidth, \
-                  self.timerParameters[timer].count, self.timerParameters[timer].delay)
+    wIndex = 0x0
+    barray = pack('IIII', self.timerParameters.period, self.timerParameters.pulseWidth, \
+                  self.timerParameters.count, self.timerParameters.delay)
     self.udev.controlWrite(request_type, request, wValue, wIndex, barray, self.HS_DELAY)
 
   ##########################################
@@ -893,3 +872,164 @@ class usb_1608GX_2AO(usb1608G):
     for chan in range(2):
       self.table_AOut[chan].slope, = unpack('f', self.MemoryR(4))
       self.table_AOut[chan].intercept, = unpack('f', self.MemoryR(4))
+
+  #############################################
+  #           Analog Output                   #
+  #############################################
+
+  def AOut(self, channel, voltage):
+    """
+    This command reads or writes the values for the analog output
+    channels.  The values are 16-bit unsigned numbers.  Both read and
+    write will result in a vontrol pipe stall if an output scan is
+    running
+
+
+    channel: the channel number to update (0-1)
+    value:   the value for the analog output channel (0-65535)
+
+    The equation for the output voltage is:
+
+              (value - 2^15)
+    V_out =  ---------------- * V_ref
+                 2^15
+
+    where value is the value written to the device.  V_ref = 10V
+    """
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wIndex = channel & 0x1
+
+    if channel > 2:
+      raise ValueError('AOut: channel out of range')
+      return
+
+    value = voltage/10.*32768. + 32768.
+    value = value*self.table_AOut[channel].slope + self.tabl_AOut[channel].intercept
+
+    if int(value) > 0xffff:
+      wValue = 0xffff
+    elif value < 0.0:
+      wValue = 0x0
+    else:
+      wValue = int(round(value))
+          
+    result = self.udev.controlWrite(request_type, self.AOUT, wValue, wIndex, [0x0], timeout = 100)
+
+  def AOutR(self, channel):
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0x0
+    wIndex = 0x0
+    value ,= unpack('HH',self.udev.controlRead(request_type, self.AOUT, wValue, wIndex, 4, timeout = 100))
+    voltage = (value[channel] - self.table_AOut[channel].intercept) / table_AOut[channel].slope
+    voltage = (voltage - 32768)*10./32768.
+    return voltage
+
+  def AOutScanStart(self, count, retrig_count, frequency, options):
+    """
+    This command starts the analog output channel scan.  This command
+    will result in a bus stall if an AOutScan is currently running.
+
+    count:        the total number of scans to perform (0 = continuous mode)
+    retrig_count: the number of scans to perform for each trigger in
+                  retrigger mode
+    frequency:    pacer frequency (0 for AO_CLK_IN)
+    options:      bit 0: 1 = include channel 0 in output scan
+                  bit 1: 1 = include channel 1 in output scan
+                  bit 2: 1 = reserved
+                  bit 3: 1 = reserved
+                  bit 4: 1 = use trigger
+                  bit 5: 1 = retirgger mode, 0 = normal trigger
+		  bit 6: reserved
+		  bit 7: reserved
+    Notes:
+		  
+    The output scan operates with the host continuously transferring
+    data for the outputs until the end of the scan.  If the "count"
+    parameter is 0, the scan will run until the AOutScanStop command
+    is issued by the host; if it is nonzero, the scan will stop
+    automatically after the specified number of scans have been
+    output.  The channels in the scan are selected in the options bit
+    field.  Scan refer to the number of updates to the channels (if
+    both channels are used, one scan is an update to both channels).
+
+    The time base is controlled by an internal 32-bit timer running at
+    a base rate of 64 MHz.  The timer is controlled by pacer_period.  
+    The equation for calculating pacer_period is:
+
+        pacer_period = (64 MHz / sample_frequency) - 1
+
+    The same time base is used for all channels when the scan involved
+    multiple channels.  The output data is to be sent using the bulk
+    out endpoint.  The data must be in the format:
+
+      low channel sample 0 : [high channel sample 0]
+      low channel sample 1 : [high channel sample 1]
+      ...
+      low channel sample n : [high channel sample n]
+
+    The output is written to an internal FIFO.  The bulk endpoint data
+    is only accepted if there is room in the FIFO.  Output data bay be
+    sent to the FIFO before the start of the scan, and the FIFO is
+    cleared when the AOutScanClearFIFO command is received.  The scan
+    will not begin until the AOutScanStart command is sent (and outupt
+    data is in the FIFO).  Data will be output until reaching the
+    specified number of scans (in single execution mode) or an
+    AOutScanStrop command is sent.
+    """
+
+    if frequency <= 0.:
+      raise ValueError('AOutScanStart: frequency must be positive')
+      return
+    elif frequency > 50000:
+      raise ValueError('AOutScanStart: frequency must be less than 50 kHz')
+      return
+    else:
+      pacer_period = round((64.E6 / frequency) - 1)
+
+    self.frequency_AOut = frequency
+    self.options_AOut = options
+    self.count_AOut = count
+    if count == 0:
+      self.continuous_mode_AOUT = True
+    else:
+      self.continuous_mode_AOUT = False
+    self.retrig_count = regrig_count
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    scanPacket = pack('IIIB', count, retrig_count, pacer_period, options)
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
+
+  def AOutScanWrite(self, data):
+    # data is a list of unsigned 16 bit numbers
+    value = [0]*len(data)*2
+    timeout = int(200 + 1000*len(data)/self.frequency_AOut)
+
+    for i in range(len(data)):
+      value[2*i] = data[i] & 0xff
+      value[2*i+1] = (data[i] >> 8) & 0xff
+    try:
+      result = self.udev.bulkWrite(2, value, timeout)
+    except:
+      print('AOutScanWrite: error in bulkWrite')
+      return
+    
+  def AOutScanStop(self):
+    """
+    This command stops the analog output scan (if running).
+    """
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0x0
+    wIndex = 0x0
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_STOP, wValue, wIndex, [0x0], timeout = 100)
+
+  def AOutScanClearFIFO(self):
+    """
+    The command clears the internal scan endoint FIFOs
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    wValue = 0x0
+    wIndex = 0x0
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CLEAR_FIFO, wValue, wIndex, [0x0], timeout = 100)
+

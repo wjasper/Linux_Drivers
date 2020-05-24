@@ -38,10 +38,11 @@ def main():
     return
 
 # print out the calibration tables
+  print('Calibration Table:')
   for gain in range(usb1608G.NGAIN):
-    print('Calibration Table (Differential):  Range = ',gain, \
-          'Slope = ',format(usb1608G.table_AIn[gain].slope,'.5f'),\
-          'Intercept = ',format(usb1608G.table_AIn[gain].intercept,'5f'))
+    print('  Range =',gain, \
+          'Slope =',format(usb1608G.table_AIn[gain].slope,'.5f'),\
+          'Intercept =',format(usb1608G.table_AIn[gain].intercept,'5f'))
 
   # print last known calibration date:
   # mdate = usb1608G.CalDate()

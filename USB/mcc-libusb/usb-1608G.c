@@ -614,7 +614,7 @@ void usbAOut_USB1608GX_2AO(libusb_device_handle *udev, uint8_t channel, double v
     output voltage is:
 
              ( value - 2^15 )
-    V_out = -----------------   * V_ref
+    V_out = -----------------  * V_ref
                  2^15
 
      were value is the value written to the channel and V_ref = 10.0V.
@@ -681,8 +681,8 @@ void usbAOutScanStart_USB1608GX_2AO(libusb_device_handle *udev, uint32_t count, 
     frequency:    pacer frequency (0 for AO_CLK_IN)
     options:      bit 0: 1 = include channel 0 in output scan
                   bit 1: 1 = include channel 1 in output scan
-                  bit 2: 1 = include channel 2 in output scan
-                  bit 3: 1 = include channel 3 in output scan
+                  bit 2: reserved
+                  bit 3: reserved
                   bit 4: 1 = use trigger
                   bit 5: 1 = retirgger mode, 0 = normal trigger
 		  bit 6: reserved
@@ -696,8 +696,32 @@ void usbAOutScanStart_USB1608GX_2AO(libusb_device_handle *udev, uint32_t count, 
     automatically after the specified number of scans have been
     output.  The channels in the scan are selected in the options bit
     field.  Scan refer to the number of updates to the channels (if
-    both channels are used, one scan is n update to both channels).
-  */
+    both channels are used, one scan is an update to both channels).
+
+    The time base is controlled by an internal 32-bit timer running at
+    a base rate of 64 MHz.  The timer is controlled by pacer_period.  
+    The equation for calculating pacer_period is:
+
+        pacer_period = (64 MHz / sample_frequency) - 1
+
+    The same time base is used for all channels when the scan involved
+    multiple channels.  The output data is to be sent using the bulk
+    out endpoint.  The data must be in the format:
+
+      low channel sample 0 : [high channel sample 0]
+      low channel sample 1 : [high channel sample 1]
+      ...
+      low channel sample n : [high channel sample n]
+
+    The output is written to an internal FIFO.  The bulk endpoint data
+    is only accepted if there is room in the FIFO.  Output data bay be
+    sent to the FIFO before the start of the scan, and the FIFO is
+    cleared when the AOutScanClearFIFO command is received.  The scan
+    will not begin until the AOutScanStart command is sent (and outupt
+    data is in the FIFO).  Data will be output until reaching the
+    specified number of scans (in single execution mode) or an
+    AOutScanStrop command is sent.
+  */  
 
   struct AOutScan_t {
     uint32_t count;         // The total number of scans to perform.  0 = run forever.
