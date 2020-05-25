@@ -36,8 +36,10 @@ class usb1608G(mccUSB):
   BP_2V    = 0x2       # +/- 2.00 V
   BP_1V    = 0x3       # +/- 1.25 V
 
+  # Analog input mode
   SINGLE_ENDED = 1  # channels 0 - 15
   DIFFERENTIAL = 0  # channels 0 - 7
+  LAST_CHANNEL = 0x80
 
   # Status Bits
   AIN_SCAN_RUNNING   = 0x2   # AIn pacer running
@@ -104,8 +106,10 @@ class usb1608G(mccUSB):
 
   def __init__(self):
     self.packet_size = 512
-    self.status = 0
+    self.status = 0                    # status of the device
     self.samplesToRead = -1            # number of bytes left to read from a scan
+    self.scanList = bytearray(15)      # depth of scan queue is 15
+    self.lastElement = 0               # last element of the scan list
 
     # Configure the FPGA
     if not (self.Status() & self.FPGA_CONFIGURED) :
@@ -275,7 +279,7 @@ class usb1608G(mccUSB):
     value = data
     return value
 
-  def AInScanStart(self, count, frequency, channels, options):
+  def AInScanStart(self, count, retrig_count, frequency, options):
     """
     This command starts the analog input channel scan.  The gain
     ranges that are currently set on the desired channels will be
@@ -372,8 +376,8 @@ class usb1608G(mccUSB):
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_STOP
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
 
   def AInConfigR(self):
@@ -395,7 +399,57 @@ class usb1608G(mccUSB):
       bit 7:  Last Channel
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
-  
+    wValue = 0
+    wIndex = 0
+    value = self.udev.controlRead(request_type, self.AIN_SCAN_CONFIG, wValue, wIndex, 15, self.HS_DELAY)
+    for i in range(len(value)):
+      self.scanList[i] = value[i]
+      if value[i] & self.LAST_CHANNEL:
+        self.lastElement = i  # depth of queue
+    return
+
+  def AInConfigW(self, entry, channel, gain, mode, lastElement=False):
+    """
+    entry:    channel entry in the queue (0 - 15)
+    channel:  channel number (Differential: 0-7, Single Ended: 0-15)
+    gain:     range  ( 0:+/- 10V,  1: +/- 5V, 2: +/- 1V, 3: +/- 1V)
+    lastElement: Set to True is last element in the queue
+    """
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request = self.AIN_SCAN_CONFIG
+    wValue = 0
+    wIndex = 0
+
+    if entry < 0 or entry > 15:
+      raise ValueError('AInConfigW: Exceed depth of queue')
+      return
+
+    if mode == DIFFERENTIAL:
+      if  channel > 7:
+        raise ValueError('AInConfigW: Exceed number of channels in differential mode')
+      else:
+        self.scanList[entry] = (gain & 0x3) << 3 | (channel & 0x7)
+    else:         # single ended mode
+      if channel > 15:
+        raise ValueError('AInConfigW: Exceed number of channels in single ended mode')
+      elif channel > 7:
+        self.scanList[entry] = (0x1 << 6) | (gain & 0x3) << 3 | (channel & 0x7)
+      else:
+        self.scanList[entry] = (0x1 << 5) | (gain & 0x3) << 3 | (channel & 0x7)
+
+    if lastElement == True:
+      self.lastElement = entry
+      self.scanList[entry] &= self.LAST_CHANNEL
+
+    if self.Status() & self.AIN_SCAN_RUNNING:
+      self.AInScanStop()
+
+    try:
+      result = self.udev.controlWrite(request_type, request, wValue, wIndex, self.scanList, self.HS_DELAY)
+    except:
+      print('AInConfigW: errir in control Write result =', result)
+      return
     
   def AInScanClearFIFO(self):
     """
@@ -403,8 +457,8 @@ class usb1608G(mccUSB):
     """
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
     request = self.AIN_SCAN_CLEAR_FIFO
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
   
 
@@ -480,8 +534,8 @@ class usb1608G(mccUSB):
   def TimerPeriodW(self, period):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PERIOD
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     period = pack('I', period)
     self.udev.controlWrite(request_type, request, wValue, wIndex, period, self.HS_DELAY)
 
@@ -497,8 +551,8 @@ class usb1608G(mccUSB):
     the period register or you may get unexpected results.
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     pulse_width ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PULSE_WIDTH, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters.pulseWidth = pulse_width
     return pulse_width
@@ -506,8 +560,8 @@ class usb1608G(mccUSB):
   def TimerPulseWidthW(self, pulse_width):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PULSE_WIDTH
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     pulse_width = pack('I', pulse_width)
     self.udev.controlWrite(request_type, request, wValue, wIndex, pulse_width, self.HS_DELAY)
     
@@ -520,8 +574,8 @@ class usb1608G(mccUSB):
     generated then the output will go low until the timer is disabled.
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     count ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_COUNT, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters.count = count
     return count
@@ -529,8 +583,8 @@ class usb1608G(mccUSB):
   def TimerCountW(self, count):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_COUNT
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     count = pack('I', count)
     self.udev.controlWrite(request_type, request, wValue, wIndex, count, self.HS_DELAY)
     return count
@@ -544,8 +598,8 @@ class usb1608G(mccUSB):
     while the timer output is enabled.
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     delay ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_START_DELAY, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters.delay = delay
     return delay
@@ -553,8 +607,8 @@ class usb1608G(mccUSB):
   def TimerStartDelayW(self, delay):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_START_DELAY
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     delay = pack('I', delay)
     self.udev.controlWrite(request_type, request, wValue, wIndex, delay, self.HS_DELAY)
 
@@ -565,8 +619,8 @@ class usb1608G(mccUSB):
     on each parameter.
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     data = unpack('IIII', self.udev.controlRead(request_type, self.TIMER_PARAMETERS, wValue, wIndex, 16, self.HS_DELAY))
     self.timerParameters.period = data[0]
     self.timerParameters.pulseWidth = data[1]
@@ -578,8 +632,8 @@ class usb1608G(mccUSB):
   def TimerParamsW(self, timer):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_START_DELAY
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     barray = pack('IIII', self.timerParameters.period, self.timerParameters.pulseWidth, \
                   self.timerParameters.count, self.timerParameters.delay)
     self.udev.controlWrite(request_type, request, wValue, wIndex, barray, self.HS_DELAY)
@@ -609,8 +663,8 @@ class usb1608G(mccUSB):
   def MemoryW(self, data):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.MEMORY
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     self.udev.controlWrite(request_type, request, wValue, wIndex, data, self.HS_DELAY)
 
   def MemAddressR(self):
@@ -639,8 +693,8 @@ class usb1608G(mccUSB):
   def MemAddressW(self, address):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.MEM_ADDRESS
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     barray = [address & 0xff, (address >> 8) & 0xff]
     self.udev.controlWrite(request_type, request, wValue, wIndex, barray, self.HS_DELAY)
 
@@ -652,8 +706,8 @@ class usb1608G(mccUSB):
     """
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.MEM_WRITE_ENABLE
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     unlock_code = 0xad
     self.udev.controlWrite(request_type, request, wValue, wIndex, [unlock_code], self.HS_DELAY)
 
@@ -678,8 +732,8 @@ class usb1608G(mccUSB):
     """
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.BLINK_LED
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     self.udev.controlWrite(request_type, request, wValue, wIndex, [count], self.HS_DELAY)
 
   def Reset(self):
@@ -689,8 +743,8 @@ class usb1608G(mccUSB):
     """
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.RESET
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], self.HS_DELAY)
 
   def TriggerConfig(self, options):
@@ -712,28 +766,44 @@ class usb1608G(mccUSB):
 
   def TriggerConfigR(self):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     value ,= unpack('B',self.udev.controlRead(request_type, self.TRIGGER_CONFIG, wValue, wIndex, 1, self.HS_DELAY))
     return value
 
+  def Temperature(self):
+
+    """
+    The command reads the internal temperature.  The temperature
+    (degrees C) is calculated as:
+
+        T = reading / 2^15 * 128
+    """
+    
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = 0
+    value ,= unpack('h',self.udev.controlRead(request_type, self.TEMPERATURE, wValue, wIndex, 2, self.HS_DELAY))
+    return value/256.
+
   def GetSerialNumber(self):
+
     """
     This commands reads the device USB serial number.  The serial
     number consists of 8 bytes, typically ASCII numeric or hexadecimal digits
     (i.e. "00000001").
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     value = self.udev.controlRead(request_type, self.SERIAL, wValue, wIndex, 8, self.HS_DELAY)
     return value.decode()
 
   def WriteSerialNumber(self, serial):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.SERIAL
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     barray = bytearray(8)
     for i in range(8):
       barray[i] = ord(serial[i])
@@ -760,8 +830,8 @@ class usb1608G(mccUSB):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.FPGA_CONFIG
     unlock_code = 0xad
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     self.udev.controlWrite(request_type, request, wValue, wIndex, [unlock_code], self.HS_DELAY)
 
   def FPGAData(self, data):
@@ -778,8 +848,8 @@ class usb1608G(mccUSB):
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.FPGA_DATA
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     self.udev.controlWrite(request_type, request, wValue, wIndex, data, self.HS_DELAY)
 
   def FPGAVersion(self):
@@ -788,8 +858,8 @@ class usb1608G(mccUSB):
     hexadecimal BCD, i.e. 0x0102 is version 01.02.
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     version ,= unpack('H',self.udev.controlRead(request_type, self.FPGA_VERSION, wValue, wIndex, 2, self.HS_DELAY))
     return "{0:02x}.{1:02x}".format((version>>8)&0xff, version&0xff)
 
@@ -910,7 +980,7 @@ class usb_1608GX_2AO(usb1608G):
     if int(value) > 0xffff:
       wValue = 0xffff
     elif value < 0.0:
-      wValue = 0x0
+      wValue = 0
     else:
       wValue = int(round(value))
           
@@ -918,8 +988,8 @@ class usb_1608GX_2AO(usb1608G):
 
   def AOutR(self, channel):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     value ,= unpack('HH',self.udev.controlRead(request_type, self.AOUT, wValue, wIndex, 4, timeout = 100))
     voltage = (value[channel] - self.table_AOut[channel].intercept) / table_AOut[channel].slope
     voltage = (voltage - 32768)*10./32768.
@@ -1020,8 +1090,8 @@ class usb_1608GX_2AO(usb1608G):
     """
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     result = self.udev.controlWrite(request_type, self.AOUT_SCAN_STOP, wValue, wIndex, [0x0], timeout = 100)
 
   def AOutScanClearFIFO(self):
@@ -1029,7 +1099,7 @@ class usb_1608GX_2AO(usb1608G):
     The command clears the internal scan endoint FIFOs
     """
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
-    wValue = 0x0
-    wIndex = 0x0
+    wValue = 0
+    wIndex = 0
     result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CLEAR_FIFO, wValue, wIndex, [0x0], timeout = 100)
 
