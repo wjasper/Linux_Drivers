@@ -55,6 +55,8 @@ class usb1608G(mccUSB):
   NGAIN = 4                  # max number of gain levels
   MAX_PACKET_SIZE_HS = 512   # max packet size for HS device
   MAX_PACKET_SIZE_FS = 64    # max packet size for HS device
+  COUNTER0           = 0
+  COUNTER1           = 1
 
   # Commands and Codes for USB1608G
   DTRISTATE           = 0x00  # Read/write digital port tristate register
@@ -94,7 +96,7 @@ class usb1608G(mccUSB):
   RESET                = 0x42  # Reset the device
   TRIGGER_CONFIG       = 0x43  # External trigger configuration
   CAL_CONFIG           = 0x44  # Calibration voltage configuration
-  INTERNAL_TEMP        = 0x45  # Read internal temperature
+  TEMPERATURE          = 0x45  # Read internal temperature
   SERIAL               = 0x48  # Read/Write USB Serial Number
 
   # FPGA Configuration Commands
@@ -188,7 +190,6 @@ class usb1608G(mccUSB):
 
     mdate = datetime(year, month, day, hour, minute, second)
     return mdate
-
 
   ##############################################
   #           Digital I/O  Commands            #
@@ -471,19 +472,19 @@ class usb1608G(mccUSB):
     This command initializes the 32-bit event counter.  On a write,
     the specified counter (0 or 1) will be reset to zero.
     """
-    requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = counter & 0x1
     wIndex = 0
     result = self.udev.controlWrite(request_type, self.COUNTER, wValue, wIndex, [0x0], timeout = 100)
 
   def Counter(self, counter):
     """
-    This command reads the 32-bit event counter.  
+    This command reads the 32-bit event counters.  
     """
-    requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
     wValue = 0
     wIndex = 0
-    data, = unpack('II',self.udev.controlRead(request_type, self.COUNTER, wValue, wIndex, 8, self.HS_DELAY))
+    data = unpack('II',self.udev.controlRead(request_type, self.COUNTER, wValue, wIndex, 8, self.HS_DELAY))
     return data[counter & 0x1]
 
   def TimerControlR(self):
@@ -772,7 +773,6 @@ class usb1608G(mccUSB):
     return value
 
   def Temperature(self):
-
     """
     The command reads the internal temperature.  The temperature
     (degrees C) is calculated as:
@@ -926,6 +926,7 @@ class usb_1608GX_2AO(usb1608G):
   AOUT_SCAN_START      = 0x1A  # Start analog output scan
   AOUT_SCAN_STOP       = 0x1B  # Stop analog output scan
   AOUT_SCAN_CLEAR_FIFO = 0x1C  # Clear the analog output scan FIFO
+  NCHAN_AO             = 2     # Number of analog output channels
 
   def __init__(self, serial=None):
     self.productID = self.USB_1608GX_2AO_PID   # usb-1608GX_2AO
