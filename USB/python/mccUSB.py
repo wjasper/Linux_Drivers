@@ -60,6 +60,16 @@ class table:
     self.slope = 0.0
     self.intercept = 0.0
 
+# Base class for timer parameters
+class TimerParameters:
+  def __init__(self):
+    self.timer = 0
+    self.period = 0
+    self.pulseWidth = 0
+    self.count = 0
+    self.dely = 0
+    self.control = 0x0
+
 class mccUSB:
   def __init__(self):
     pass

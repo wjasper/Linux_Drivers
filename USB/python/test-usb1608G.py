@@ -124,7 +124,23 @@ def main():
       print("Internal temperature = %.2f deg C or %.2f deg " % (usb1608G.Temperature(), usb1608G.Temperature()*9./5. + 32.))
     elif ch == 'v':
       print("FPGA version %s" % (usb1608G.FPGAVersion()))
-
+    elif ch == 't':
+      frequency = int(input('Enter frequency of timer: '))
+      period = 64.E6/frequency  - 1.
+      usb1608G.TimerPeriodW(period)
+      usb1608G.TimerPulseWidthW(period / 2)
+      usb1608G.TimerCountW(0)
+      usb1608G.TimerStartDelayW(0)
+      usb1608G.TimerControlW(0x1)
+      toContinue()
+      usb1608G.TimerControlW(0x0)
+#      usb1608G.TimerParamsR()
+      print("Timer:", usb1608G.timerParameters.timer, \
+            "  Control Reg:",hex(usb1608G.TimerControlR()), \
+            "\tPeriod Reg:",hex(usb1608G.TimerPeriodR()), \
+            "\tPulse Width Reg:",hex(usb1608G.TimerPulseWidthR()), \
+            "    \tCount Reg:",hex(usb1608G.TimerCountR()), \
+            "    \tDelay Reg:",hex(usb1608G.TimerStartDelayR()))
 
 if __name__ == "__main__":
   main()

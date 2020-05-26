@@ -145,6 +145,9 @@ class usb1608G(mccUSB):
     # Find the maxPacketSize for bulk transfers
     self.wMaxPacketSize = self.getMaxPacketSize(libusb1.LIBUSB_ENDPOINT_IN | 0x6)  #EP IN 6
 
+    # Set up the Timers
+    self.timerParameters = TimerParameters()
+
     # Build a lookup table of calibration coefficients to translate values into voltages:
     # The calibration coefficients are stored in the onboard FLASH memory on the device in
     # IEEE-754 4-byte floating point values.
@@ -505,7 +508,7 @@ class usb1608G(mccUSB):
     self.timerParameters.control = data
     return data
 
-  def TimerControlW(self, timer, control):
+  def TimerControlW(self, control):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_CONTROL
     wValue = control
@@ -535,8 +538,9 @@ class usb1608G(mccUSB):
   def TimerPeriodW(self, period):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PERIOD
-    wValue = 0
-    wIndex = 0
+    period = int(period)
+    wValue = period & 0xffff
+    wIndex = (period >> 16) & 0xffff
     period = pack('I', period)
     self.udev.controlWrite(request_type, request, wValue, wIndex, period, self.HS_DELAY)
 
@@ -561,9 +565,10 @@ class usb1608G(mccUSB):
   def TimerPulseWidthW(self, pulse_width):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PULSE_WIDTH
-    wValue = 0
-    wIndex = 0
-    pulse_width = pack('I', pulse_width)
+    pulse_width = int(pulse_width)
+    wValue = pulse_width & 0xffff
+    wIndex = (pulse_width >> 16) & 0xffff
+    pulse_width = pack ('I', pulse_width)
     self.udev.controlWrite(request_type, request, wValue, wIndex, pulse_width, self.HS_DELAY)
     
   def TimerCountR(self):
@@ -584,8 +589,9 @@ class usb1608G(mccUSB):
   def TimerCountW(self, count):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_COUNT
-    wValue = 0
-    wIndex = 0
+    count = int(count)
+    wValue = count & 0xffff
+    wIndex = (count >> 16) & 0xffff
     count = pack('I', count)
     self.udev.controlWrite(request_type, request, wValue, wIndex, count, self.HS_DELAY)
     return count
@@ -595,7 +601,7 @@ class usb1608G(mccUSB):
     This command reads/writes the timer start delay register.  This
     register is the amount of time to delay before starting the timer
     output after enabling the output.  The value specifies the number
-    of 64 MHZ clock pulses to delay.  This value may not be written
+    of 40 MHZ clock pulses to delay.  This value may not be written
     while the timer output is enabled.
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -608,12 +614,13 @@ class usb1608G(mccUSB):
   def TimerStartDelayW(self, delay):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_START_DELAY
-    wValue = 0
-    wIndex = 0
+    delay = int(delay)
+    wValue = delay & 0xffff
+    wIndex = (delay >> 16) & 0xffff
     delay = pack('I', delay)
     self.udev.controlWrite(request_type, request, wValue, wIndex, delay, self.HS_DELAY)
 
-  def TimerParamsR(self, timer):
+  def TimerParamsR(self):
     """
     This command reads/writes all timer parameters in one call.
     See the individual command descriptions for futher information
