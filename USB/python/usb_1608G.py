@@ -165,33 +165,19 @@ class usb1608G(mccUSB):
   def CalDate(self):
     """
     get the manufacturers calibration data (timestamp) from the
-    Calibration memory
+    Calibration memory.
+
+    Note: The calibration date is stored in the EEPROM
+    starting at address 0x7098.  The six date elements
+    (year, month, day, hour, minute, second) are stored
+    as big endian unsigned short.
     """
 
-    # get the year (since 2000)
-    address = 0x7098
+    address = 0x7098   # staring address of the MFG calibration date
     self.MemAddressW(address)
-    data ,= unpack('B', self.MemoryR(1))
-    year  = 100+data
 
-    # get the month
-    month ,= unpack('B', self.MemoryR(1))
-    month -= 1
-    print(month)
-
-    # get the day
-    day ,= unpack('B', self.MemoryR(1))
-
-    # get the hour
-    hour ,= unpack('B', self.MemoryR(1))
-    
-    # get the minute
-    minute ,= unpack('B', self.MemoryR(1))
-
-    # get the second
-    second ,= unpack('B', self.MemoryR(1))
-
-    mdate = datetime(year, month, day, hour, minute, second)
+    data = unpack('>HHHHHH', self.MemoryR(12))  # 12 bytes big endian
+    mdate = datetime(data[0], data[1], data[2], data[3], data[4], data[5])
     return mdate
 
   ##############################################
@@ -262,7 +248,7 @@ class usb1608G(mccUSB):
   #        Analog Input Commands              #
   #############################################
 
-  def AIn(self, channel):
+  def AIn(self, channel, gain):
     """
     This command reads the value of an analog input channel.  This
     command will result in a bus stall if an AInScan is currently
@@ -274,14 +260,21 @@ class usb1608G(mccUSB):
 
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue =  channel
-    gain = self.gains[channel]
+    wIndex = 0
     
-    value ,= unpack('H',self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 2, timeout = 200))
+    if gain < 0 or gain >= self.NGAIN:
+      raise ValueError('AIn: Error in gain value')
+      return
+    
+    data ,= unpack('H',self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 2, timeout = 200))
 
-    data = round(float(value)*self.table_AIn[gain].slope + self.table_AIn[gain].intercept)
-
-    value = data
-    return value
+    if data > 0xfffd:
+      raise ValueError("DAC is saturated at +FS")
+    elif data < 0x60:
+      raise ValueError("DAC is saturated at -FS")
+    else:
+      data = round(float(data)*self.table_AIn[gain].slope + self.table_AIn[gain].intercept)
+      return data
 
   def AInScanStart(self, count, retrig_count, frequency, options):
     """
@@ -429,7 +422,7 @@ class usb1608G(mccUSB):
       raise ValueError('AInConfigW: Exceed depth of queue')
       return
 
-    if mode == DIFFERENTIAL:
+    if mode == self.DIFFERENTIAL:
       if  channel > 7:
         raise ValueError('AInConfigW: Exceed number of channels in differential mode')
       else:
@@ -444,7 +437,7 @@ class usb1608G(mccUSB):
 
     if lastElement == True:
       self.lastElement = entry
-      self.scanList[entry] &= self.LAST_CHANNEL
+      self.scanList[entry] |= self.LAST_CHANNEL
 
     if self.Status() & self.AIN_SCAN_RUNNING:
       self.AInScanStop()
@@ -452,8 +445,9 @@ class usb1608G(mccUSB):
     try:
       result = self.udev.controlWrite(request_type, request, wValue, wIndex, self.scanList, self.HS_DELAY)
     except:
-      print('AInConfigW: errir in control Write result =', result)
+      print('AInConfigW: error in control Write result =', result)
       return
+
     
   def AInScanClearFIFO(self):
     """

@@ -183,22 +183,28 @@ void usbInit_1608G(libusb_device_handle *udev, int version)
 
 void usbCalDate_USB1608G(libusb_device_handle *udev, struct tm *date)
 {
-  /* This command reads the factory calibration date */
+  /* This command reads the factory calibration date 
+     Note: The calibration date is stored in the EEPROM
+     starting at address 0x7098.  The six date elements
+     (year, month, day, hour, minute, second) are stored
+     as big endian unsigned short.
+*/
 
-  calibrationTimeStamp calDate;
+  uint8_t calDate[12];
   uint16_t address = 0x7098;  // beginning of MFG Calibration date
   time_t time;
 
   usbMemAddressW_USB1608G(udev, address);
   usbMemoryR_USB1608G(udev, (uint8_t *) &calDate, sizeof(calDate));
-  date->tm_year = calDate.year + 100;
-  date->tm_mon = calDate.month - 1;
-  date->tm_mday = calDate.day;
-  date->tm_hour = calDate.hour;
-  date->tm_min = calDate.minute;
-  date->tm_sec = calDate.second;
+  date->tm_year = ((calDate[0] << 8) | calDate[1]) - 1900;  // years since 1900
+  date->tm_mon = calDate[3] - 1;                            // month starts at 0
+  date->tm_mday = calDate[5];
+  date->tm_hour = calDate[7];
+  date->tm_min = calDate[9];
+  date->tm_sec = calDate[11]; 
   time = mktime(date);
   date = localtime(&time);
+  
 }
 
 /***********************************************

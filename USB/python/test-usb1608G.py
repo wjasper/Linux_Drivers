@@ -60,8 +60,8 @@ def main():
           'Intercept =',format(usb1608G.table_AIn[channel].intercept,'5f'))
 
   # print last known calibration date:
-  # mdate = usb1608G.CalDate()
-  # print('\nMFG Calibration date: ', mdate)
+  mdate = usb1608G.CalDate()
+  print('\nMFG Calibration date: ', mdate)
 
   print("wMaxPacketSize = ", usb1608G.wMaxPacketSize)
 
@@ -76,10 +76,9 @@ def main():
     print("Hit 'i' to test analog input. (differential)")
     print("Hit 'I' to test analog input scan.")
     if usb1608G.productID == usb1608G.USB_1608GX_2AO_PID:
-      print("Hit 'o'to test Analog Output")
+      print("Hit 'o' to test Analog Output")
       print("Hit 'O' to test Analog Output Scan")
     print("Hit 'M' for information.")
-    print("Hit 'p' to test Pulse Width Modulation")
     print("Hit 't' to test timers")
     print("Hit 'T' to get temperature")
     print("Hit 'r' to reset the device.")
@@ -106,6 +105,33 @@ def main():
         usb1608G.DLatchW(0x0)
         usb1608G.DLatchW(0x1)
       print("Count = %d.  Should read 100" % (usb1608G.Counter(counter)))
+    elif ch == 'd':
+      print("Testing Digital I/O ...")
+      print("connect pins DIO[0-3] <--> DIO[4-7]")
+      usb1608G.DTristateW(0xf0)
+      print("Digital Port Tristate Register = ", hex(usb1608G.DTristateR()))
+      while True:
+        value = int(input('Enter a byte number [0-0xf]: '),16) & 0xf
+        usb1608G.DLatchW(value)
+        value2 = usb1608G.DLatchR()
+        value3 = usb1608G.DPort() >> 4
+        print("The number you entered: ", hex(value3), "  Latched value: ", hex(value2))
+        if toContinue() != True:
+          break
+    elif ch == 'i':
+      channel = int(input('Enter channel number: '))
+      mode = int(input('Enter mode: 0 = Differential, 1 = Single Ended: '))
+      gain = int(input('Enter Gain: 0 = +/- 10V, 1 = +/- 5V, 2 = +/- 2V, 3 = +/- 1V: '))
+      usb1608G.AInConfigW(0, channel, gain, mode, lastElement=True)
+      while True:
+        try:
+          value = usb1608G.AIn(channel, gain)
+        except ValueError as e:
+          print(e)
+          break
+        print("AIn: %#x  volt = %f" % (value, usb1608G.volts(gain, value)))
+        if toContinue() != True:
+          break
     elif ch == 'M':
       print("Manufacturer: %s" % usb1608G.getManufacturer())
       print("Product: %s" % usb1608G.getProduct())
