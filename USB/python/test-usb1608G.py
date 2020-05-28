@@ -132,6 +132,74 @@ def main():
         print("AIn: %#x  volt = %f" % (value, usb1608G.volts(gain, value)))
         if toContinue() != True:
           break
+    elif ch == 'I':
+      print('Testing USB-1608G Multi-Channel Analog Input Scan.')
+      usb1608G.AInScanStop()
+      usb1608G.AInScanClearFIFO()
+      mode = int(input('Enter mode: 0 = Differential, 1 = Single Ended: '))
+      if mode == usb1608G.SINGLE_ENDED:
+        nChan = int(input('Enter number of channels 1-16: '))
+      else:
+        nChan = int(input('Enter number of channels 1-8: '))
+      nScans = int(input('Enter number of scans: '))
+      nRepeat = int(input('Enter nuber of repeats: '))
+      frequency = float(input('Enter sampling frequency [Hz]: '))
+      for channel in range(nChan):
+        gain = int(input('Enter Gain: 0 = +/- 10V, 1 = +/- 5V, 2 = +/- 2V, 3 = +/- 1V: '))
+        usb1608G.AInConfigW(channel, channel, gain, mode)
+      usb1608G.AInConfigW(nChan-1, nChan-1, gain, mode, lastElement=True)
+
+      for repeat in range(nRepeat):
+        print('\n\n---------------------------------------')
+        print('repeat: %d' % (repeat))
+        mode = 0
+        options = 0
+        usb1608G.AInScanStart(nScans, 0, frequency, options, mode)
+        data = usb1608G.AInScanRead()
+        print('Number of samples read = %d (should be %d)' % (len(data), nChan*nScans))
+        for i in range(nScans):
+          print("%6d" % (i), end ='')
+          for j in range(nChan):
+            k = i*nChan + j
+            if data[k] >= 0xfffd:
+              print("DAC is saturated at +FS")
+            elif data[k] <= 0x60:
+              print("DaC is saturated at -FS")
+            else:
+              data[k] = int(round(data[k]*usb1608G.table_AIn[gain].slope + usb1608G.table_AIn[gain].intercept))
+            print(", %8.4lf V" % usb1608G.volts(gain, data[k]), end='')
+          print("")
+      print("\n\n---------------------------------------")
+    elif ch == 'C':
+      print("Testing USB-1608G Analog Input Scan in continuous mode 16 channels")
+      print("Hit any key to exit");
+      frequency = float(input("Enter desired sampling frequency (greater than 1000): "))
+      usb1608G.AInScanStop()
+      nScans = 0  # for conitnuous mode
+      nChan = 16  # 16 channels
+      gain = usb1608G.BP_10V
+      mode = usb1608G.SINGLE_ENDED
+      for channel in range(nChan):
+        usb1608G.AInConfigW(channel, channel, gain, mode)
+      usb1608G.AInConfigW(nChan-1, nChan-1, gain, mode, lastElement=True)
+      time.sleep(1)
+      mode = usb1608G.CONTINUOUS_READOUT
+      options = 0
+      usb1608G.AInScanStart(nScans, 0, frequency, options, mode)
+      flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      i = 0
+      while True:
+        raw_data = usb1608G.AInScanRead()
+        if i%100 == 0:
+          print('Scan =', i, 'samples returned =', len(raw_data))
+        i += 1
+        c = sys.stdin.readlines()
+        if (len(c) != 0):
+          break
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+      usb1608G.AInScanStop()
+      usb1608G.AInScanClearFIFO()
     elif ch == 'M':
       print("Manufacturer: %s" % usb1608G.getManufacturer())
       print("Product: %s" % usb1608G.getProduct())

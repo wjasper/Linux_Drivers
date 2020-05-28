@@ -334,7 +334,7 @@ void usbAInScanStart_USB1608G(libusb_device_handle *udev, usbDevice1608G *usb160
     mode:  mode bits:
            bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
            bit 1:   1 = SINGLEIO
-           bit 2:   1 = use packet size passed dusbDevice1608G->packet_size
+           bit 2:   1 = use packet size passed usbDevice1608G->packet_size
 
      Notes:
 

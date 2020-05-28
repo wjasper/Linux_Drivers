@@ -58,6 +58,11 @@ class usb1608G(mccUSB):
   COUNTER0           = 0
   COUNTER1           = 1
 
+  # AIn Scan Modes
+  CONTINUOUS_READOUT = 0x1  # Continuous mode
+  SINGLEIO           = 0x2  # Return date after every read (used for low frequency scans)
+  FORCE_PACKET_SIZE  = 0x4  # Force packet_size
+
   # Commands and Codes for USB1608G
   DTRISTATE           = 0x00  # Read/write digital port tristate register
   DPORT               = 0x01  # Read digital port pins / write output latch register
@@ -65,8 +70,8 @@ class usb1608G(mccUSB):
 
   # Analog Input Commands
   AIN                 = 0x10  # Read analog input channel
-  AIN_SCAN_START      = 0x11  # Start analog input scan
-  AIN_SCAN_STOP       = 0x12  # Stop analog input scan
+  AIN_SCAN_START      = 0x12  # Start analog input scan
+  AIN_SCAN_STOP       = 0x13  # Stop analog input scan
   AIN_SCAN_CONFIG     = 0x14  # Read/Write analog input configuration
   AIN_SCAN_CLEAR_FIFO = 0x15  # Clear the analog input scan FIFO
 
@@ -107,12 +112,20 @@ class usb1608G(mccUSB):
   HS_DELAY = 2000
 
   def __init__(self):
-    self.packet_size = 512
-    self.status = 0                    # status of the device
-    self.samplesToRead = -1            # number of bytes left to read from a scan
-    self.scanList = bytearray(15)      # depth of scan queue is 15
-    self.lastElement = 0               # last element of the scan list
-
+    self.status = 0                       # status of the device
+    self.samplesToRead = -1               # number of bytes left to read from a scan
+    self.scanList = bytearray(self.NCHAN) # depth of scan queue is 15
+    self.lastElement = 0                  # last element of the scan list
+    self.count = 0
+    self.retrig_count = 0
+    self.options = 0
+    self.frequency = 0.0                  # frequency of scan (0 for external clock)
+    self.packet_size = 512                # number of samples to return from FIFO
+    self.mode = 0                         # mode bits:
+                                          # bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
+                                          # bit 1:   1 = SINGLEIO
+                                          # bit 2:   1 = use packet size in self.packet_size
+                
     # Configure the FPGA
     if not (self.Status() & self.FPGA_CONFIGURED) :
       # load the FPGA data into memory
@@ -276,7 +289,7 @@ class usb1608G(mccUSB):
       data = round(float(data)*self.table_AIn[gain].slope + self.table_AIn[gain].intercept)
       return data
 
-  def AInScanStart(self, count, retrig_count, frequency, options):
+  def AInScanStart(self, count, retrig_count, frequency, options, mode):
     """
     This command starts the analog input channel scan.  The gain
     ranges that are currently set on the desired channels will be
@@ -300,7 +313,7 @@ class usb1608G(mccUSB):
     mode:  mode bits:
            bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
            bit 1:   1 = SINGLEIO
-           bit 2:   1 = use packet size passed dusbDevice1608G->packet_size
+           bit 2:   1 = use packet size passed usbDevice1608G->packet_size
 
     Notes:
 
@@ -349,28 +362,97 @@ class usb1608G(mccUSB):
     be rearmed after retrig_count samples are acquired, with a total
     of count samples being returned from the entire scan.
     """
-    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    bytesPerScan = (self.lastElement+1)*2
 
-    if self.productID == USB_1608G_PID and frequency > 250000: # 250k S/s throughput
+    if self.productID == self.USB_1608G_PID and frequency > 250000: # 250k S/s throughput
       frequency = 250000.
     elif frequency > 500000: # 500 kS/s throughput
       frequency = 500000.
 
-    self.frequency = frequency
-    self.options = options & 0xff
-    if count == 0:
-      self.continuous_mode = True
+    if frequency == 0.0:
+      pacer_period = 0     # use external pacer
     else:
-      self.continuous_mode = False
+      pacer_period = round((64.E6 / frequency) - 1)
 
+    if count == 0:
+      self.mode |= self.CONTINUOUS_READOUT
+      self.bytesToRead = -1  # disable and sample forever
+    else:
+      self.bytesToRead = count*(self.lastElement+1)*2  # total number of bytes to read
+
+    if self.mode & self.FORCE_PACKET_SIZE:
+      packet_size = self.packet_size
+    elif self.mode & self.SINGLEIO:
+      packet_size = self.lastElement +1
+    elif self.mode & self.CONTINUOUS_READOUT:
+      packet_size = int((( (self.wMaxPacketSize//bytesPerScan) * bytesPerScan) // 2))
+    else:
+      packet_size = self.wMaxPacketSize // 2
+    self.packet_size = packet_size
+
+    if self.mode & self.CONTINUOUS_READOUT:
+      self.count = 0
+    else:
+      self.count = count
+
+    self.retirg_count = retrig_count
+    self.mode = mode & 0xff
+    self.options = options
+
+    packet_size -= 1  # force to uint8_t size in range 0-255    
     scanPacket = pack('IIIBB', count, retrig_count, pacer_period, packet_size, options)
     result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
+
+    self.status = self.Status()
+
+  def AInScanRead(self):
+    if self.status & self.AIN_SCAN_RUNNING == 0x0:
+      raise ValueError("AInScanRead: pacer must be running to read from buffer")
+      return
+
+    if self.mode & self.CONTINUOUS_READOUT or self.mode & self.SINGLEIO :
+      nSamples = self.packet_size
+    else:
+      nSamples = self.count*(self.lastElement+1)
+
+    try:
+      data =  list(unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(2*nSamples), self.HS_DELAY)))
+    except:
+      print('AInScanRead: error in bulkRead.')
+
+    if len(data) != nSamples:
+      raise ValueError('AInScanRead: error in number of samples transferred.')
+      return len(data)
+    
+    if self.bytesToRead > len(data)*2:
+      self.bytesToRead -= len(data)*2
+    elif self.bytesToRead > 0 and self.bytesToRead < len(data)*2:  # all done
+      self.AInScanStop()
+      self.AInScanClearFIFO()
+      self.status = self.Status()
+      return self.bytesToRead
+
+    if self.mode & self.CONTINUOUS_READOUT:
+      return data
+
+    # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
+    if nSamples*2%self.wMaxPacketSize == 0:
+     dummy = self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, 2, 100)
+     
+    self.status = self.Status()
+    if self.status & self.AIN_SCAN_OVERRUN:
+      self.AInScanStop()
+      self.AInScanFIFO()
+      raise ValueError('AInScanRead: Scan overrun.')
+      return
+
+    return data
         
   def AInScanStop(self):
     """
     This command stops the analog input scan (if running).
     """
-
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_STOP
     wValue = 0
@@ -447,7 +529,6 @@ class usb1608G(mccUSB):
     except:
       print('AInConfigW: error in control Write result =', result)
       return
-
     
   def AInScanClearFIFO(self):
     """
@@ -458,7 +539,6 @@ class usb1608G(mccUSB):
     wValue = 0
     wIndex = 0
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
-  
 
   ##########################################
   #         Counter/Timer Commands         #
@@ -928,6 +1008,12 @@ class usb_1608GX_2AO(usb1608G):
   AOUT_SCAN_STOP       = 0x1B  # Stop analog output scan
   AOUT_SCAN_CLEAR_FIFO = 0x1C  # Clear the analog output scan FIFO
   NCHAN_AO             = 2     # Number of analog output channels
+
+  # Analog Output Scan Options
+  AO_CHAN0       = 0x1   # Include Channel 0 in output scan
+  AO_CHAN1       = 0x2   # Include Channel 1 in output scan
+  AO_TRIG        = 0x10  # Use Trigger
+  AO_RETRIG_MODE = 0x20  # Retrigger Mode
 
   def __init__(self, serial=None):
     self.productID = self.USB_1608GX_2AO_PID   # usb-1608GX_2AO

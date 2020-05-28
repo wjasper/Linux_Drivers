@@ -47,7 +47,7 @@ extern "C" {
 #define AIN_SCAN_TRIGGER   0x8       // 1 = use trigger
 #define AIN_SCAN_RETRIGGER 0x40      // 1 = retrigger mode, 0 = normal trigger
   
-/* Ananlog Output Scan Options */
+/* Analog Output Scan Options */
 #define AO_CHAN0       0x1   // Include Channel 0 in output scan
 #define AO_CHAN1       0x2   // Include Channel 1 in output scan
 #define AO_TRIG        0x10  // Use Trigger
