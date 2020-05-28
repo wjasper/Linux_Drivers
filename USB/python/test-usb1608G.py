@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 #
-# Copyright (c) 2019 Warren J. Jasper <wjasper@ncsu.edu>
+# Copyright (c) 2020 Warren J. Jasper <wjasper@ncsu.edu>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -19,6 +19,7 @@ import time
 import sys
 import fcntl
 import os
+import math
 from usb_1608G import *
 
 def toContinue():
@@ -235,6 +236,45 @@ def main():
             "\tPulse Width Reg:",hex(usb1608G.TimerPulseWidthR()), \
             "    \tCount Reg:",hex(usb1608G.TimerCountR()), \
             "    \tDelay Reg:",hex(usb1608G.TimerStartDelayR()))
-
+    elif ch == 'o':
+      voltage = float(input('Enter voltage: '))
+      usb1608G.AOut(0, voltage)
+      voltage = usb1608G.AOutR(0)
+      print('Analog Output Voltage = %f V' % (voltage))
+    elif ch == 'O':
+      print('Test of Analog Output Scan.')
+      print('Hook scope up to VDAC 0')
+      frequency = float(input('Enter desired frequency of sine wave [Hz]: '))
+      frequency *= 512
+      data = [0]*512
+      for i in range(512):
+        voltage = 10*math.sin(2.* math.pi * i / 512.)
+        voltage = voltage / 10. * 32768. + 32768.
+        data[i] = voltage * usb1608G.table_AOut[channel].slope + usb1608G.table_AOut[channel].intercept
+        if data[i] > 0xffff:
+          data[i] = 0xffff
+        elif data[i] < 0:
+          data[i] = 0
+        else:
+          data[i] = int(data[i])
+      usb1608G.AOutScanStop()
+      usb1608G.AOutScanStart(0,0,frequency,usb1608G.AO_CHAN0)
+      print("Hit 's <CR>' to stop")
+      flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      while True:
+        try:
+          ret = usb1608G.AOutScanWrite(data)
+        except:
+          fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+          usb1608G.AOutScanStop()
+          break
+        c = sys.stdin.readlines()
+        if (len(c) != 0):
+          break
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+      usb1608G.AOutScanStop()
+      usb1608G.AOutClearFIFO
+      
 if __name__ == "__main__":
   main()

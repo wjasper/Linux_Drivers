@@ -1068,7 +1068,7 @@ class usb_1608GX_2AO(usb1608G):
     if int(value) > 0xffff:
       wValue = 0xffff
     elif value < 0.0:
-      wValue = 0
+      wValue = 0x0
     else:
       wValue = int(round(value))
           
@@ -1078,6 +1078,10 @@ class usb_1608GX_2AO(usb1608G):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
+    channel = int(channel)
+    if channel >= self.NCHAN_AO or channel < 0:
+      raise ValueError('AOutR: channel out of range')
+      return
     value ,= unpack('HH',self.udev.controlRead(request_type, self.AOUT, wValue, wIndex, 4, timeout = 100))
     voltage = (value[channel] - self.table_AOut[channel].intercept) / table_AOut[channel].slope
     voltage = (voltage - 32768)*10./32768.
