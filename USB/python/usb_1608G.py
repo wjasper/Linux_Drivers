@@ -59,27 +59,21 @@ class usb1608G(mccUSB):
   COUNTER1           = 1
 
   # AIn Scan Modes
-  CONTINUOUS_READOUT = 0x1  # Continuous mode
-  SINGLEIO           = 0x2  # Return date after every read (used for low frequency scans)
-  FORCE_PACKET_SIZE  = 0x4  # Force packet_size
+  CONTINUOUS_READOUT   = 0x1  # Continuous mode
+  SINGLEIO             = 0x2  # Return data after every read (used for low frequency scans)
+  FORCE_PACKET_SIZE    = 0x4  # Force packet_size
 
   # Commands and Codes for USB1608G
-  DTRISTATE           = 0x00  # Read/write digital port tristate register
-  DPORT               = 0x01  # Read digital port pins / write output latch register
-  DLATCH              = 0x02  # Read/write digital port output latch register
+  DTRISTATE            = 0x00  # Read/write digital port tristate register
+  DPORT                = 0x01  # Read digital port pins / write output latch register
+  DLATCH               = 0x02  # Read/write digital port output latch register
 
   # Analog Input Commands
-  AIN                 = 0x10  # Read analog input channel
-  AIN_SCAN_START      = 0x12  # Start analog input scan
-  AIN_SCAN_STOP       = 0x13  # Stop analog input scan
-  AIN_SCAN_CONFIG     = 0x14  # Read/Write analog input configuration
-  AIN_SCAN_CLEAR_FIFO = 0x15  # Clear the analog input scan FIFO
-
-  # Analog Output Commands
-  AOUT                 = 0x18  # Read/write analog output channel
-  AOUT_SCAN_START      = 0x1A  # Start analog output scan
-  AOUT_SCAN_STOP       = 0x1B  # Stop analog output scan
-  AOUT_SCAN_CLEAR_FIFO = 0x1C  # Clear the analog output scan FIFO
+  AIN                  = 0x10  # Read analog input channel
+  AIN_SCAN_START       = 0x12  # Start analog input scan
+  AIN_SCAN_STOP        = 0x13  # Stop analog input scan
+  AIN_SCAN_CONFIG      = 0x14  # Read/Write analog input configuration
+  AIN_SCAN_CLEAR_FIFO  = 0x15  # Clear the analog input scan FIFO
 
   # Counter/Timer Commands
   COUNTER              = 0x20  # Read/reset counter
@@ -177,7 +171,7 @@ class usb1608G(mccUSB):
 
   def CalDate(self):
     """
-    get the manufacturers calibration data (timestamp) from the
+    Get the manufacturers calibration data (timestamp) from the
     Calibration memory.
 
     Note: The calibration date is stored in the EEPROM
@@ -467,7 +461,7 @@ class usb1608G(mccUSB):
     acquire data from the channels in the order that they are placed
     in the scan list.
 
-    ScanList[15]  channel configuration:
+    ScanList[16]  channel configuration:
       bit 0:  Channel Mux 0
       bit 1:  Channel Mux 1
       bit 2:  Channel Mux 2
@@ -480,7 +474,7 @@ class usb1608G(mccUSB):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
     wValue = 0
     wIndex = 0
-    value = self.udev.controlRead(request_type, self.AIN_SCAN_CONFIG, wValue, wIndex, 15, self.HS_DELAY)
+    value = self.udev.controlRead(request_type, self.AIN_SCAN_CONFIG, wValue, wIndex, 16, self.HS_DELAY)
     for i in range(len(value)):
       self.scanList[i] = value[i]
       if value[i] & self.LAST_CHANNEL:
