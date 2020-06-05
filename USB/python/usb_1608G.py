@@ -64,6 +64,7 @@ class usb1608G(mccUSB):
   FORCE_PACKET_SIZE    = 0x4  # Force packet_size
 
   # Commands and Codes for USB1608G
+  # Digital I/O Commands
   DTRISTATE            = 0x00  # Read/write digital port tristate register
   DPORT                = 0x01  # Read digital port pins / write output latch register
   DLATCH               = 0x02  # Read/write digital port output latch register

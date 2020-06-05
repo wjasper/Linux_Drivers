@@ -110,7 +110,7 @@ class usb_1608FS_Plus(mccUSB):
     # IEEE-754 4-byte floating point values.
     #
     #   calibrated code = code*slope + intercept
-    #   self.table_AIn[channel][gain]  0 < chan < 7,  0 < gain < 7
+    #   self.table_AIn[channel][gain]  0 <= chan < 8  0 <= gain < 8
     self.table_AIn = [[table(), table(), table(), table(), table(), table(), table(), table()], \
                       [table(), table(), table(), table(), table(), table(), table(), table()], \
                       [table(), table(), table(), table(), table(), table(), table(), table()], \
