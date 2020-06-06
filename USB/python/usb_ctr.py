@@ -23,28 +23,6 @@ from struct import *
 from datetime import datetime
 from mccUSB import *
 
-class CounterParameters:
-  def __init__(self):
-    self.counter = 0
-    self.modeOptions = 0x0
-    self.counterOptions = 0x0
-    self.gateOptions = 0x0
-    self.outputOptions = 0x0
-    self.debounce = 0x0
-    self.outputValue0 = 0x0
-    self.outputValue1 = 0x0
-    self.limitValue0 = 0x0    # Minimum Limit Value
-    self.limitValue1 = 0x0    # Maximum Limit Value
-
-class TimerParameters:
-  def __init__(self):
-    self.timer = 0
-    self.period = 0
-    self.pulseWidth = 0
-    self.count = 0
-    self.dely = 0
-    self.control = 0x0
-
 class usb_ctr(mccUSB):
 
   NTIMER   = 4      # Number of PWM Timers
@@ -1000,7 +978,7 @@ class usb_ctr(mccUSB):
       return
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    request = self.TIMER_START_DELAY
+    request = self.TIMER_PARAMETERS
     wValue = 0x0
     wIndex = timer
     barray = pack('IIII', self.timerParameters[timer].period, self.timerParameters[timer].pulseWidth, \

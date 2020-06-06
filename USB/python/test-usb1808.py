@@ -90,11 +90,12 @@ def main():
     elif ch == 'c':
       counter = int(input('Enter counter [0-1]: '))
       if counter == 0:                    
-        usb1808.CounterInit(usb1808.COUNTER0)
         print("Connect DIO0 to CTR0")
       else:
-        usb1808.CounterInit(usb1808.COUNTER1)
         print("Connect DIO0 to CTR1")
+      usb1808.CounterOptionsW(counter, 0x0)
+      usb1808.CounterModeW(counter, 0x0)
+      usb1808.CounterSet(counter, 0x0)
       usb1808.DTristateW(0xc)
       toContinue()
       for i in range(100):

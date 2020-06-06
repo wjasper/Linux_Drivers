@@ -70,6 +70,20 @@ class TimerParameters:
     self.dely = 0
     self.control = 0x0
 
+# Base class for counter parameters
+class CounterParameters:
+  def __init__(self):
+    self.counter = 0
+    self.modeOptions = 0x0
+    self.counterOptions = 0x0
+    self.gateOptions = 0x0
+    self.outputOptions = 0x0
+    self.debounce = 0x0
+    self.outputValue0 = 0x0
+    self.outputValue1 = 0x0
+    self.limitValue0 = 0x0    # Minimum Limit Value
+    self.limitValue1 = 0x0    # Maximum Limit Value
+
 class mccUSB:
   def __init__(self):
     pass
