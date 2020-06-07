@@ -160,19 +160,19 @@ class usb1808(mccUSB):
   HS_DELAY = 2000
 
   def __init__(self):
-    self.status = 0                       # status of the device
-    self.samplesToRead = -1               # number of bytes left to read from a scan
-    self.scanList = bytearray(self.NCHAN) # depth of scan queue is 15
-    self.lastElement = 0                  # last element of the scan list
+    self.status = 0                        # status of the device
+    self.samplesToRead = -1                # number of bytes left to read from a scan
+    self.scanQueue = bytearray(13)         # depth of scan queue is 13
+    self.lastElement = 0                   # last element of the scan list
     self.count = 0
     self.retrig_count = 0
     self.options = 0
-    self.frequency = 0.0                  # frequency of scan (0 for external clock)
-    self.packet_size = 512                # number of samples to return from FIFO
-    self.mode = 0                         # mode bits:
-                                          # bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
-                                          # bit 1:   1 = SINGLEIO
-                                          # bit 2:   1 = use packet size in self.packet_size
+    self.frequency = 0.0                   # frequency of scan (0 for external clock)
+    self.packet_size = 512                 # number of samples to return from FIFO
+    self.mode = 0                          # mode bits:
+                                           # bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
+                                           # bit 1:   1 = SINGLEIO
+                                           # bit 2:   1 = use packet size in self.packet_size
     # Configure the FPGA
     if not (self.Status() & self.FPGA_CONFIGURED) :
       # load the FPGA data into memory
@@ -204,9 +204,6 @@ class usb1808(mccUSB):
 
     # Find the maxPacketSize for bulk transfers
     self.wMaxPacketSize = self.getMaxPacketSize(libusb1.LIBUSB_ENDPOINT_IN | 0x6)  #EP IN 6
-
-    # Set up the Timers
-    # self.timerParameters = TimerParameters()
 
     # Build a lookup table of calibration coefficients to translate values into voltages:
     # The calibration coefficients are stored in the onboard FLASH memory on the device in
@@ -245,7 +242,13 @@ class usb1808(mccUSB):
       self.table_AOut[chan].intercept, = unpack('f', self.MemoryR(4))
       address += 4
 
+    # Set up the ADC Configuration
+    #  Default to +/- 10V Differential
+    self.AInConfig = bytearray(self.NCHAN)
+    for chan in range(self.NCHAN):
+      self.AInConfig[chan] = 0x0
     self.counterParameters = [CounterParameters(), CounterParameters(), CounterParameters(), CounterParameters()]
+
     self.timerParameters = [TimerParameters(), TimerParameters()]
 
   def CalDate(self):
@@ -350,7 +353,201 @@ class usb1808(mccUSB):
     wValue = value & 0xffff
     wIndex = 0
     self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], self.HS_DELAY)
-        
+
+  #############################################
+  #        Analog Input Commands              #
+  #############################################
+
+  def AIn(self):
+    """
+    This command performs an asynchronous read of all analog input channels. 
+    value[8]: 18-bit data read from that channel
+    
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = 0
+    value = list(unpack('IIIIIIII', self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 32, self.HS_DELAY)))
+    for chan in range(self.NCHAN):
+      gain = self.AInConfig[chan] & 0x3
+      value[chan] = self.table_AIn[chan][gain].slope * value[chan] + self.table_AIn[chan][gain].intercept
+      if value[chan] > 0x3ffff:
+        value[chan] = 0x3ffff
+      elif value[chan] < 0:
+        value[chan] = 0x0
+      else:
+        value[chan] = round(value[chan])
+
+    return value
+      
+
+  def ADCSetup(self, channel, gain, mode):
+    """
+     This command reads or writes the range configuration for all
+     analog input channels (each channel can have its own unique
+     range).  Each bye in this array corresponds to the analog input
+     channel and the value determines that channel's range and input
+     type.
+     Bits 1-0: +/- 10V    = 0     
+               +/-  5V    = 1
+               0 - 10V    = 2
+               0 -  5V    = 3
+     Bits 3-2: Differential = 0
+               Single Ended = 1
+               Grounded     = 3
+     Bits 7-4: Reserved 
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AIN_ADC_SETUP
+    wValue = 0
+    wIndex = 0
+    self.AInConfig[channel] = (mode & 0x3) << 2 | (gain & 0x3)
+    self.udev.controlWrite(request_type, request, wValue, wIndex, self.AInConfig, self.HS_DELAY)
+
+  def ADCSetupR(self):
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = 0
+    value = unpack('BBBBBBBB',self.udev.controlRead(request_type, self.AIN_ADC_SETUP, wValue, wIndex, 8, self.HS_DELAY))
+    return value
+
+  def AInScanStart(self, count, retrig_count, frequency, options):
+    """
+    This command starts the analog input channel scan.  The gain
+    ranges that are currently set on the desired channels will be
+    used (these may be changed with AInConfig) This command will
+    result in a bus stall if an AInScan is currently running.
+
+    Notes:
+
+    The pacer rate is set by an internal 32-bit incrementing timer
+    running at a base rate of 100 MHz.  The timer is controlled by
+    pacer_period. A pulse will be output at the ICLKO pin at
+    every pacer_period interval regardless of the mode.
+
+    If pacer_period is set to 0, the device does not generate an A/D
+    clock.  It uses the ICLKO pin as the pacer source.  
+
+    The timer will be reset and sample acquired when its value equals
+    timer_period.  The equation for calculating timer_period is:
+
+        timer_period = [100MHz / (sample frequency)] - 1
+
+    The data will be returned in packets utilizing a bulk IN endpoint.
+    The data will be in the format:
+
+    lowchannel sample 0: lowchannel + 1 sample 0: ... :hichannel sample 0
+    lowchannel sample 1: lowchannel + 1 sample 1: ... :hichannel sample 1
+    ...
+    lowchannel sample n: lowchannel + 1 sample n: ... :hichannel sample n
+
+    Important: Since the analog input data is 18 bits wide, each
+    input sample will be 32 bits wide to account for this.  This
+    includes the digital channels, and zeros will be padded for
+    unused bits.  The scan will not begin until the InScanStart
+    command is sent (and any trigger conditions are met.)  Data will
+    be sent until reaching the specified count or an InScanStop
+    command is sent.
+
+    The packet_size parameter is used for low sampling rates to avoid
+    delays in receiving the sampled data. The buffer will be sent,
+    rather than waiting for the buffer to fill.  This mode should
+    not be used for high sample rates in order to avoid data loss.
+
+    The external trigger may be used to start data collection
+    synchronously.  If the bit is set, the device will wait until the
+    appropriate trigger edge is detected, then begin sampling data at
+    the specified rate.  No messages will be sent until the trigger
+    is detected.
+
+    Pattern detection is used with the PatternDetectConfig command
+    to set up a specified number of bits to watch, and then trigger
+    when those bits reach the specified value.
+
+    The retrigger mode option and the retrig_count parameter are only
+    used if trigger is used.  This option will cause the trigger to
+    be rearmed after retrig_count samples are acquired, with a total
+    of count samples being returned from the entire scan.
+    """
+
+  def AInScanStop(self):
+    """
+    This command stops the analog input scan (if running).
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AIN_SCAN_STOP
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def AInConfigR(self):
+    """
+    This command reads/writes the input scan queue to the FPGA.  The max
+    queue is 13 elements: 8 AIn, 2 Counters, 2 Encoders, 1 DIO.
+
+    Each element of the scanQueue array corresponds to the element in
+    the scan queue of the FPGA.  The data will determine which channel
+    is read as follows:
+
+    Analog Inputs:   0 - 7
+    DIO:             8
+    Counter 0:       9
+    Counter 1:       10
+    Encoder 0:       11
+    Encoder 1:       12
+
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+    wValue = 0
+    wIndex = 0
+    value = self.udev.controlRead(request_type, self.AIN_SCAN_CONFIG, wValue, wIndex, 13, self.HS_DELAY)
+    for i in range(len(value)):
+      self.scanQueue[i] = value[i]
+    return
+
+  def AInConfigW(self, entry, value, lastElement=False):
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request = self.AIN_SCAN_CONFIG
+    wValue = 0
+    wIndex = 0
+
+    if entry < 0 or entry > 12:
+      raise ValueError('AInConfigW: Exceed depth of queue')
+      return
+
+    if lastElement != False:
+      self.lastElement = entry
+      wIndex = entry
+      
+    if self.Status() & self.AIN_SCAN_RUNNING:
+      self.AInScanStop()
+
+    try:
+      result = self.udev.controlWrite(request_type, request, wValue, wIndex, self.scanQueue, self.HS_DELAY)
+    except:
+      print('AInConfigW: error in control Write result =', result)
+      return
+    
+  def AInScanClearFIFO(self):
+    """
+    This command clears the analog input firmware buffer.
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request = self.AIN_SCAN_CLEAR_FIFO
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def AInSBulkFlush(self, count):
+    """
+    This command flushes the input Bulk pipe a number of times.
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request = self.AIN_BULK_FLUSH
+    wValue = count
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
   ##########################################
   #            Counter Commands            #
   ##########################################
@@ -384,9 +581,9 @@ class usb1808(mccUSB):
       raise ValueError('Counter: counter out of range.')
       return
 
-    value = unpack('I',self.udev.controlRead(request_type, self.COUNTER, wValue, wIndex, 4, self.HS_DELAY))
+    value, = unpack('I',self.udev.controlRead(request_type, self.COUNTER, wValue, wIndex, 4, self.HS_DELAY))
     return value
-
+  
   def CounterOptionsR(self, counter):
     """
     This command reads or sets the options of the counter.
@@ -527,7 +724,7 @@ class usb1808(mccUSB):
     self.counterParameters[counter].modeOptions = mode
     self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], self.HS_DELAY)
 
-  def CounterParamsR(self, counter):
+  def CounterParametersR(self, counter):
     """
     This command reads or sets the mode and options of a counter.
     This only works on the Options on the Encoder counters.
@@ -546,7 +743,7 @@ class usb1808(mccUSB):
     self.counterParameters[counter].counterOptions = data[1]   # the current counter's mode's options
     return
 
-  def CounterParamsW(self, counter, counterMode, counterOptions):
+  def CounterParametersW(self, counter, counterMode, counterOptions):
     if counter >= self.NCOUNTER:
       raise ValueError('CounterParamsR: counter value too large.')
       return
@@ -557,7 +754,7 @@ class usb1808(mccUSB):
     wIndex = counter & 0xf
     self.counterParameters[counter].modeOptions = counterMode
     self.counterParameters[counter].counterOptions  = counterOptions
-    s_buffer = [ counterMode, counterOptions ]
+    s_buffer = [counterMode, counterOptions]
     
     self.udev.controlWrite(request_type, request, wValue, wIndex, s_buffer, self.HS_DELAY)
 
@@ -661,13 +858,13 @@ class usb1808(mccUSB):
     wValue = 0x0
     wIndex = timer
 
-    period = 100.E6/frequency -1
+    period = round(100.E6/frequency - 1)
     pulseWidth = period * dutyCycle
 
-    self.timerParameters[timer].period = period
-    self.timerParameters[timer].pulseWidth = pulseWieth
-    self.timerParameters[timer].count = count
-    self.timerParameters[timer].delay = delay
+    self.timerParameters[timer].period = int(period)
+    self.timerParameters[timer].pulseWidth = int(pulseWidth)
+    self.timerParameters[timer].count = int(count)
+    self.timerParameters[timer].delay = int(delay)
         
     barray = pack('IIII', self.timerParameters[timer].period, self.timerParameters[timer].pulseWidth, \
                   self.timerParameters[timer].count, self.timerParameters[timer].delay)

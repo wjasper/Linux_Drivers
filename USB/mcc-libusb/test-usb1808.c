@@ -401,17 +401,16 @@ int main (int argc, char **argv)
 	break;
       case 't':
 	printf("Test timers.\n");
+	printf("Enter timer (0-1): ");
+	scanf("%hhd", &timer);
 	printf("Enter desired frequency: ");
 	scanf("%lf", &frequency);
+	usbTimerControlW_USB1808(udev, timer, 0x0);  // stop timer
 	if (frequency == 0.0) {
-	  usbTimerControlW_USB1808(udev, timer, 0x0);  // stop timer
 	  break;
 	}
 	printf("Enter desired duty cycle (0-1.0): ");
 	scanf("%lf", &duty_cycle);
-	printf("Enter timer (0-1): ");
-	scanf("%hhd", &timer);
-	usbTimerControlW_USB1808(udev, timer, 0x0);  // stop timer
 	usbTimerParametersW_USB1808(udev, timer, frequency, duty_cycle, 0, 0);
 	usbTimerControlW_USB1808(udev, timer, TIMER_ENABLE);  // enable timer
 	break;

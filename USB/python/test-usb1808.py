@@ -102,6 +102,45 @@ def main():
         usb1808.DLatchW(0x0)
         usb1808.DLatchW(0x1)
       print("Count = %d.  Should read 100" % (usb1808.Counter(counter)))
+    elif ch == 'd':
+      print('Testing Digital I/O ...')
+      usb1808.DTristateW(0x0)
+      print("Digital Port Tristate Register = %#x" % usb1808.DTristateR())
+      while True:
+        value = int(input('Enter a nubble number [0-0xf]: '),16) & 0xf
+        usb1808.DLatchW(value)
+        value2 = usb1808.DLatchR()
+        print("The number you entered = %#x   Latched value = %#x\n\n" %(value, value2))
+        for i in range(4):
+          print('Bit %d = %d' % (i, (value2>>i) & 0x1))
+        if toContinue() == False:
+          break
+    elif ch == 'i':
+      print('Test Analog Input for all 8 channels')
+      mode = int(input('Enter 0 for Differential and 1 for Single Ended: '))
+      if mode == 0:
+        mode = usb1808.DIFFERENTIAL
+      else:
+        mode = usb1808.SINGLE_ENDED
+      gain = int(input('Eneter Gain: 1 = +/-10V  2 = +/- 5V  3 = 0-10V  4 = 0-5V: '))
+      if gain == 1:
+        gain = usb1808.BP_10V
+      elif gain == 2:
+        gain = usb1808.BP_5V
+      elif gain == 3:
+        gain = usb1808.UP_10V
+      elif gain == 4:
+        gain = usb1808.UP_5V
+      else:
+        gain = usb1808.BP_10V
+      for chan in range(8):
+        usb1808.ADCSetup(chan, gain, mode)  #set them all the same for now
+      value = usb1808.AIn()
+      for i in range(8):
+        gain = usb1808.AInConfig[i] & 0x3
+        mode = (usb1808.AInConfig[i] >> 2) & 0x3
+        print('Channel %d Mode = %#x  Gain = %d value[%d] = %#x Volts = %lf' %
+              (i, mode, gain, i, value[i], usb1808.volts(gain, value[i])))
     elif ch == 'e':
       usb1808.udev.close()
       exit(0)
@@ -116,6 +155,35 @@ def main():
       usb1808.printStatus()
     elif ch == 's':
       print("Serial No: %s" % usb1808.getSerialNumber())
+    elif ch == 't':
+      print('Test timers.')
+      timer = int(input('Enter timer [0-1]: '))
+      frequency = float(input('Enter desired frequency: '))
+      count = 0
+      delay = 0
+      usb1808.TimerControlW(timer, 0x0)  # stop timer
+      if frequency == 0.0:
+        break
+      duty_cycle = float(input('Enter desired duty cycle [0.0 - 1.0]: '))
+      usb1808.TimerControlW(timer, 0x0)  # stop timer
+      usb1808.TimerParametersW(timer, frequency, duty_cycle, count, delay)
+      usb1808.TimerControlW(usb1808.TIMER0, usb1808.TIMER_ENABLE) # enable timer
+    elif ch == 'T':
+      print('Testing counter and timer.')
+      print('Connect Timer 0 to Counter 0')
+      frequency = float(input('Enter desired frequency: '))
+      duty_cycle = 0.5
+      count = 0
+      delay = 0
+      usb1808.TimerControlW(usb1808.TIMER0, 0x0)  # stop timer
+      usb1808.TimerParametersW(usb1808.TIMER0, frequency, duty_cycle, count, delay)
+      usb1808.TimerControlW(usb1808.TIMER0, usb1808.TIMER_ENABLE) # enable timer
+      usb1808.CounterParametersW(usb1808.COUNTER0, usb1808.COUNTER_PERIOD | usb1808.PERIOD_MODE_10X, 0x0)
+      time.sleep(1)
+      period = usb1808.Counter(usb1808.COUNTER0)
+      frequency = 100.E6/(period + 1)*5.0
+      usb1808.TimerControlW(usb1808.TIMER0, 0x0)  # stop timer
+      print('frequency = %f' % frequency)
     elif ch == 'v':
       print("FPGA version %s" % (usb1808.FPGAVersion()))
 
