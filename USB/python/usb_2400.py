@@ -1048,7 +1048,7 @@ class usb_2408_2AO(usb_2400):
      the number of updates to the channels (if all channels are used, one scan is an
      update to all 2 channels).
 
-     period = 50kHz / frequency
+         period = 50kHz / frequency
 
      Multiple channels are updated simultaneously using the same time base.
 

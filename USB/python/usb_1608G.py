@@ -1034,9 +1034,8 @@ class usb_1608GX_2AO(usb1608G):
     """
     This command reads or writes the values for the analog output
     channels.  The values are 16-bit unsigned numbers.  Both read and
-    write will result in a vontrol pipe stall if an output scan is
-    running
-
+    write will result in a control pipe stall if an output scan is
+    running.
 
     channel: the channel number to update (0-1)
     value:   the value for the analog output channel (0-65535)
@@ -1135,12 +1134,15 @@ class usb_1608GX_2AO(usb1608G):
     AOutScanStrop command is sent.
     """
 
-    if frequency <= 0.:
+    if frequency < 0.:
       raise ValueError('AOutScanStart: frequency must be positive')
       return
     elif frequency > 50000:
       raise ValueError('AOutScanStart: frequency must be less than 50 kHz')
       return
+
+    if frequency == 0:
+      pacer_period = 0    # use AOCKI pin 47
     else:
       pacer_period = round((64.E6 / frequency) - 1)
 

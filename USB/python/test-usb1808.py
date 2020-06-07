@@ -141,6 +141,10 @@ def main():
         mode = (usb1808.AInConfig[i] >> 2) & 0x3
         print('Channel %d Mode = %#x  Gain = %d value[%d] = %#x Volts = %lf' %
               (i, mode, gain, i, value[i], usb1808.volts(gain, value[i])))
+    elif ch == 'o':
+      channel = int(input('Enter analog output channel [0-1]: '))
+      voltage = float(input('Enter voltage [+/- 10V]: '))
+      usb1808.AOut(channel, voltage)
     elif ch == 'e':
       usb1808.udev.close()
       exit(0)

@@ -124,12 +124,13 @@ class usb1808(mccUSB):
 
   # Analog Output Commands
   AOUT                 = 0x18  # Read/write analog output channel
+  AOUT_SCAN_CONFIG     = 0x19  # Read / write output scan queue
   AOUT_SCAN_START      = 0x1A  # Start analog output scan
   AOUT_SCAN_STOP       = 0x1B  # Stop analog output scan
   AOUT_SCAN_CLEAR_FIFO = 0x1C  # Clear the analog output scan FIFO
 
   # Counter Commands
-  COUNTER              = 0x20  # Read/reset counter
+  COUNTER              = 0x20  # Read or set the counter
   COUNTER_OPTIONS      = 0x21  # Read or set the counter's options
   COUNTER_LIMITS       = 0x22  # Read or set the counter's range limits
   COUNTER_MODE         = 0x23  # Read or set the counter's mode
@@ -160,19 +161,21 @@ class usb1808(mccUSB):
   HS_DELAY = 2000
 
   def __init__(self):
-    self.status = 0                        # status of the device
-    self.samplesToRead = -1                # number of bytes left to read from a scan
-    self.scanQueue = bytearray(13)         # depth of scan queue is 13
-    self.lastElement = 0                   # last element of the scan list
+    self.status = 0                    # status of the device
+    self.samplesToRead = -1            # number of bytes left to read from a scan
+    self.scanQueueAIn = bytearray(13)  # depth of analog input scan queue is 13
+    self.scanQueueAOut= bytearray(3)   # depth of analog output scan queue is 3
+    self.lastElementAIn = 0            # last element of the analog input scan list
+    self.lastElementAOut = 0           # last element of the analog output scan list
     self.count = 0
     self.retrig_count = 0
     self.options = 0
-    self.frequency = 0.0                   # frequency of scan (0 for external clock)
-    self.packet_size = 512                 # number of samples to return from FIFO
-    self.mode = 0                          # mode bits:
-                                           # bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
-                                           # bit 1:   1 = SINGLEIO
-                                           # bit 2:   1 = use packet size in self.packet_size
+    self.frequency = 0.0               # frequency of scan (0 for external clock)
+    self.packet_size = 512             # number of samples to return from FIFO
+    self.mode = 0                      # mode bits:
+                                       # bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
+                                       # bit 1:   1 = SINGLEIO
+                                       # bit 2:   1 = use packet size in self.packet_size
     # Configure the FPGA
     if not (self.Status() & self.FPGA_CONFIGURED) :
       # load the FPGA data into memory
@@ -247,21 +250,23 @@ class usb1808(mccUSB):
     self.AInConfig = bytearray(self.NCHAN)
     for chan in range(self.NCHAN):
       self.AInConfig[chan] = 0x0
-    self.counterParameters = [CounterParameters(), CounterParameters(), CounterParameters(), CounterParameters()]
 
+    # Set up structure for Counter Parameters
+    self.counterParameters = [CounterParameters(), CounterParameters(), CounterParameters(), CounterParameters()]
+    # Set up structure for Timer Parameters
     self.timerParameters = [TimerParameters(), TimerParameters()]
 
   def CalDate(self):
     """
-    get the manufacturers calibration data (timestamp) from the
+    Get the manufacturers calibration data (timestamp) from the
     Calibration memory
     """
 
     # get the year (since 2000)
     address = 0x7110
     self.MemAddressW(address)
-    data ,= unpack('B', self.MemoryR(1))
-    year  = 2000+data
+    year ,= unpack('B', self.MemoryR(1))
+    year += 2000
 
     # get the month
     address = 0x7111
@@ -485,7 +490,7 @@ class usb1808(mccUSB):
     This command reads/writes the input scan queue to the FPGA.  The max
     queue is 13 elements: 8 AIn, 2 Counters, 2 Encoders, 1 DIO.
 
-    Each element of the scanQueue array corresponds to the element in
+    Each element of the scanQueueAIn array corresponds to the element in
     the scan queue of the FPGA.  The data will determine which channel
     is read as follows:
 
@@ -502,7 +507,7 @@ class usb1808(mccUSB):
     wIndex = 0
     value = self.udev.controlRead(request_type, self.AIN_SCAN_CONFIG, wValue, wIndex, 13, self.HS_DELAY)
     for i in range(len(value)):
-      self.scanQueue[i] = value[i]
+      self.scanQueueAIn[i] = value[i]
     return
 
   def AInConfigW(self, entry, value, lastElement=False):
@@ -523,7 +528,7 @@ class usb1808(mccUSB):
       self.AInScanStop()
 
     try:
-      result = self.udev.controlWrite(request_type, request, wValue, wIndex, self.scanQueue, self.HS_DELAY)
+      result = self.udev.controlWrite(request_type, request, wValue, wIndex, self.scanQueueAIn, self.HS_DELAY)
     except:
       print('AInConfigW: error in control Write result =', result)
       return
@@ -547,6 +552,198 @@ class usb1808(mccUSB):
     wValue = count
     wIndex = 0
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+
+  #############################################
+  #           Analog Output                   #
+  #############################################
+
+  def AOut(self, channel, voltage):
+    """
+    This command asynchronously writes out data to the specified DAC
+    channels.  The values are 16-bit unsigned numbers.  Both read and
+    write will result in a control pipe stall if an output scan is
+    running.
+
+    channel: the channel number to update (0-1)
+    value:   the value for the analog output channel (0-65535)
+
+    The equation for the output voltage is:
+
+              (value - 2^15)
+    V_out =  ---------------- * V_ref
+                 2^15
+
+    where value is the value written to the device.  V_ref = 10V
+    """
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wIndex = channel & 0x1
+
+    if channel > 2:
+      raise ValueError('AOut: channel out of range')
+      return
+
+    value = voltage/10.*32768. + 32768.
+    value = value*self.table_AOut[channel].slope + self.table_AOut[channel].intercept
+
+    if int(value) > 0xffff:
+      wValue = 0xffff
+    elif value < 0.0:
+      wValue = 0x0
+    else:
+      wValue = int(round(value))
+          
+    result = self.udev.controlWrite(request_type, self.AOUT, wValue, wIndex, [0x0], timeout = 100)
+
+  def AOutScanConfig(self, entry, value, lastElement=False):
+    """
+    This command writes the output scan queue to the FPGA.  The max
+    queue depth is 3 elements: 2 AOUT, 1 DIO
+
+      LastChan:         This is the last channel that will be read in the queue
+      ScanQueueAOut[3]: The value in this array determines which channel is read
+                        at that point in the queue as follows:
+                        AOUT0 = 0
+                        AOUT1 = 1
+                        DIO   = 2
+
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wIndex = 0
+    value = 0
+
+    self.ScanQueueAOut[entry] = value
+    if lastElement != False:
+      self.lastElementAOut = entry
+      wIndex = entry
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CONFIG, wValue, wIndex, self.ScanQueueAOut, timeout = 100)
+
+  def AOutScanConfigR(self):
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = 0
+
+    value = unpack('BBB',self.udev.controlRead(request_type, self.AOUT_SCAN_CONFIG, wValue, wIndex, 3, self.HS_DELAY))
+    return list(value)
+
+  def AOutScanStart(self, count, retrig_count, frequency, options):
+    """
+    This command starts the analog output channel scan.  This command
+    will result in a bus stall if an AOutScan is currently running.
+
+    count:        the total number of scans to perform (0 = continuous mode)
+    retrig_count: the number of scans to perform for each trigger in
+                  retrigger mode
+    frequency:    pacer frequency (0 for AO_CLK_IN) 0.23 Hz < frequency < 125 kHz
+    options:      bit 0: 1 = use external trigger
+                  bit 1: 1 = use Pattern Detection trigger
+                  bit 2: 1 = retirgger mode, 0 = normal trigger
+                  bit 3: reserved
+                  bit 4: reserved
+                  bit 5: reserved
+		  bit 6: reserved
+		  bit 7: reserved
+    Notes:
+		  
+    The output scan operates with the host continuously transferring
+    data for the outputs until the end of the scan.  If the "count"
+    parameter is 0, the scan will run until the AOutScanStop command
+    is issued by the host; if it is nonzero, the scan will stop
+    automatically after the specified number of scans have been
+    output.  The channels in the scan are selected in the options bit
+    field.  Scan refer to the number of updates to the channels (if
+    both channels are used, one scan is an update to both channels).
+
+    The time base is controlled by an internal 32-bit timer running at
+    a base rate of 100 MHz.  The timer is controlled by pacer_period.  
+    The equation for calculating pacer_period is:
+
+        pacer_period = (100 MHz / sample_frequency) - 1
+
+    The same time base is used for all channels when the scan involved
+    multiple channels.  The output data is to be sent using the bulk
+    out endpoint.  The data must be in the format:
+
+      low channel sample 0 : [high channel sample 0]
+      low channel sample 1 : [high channel sample 1]
+      ...
+      low channel sample n : [high channel sample n]
+
+    The output is written to an internal FIFO.  The bulk endpoint data
+    is only accepted if there is room in the FIFO.  Output data may be
+    sent to the FIFO before the start of the scan, and the FIFO is
+    cleared when the AOutScanClearFIFO command is received.  The scan
+    will not begin until the AOutScanStart command is sent (and outupt
+    data is in the FIFO).  Data will be output until reaching the
+    specified number of scans (in single execution mode) or an
+    AOutScanStop command is sent.
+    """
+
+    if frequency < 0.:
+      raise ValueError('AOutScanStart: frequency must be positive')
+      return
+    elif frequency > 0 and frequency < 0.23:
+      raise ValueError('AOutScanStart: frequency must be greater than .23 kHz')
+      return
+    elif frequency > 125000 and self.productID == self.USB_1808_PID:
+      raise ValueError('AOutScanStart: frequency must be less than 125 kHz')
+      return
+    elif frequency > 500000 and self.productID == self.USB_1808X_PID:
+      raise ValueError('AOutScanStart: frequency must be less than 500 kHz')
+      return
+
+    if frequency == 0:
+      pacer_period = 0  # use external clock pin 22 OCLKI      
+    else:
+      pacer_period = round((100.E6 / frequency) - 1)
+
+    self.frequency_AOut = frequency
+    self.options_AOut = options
+    self.count_AOut = count
+    if count == 0:
+      self.continuous_mode_AOUT = True
+    else:
+      self.continuous_mode_AOUT = False
+    self.retrig_count = regrig_count
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    scanPacket = pack('IIIB', count, retrig_count, pacer_period, options)
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
+
+  def AOutScanWrite(self, data):
+    # data is a list of unsigned 16 bit numbers
+    value = [0]*len(data)*2
+    timeout = int(200 + 1000*len(data)/self.frequency_AOut)
+
+    for i in range(len(data)):
+      value[2*i] = data[i] & 0xff
+      value[2*i+1] = (data[i] >> 8) & 0xff
+    try:
+      result = self.udev.bulkWrite(2, value, timeout)
+    except:
+      print('AOutScanWrite: error in bulkWrite')
+      return
+    
+  def AOutScanStop(self):
+    """
+    This command stops the analog output scan (if running).
+    """
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_STOP, wValue, wIndex, [0x0], timeout = 100)
+
+  def AOutScanClearFIFO(self):
+    """
+    The command clears the output firmware buffer.
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CLEAR_FIFO, wValue, wIndex, [0x0], timeout = 100)
+
 
   ##########################################
   #            Counter Commands            #
