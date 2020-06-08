@@ -1057,7 +1057,7 @@ class usb_1608GX_2AO(usb1608G):
       return
 
     value = voltage/10.*32768. + 32768.
-    value = value*self.table_AOut[channel].slope + self.tabl_AOut[channel].intercept
+    value = value*self.table_AOut[channel].slope + self.table_AOut[channel].intercept
 
     if int(value) > 0xffff:
       wValue = 0xffff
@@ -1076,8 +1076,8 @@ class usb_1608GX_2AO(usb1608G):
     if channel >= self.NCHAN_AO or channel < 0:
       raise ValueError('AOutR: channel out of range')
       return
-    value ,= unpack('HH',self.udev.controlRead(request_type, self.AOUT, wValue, wIndex, 4, timeout = 100))
-    voltage = (value[channel] - self.table_AOut[channel].intercept) / table_AOut[channel].slope
+    value = unpack('HH',self.udev.controlRead(request_type, self.AOUT, wValue, wIndex, 4, timeout = 100))
+    voltage = (value[channel] - self.table_AOut[channel].intercept) / self.table_AOut[channel].slope
     voltage = (voltage - 32768)*10./32768.
     return voltage
 
@@ -1153,7 +1153,7 @@ class usb_1608GX_2AO(usb1608G):
       self.continuous_mode_AOUT = True
     else:
       self.continuous_mode_AOUT = False
-    self.retrig_count = regrig_count
+    self.retrig_count = retrig_count
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     scanPacket = pack('IIIB', count, retrig_count, pacer_period, options)
@@ -1162,7 +1162,7 @@ class usb_1608GX_2AO(usb1608G):
   def AOutScanWrite(self, data):
     # data is a list of unsigned 16 bit numbers
     value = [0]*len(data)*2
-    timeout = int(200 + 1000*len(data)/self.frequency_AOut)
+    timeout = int(500 + 1000*len(data)/self.frequency_AOut)
 
     for i in range(len(data)):
       value[2*i] = data[i] & 0xff

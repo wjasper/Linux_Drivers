@@ -611,13 +611,13 @@ class usb1808(mccUSB):
     """
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     wIndex = 0
-    value = 0
+    wValue = 0
 
-    self.ScanQueueAOut[entry] = value
+    self.scanQueueAOut[entry] = value
     if lastElement != False:
       self.lastElementAOut = entry
       wIndex = entry
-    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CONFIG, wValue, wIndex, self.ScanQueueAOut, timeout = 100)
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CONFIG, wValue, wIndex, self.scanQueueAOut, timeout = 100)
 
   def AOutScanConfigR(self):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -705,7 +705,7 @@ class usb1808(mccUSB):
       self.continuous_mode_AOUT = True
     else:
       self.continuous_mode_AOUT = False
-    self.retrig_count = regrig_count
+    self.retrig_count = retrig_count
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     scanPacket = pack('IIIB', count, retrig_count, pacer_period, options)

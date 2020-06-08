@@ -244,7 +244,7 @@ def main():
     elif ch == 'O':
       print('Test of Analog Output Scan.')
       print('Hook scope up to VDAC 0')
-      frequency = float(input('Enter desired frequency of sine wave [Hz]: '))
+      frequency = float(input('Enter desired frequency of sine wave [ 1-40 Hz]: '))
       frequency *= 512
       data = [0]*512
       for i in range(512):
@@ -274,7 +274,7 @@ def main():
           break
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
       usb1608G.AOutScanStop()
-      usb1608G.AOutClearFIFO
+      usb1608G.AOutScanClearFIFO
       
 if __name__ == "__main__":
   main()
