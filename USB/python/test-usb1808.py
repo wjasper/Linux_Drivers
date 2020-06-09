@@ -134,8 +134,8 @@ def main():
       else:
         gain = usb1808.BP_10V
       for chan in range(8):
-        usb1808.ADCSetup(chan, gain, mode)  #set them all the same for now
-      value = usb1808.AIn()
+        usb1808.ADCSetup(chan, gain, mode)  # set them all the same for now
+      value = usb1808.AIn(voltage = False)  # return raw 18 bit values, not voltages
       for i in range(8):
         gain = usb1808.AInConfig[i] & 0x3
         mode = (usb1808.AInConfig[i] >> 2) & 0x3

@@ -62,6 +62,7 @@ class usb1608G(mccUSB):
   CONTINUOUS_READOUT   = 0x1  # Continuous mode
   SINGLEIO             = 0x2  # Return data after every read (used for low frequency scans)
   FORCE_PACKET_SIZE    = 0x4  # Force packet_size
+  VOLTAGE              = 0x8  # return values as voltages
 
   # Commands and Codes for USB1608G
   # Digital I/O Commands
@@ -120,6 +121,7 @@ class usb1608G(mccUSB):
                                           # bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
                                           # bit 1:   1 = SINGLEIO
                                           # bit 2:   1 = use packet size in self.packet_size
+                                          # bit 3:   1 = convert raw readings to voltages
                 
     # Configure the FPGA
     if not (self.Status() & self.FPGA_CONFIGURED) :
@@ -256,7 +258,7 @@ class usb1608G(mccUSB):
   #        Analog Input Commands              #
   #############################################
 
-  def AIn(self, channel, gain):
+  def AIn(self, channel, gain, voltage = False):
     """
     This command reads the value of an analog input channel.  This
     command will result in a bus stall if an AInScan is currently
@@ -264,6 +266,7 @@ class usb1608G(mccUSB):
 
      channel: the channel to read (0-15)
      value:   16 bits of data, right justified.
+     voltage: True = return voltage, False = return raw reading
     """
 
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -282,7 +285,12 @@ class usb1608G(mccUSB):
       raise ValueError("DAC is saturated at -FS")
     else:
       data = round(float(data)*self.table_AIn[gain].slope + self.table_AIn[gain].intercept)
-      return data
+
+    if voltage == True:
+      data = self.volts(gain, value)
+
+    return data
+    
 
   def AInScanStart(self, count, retrig_count, frequency, options, mode):
     """
@@ -306,9 +314,10 @@ class usb1608G(mccUSB):
                    bit 6: 1 = retrigger mode, 0 = normal trigger
                    bit 7: Reserved
     mode:  mode bits:
-           bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
-           bit 1:   1 = SINGLEIO
-           bit 2:   1 = use packet size passed usbDevice1608G->packet_size
+           bit 0:  0 = counting mode,  1 = CONTINUOUS_READOUT
+           bit 1:  1 = SINGLEIO
+           bit 2:  1 = use packet size passed usbDevice1608G->packet_size
+           bit 3:  1 = convert to voltages  
 
     Notes:
 
@@ -427,6 +436,18 @@ class usb1608G(mccUSB):
       self.AInScanClearFIFO()
       self.status = self.Status()
       return self.bytesToRead
+
+    if self.mode & self.VOLTAGE:
+      for i in range(len(data)):
+        gain = (self.scanList[i%(self.lastElement+1)] >> 3) & 0x3
+        data[i] = data[i]*self.table_AIn[gain].slope + self.table_AIn[gain].intercept
+        if data[i] > 0xffff:
+          data[i] = 0xffff
+        elif data[i] < 0.0:
+          data[i] = 0x0
+        else:
+          data[i] = int(round(data[i]))
+        data[i] = self.volts(gain, data[i])
 
     if self.mode & self.CONTINUOUS_READOUT:
       return data

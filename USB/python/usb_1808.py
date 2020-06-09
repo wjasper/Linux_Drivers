@@ -363,7 +363,7 @@ class usb1808(mccUSB):
   #        Analog Input Commands              #
   #############################################
 
-  def AIn(self):
+  def AIn(self, voltage = False):
     """
     This command performs an asynchronous read of all analog input channels. 
     value[8]: 18-bit data read from that channel
@@ -383,6 +383,10 @@ class usb1808(mccUSB):
       else:
         value[chan] = round(value[chan])
 
+    if voltage == True:  # return voltage instead of raw readings
+      for chan in range(self.NCHAN):
+        value[chan] = self.volts(gain, value[chan])
+    
     return value
       
 

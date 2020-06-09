@@ -153,7 +153,8 @@ def main():
       for repeat in range(nRepeat):
         print('\n\n---------------------------------------')
         print('repeat: %d' % (repeat))
-        mode = 0
+        mode = usb1608G.VOLTAGE
+#        mode = 0
         options = 0
         usb1608G.AInScanStart(nScans, 0, frequency, options, mode)
         data = usb1608G.AInScanRead()
@@ -162,13 +163,16 @@ def main():
           print("%6d" % (i), end ='')
           for j in range(nChan):
             k = i*nChan + j
-            if data[k] >= 0xfffd:
-              print("DAC is saturated at +FS")
-            elif data[k] <= 0x60:
-              print("DaC is saturated at -FS")
+            if mode & usb1608G.VOLTAGE:   # data returned in volts
+              print(", %8.4lf V" % data[k], end='')
             else:
-              data[k] = int(round(data[k]*usb1608G.table_AIn[gain].slope + usb1608G.table_AIn[gain].intercept))
-            print(", %8.4lf V" % usb1608G.volts(gain, data[k]), end='')
+              if data[k] >= 0xfffd:
+                print("DAC is saturated at +FS")
+              elif data[k] <= 0x60:
+                print("DaC is saturated at -FS")
+              else:
+                data[k] = int(round(data[k]*usb1608G.table_AIn[gain].slope + usb1608G.table_AIn[gain].intercept))
+              print(", %8.4lf V" % usb1608G.volts(gain, data[k]), end='')
           print("")
       print("\n\n---------------------------------------")
     elif ch == 'C':
