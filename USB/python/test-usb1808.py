@@ -206,6 +206,7 @@ def main():
     elif ch == 'O':
       print('Test of Analog Output Scan.')
       print('Hook scope up to VDAC 0')
+      channel = 0
       frequency = float(input('Enter desired frequency of sine wave [1-40 Hz]: '))
       frequency *= 512
       data = [0]*512
@@ -220,8 +221,8 @@ def main():
         else:
           data[i] = int(data[i])
       usb1808.AOutScanStop()
-      usb1808.AOutScanConfig(0,usb1808.AO_CHAN0)
-      usb1808.AOutScanStart(0,0,frequency,0)
+      usb1808.AOutScanConfig(0, 0, 0)
+      usb1808.AOutScanStart(0, 0, frequency, 0)
       print("Hit 's <CR>' to stop")
       flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)

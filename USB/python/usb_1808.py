@@ -169,8 +169,8 @@ class usb1808(mccUSB):
   def __init__(self):
     self.status = 0                    # status of the device
     self.samplesToRead = -1            # number of bytes left to read from a scan
-    self.scanQueueAIn = bytearray(13)  # depth of analog input scan queue is 13
-    self.scanQueueAOut= bytearray(3)   # depth of analog output scan queue is 3
+    self.scanQueueAIn = [0]*13         # depth of analog input scan queue is 13
+    self.scanQueueAOut= [0]*3          # depth of analog output scan queue is 3
     self.lastElementAIn = 0            # last element of the analog input scan list
     self.lastElementAOut = 0           # last element of the analog output scan list
     self.count = 0
@@ -648,11 +648,10 @@ class usb1808(mccUSB):
       raise ValueError('AInScanConfigW: Exceed depth of queue')
       return
 
-    if lastElement > 0:
-      self.lastElementAIn = entry
-      wIndex = entry
-      print('entry = ', entry)
-      
+    if lastElement >= 0:
+      self.lastElementAIn = lastElement
+      wIndex = lastElement
+
     if self.Status() & self.AIN_SCAN_RUNNING:
       self.AInScanStop()
 
@@ -727,7 +726,7 @@ class usb1808(mccUSB):
           
     result = self.udev.controlWrite(request_type, self.AOUT, wValue, wIndex, [0x0], timeout = 100)
 
-  def AOutScanConfig(self, entry, value, lastElement=False):
+  def AOutScanConfig(self, entry, value, lastElement=-1):
     """
     This command writes the output scan queue to the FPGA.  The max
     queue depth is 3 elements: 2 AOUT, 1 DIO
@@ -745,10 +744,10 @@ class usb1808(mccUSB):
     wValue = 0
 
     self.scanQueueAOut[entry] = value
-    if lastElement != False:
-      self.lastElementAOut = entry
-      wIndex = entry
-    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CONFIG, wValue, wIndex, self.scanQueueAOut, timeout = 100)
+    if lastElement != -1:
+      self.lastElementAOut = lastElement
+      wIndex = lastElement
+    result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CONFIG, wValue, wIndex, self.scanQueueAOut, timeout = 200)
 
   def AOutScanConfigR(self):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -845,7 +844,7 @@ class usb1808(mccUSB):
   def AOutScanWrite(self, data):
     # data is a list of unsigned 16 bit numbers
     value = [0]*len(data)*2
-    timeout = int(200 + 1000*len(data)/self.frequency_AOut)
+    timeout = int(800 + 1000*len(data)/self.frequency_AOut)
 
     for i in range(len(data)):
       value[2*i] = data[i] & 0xff
@@ -855,6 +854,11 @@ class usb1808(mccUSB):
     except:
       print('AOutScanWrite: error in bulkWrite')
       return
+
+    try:
+      result = self.udev.bulkWrite(2, [0x0],  200)
+    except:
+      print('AOutScanWrite: error in bulkWrite 2')
     
   def AOutScanStop(self):
     """
