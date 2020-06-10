@@ -1094,7 +1094,8 @@ class usb_1608GX_2AO(usb1608G):
     if channel >= self.NCHAN_AO or channel < 0:
       raise ValueError('AOutR: channel out of range')
       return
-    value = unpack('HH',self.udev.controlRead(request_type, self.AOUT, wValue, wIndex, 4, timeout = 100))
+
+    value = unpack('HH',self.udev.controlRead(request_type, self.AOUT, wValue, wIndex, 8, timeout = 400))
     voltage = (value[channel] - self.table_AOut[channel].intercept) / self.table_AOut[channel].slope
     voltage = (voltage - 32768)*10./32768.
     return voltage
