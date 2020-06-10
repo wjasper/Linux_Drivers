@@ -51,8 +51,8 @@ class usb1608G(mccUSB):
   FPGA_CONFIGURED    = 0x100 # FPGA is configured
   FPGA_CONFIG_MODE   = 0x200 # FPGA config mode
 
-  NCHAN = 16                 # max number of A/D channels in the device (single_ended)
-  NGAIN = 4                  # max number of gain levels
+  NCHAN              = 16    # max number of A/D channels in the device (single_ended)
+  NGAIN              = 4     # max number of gain levels
   MAX_PACKET_SIZE_HS = 512   # max packet size for HS device
   MAX_PACKET_SIZE_FS = 64    # max packet size for HS device
   COUNTER0           = 0
@@ -316,7 +316,7 @@ class usb1608G(mccUSB):
     mode:  mode bits:
            bit 0:  0 = counting mode,  1 = CONTINUOUS_READOUT
            bit 1:  1 = SINGLEIO
-           bit 2:  1 = use packet size passed usbDevice1608G->packet_size
+           bit 2:  1 = use packet size passed usbDevice1808->packet_size
            bit 3:  1 = convert to voltages  
 
     Notes:
@@ -411,9 +411,6 @@ class usb1608G(mccUSB):
     self.status = self.Status()
 
   def AInScanRead(self):
-    if self.status & self.AIN_SCAN_RUNNING == 0x0:
-      raise ValueError("AInScanRead: pacer must be running to read from buffer")
-      return
 
     if self.mode & self.CONTINUOUS_READOUT or self.mode & self.SINGLEIO :
       nSamples = self.packet_size

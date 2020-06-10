@@ -67,7 +67,7 @@ def main():
     print("------------------------")
     print("Hit 'b' to blink LED.")
     print("Hit 'c' to test counter. ")
-    print("Hit 'C' to test continous sampling greater tahn 1000 Hz")
+    print("Hit 'C' to test continous sampling greater than 1000 Hz")
     print("Hit 'd' to read/write digital port.")
     print("Hit 'e' to exit.")
     print("Hit 'i' to test analog input. (differential)")
@@ -141,6 +141,64 @@ def main():
         mode = (usb1808.AInConfig[i] >> 2) & 0x3
         print('Channel %d Mode = %#x  Gain = %d value[%d] = %#x Volts = %lf' %
               (i, mode, gain, i, value[i], usb1808.volts(gain, value[i])))
+    elif ch == 'I':
+      print('Testing USB-1808 Multi-Channel Analog Input Scan')
+      usb1808.AInScanStop()
+#     usb1808.AInBulkFlush(5)
+      usb1808.AInScanClearFIFO()
+      mode = int(input('Enter 0 for Differential and 1 for Single Ended: '))
+      if mode == 0:
+        mode = usb1808.DIFFERENTIAL
+      else:
+        mode = usb1808.SINGLE_ENDED
+      nchan = int (input('Enter number of channels (1-8): '))
+      if nchan > 8:
+        print('Max number is channels is 8')
+        continue
+      nscan = int(input('Enter number of scans: '))
+      repeats = int(input('Enter number of repeats: '))
+      frequency = float(input('Enter sampling frequency [Hz]: '))
+      for channel in range(nchan):
+        gain = int(input('Eneter Gain: 1 = +/-10V  2 = +/- 5V  3 = 0-10V  4 = 0-5V: '))
+        if gain == 1:
+          gain = usb1808.BP_10V
+        elif gain == 2:
+          gain = usb1808.BP_5V
+        elif gain == 3:
+          gain = usb1808.UP_10V
+        elif gain == 4:
+          gain = usb1808.UP_5V
+        else:
+          gain = usb1808.BP_10V
+        usb1808.ADCSetup(channel, gain, mode)
+        usb1808.AInScanConfigW(channel, channel, channel)
+
+      print('ADCSetup: ', usb1808.ADCSetupR(), usb1808.AInConfig)
+      print('AInScanConfig: ', usb1808.AInScanConfigR())
+
+      mode = 0
+      for m in range(repeats):
+        print("\n---------------------------------------")
+        print('repeat: %d' % m)
+        usb1808.AInScanStart(nscan, 0, frequency, 0x0, mode)
+        data = usb1808.AInScanRead()
+        print('Number of bytes read = %d (should be %d)' % (len(data), 4*nscans*nchan))
+        for i in range(nscans):
+          print("%6d" % (i), end ='')
+          for j in range(nchan):
+            k = i*nChan + j
+            if mode & usb1808.VOLTAGE:   # data returned in volts
+              print(", %8.4lf V" % data[k], end='')
+            else:
+              if data[k] >= 0x3fffd:
+                print("DAC is saturated at +FS")
+              elif data[k] <= 0x60:
+                print("DaC is saturated at -FS")
+              else:
+                data[k] = int(round(data[k]*usb1808.table_AIn[gain].slope + usb1808.table_AIn[gain].intercept))
+              print(", %8.4lf V" % usb1808.volts(gain, data[k]), end='')
+          print("")
+      print("\n\n---------------------------------------")
     elif ch == 'o':
       channel = int(input('Enter analog output channel [0-1]: '))
       voltage = float(input('Enter voltage [+/- 10V]: '))
