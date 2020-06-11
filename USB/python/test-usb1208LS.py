@@ -59,8 +59,8 @@ def main():
       usb1208LS.CInit()                       # initialize the counter
       print('Connect pin 20 and 21')
       for i in range(20):
-        usb1208LS.DOut(usb1208LS.DIO_PORTA, 1);
-        usb1208LS.DOut(usb1208LS.DIO_PORTA, 0);
+        usb1208LS.DOut(usb1208LS.DIO_PORTA, 1)
+        usb1208LS.DOut(usb1208LS.DIO_PORTA, 0)
         print('Counter =', usb1208LS.CIn())   # read the current count
     elif ch == 'f':
       print("Serial No: %s" % usb1208LS.h.get_serial_number_string())

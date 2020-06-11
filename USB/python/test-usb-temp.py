@@ -45,19 +45,19 @@ def main():
     print("\nTesting USB-TEMP")
     print("----------------")
     print("Hit 'b' to blink LED")
-    print("Hit 'c' to calibrate");
+    print("Hit 'c' to calibrate")
     print("Hit 'd' to test digital I/O ")
     print("Hit 'e' to exit")
-    print("Hit 'f' for burnout status");
+    print("Hit 'f' for burnout status")
     print("Hit 'i' for information")
-    print("Hit 'R' to reset");
-    print("Hit 'r' to measure temperature (RTD)");
-    print("Hit 'p' read the CJC");
-    print("Hit 's' to get status");
-    print("Hit 'S' to measure temperature (Semiconductor)");
-    print("Hit 't' to measure temperature (Thermocouple)");
-    print("Hit 'T' to measure temperature (Thermistor)");    
-    print("Hit 'x' to measure temperature (Thermocouple) multiple channels");
+    print("Hit 'R' to reset")
+    print("Hit 'r' to measure temperature (RTD)")
+    print("Hit 'p' read the CJC")
+    print("Hit 's' to get status")
+    print("Hit 'S' to measure temperature (Semiconductor)")
+    print("Hit 't' to measure temperature (Thermocouple)")
+    print("Hit 'T' to measure temperature (Thermistor)")    
+    print("Hit 'x' to measure temperature (Thermocouple) multiple channels")
     ch = input('\n')
 
     if ch == 'b':

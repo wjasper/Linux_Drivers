@@ -717,7 +717,7 @@ class usb_ctr(mccUSB):
 
   def ScanRead(self, count):
     if (self.status & self.PACER_RUNNING) == 0x0:
-      print("ScanRead: pacer must be running to read from buffer\n");
+      print("ScanRead: pacer must be running to read from buffer\n")
       return -1
 
     if (self.scan_mode & self.CONTINUOUS_READOUT) or (self.scan_mode & self.SINGLEIO):

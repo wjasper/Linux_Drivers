@@ -73,9 +73,9 @@ def main():
       print('Connect pin 38 and 35')
       usb1608FS.DConfig(usb1608FS.DIO_DIR_OUT)
       for i in range(20):
-        usb1608FS.DOut(0xff);
+        usb1608FS.DOut(0xff)
         time.sleep(.01)
-        usb1608FS.DOut(0);
+        usb1608FS.DOut(0)
         print('Counter =', usb1608FS.CIn())   # read the current count
     elif ch == 'd':
       print('Reading Digital I/O ...')
@@ -165,21 +165,21 @@ def main():
         print('Channel: ',chan,' value =', hex(value),'\t',format(usb1608FS.volts(gain, value),'.3f'),'V')
         usb1608FS.DOut(1)
         time.sleep(0.01)
-        value = usb1608FS.AIn(chan, gain);
+        value = usb1608FS.AIn(chan, gain)
         print('Channel: ',chan,' value =', hex(value),'\t',format(usb1608FS.volts(gain, value),'.3f'),'V')
     elif ch == 'g':
       print('Testing Analog input scan')
       freq = float(input('Enter desired frequency [Hz]: '))
       count = int(input('Enter number of scans [1-1024]: '))
       chan = int(input('Enter channel [0-7]: '))
-      print("\t\t1. +/- 10.0V");
-      print("\t\t2. +/- 5.0V");
-      print("\t\t3. +/- 2.5V");
-      print("\t\t4. +/- 2.V");
-      print("\t\t5. +/- 1.25V");
-      print("\t\t6. +/- 1.0V");
-      print("\t\t7. +/- 0.625V");
-      print("\t\t8. +/- 0.3125V");
+      print("\t\t1. +/- 10.0V")
+      print("\t\t2. +/- 5.0V")
+      print("\t\t3. +/- 2.5V")
+      print("\t\t4. +/- 2.V")
+      print("\t\t5. +/- 1.25V")
+      print("\t\t6. +/- 1.0V")
+      print("\t\t7. +/- 0.625V")
+      print("\t\t8. +/- 0.3125V")
       gain = int(input("Select gain [1-8]: "))
       if gain == 1:
         gain = usb1608FS.BP_10_00V

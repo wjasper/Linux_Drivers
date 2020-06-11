@@ -78,8 +78,8 @@ class usb1808(mccUSB):
   SINGLE_IO         = 0x10   # 1 = use SINGLE_IO data transfer,  0 = use BLOCK_IO transfer
 
   # Ananlog Output Scan Options
-  AO_CHAN0       = 0x1   # Include Channel 0 in output scan
-  AO_CHAN1       = 0x2   # Include Channel 1 in output scan
+  AO_CHAN0       = 0x0   # Include Channel 0 in output scan
+  AO_CHAN1       = 0x1   # Include Channel 1 in output scan
   AO_TRIG        = 0x10  # Use Trigger
   AO_RETRIG_MODE = 0x20  # Retrigger Mode
   
@@ -255,12 +255,11 @@ class usb1808(mccUSB):
 
     # Set up the ADC Configuration
     #  Default to +/- 10V Differential
-    self.AInConfig = bytearray(self.NCHAN)
-    for chan in range(self.NCHAN):
-      self.AInConfig[chan] = 0x0
+    self.AInConfig = [0, 0, 0, 0, 0, 0, 0, 0]
 
     # Set up structure for Counter Parameters
     self.counterParameters = [CounterParameters(), CounterParameters(), CounterParameters(), CounterParameters()]
+
     # Set up structure for Timer Parameters
     self.timerParameters = [TimerParameters(), TimerParameters()]
 
@@ -490,8 +489,6 @@ class usb1808(mccUSB):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     bytesPerScan = (self.lastElementAIn+1)*4
 
-    print('bytestPerScan = ', bytesPerScan)
-
     if frequency > 50000: # 50k S/s throughput max
       frequency = 50000
     elif frequency > 0 and frequency < .023: # .023 S/s throughut min
@@ -508,8 +505,6 @@ class usb1808(mccUSB):
     else:
       self.bytesToRead = count*(self.lastElementAIn+1)*4  # total number of bytes to read
 
-    print('bytesToRead = ', self.bytesToRead)
-
     if self.mode & self.FORCE_PACKET_SIZE:
       packet_size = self.packet_size
     elif self.mode & self.SINGLEIO:
@@ -520,8 +515,6 @@ class usb1808(mccUSB):
       packet_size = self.wMaxPacketSize // 4
     self.packet_size = packet_size
 
-    print('packet_size = ', packet_size, 'lastElementAIn = ', self.lastElementAIn + 1, ' mode = ', self.mode)
-
     if self.mode & self.CONTINUOUS_READOUT:
       self.count = 0
     else:
@@ -529,39 +522,32 @@ class usb1808(mccUSB):
 
     self.retirg_count = retrig_count
     self.mode = mode & 0xff
-    self.options = options
+    self.options = options 
 
-    packet_size -= 1  # force to uint8_t size in range 0-255    
+    packet_size -= 1  # force to uint8_t size in range 0-255  
     scanPacket = pack('IIIBB', count, retrig_count, pacer_period, packet_size, options)
-    print('AInScanStart: ', scanPacket, 'count = ', count, 'packet_size = ', packet_size)
+
     try:
-      result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
+      result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 500)
     except:
       print('AInScanStart: Error in control write')
 
     self.status = self.Status()
-    self.printStatus()
+
 
   def AInScanRead(self):
-#    if self.status & self.AIN_SCAN_RUNNING == 0x0:
-#      raise ValueError("AInScanRead: pacer must be running to read from buffer")
-#      return
-
     if self.mode & self.CONTINUOUS_READOUT or self.mode & self.SINGLEIO :
       nSamples = self.packet_size
     else:
       nSamples = self.count*(self.lastElementAIn+1)
 
-    print('AInScanRead: nSamples = ', nSamples)
-
     try:
-       data =  list(unpack('I'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(4*nSamples), self.HS_DELAY)))
-#      data =  unpack('I'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(4*nSamples), self.HS_DELAY))
-#       data =   self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, 4*nSamples, self.HS_DELAY)
-    except:
-      print('AInScanRead: error in bulkRead.')
+      data =  list(unpack('I'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, 4*nSamples, 2000)))
+    except usb1.USBErrorTimeout as exception:
+      print('AInScanRead: Bulk Read error.  Timeout')
+      return [0]*nSamples
 
-    print('AInConfigRead: ',data)
+    print('AInScangRead: ',data, len(data))
     if len(data) != nSamples:
       raise ValueError('AInScanRead: error in number of samples transferred.')
       return len(data)
@@ -630,7 +616,7 @@ class usb1808(mccUSB):
     Encoder 1:       12
 
     """
-    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
     value = self.udev.controlRead(request_type, self.AIN_SCAN_CONFIG, wValue, wIndex, 13, self.HS_DELAY)
@@ -639,7 +625,7 @@ class usb1808(mccUSB):
     return value
 
   def AInScanConfigW(self, entry, value, lastElement=-1):
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_CONFIG
     wValue = 0
     wIndex = 0
@@ -660,14 +646,14 @@ class usb1808(mccUSB):
     try:
       result = self.udev.controlWrite(request_type, request, wValue, wIndex, self.scanQueueAIn, self.HS_DELAY)
     except:
-      print('AInScanConfigW: error in control Write result =', result)
+      print('AInScanConfigW: error in control write. result =', result)
       return
     
   def AInScanClearFIFO(self):
     """
     This command clears the analog input firmware buffer.
     """
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_CLEAR_FIFO
     wValue = 0
     wIndex = 0
@@ -677,7 +663,7 @@ class usb1808(mccUSB):
     """
     This command flushes the input Bulk pipe a number of times.
     """
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_BULK_FLUSH
     wValue = count
     wIndex = 0
@@ -874,7 +860,7 @@ class usb1808(mccUSB):
     """
     The command clears the output firmware buffer.
     """
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
     result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CLEAR_FIFO, wValue, wIndex, [0x0], timeout = 100)

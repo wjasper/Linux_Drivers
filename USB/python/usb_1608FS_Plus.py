@@ -426,7 +426,7 @@ class usb_1608FS_Plus(mccUSB):
              6            +/- 0.625 V
              7            +/- 0.3125 V
     """
-    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_CONFIG
     wValue = 0x0
     wIndex = 0x0
@@ -434,7 +434,7 @@ class usb_1608FS_Plus(mccUSB):
     return ranges
 
   def AInConfigW(self, ranges):
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_CONFIG
     wValue = 0x0
     wIndex = 0x0
@@ -444,7 +444,7 @@ class usb_1608FS_Plus(mccUSB):
     """
     This command clears the internal scan endpoint FIFOs
     """
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_CLEAR_FIFO
     wValue = 0x0
     wIndex = 0x0

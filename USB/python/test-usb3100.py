@@ -76,7 +76,7 @@ def main():
 
   while True:
     print("\nUSB 31XX Testing")
-    print("----------------");
+    print("----------------")
     print("Hit 'a' for analog output of different levels.")
     print("Hit 'o' for analog output.")
     print("Hit 'b' to blink")

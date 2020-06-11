@@ -61,8 +61,8 @@ def main():
       print('Connect DIO0 to CTR')
       miniLAB.DConfig(miniLAB.DIO_AUXPORT,miniLAB.DIO_DIR_OUT) 
       for i in range(20):
-        miniLAB.DOut(miniLAB.DIO_AUXPORT, 1);
-        miniLAB.DOut(miniLAB.DIO_AUXPORT, 0);
+        miniLAB.DOut(miniLAB.DIO_AUXPORT, 1)
+        miniLAB.DOut(miniLAB.DIO_AUXPORT, 0)
         print('Counter =', miniLAB.CIn())   # read the current count
     elif ch == 'f':
       print("Serial No: %s" % miniLAB.h.get_serial_number_string())

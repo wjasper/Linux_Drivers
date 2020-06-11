@@ -149,7 +149,7 @@ def main():
       usb1408FS_Plus.DTristateW(0x0, usb1408FS_Plus.PORTA)
 
       for i in range(20):
-        usb1408FS_Plus.DPortW(0,usb1408FS_Plus.PORTA);
+        usb1408FS_Plus.DPortW(0,usb1408FS_Plus.PORTA)
         time.sleep(0.01)
         value = usb1408FS_Plus.AIn(chan, mode, gain)
         print('Channel: ',chan,' value =', hex(value),'\t',format(usb1408FS_Plus.volts(gain, value),'.3f'),'V')

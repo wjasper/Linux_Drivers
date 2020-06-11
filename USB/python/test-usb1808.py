@@ -144,7 +144,7 @@ def main():
     elif ch == 'I':
       print('Testing USB-1808 Multi-Channel Analog Input Scan')
       usb1808.AInScanStop()
-#     usb1808.AInBulkFlush(5)
+      usb1808.AInBulkFlush(5)
       usb1808.AInScanClearFIFO()
       mode = int(input('Enter 0 for Differential and 1 for Single Ended: '))
       if mode == 0:
@@ -173,27 +173,24 @@ def main():
         usb1808.ADCSetup(channel, gain, mode)
         usb1808.AInScanConfigW(channel, channel, channel)
 
-      print('ADCSetup: ', usb1808.ADCSetupR(), usb1808.AInConfig)
-      print('AInScanConfig: ', usb1808.AInScanConfigR())
-
       mode = 0
       for m in range(repeats):
         print("\n---------------------------------------")
         print('repeat: %d' % m)
         usb1808.AInScanStart(nscan, 0, frequency, 0x0, mode)
         data = usb1808.AInScanRead()
-        print('Number of bytes read = %d (should be %d)' % (len(data), 4*nscans*nchan))
-        for i in range(nscans):
+        print('Number of bytes read = %d (should be %d)' % (len(data), 4*nscan*nchan))
+        for i in range(nscan):
           print("%6d" % (i), end ='')
           for j in range(nchan):
-            k = i*nChan + j
+            k = i*nchan + j
             if mode & usb1808.VOLTAGE:   # data returned in volts
               print(", %8.4lf V" % data[k], end='')
             else:
               if data[k] >= 0x3fffd:
-                print("DAC is saturated at +FS")
+                print(" DAC is saturated at +FS")
               elif data[k] <= 0x60:
-                print("DaC is saturated at -FS")
+                print(" DaC is saturated at -FS")
               else:
                 data[k] = int(round(data[k]*usb1808.table_AIn[gain].slope + usb1808.table_AIn[gain].intercept))
               print(", %8.4lf V" % usb1808.volts(gain, data[k]), end='')

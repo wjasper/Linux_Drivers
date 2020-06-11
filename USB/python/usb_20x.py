@@ -482,7 +482,7 @@ class usb_20x(mccUSB):
     """
     The command clears the internal scan endoint FIFOs
     """
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_CLEAR_FIFO
     wValue = 0x0
     wIndex = 0x0

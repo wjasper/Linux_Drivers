@@ -514,7 +514,7 @@ class bth_1208LS(mccUSB):
     stall if an AInScan is currently running.  
     """
 
-    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_CONFIG
     wValue = 0x0
     wIndex = 0x0
@@ -522,7 +522,7 @@ class bth_1208LS(mccUSB):
     return ranges
 
   def AInConfigW(self, ranges):
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_CONFIG
     wValue = 0x0
     wIndex = 0x0
@@ -532,7 +532,7 @@ class bth_1208LS(mccUSB):
     """
     The command clears the internal scan endoint FIFOs
     """
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_CLEAR_FIFO
     wValue = 0x0
     wIndex = 0x0

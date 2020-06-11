@@ -81,9 +81,9 @@ def main():
       usb1408FS.CInit()                       # initialize the counter
       print('Connect pin 20 and 21')
       for i in range(20):
-        usb1408FS.DOut(usb1408FS.DIO_PORTA, 1);
+        usb1408FS.DOut(usb1408FS.DIO_PORTA, 1)
         time.sleep(.01)
-        usb1408FS.DOut(usb1408FS.DIO_PORTA, 0);
+        usb1408FS.DOut(usb1408FS.DIO_PORTA, 0)
         print('Counter =', usb1408FS.CIn())   # read the current count
     elif ch == 'd':
       print('Testing Digital I/O ...')
@@ -121,7 +121,7 @@ def main():
     elif ch == 'i':
       print('Connect pin 1 <-> pin 21 and pin 2 <-> pin 3')
       chan = int(input('Select channel [0-3]: '))
-      print("\t\t1. +/- 20.V");
+      print("\t\t1. +/- 20.V")
       print("\t\t2. +/- 10.V")
       print("\t\t3. +/- 5.V")
       print("\t\t4. +/- 4.V")
@@ -153,14 +153,14 @@ def main():
         print('Channel: ',chan,' value =', hex(value),'\t',format(usb1408FS.volts(gain, value),'.3f'),'V')
         usb1408FS.DOut(usb1408FS.DIO_PORTA, 1)
         time.sleep(0.01)
-        value = usb1408FS.AIn(chan, gain);
+        value = usb1408FS.AIn(chan, gain)
         print('Channel: ',chan,' value =', hex(value),'\t',format(usb1408FS.volts(gain, value),'.3f'),'V')
     elif ch == 'g':
       print('Testing Analog input scan')
       freq = int(input('Enter desired frequency [Hz]: '))
       count = int(input('Enter number of samples [1-1024]: '))
       chan = int(input('Enter channel [0-3]: '))
-      print("\t\t1. +/- 20.V");
+      print("\t\t1. +/- 20.V")
       print("\t\t2. +/- 10.V")
       print("\t\t3. +/- 5.V")
       print("\t\t4. +/- 4.V")

@@ -490,7 +490,7 @@ class usb1608G(mccUSB):
       bit 6:  Mode Mux 1
       bit 7:  Last Channel
     """
-    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
     value = self.udev.controlRead(request_type, self.AIN_SCAN_CONFIG, wValue, wIndex, 16, self.HS_DELAY)
@@ -508,7 +508,7 @@ class usb1608G(mccUSB):
     lastElement: Set to True is last element in the queue
     """
 
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_CONFIG
     wValue = 0
     wIndex = 0
@@ -547,7 +547,7 @@ class usb1608G(mccUSB):
     """
     This command clears the analog input firmware buffer.
     """
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_CLEAR_FIFO
     wValue = 0
     wIndex = 0
@@ -571,7 +571,7 @@ class usb1608G(mccUSB):
     """
     This command reads the 32-bit event counters.  
     """
-    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
     data = unpack('II',self.udev.controlRead(request_type, self.COUNTER, wValue, wIndex, 8, self.HS_DELAY))
@@ -1206,7 +1206,7 @@ class usb_1608GX_2AO(usb1608G):
     """
     The command clears the internal scan endoint FIFOs
     """
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
     result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CLEAR_FIFO, wValue, wIndex, [0x0], timeout = 100)

@@ -144,8 +144,8 @@ def main():
       bth1208LS.AInConfigW(ranges)
       time.sleep(1)
       for m in range(repeats):
-        print("\n\n---------------------------------------");
-        print("\nrepeat: ", m);
+        print("\n\n---------------------------------------")
+        print("\nrepeat: ", m)
         bth1208LS.AInScanStop()
         bth1208LS.AInScanClearFIFO()
         bth1208LS.AInScanStart(nScan*nChan, 0x0, frequency, channels, options)

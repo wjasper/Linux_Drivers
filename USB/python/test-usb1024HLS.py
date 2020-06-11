@@ -55,8 +55,8 @@ def main():
       print('Connect pin 1 and 20')
       usbdio.CInit()                       # initialize the counter
       for i in range(20):
-        usbdio.DOut(usbdio.DIO_PORTC_LOW, 1);
-        usbdio.DOut(usbdio.DIO_PORTC_LOW, 0);
+        usbdio.DOut(usbdio.DIO_PORTC_LOW, 1)
+        usbdio.DOut(usbdio.DIO_PORTC_LOW, 0)
         print('Counter =', usbdio.CIn())   # read the current count
     elif ch == 'n':
       print("Serial No: %s" % usbdio.h.get_serial_number_string())

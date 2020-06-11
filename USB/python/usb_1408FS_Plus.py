@@ -486,7 +486,7 @@ class usb_1408FS_Plus(mccUSB):
              6            +/- 1.25 V
              7            +/- 1 V
     """
-    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_CONFIG
     wValue = 0x0
     wIndex = 0x0
@@ -494,7 +494,7 @@ class usb_1408FS_Plus(mccUSB):
     return ranges
 
   def AInScanConfigW(self, ranges):
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_CONFIG
     wValue = 0x0
     wIndex = 0x0
@@ -504,7 +504,7 @@ class usb_1408FS_Plus(mccUSB):
     """
     The command clears the internal scan endoint FIFOs
     """
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_CLEAR_FIFO
     wValue = 0x0
     wIndex = 0x0
@@ -514,7 +514,7 @@ class usb_1408FS_Plus(mccUSB):
     """
     The command will send a specified number of empty Bulk In packets
     """
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_BULK_FLUSH
     wValue = 0x0
     wIndex = 0x0
@@ -633,7 +633,7 @@ class usb_1408FS_Plus(mccUSB):
     """
     The command clears the internal scan endoint FIFOs
     """
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0x0
     wIndex = 0x0
     result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CLEAR_FIFO, wValue, wIndex, [0x0], timeout = 100)

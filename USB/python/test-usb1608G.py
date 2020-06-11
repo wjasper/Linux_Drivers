@@ -177,7 +177,7 @@ def main():
       print("\n\n---------------------------------------")
     elif ch == 'C':
       print("Testing USB-1608G Analog Input Scan in continuous mode 16 channels")
-      print("Hit any key to exit");
+      print("Hit any key to exit")
       frequency = float(input("Enter desired sampling frequency (greater than 1000): "))
       usb1608G.AInScanStop()
       nScans = 0  # for conitnuous mode

@@ -137,14 +137,14 @@ def main():
       frequency = float(input('Enter desired frequency [Hz]: '))
       count = int(input('Enter number of scans [1-1024]: '))
       nchan = int(input('Enter number of channels [1-8]: '))
-      print("\t\t1. +/- 10.0V");
-      print("\t\t2. +/- 5.0V");
-      print("\t\t3. +/- 2.5V");
-      print("\t\t4. +/- 2.V");
-      print("\t\t5. +/- 1.25V");
-      print("\t\t6. +/- 1.0V");
-      print("\t\t7. +/- 0.625V");
-      print("\t\t8. +/- 0.3125V");
+      print("\t\t1. +/- 10.0V")
+      print("\t\t2. +/- 5.0V")
+      print("\t\t3. +/- 2.5V")
+      print("\t\t4. +/- 2.V")
+      print("\t\t5. +/- 1.25V")
+      print("\t\t6. +/- 1.0V")
+      print("\t\t7. +/- 0.625V")
+      print("\t\t8. +/- 0.3125V")
       gain = int(input("Select gain [1-8]: "))
       if gain == 1:
         gain = usb1608FS_Plus.BP_10_00V
