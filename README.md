@@ -23,7 +23,7 @@ write me (wjasper@ncsu.edu) about it.
 There have been many requests for Python drivers, which I have put off
 for many reasons.  However, I am beginning the process starting with
 the E-1608.py (Ethernet devices) and am now writing them for USB HID
-devices. Please send me comments and feedback.
+and high speed USB devices. Please send me comments and feedback.
 
 **Note:** There have been many changes to the 2.6 kernel API.  All the
 drivers have been tested with the 2.6.22 kernel.  There are backward
@@ -34,7 +34,7 @@ API changed enough that I started a new version of the modules. I do
 not have a new version of the modules for each version of the kernel.
 If you notice problems that are kernel version related, use a later
 version or email me.  The pci drivers should also work on the 3.X and
-4.X kernels.
+4.X kernels.  Most should also work with the 5.X kernels.
 
 I have divided the drivers into categories by bus type.  Thus, all the
 USB drivers are in the USB directory, etc. 
@@ -61,6 +61,7 @@ I have written drivers for the following boards:
 17. PCI-QUAD04
 18. PCIM-DAS1602/16
 19. PCIM-DAS16Jr/16
+20. PCIM-DDA06-16
 
 **Ethernet**
 1. E-1608   (C/Python)
@@ -84,17 +85,18 @@ I have written drivers for the following boards:
    USB-4301, USB-4303, USB-DIO24, USB-DIO24H, USB-1408FS, USB-TC-AI, USB-TEMP-AI
    USB-1608HS, USB-1608HS-2AO, USB-2416, USB-1208HS, USB-1608G, USB-1608GX, UB-1608GX-2AO
    USB-1608FS-Plus, USB-2633, USB-2637, USB-201, USB-204, USB-205, USB-CTR8, USB-1208FS-Plus,
-   USB-1408FS-Plus, USB-2020 USB-2001TC USB-2408 USB-7202 USB-7204 USB-DIO32HS USB-1808
+   USB-1408FS-Plus, USB-2020 USB-2001TC USB-2408 USB-7202 USB-7204 USB-DIO32HS USB-1808, USB-1808X
 
 **Python**
   USB-1208LS, USB-miniLAB1008, USB-1024LS, USB-1024HLS, USB-DIO24, USB-DIO24H, USB-SSR24, 
   USB-SSR08, USB-ERB24, USB-ERB08, USB-PDISO8 USB-1208FS, USB-1408FS, USB-1608FS,
   USB-2408, USB-2408-2AO, USB-3101, USB-3101, USB-3102, USB-3103, USB-3104, USB-3105,
   USB-3106, USB-3110, USB-3112, USB-3114, USB-2001TC, USB-CTR-04, USB-CTR08, BTH-120LS,
-  USB-201, USB-202, USB-204, USB-205
+  USB-201, USB-202, USB-204, USB-205, USB-1608G, USB-1608GX, USB-1608GX-2AO,
+  USB-1808, USB-1808X.
 
 **New Python**:heavy_exclamation_mark:  USB-31XX, USB-2001TC USB-CTR04, USB-CTR08, USB-201,
-USB-202, USB-204, USB-205
+USB-202, USB-204, USB-205, USB-1608G, USB-1608GX, USB-1608GX-2AO, USB-1808, USB-1808X.
 
 ====================================================================
 ## FAQ:  Here are some questions that I sometimes get that might help.
@@ -123,8 +125,9 @@ USB-202, USB-204, USB-205
 
 4. Q: How do I know if I have a hardware problem with the board?  
    A: Measurement Computing tests each and every board and QC's it before
-   shipping.  It is rare, but possible that you have a bad board. Run InstaCal (under Windows). If InstaCal fails, you should
-   contact Measurement Computing, as it is likely you have a hardware problem.
+   shipping.  It is rare, but possible that you have a bad board. Run InstaCal (under Windows).
+   If InstaCal fails, you should contact Measurement Computing, as it is likely
+   you have a hardware problem.
       
 5. Q: The driver fails to load.  
    A: There are many reasons why the driver may fail to load.  Check that  
