@@ -388,7 +388,7 @@ class usb1608G(mccUSB):
     if self.mode & self.FORCE_PACKET_SIZE:
       packet_size = self.packet_size
     elif self.mode & self.SINGLEIO:
-      packet_size = self.lastElement +1
+      packet_size = self.lastElement + 1
     elif self.mode & self.CONTINUOUS_READOUT:
       packet_size = int((( (self.wMaxPacketSize//bytesPerScan) * bytesPerScan) // 2))
     else:

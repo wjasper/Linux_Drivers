@@ -489,10 +489,14 @@ class usb1808(mccUSB):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     bytesPerScan = (self.lastElementAIn+1)*4
 
-    if frequency > 50000: # 50k S/s throughput max
+    if self.productID == self.USB_1808_PID and frequency > 50000: # 50k S/s throughput max
       frequency = 50000
-    elif frequency > 0 and frequency < .023: # .023 S/s throughut min
+    elif self.productID == self.USB_1808X_PID and frequency > 200000: # 200k S/s throughput max
+      frequency = 200000
+    elif frequency > 0 and frequency < .023: # .023 S/s throughput min
       frequency = .023
+
+    self.frequency = frequency
 
     if frequency == 0.0:
       pacer_period = 0     # use external pacer
@@ -510,7 +514,9 @@ class usb1808(mccUSB):
     elif self.mode & self.SINGLEIO:
       packet_size = self.lastElementAIn + 1
     elif self.mode & self.CONTINUOUS_READOUT:
-      packet_size = int((( (self.wMaxPacketSize//bytesPerScan) * bytesPerScan) // 4))
+      packet_size = int(((self.wMaxPacketSize//bytesPerScan) * bytesPerScan) // 4)
+    elif self.bytesToRead <= self.wMaxPacketSize:
+      packet_size = self.bytesToRead // 4  # causes timeout error for small sample size
     else:
       packet_size = self.wMaxPacketSize // 4
     self.packet_size = packet_size
@@ -524,7 +530,8 @@ class usb1808(mccUSB):
     self.mode = mode & 0xff
     self.options = options 
 
-    packet_size -= 1  # force to uint8_t size in range 0-255  
+    packet_size -= 1  # force to uint8_t size in range 0-255
+    print('packet_size =', packet_size)
     scanPacket = pack('IIIBB', count, retrig_count, pacer_period, packet_size, options)
 
     try:
@@ -534,20 +541,20 @@ class usb1808(mccUSB):
 
     self.status = self.Status()
 
-
   def AInScanRead(self):
     if self.mode & self.CONTINUOUS_READOUT or self.mode & self.SINGLEIO :
       nSamples = self.packet_size
     else:
       nSamples = self.count*(self.lastElementAIn+1)
 
+    timeout = round(500 + 1000*nSamples/self.frequency)
+
     try:
-      data =  list(unpack('I'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, 4*nSamples, 2000)))
+      data =  list(unpack('I'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, 4*nSamples, timeout)))
     except usb1.USBErrorTimeout as exception:
       print('AInScanRead: Bulk Read error.  Timeout')
-      return [0]*nSamples
+      return
 
-    print('AInScangRead: ',data, len(data))
     if len(data) != nSamples:
       raise ValueError('AInScanRead: error in number of samples transferred.')
       return len(data)
@@ -577,8 +584,11 @@ class usb1808(mccUSB):
       return data
 
     # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
-    if nSamples*2%self.wMaxPacketSize == 0:
-     dummy = self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, 4, 100)
+    if nSamples*4%self.wMaxPacketSize == 0:
+      try:
+       dummy = self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, 1, 100)
+      except:
+        pass
      
     self.status = self.Status()
     if self.status & self.AIN_SCAN_OVERRUN:
