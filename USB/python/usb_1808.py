@@ -427,7 +427,7 @@ class usb1808(mccUSB):
     value = unpack('BBBBBBBB',self.udev.controlRead(request_type, self.AIN_ADC_SETUP, wValue, wIndex, 8, self.HS_DELAY))
     return value
 
-  def AInScanStart(self, count, retrig_count, frequency, options, mode):
+  def AInScanStart(self, count, retrig_count, frequency, options, mode=0x0):
     """
     This command starts the analog input channel scan.  The gain
     ranges that are currently set on the desired channels will be
@@ -484,6 +484,28 @@ class usb1808(mccUSB):
     used if trigger is used.  This option will cause the trigger to
     be rearmed after retrig_count samples are acquired, with a total
     of count samples being returned from the entire scan.
+
+
+    count:          the total number of scans to perform (0 for continuous scan)
+    retrig_count:   the number of scans to perform fro each trigger in retrigger mode
+    pacer_period:   pacer timer period value (0 for external clock)
+    packet_size:    number of samples to transfer from defice FIFO at a time
+    options:        bit field that controls various options
+                bit 0: 1 = use external trigger
+                bit 1: 1 = use Pattern Detection trigger
+                bit 2: 1 = retrigger mode, 0 = normal trigger
+                bit 3: 1 = Maintain counter value on scan start, 0 = clear counter value on scan start
+                bit 4: Reserved 
+                bit 5: Reserved 
+                bit 6: Reserved 
+                bit 7: Reserved 
+
+    frequency: sampling frequency in Hz to set the pacer clock (scans per second)
+    mode:      Controls various AIn Scan Modes
+               bit 0: 1 = Continuous mode  0 = sample for "count" scans
+               bit 1: 1 = return data after every read (used for low frequency scans)
+               bit 2: 1 = force value of packet_size
+               bit 3: 1 = return voltages as floats instead of raw reading
     """
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -497,6 +519,7 @@ class usb1808(mccUSB):
       frequency = .023
 
     self.frequency = frequency
+    self.mode = mode
 
     if frequency == 0.0:
       pacer_period = 0     # use external pacer
@@ -531,7 +554,6 @@ class usb1808(mccUSB):
     self.options = options 
 
     packet_size -= 1  # force to uint8_t size in range 0-255
-    print('packet_size =', packet_size)
     scanPacket = pack('IIIBB', count, retrig_count, pacer_period, packet_size, options)
 
     try:
@@ -559,26 +581,27 @@ class usb1808(mccUSB):
       raise ValueError('AInScanRead: error in number of samples transferred.')
       return len(data)
     
+    if self.mode & self.VOLTAGE:
+      for i in range(len(data)):
+        chan = self.scanQueueAIn[i%(self.lastElementAIn+1)]
+        if chan < 8:  # Only convert A/D values
+          gain = self.AInConfig[chan] & 0x3
+          data[i] = data[i]*self.table_AIn[chan][gain].slope + self.table_AIn[chan][gain].intercept
+          if data[i] > 0x3ffff:
+            data[i] = 0x3ffff
+          elif data[i] < 0.0:
+            data[i] = 0x0
+          else:
+            data[i] = int(round(data[i]))
+          data[i] = self.volts(gain, data[i])
+
     if self.bytesToRead > len(data)*4:
       self.bytesToRead -= len(data)*4
     elif self.bytesToRead > 0 and self.bytesToRead < len(data)*4:  # all done
       self.AInScanStop()
       self.AInScanClearFIFO()
       self.status = self.Status()
-      return self.bytesToRead
-
-    if self.mode & self.VOLTAGE:
-      for i in range(len(data)):
-        chan = self.scanQueueAIn[i%(self.lastElementAIn+1)]
-        gain = self.AInConfig[chan] & 0x3
-        data[i] = data[i]*self.table_AIn[chan][gain].slope + self.table_AIn[chan][gain].intercept
-        if data[i] > 0x3ffff:
-          data[i] = 0x3ffff
-        elif data[i] < 0.0:
-          data[i] = 0x0
-        else:
-          data[i] = int(round(data[i]))
-        data[i] = self.volts(gain, data[i])
+      return data
 
     if self.mode & self.CONTINUOUS_READOUT:
       return data

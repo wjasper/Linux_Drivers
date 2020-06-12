@@ -176,7 +176,7 @@ def main():
       for m in range(repeats):
         print("\n---------------------------------------")
         print('repeat: %d' % m)
-        usb1808.AInScanStart(nScans, 0, frequency, 0x0, 0)
+        usb1808.AInScanStart(nScans, 0, frequency, 0x0)
         data = usb1808.AInScanRead()
         print('Number of samples read = %d (should be %d)' % (len(data), nScans*nchan))
         for i in range(nScans):
@@ -186,12 +186,13 @@ def main():
             if mode & usb1808.VOLTAGE:   # data returned in volts
               print(", %8.4lf V" % data[k], end='')
             else:
-              if data[k] >= 0x3fffd:
+              data[k] = int(round(data[k]*usb1808.table_AIn[j][gain].slope + usb1808.table_AIn[j][gain].intercept))
+              if data[k] >= 0x3ffff:
                 print(" DAC is saturated at +FS")
-              elif data[k] <= 0x60:
+                data[k] = 0x3ffff
+              elif data[k] < 0x0:
                 print(" DaC is saturated at -FS")
-              else:
-                data[k] = int(round(data[k]*usb1808.table_AIn[j][gain].slope + usb1808.table_AIn[j][gain].intercept))
+                data[k] = 0x0
               print(", %8.4lf V" % usb1808.volts(gain, data[k]), end='')
           print("")
       print("\n\n---------------------------------------")
@@ -209,7 +210,7 @@ def main():
         usb1808.AInScanConfigW(channel, channel, channel)
       nread = 128
       i = 0
-      usb1808.AInScanStart(nScans, 0, frequency, 0, usb1808.CONTINUOUS_READOUT)
+      usb1808.AInScanStart(nScans, 0, frequency, 0, usb1808.CONTINUOUS_READOUT | usb1808.VOLTAGE)
       flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
       while True:
