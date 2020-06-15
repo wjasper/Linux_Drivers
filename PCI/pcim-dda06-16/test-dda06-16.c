@@ -41,7 +41,7 @@ int  Status;
 static int fd_A, fd_B, fd_C;
 static int fd_dac[6];    // we are only going to use 2 for this test.
 
-int  DAC_Gain[4]  = {UP_10_0V, UP_10_0V, UP_10_0V, UP_10_0V};  // HW selectable onboard only
+int  DAC_Gain[6]  = {BP_5_0V, BP_5_0V, BP_5_0V, BP_5_0V, BP_5_0V, BP_5_0V};  // HW selectable onboard only
 
 /***************************************************************************
  *
@@ -202,15 +202,19 @@ float volts( int gain, unsigned short value )
   
   switch( gain ) {
     case BP_5_0V:
+      printf("gain set to BP_5_0V\n");
       volt = (5.0/FS)*(value - FS/2);
       break;
     case BP_10_0V:
+      printf("gain set to BP_10_0V\n");
       volt = (10.0/FS)*(value - FS/2);
       break;
     case UP_5_0V:
+      printf("gain set to UP_5_0V\n");
       volt = (5.0/FS)*(value);
       break;
     case UP_10_0V:
+      printf("gain set to UP_10_0V\n");
       volt = (10.0/FS)*value;
       break;
   }
@@ -221,7 +225,8 @@ void ChangeDACGains()
 {
   int choice;
   int channel = 0;
-
+  printf("Gains can only be change via DIP switches located on the board.  The default is Bipolar +/- 5V\n");
+  printf("Use this function to tell the driver the default settings for each setting\n");
   printf("Enter desired channel: ");
   scanf("%d", &channel);
   printf("Select from the following choices:\n");
@@ -266,13 +271,16 @@ void testDAC2()
 
   for (j = 0; j < 120; j++) {
     for (i = 0; i < FS; i++) {
-      x = 5.0 + 5.*sin(2*M_PI*i/FS);
-      value = x*FS/10.;
-      write(fd_dac[0], &value, 1);  // sine wave
-      x = 5 + 2.5*cos(2*M_PI*i/FS);
-      value = x*FS/10.;
-      write(fd_dac[1], &value, 1);  // sine wave
-      //write(fd_dac[0], &i, 1);    // triangular wave
+      //      x = 5 + 2.5*cos(2*M_PI*i/FS);
+      //      value = x*FS/10.;
+      //      write(fd_dac[1], &value, 1);  // sine wave
+      //value = 0xffff;
+      //write(fd_dac[0], &value, 1);    // square wave
+      //usleep(1000);
+      //value = 0x0;
+      value = (unsigned short) i*16;   // triangular wave
+      write(fd_dac[0], &value, 1);    
+      usleep(1000);
     }
   }
 }
