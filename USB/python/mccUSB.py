@@ -69,6 +69,7 @@ class TimerParameters:
     self.count = 0
     self.dely = 0
     self.control = 0x0
+    self.frequency = 0.0
 
 # Base class for counter parameters
 class CounterParameters:

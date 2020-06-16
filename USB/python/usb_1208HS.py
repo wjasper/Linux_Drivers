@@ -23,23 +23,21 @@ from struct import *
 from datetime import datetime
 from mccUSB import *
 
-class usb1608G(mccUSB):
-
+class usb1208HS(mccUSB):
   # USB PIDs for family of devices
-  USB_1608G_PID = 0x0134
-  USB_1608GX_PID = 0x0135
-  USB_1608GX_2AO_PID = 0x0136
+  USB_1208HS_PID = 0x00c4
+  USB_1208HS_2AO_PID = 0x00c5
+  USB_1208HS_4AO_PID = 0x00c6
 
   # Gain Ranges
   BP_10V   = 0x0       # +/- 10.0 V
   BP_5V    = 0x1       # +/- 5.00 V
-  BP_2V    = 0x2       # +/- 2.00 V
-  BP_1V    = 0x3       # +/- 1.25 V
+  BP_2_5V  = 0x2       # +/- 2.50 V
+  UP_10V   = 0x3       # 0 - 10 V
 
-  # Analog input mode
-  SINGLE_ENDED = 1  # channels 0 - 15
-  DIFFERENTIAL = 0  # channels 0 - 7
-  LAST_CHANNEL = 0x80
+  BP_20V_DE = 0
+  BP_10V_DE = 1
+  BP_5V_DE  = 2
 
   # Status Bits
   AIN_SCAN_RUNNING   = 0x2   # AIn pacer running
@@ -51,10 +49,11 @@ class usb1608G(mccUSB):
   FPGA_CONFIGURED    = 0x100 # FPGA is configured
   FPGA_CONFIG_MODE   = 0x200 # FPGA config mode
 
-  NCHAN              = 16    # max number of A/D channels in the device (single_ended)
-  NGAIN              = 4     # max number of gain levels
-  MAX_PACKET_SIZE_HS = 512   # max packet size for HS device
-  MAX_PACKET_SIZE_FS = 64    # max packet size for HS device
+  NCHAN              = 8    # max number of A/D channels in the device (single_ended)
+  NGAIN              = 4    # max number of gain levels
+  NMODE              = 4    # max number of configuration modes
+  MAX_PACKET_SIZE_HS = 512  # max packet size for HS device
+  MAX_PACKET_SIZE_FS = 64   # max packet size for HS device
   COUNTER0           = 0
   COUNTER1           = 1
 
@@ -64,7 +63,7 @@ class usb1608G(mccUSB):
   FORCE_PACKET_SIZE    = 0x4  # Force packet_size
   VOLTAGE              = 0x8  # return values as voltages
 
-  # Commands and Codes for USB1608G
+  # Commands and Codes for USB-1208HS
   # Digital I/O Commands
   DTRISTATE            = 0x00  # Read/write digital port tristate register
   DPORT                = 0x01  # Read digital port pins / write output latch register
@@ -75,7 +74,6 @@ class usb1608G(mccUSB):
   AIN_SCAN_START       = 0x12  # Start analog input scan
   AIN_SCAN_STOP        = 0x13  # Stop analog input scan
   AIN_SCAN_CONFIG      = 0x14  # Read/Write analog input configuration
-  AIN_SCAN_CLEAR_FIFO  = 0x15  # Clear the analog input scan FIFO
 
   # Counter/Timer Commands
   COUNTER              = 0x20  # Read/reset counter
@@ -96,7 +94,6 @@ class usb1608G(mccUSB):
   BLINK_LED            = 0x41  # Causes the LED to blink
   RESET                = 0x42  # Reset the device
   TRIGGER_CONFIG       = 0x43  # External trigger configuration
-  CAL_CONFIG           = 0x44  # Calibration voltage configuration
   TEMPERATURE          = 0x45  # Read internal temperature
   SERIAL               = 0x48  # Read/Write USB Serial Number
 
@@ -108,41 +105,43 @@ class usb1608G(mccUSB):
   HS_DELAY = 2000
 
   def __init__(self):
-    self.status = 0                       # status of the device
-    self.samplesToRead = -1               # number of bytes left to read from a scan
-    self.scanList = bytearray(self.NCHAN) # depth of scan queue is 15
-    self.lastElement = 0                  # last element of the scan list
+    self.status = 0                    # status of the device
+    self.samplesToRead = -1            # number of bytes left to read from a scan
+    self.scanQueueAIn = [0]*13         # depth of analog input scan queue is 13
+    self.scanQueueAOut= [0]*3          # depth of analog output scan queue is 3
+    self.lastElementAIn = 0            # last element of the analog input scan list
+    self.lastElementAOut = 0           # last element of the analog output scan list
     self.count = 0
     self.retrig_count = 0
     self.options = 0
-    self.frequency = 0.0                  # frequency of scan (0 for external clock)
-    self.packet_size = 512                # number of samples to return from FIFO
-    self.mode = 0                         # mode bits:
-                                          # bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
-                                          # bit 1:   1 = SINGLEIO
-                                          # bit 2:   1 = use packet size in self.packet_size
-                                          # bit 3:   1 = convert raw readings to voltages
-                
+    self.frequency = 0.0               # frequency of scan (0 for external clock)
+    self.packet_size = 512             # number of samples to return from FIFO
+    self.mode = 0                      # mode bits:
+                                       # bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
+                                       # bit 1:   1 = SINGLEIO
+                                       # bit 2:   1 = use packet size in self.packet_size
+                                       # bit 3:   1 = convert raw readings to voltages
+
     # Configure the FPGA
     if not (self.Status() & self.FPGA_CONFIGURED) :
       # load the FPGA data into memory
-      from usb_1608G_rbf import FPGA_V2_data
+      from usb_1208HS_rbf import FPGA_data
       print("Configuring FPGA.  This may take a while ...")
       self.FPGAConfig()
       if self.Status() & self.FPGA_CONFIG_MODE:
-        for i in range(0, len(FPGA_V2_data) - len(FPGA_V2_data)%64, 64) :
-          self.FPGAData(FPGA_V2_data[i:i+64])
+        for i in range(0, len(FPGA_data) - len(FPGA_data)%64, 64) :
+          self.FPGAData(FPGA_data[i:i+64])
         i += 64
-        if len(FPGA_V2_data) % 64 :
-          self.FPGAData(FPGA_V2_data[i:i+len(FPGA_V2_data)%64])
-        if not self.Status() & self.FPGA_CONFIGURED:
-          print("Error: FPGA for the USB-1608G is not configured.  status = ", hex(self.Status()))
+        if len(FPGA_data) % 64 :
+          self.FPGAData(FPGA_data[i:i+len(FPGA_data)%64])
+        if not (self.Status() & self.FPGA_CONFIGURED):
+          print("Error: FPGA for the USB-1208HS is not configured.  status = ", hex(self.Status()))
           return
       else:
-        print("Error: could not put USB-1608G into FPGA Config Mode.  status = ", hex(self.Status()))
+        print("Error: could not put USB-1208HS into FPGA Config Mode.  status = ", hex(self.Status()))
         return
     else:
-      print("USB-1608G FPGA configured.")
+      print("USB-1208HS FPGA configured.")
 
     if sys.platform.startswith('linux'):
       if self.udev.kernelDriverActive(0):
@@ -155,40 +154,32 @@ class usb1608G(mccUSB):
     # Find the maxPacketSize for bulk transfers
     self.wMaxPacketSize = self.getMaxPacketSize(libusb1.LIBUSB_ENDPOINT_IN | 0x6)  #EP IN 6
 
-    # Set up the Timers
-    self.timerParameters = TimerParameters()
-
     # Build a lookup table of calibration coefficients to translate values into voltages:
     # The calibration coefficients are stored in the onboard FLASH memory on the device in
     # IEEE-754 4-byte floating point values.
     #
     #   calibrated code = code*slope + intercept
-    #   self.table_AIn[gain]    0 <= gain < 4
+    #   self.table_AIn[mode][gain]  0 <= mode < 4,  0 <= gain < 4
     #
-    self.table_AIn = [table(), table(), table(), table()]
-    address = 0x7000
-    self.MemAddressW(address)
-    for gain in range(self.NGAIN):
-      self.table_AIn[gain].slope, = unpack('f', self.MemoryR(4))
-      self.table_AIn[gain].intercept, = unpack('f', self.MemoryR(4))
+    self.table_AIn = [[table(), table(), table(), table()], \
+                      [table(), table(), table(), table()], \
+                      [table(), table(), table(), table()], \
+                      [table(), table(), table(), table()]]
+    address = 0x4000
+    for mode in range(self.NMODE):
+      for gain in range(self.NGAIN):
+        self.MemAddressW(address)
+        self.table_AIn[mode][gain].slope, = unpack('f', self.MemoryR(4))
+        address += 4
+        self.MemAddressW(address)
+        self.table_AIn[mode][gain].intercept, = unpack('f', self.MemoryR(4))
+        address += 4
 
-  def CalDate(self):
-    """
-    Get the manufacturers calibration data (timestamp) from the
-    Calibration memory.
+    # Set up structure for Counter Parameters
+    self.counterParameters = [CounterParameters(), CounterParameters(), CounterParameters(), CounterParameters()]
 
-    Note: The calibration date is stored in the EEPROM
-    starting at address 0x7098.  The six date elements
-    (year, month, day, hour, minute, second) are stored
-    as big endian unsigned short.
-    """
-
-    address = 0x7098   # staring address of the MFG calibration date
-    self.MemAddressW(address)
-
-    data = unpack('>HHHHHH', self.MemoryR(12))  # 12 bytes big endian
-    mdate = datetime(data[0], data[1], data[2], data[3], data[4], data[5])
-    return mdate
+    # Set up structure for Timer Parameters
+    self.timerParameters = TimerParameters()
 
   ##############################################
   #           Digital I/O  Commands            #
@@ -206,7 +197,7 @@ class usb1608G(mccUSB):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
-    value ,= self.udev.controlRead(request_type, self.DTRISTATE, wValue, wIndex, 2, self.HS_DELAY)
+    value ,= self.udev.controlRead(request_type, self.DTRISTATE, wValue, wIndex, 1, self.HS_DELAY)
     return value
 
   def DTristateW(self, value):
@@ -230,7 +221,7 @@ class usb1608G(mccUSB):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
-    value ,= self.udev.controlRead(request_type, self.DPORT, wValue, wIndex, 2, self.HS_DELAY)
+    value ,= self.udev.controlRead(request_type, self.DPORT, wValue, wIndex, 1, self.HS_DELAY)
     return value
 
   def DLatchR(self):
@@ -240,7 +231,7 @@ class usb1608G(mccUSB):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
-    value ,= self.udev.controlRead(request_type, self.DLATCH, wValue, wIndex, 2, self.HS_DELAY)
+    value ,= self.udev.controlRead(request_type, self.DLATCH, wValue, wIndex, 1, self.HS_DELAY)
     return value
 
   def DLatchW(self, value):
@@ -253,217 +244,39 @@ class usb1608G(mccUSB):
     wIndex = 0
     self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], self.HS_DELAY)
 
-
   #############################################
   #        Analog Input Commands              #
   #############################################
 
-  def AIn(self, channel, gain, voltage = False):
+  def AIn(self, channnel, voltage = False):
     """
-    This command reads the value of an analog input channel.  This
-    command will result in a bus stall if an AInScan is currently
-    running.  
+    This command returns the value from an analog input channel.  This
+    command will result in a bus stall if an AIn scan is currently running
+    """
 
-     channel: the channel to read (0-15)
-     value:   16 bits of data, right justified.
-     voltage: True = return voltage, False = return raw reading
-    """
+    if channel < 0 or channel > 7:
+      raise ValueError('AIn: error in channel number.')
+      return
 
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue =  channel
+    wValue = channel
     wIndex = 0
+    value ,= unpack('H', self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 2, self.HS_DELAY))
+    gain = self.AInConfig[chan] & 0x3
+    mode = self.AInMode
+    value = self.table_AIn[mode][gain].slope*value + self.table_AIn[mode][gain].intercept
+    if value > 0x1fff:
+      value = 0x1fff
+    elif value < 0:
+      value = 0x0
+    else:
+      value = round(value)
+
+    if voltage == True:  # return voltage instead of raw readings
+      value = self.volts(gain, value)
     
-    if gain < 0 or gain >= self.NGAIN:
-      raise ValueError('AIn: Error in gain value')
-      return
-    
-    data ,= unpack('H',self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 2, timeout = 200))
-
-    if data > 0xfffd:
-      raise ValueError("DAC is saturated at +FS")
-    elif data < 0x60:
-      raise ValueError("DAC is saturated at -FS")
-    else:
-      data = round(float(data)*self.table_AIn[gain].slope + self.table_AIn[gain].intercept)
-
-    if voltage == True:
-      data = self.volts(gain, value)
-
-    return data
-    
-
-  def AInScanStart(self, count, retrig_count, frequency, options, mode=0):
-    """
-    This command starts the analog input channel scan.  The gain
-    ranges that are currently set on the desired channels will be
-    used (these may be changed with AInConfig) This command will
-    result in a bus stall if an AInScan is currently running.
-
-    count:        the total number of scans to perform (0 for continuous scan)
-    retrig_count: the number of scan to perform for each trigger in retrigger mode
-    pacer_period: pacer timer period value (0 for AI_CLK_IN)
-    frequency:    pacer frequency in Hz
-    packet_size:  number of samples to transfer at a time
-    options:      bit field that controls various options
-                   bit 0: 1 = burst mode, 0 = normal mode
-                   bit 1: Reserved
-                   bit 2: Reserved
-                   bit 3: 1 = use trigger  0 = no trigger
-                   bit 4: Reserved
-                   bit 5: Reserved
-                   bit 6: 1 = retrigger mode, 0 = normal trigger
-                   bit 7: Reserved
-    mode:  mode bits:
-           bit 0:  0 = counting mode,  1 = CONTINUOUS_READOUT
-           bit 1:  1 = SINGLEIO
-           bit 2:  1 = use packet size passed usbDevice1808->packet_size
-           bit 3:  1 = convert to voltages  
-
-    Notes:
-
-    The pacer rate is set by an internal 32-bit incrementing timer
-    running at a base rate of 64 MHz.  The timer is controlled by
-    pacer_period. If burst mode is specified, then this value is the
-    period of the scan and the A/D is clocked at this maximum rate
-    (500 kHz) for each channel in the scan.  If burst mode is not
-    specified, then this value is the period of the A/D readings.  A
-    pulse will be output at the AI_CLK_OUT pin at every pacer_period
-    interval regardless of the mode.
-
-    If pacer_period is set to 0, the device does not generate an A/D
-    clock.  It uses the AI_CLK_IN pin as the pacer source.  Burst
-    mode operates in the same fashion: if specified, the scan starts
-    on every rising edge of AI_CLK_IN and the A/D is clocked at 500 kHz
-    for the number of channels in the scan; if not specified, the A/D
-    is clocked on every rising edge of AI_CLK_IN.
-
-    The timer will be reset and sample acquired when its value equals
-    timer_period.  The equation for calculating timer_period is:
-
-           timer_period = [64MHz / (sample frequency)] - 1
-
-    The data will be returned in packets utilizing a bulk IN endpoint.
-    The data will be in the format:
-
-      lowchannel sample 0: lowchannel + 1 sample 0: ... :hichannel sample 0
-      lowchannel sample 1: lowchannel + 1 sample 1: ... :hichannel sample 1
-      ...
-      lowchannel sample n: lowchannel + 1 sample n: ... :hichannel sample n
-
-    The packet_size parameter is used for low sampling rates to avoid
-    delays in receiving the sampled data. The buffer will be sent,
-    rather than waiting for the buffer to fill.  This mode should
-    not be used for high sample rates in order to avoid data loss.
-
-    The external trigger may be used to start data collection
-    synchronously.  If the bit is set, the device will wait until the
-    appropriate trigger edge is detected, then begin sampling data at
-    the specified rate.  No messages will be sent until the trigger
-    is detected.
-
-    The retrigger mode option and the retrig_count parameter are only
-    used if trigger is used.  This option will cause the trigger to
-    be rearmed after retrig_count samples are acquired, with a total
-    of count samples being returned from the entire scan.
-    """
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    bytesPerScan = (self.lastElement+1)*2
-
-    if self.productID == self.USB_1608G_PID and frequency > 250000: # 250k S/s throughput
-      frequency = 250000.
-    elif frequency > 500000: # 500 kS/s throughput
-      frequency = 500000.
-
-    if frequency == 0.0:
-      pacer_period = 0     # use external pacer
-    else:
-      pacer_period = round((64.E6 / frequency) - 1)
-
-    if count == 0:
-      self.mode |= self.CONTINUOUS_READOUT
-      self.bytesToRead = -1  # disable and sample forever
-    else:
-      self.bytesToRead = count*(self.lastElement+1)*2  # total number of bytes to read
-
-    if self.mode & self.FORCE_PACKET_SIZE:
-      packet_size = self.packet_size
-    elif self.mode & self.SINGLEIO:
-      packet_size = self.lastElement + 1
-    elif self.mode & self.CONTINUOUS_READOUT:
-      packet_size = int((( (self.wMaxPacketSize//bytesPerScan) * bytesPerScan) // 2))
-    else:
-      packet_size = self.wMaxPacketSize // 2
-    self.packet_size = packet_size
-
-    if self.mode & self.CONTINUOUS_READOUT:
-      self.count = 0
-    else:
-      self.count = count
-
-    self.retirg_count = retrig_count
-    self.mode = mode & 0xff
-    self.options = options
-    self.frequency = frequency
-
-    packet_size -= 1  # force to uint8_t size in range 0-255    
-    scanPacket = pack('IIIBB', count, retrig_count, pacer_period, packet_size, options)
-    result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
-
-    self.status = self.Status()
-
-  def AInScanRead(self):
-
-    if self.mode & self.CONTINUOUS_READOUT or self.mode & self.SINGLEIO :
-      nSamples = self.packet_size
-    else:
-      nSamples = self.count*(self.lastElement+1)
-
-    try:
-      data =  list(unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(2*nSamples), self.HS_DELAY)))
-    except:
-      print('AInScanRead: error in bulkRead.')
-
-    if len(data) != nSamples:
-      raise ValueError('AInScanRead: error in number of samples transferred.')
-      return len(data)
-    
-
-    if self.mode & self.VOLTAGE:
-      for i in range(len(data)):
-        gain = (self.scanList[i%(self.lastElement+1)] >> 3) & 0x3
-        data[i] = data[i]*self.table_AIn[gain].slope + self.table_AIn[gain].intercept
-        if data[i] > 0xffff:
-          data[i] = 0xffff
-        elif data[i] < 0.0:
-          data[i] = 0x0
-        else:
-          data[i] = int(round(data[i]))
-        data[i] = self.volts(gain, data[i])
-        
-    if self.bytesToRead > len(data)*2:
-      self.bytesToRead -= len(data)*2
-    elif self.bytesToRead > 0 and self.bytesToRead < len(data)*2:  # all done
-      self.AInScanStop()
-      self.AInScanClearFIFO()
-      self.status = self.Status()
-      return data
-
-    if self.mode & self.CONTINUOUS_READOUT:
-      return data
-
-    # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
-    if nSamples*2%self.wMaxPacketSize == 0:
-     dummy = self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, 2, 100)
-     
-    self.status = self.Status()
-    if self.status & self.AIN_SCAN_OVERRUN:
-      self.AInScanStop()
-      self.AInScanFIFO()
-      raise ValueError('AInScanRead: Scan overrun.')
-      return
-
-    return data
-        
+    return value
+      
   def AInScanStop(self):
     """
     This command stops the analog input scan (if running).
@@ -474,91 +287,9 @@ class usb1608G(mccUSB):
     wIndex = 0
     result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
 
-  def AInConfigR(self):
-    """
-    This command reads or writes the analog input channel
-    configurations.  This command will result in a bus stall if an
-    AIn scan is currently running.  The scan list is setup to
-    acquire data from the channels in the order that they are placed
-    in the scan list.
-
-    ScanList[16]  channel configuration:
-      bit 0:  Channel Mux 0
-      bit 1:  Channel Mux 1
-      bit 2:  Channel Mux 2
-      bit 3:  Range Mux 0
-      bit 4:  Range Mux 1
-      bit 5:  Mode Mux 0
-      bit 6:  Mode Mux 1
-      bit 7:  Last Channel
-    """
-    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0
-    wIndex = 0
-    value = self.udev.controlRead(request_type, self.AIN_SCAN_CONFIG, wValue, wIndex, 16, self.HS_DELAY)
-    for i in range(len(value)):
-      self.scanList[i] = value[i]
-      if value[i] & self.LAST_CHANNEL:
-        self.lastElement = i  # depth of queue
-    return
-
-  def AInConfigW(self, entry, channel, gain, mode, lastElement=False):
-    """
-    entry:    channel entry in the queue (0 - 15)
-    channel:  channel number (Differential: 0-7, Single Ended: 0-15)
-    gain:     range  ( 0:+/- 10V,  1: +/- 5V, 2: +/- 1V, 3: +/- 1V)
-    lastElement: Set to True is last element in the queue
-    """
-
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    request = self.AIN_SCAN_CONFIG
-    wValue = 0
-    wIndex = 0
-
-    if entry < 0 or entry > 15:
-      raise ValueError('AInConfigW: Exceed depth of queue')
-      return
-
-    if mode == self.DIFFERENTIAL:
-      if  channel > 7:
-        raise ValueError('AInConfigW: Exceed number of channels in differential mode')
-      else:
-        self.scanList[entry] = (gain & 0x3) << 3 | (channel & 0x7)
-    else:         # single ended mode
-      if channel > 15:
-        raise ValueError('AInConfigW: Exceed number of channels in single ended mode')
-      elif channel > 7:
-        self.scanList[entry] = (0x1 << 6) | (gain & 0x3) << 3 | (channel & 0x7)
-      else:
-        self.scanList[entry] = (0x1 << 5) | (gain & 0x3) << 3 | (channel & 0x7)
-
-    if lastElement == True:
-      self.lastElement = entry
-      self.scanList[entry] |= self.LAST_CHANNEL
-
-    if self.Status() & self.AIN_SCAN_RUNNING:
-      self.AInScanStop()
-
-    try:
-      result = self.udev.controlWrite(request_type, request, wValue, wIndex, self.scanList, self.HS_DELAY)
-    except:
-      print('AInConfigW: error in control Write result =', result)
-      return
-    
-  def AInScanClearFIFO(self):
-    """
-    This command clears the analog input firmware buffer.
-    """
-    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    request = self.AIN_SCAN_CLEAR_FIFO
-    wValue = 0
-    wIndex = 0
-    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
-
   ##########################################
   #         Counter/Timer Commands         #
   ##########################################
-
   def CounterInit(self, counter):
     """
     This command initializes the 32-bit event counter.  On a write,
@@ -567,9 +298,9 @@ class usb1608G(mccUSB):
     if counter < 0 or counter > 1:
       raise ValueError('CounterInit: error in counter number.')
       return
-
+      
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = counter & 0x1
+    wValue = counter
     wIndex = 0
     result = self.udev.controlWrite(request_type, self.COUNTER, wValue, wIndex, [0x0], timeout = 100)
 
@@ -585,7 +316,7 @@ class usb1608G(mccUSB):
     wValue = 0
     wIndex = 0
     data = unpack('II',self.udev.controlRead(request_type, self.COUNTER, wValue, wIndex, 8, self.HS_DELAY))
-    return data[counter & 0x1]
+    return data[counter]
 
   def TimerControlR(self):
 
@@ -617,20 +348,21 @@ class usb1608G(mccUSB):
     """
     This command reads or writes the timer period register.
 
-    The timer is based on a 64 MHz input clock and has a 32-bit period register. The
+    The timer is based on a 40 MHz input clock and has a 32-bit period register. The
     frequency of the output is set to:
 
-    frequency = 64 MHz / (period + 1)
+    frequency = 40 MHz / (period + 1)
 
     Note that the value for pulseWidth should always be smaller than the value for
     the period register or you may get unexpected results.  This results in a minimum
-    allowable value for the period of 1, which sets the maximum frequency to 64 MHz/2.
+    allowable value for the period of 1, which sets the maximum frequency to 40 MHz/2.
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
     period ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PERIOD, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters.period = period
+    self.timerParameters.frequency = 40.E6/(period + 1)
     return period
 
   def TimerPeriodW(self, period):
@@ -645,10 +377,10 @@ class usb1608G(mccUSB):
   def TimerPulseWidthR(self):
     """
     This command reads/writes the timer pulse width register.
-    The timer is based on a 64 MHz input clock and has a 32-bit pulse width register.
+    The timer is based on a 40 MHz input clock and has a 32-bit pulse width register.
     The width of the output pulse is set to:
 
-    pulse width = (pulseWidth + 1) / 64 MHz
+    pulse width = (pulseWidth + 1) / 40 MHz
 
     Note that the value for pulseWidth should always be smaller than the value for
     the period register or you may get unexpected results.
@@ -817,7 +549,6 @@ class usb1608G(mccUSB):
     unlock_code = 0xad
     self.udev.controlWrite(request_type, request, wValue, wIndex, [unlock_code], self.HS_DELAY)
 
-
   ##########################################
   #        Miscellaneous Commands          #
   ##########################################
@@ -969,7 +700,7 @@ class usb1608G(mccUSB):
 
   def printStatus(self):
     status = self.Status()
-    print('**** USB-1608G Status ****')
+    print('**** USB-1208HS Status ****')
     if status & self.AIN_SCAN_RUNNING:
       print('  Analog Input scan running.')
     if status & self.AIN_SCAN_OVERRUN:
@@ -1002,35 +733,23 @@ class usb1608G(mccUSB):
 
     return volt
 
-    
 ################################################################################################################
 
-class usb_1608G(usb1608G):
+class usb_1208HS(usb1208HS):
   def __init__(self, serial=None):
-    self.productID = self.USB_1608G_PID   #usb-1608G
+    self.productID = self.USB_1208HS_PID  #usb-1208HS
     self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
-      raise IOError("MCC USB-1608G not found")
+      raise IOError("MCC USB-1208HS not found")
       return
-    usb1608G.__init__(self)
+    usb1208HS.__init__(self)
 
-class usb_1608GX(usb1608G):
-  def __init__(self, serial=None):
-    self.productID = self.USB_1608GX_PID   #usb-1608GX
-    self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
-    if not self.udev:
-      raise IOError("MCC USB-1608GX not found")
-      return
-    usb1608G.__init__(self)
-
-class usb_1608GX_2AO(usb1608G):
-
+class usb_1208HS_2AO(usb1208HS):
   # Analog Output Commands
   AOUT                 = 0x18  # Read/write analog output channel
   AOUT_SCAN_START      = 0x1A  # Start analog output scan
   AOUT_SCAN_STOP       = 0x1B  # Stop analog output scan
   AOUT_SCAN_CLEAR_FIFO = 0x1C  # Clear the analog output scan FIFO
-  NCHAN_AO             = 2     # Number of analog output channels
 
   # Analog Output Scan Options
   AO_CHAN0       = 0x1   # Include Channel 0 in output scan
@@ -1039,16 +758,18 @@ class usb_1608GX_2AO(usb1608G):
   AO_RETRIG_MODE = 0x20  # Retrigger Mode
 
   def __init__(self, serial=None):
-    self.productID = self.USB_1608GX_2AO_PID   # usb-1608GX_2AO
+    self.productID = self.USB_1208HS_2AO_PID   # usb-1208HS_2AO
     self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
-      raise IOError("MCC USB-1608GX_2AO not found")
+      raise IOError("MCC USB-1208HS_2AO not found")
       return
-    usb1608G.__init__(self)
+    usb1208HS.__init__(self)
+
+    self.NCHAN_AO             = 2     # Number of analog output channels
 
     # Read calibration table for analog out
-    self.table_AOut = [table(), table()]
-    address = 0x7080
+    self.table_AOut = [table(), table(), table(), table()]
+    address = 0x4080
     self.MemAddressW(address)
     for chan in range(self.NCHAN_AO):
       self.table_AOut[chan].slope, = unpack('f', self.MemoryR(4))
@@ -1220,4 +941,24 @@ class usb_1608GX_2AO(usb1608G):
     wValue = 0
     wIndex = 0
     result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CLEAR_FIFO, wValue, wIndex, [0x0], timeout = 100)
+
+  
+class usb_1208HS_4AO(usb_1208HS_2AO):
+  def __init__(self, serial=None):
+    self.productID = self.USB_1208HS_4AO_PID   # usb-1208HS_4AO
+    self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
+    if not self.udev:
+      raise IOError("MCC USB-1208HS_4AO not found")
+      return
+    usb1208HS.__init__(self)
+
+    self.NCHAN_AO             = 4     # Number of analog output channels
+
+    # Read calibration table for analog out
+    self.table_AOut = [table(), table(), table(), table()]
+    address = 0x4080
+    self.MemAddressW(address)
+    for chan in range(self.NCHAN_AO):
+      self.table_AOut[chan].slope, = unpack('f', self.MemoryR(4))
+      self.table_AOut[chan].intercept, = unpack('f', self.MemoryR(4))
 

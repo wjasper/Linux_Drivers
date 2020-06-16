@@ -47,18 +47,18 @@ def main():
         return
 
 # print out the calibration tables
-  print('Calibration Analog Input Table:')
+  print('\nCalibration Analog Input Table:')
   for gain in range(usb1608G.NGAIN):
     print('  Range =',gain, \
           'Slope =',format(usb1608G.table_AIn[gain].slope,'.5f'),\
           'Intercept =',format(usb1608G.table_AIn[gain].intercept,'5f'))
 
   if usb1608G.productID == usb1608G.USB_1608GX_2AO_PID:
-    print('Calibration Analog Output Table:')
+    print('\nCalibration Analog Output Table:')
     for channel in range(usb1608G.NCHAN_AO):
       print('  Channel =',channel, \
-          'Slope =',format(usb1608G.table_AIn[channel].slope,'.5f'),\
-          'Intercept =',format(usb1608G.table_AIn[channel].intercept,'5f'))
+          'Slope =',format(usb1608G.table_AOut[channel].slope,'.5f'),\
+          'Intercept =',format(usb1608G.table_AOut[channel].intercept,'5f'))
 
   # print last known calibration date:
   mdate = usb1608G.CalDate()
@@ -224,7 +224,7 @@ def main():
     elif ch == 'v':
       print("FPGA version %s" % (usb1608G.FPGAVersion()))
     elif ch == 't':
-      frequency = int(input('Enter frequency of timer: '))
+      frequency = float(input('Enter frequency of timer: '))
       period = 64.E6/frequency  - 1.
       usb1608G.TimerPeriodW(period)
       usb1608G.TimerPulseWidthW(period / 2)
