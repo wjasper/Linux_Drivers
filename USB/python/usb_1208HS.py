@@ -1039,7 +1039,7 @@ class usb_1208HS_2AO(usb1208HS):
   def AOut(self, channel, voltage):
     """
     This command reads or writes the values for the analog output
-    channels.  The values are 16-bit unsigned numbers.  Both read and
+    channels.  The values are 12-bit unsigned numbers.  Both read and
     write will result in a control pipe stall if an output scan is
     running.
 
@@ -1048,25 +1048,25 @@ class usb_1208HS_2AO(usb1208HS):
 
     The equation for the output voltage is:
 
-              (value - 2^15)
+              (value - 2^11)
     V_out =  ---------------- * V_ref
-                 2^15
+                 2^11
 
     where value is the value written to the device.  V_ref = 10V
     """
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wIndex = channel & 0x1
+    wIndex = channel & 0x31
 
     if channel > self.NCHAN_AO:
       raise ValueError('AOut: channel out of range')
       return
 
-    value = voltage/10.*32768. + 32768.
+    value = voltage/10.*2048. + 2048.
     value = value*self.table_AOut[channel].slope + self.table_AOut[channel].intercept
 
-    if int(value) > 0xffff:
-      wValue = 0xffff
+    if int(value) > 0xfff:
+      wValue = 0xfff
     elif value < 0.0:
       wValue = 0x0
     else:
@@ -1083,9 +1083,9 @@ class usb_1208HS_2AO(usb1208HS):
       raise ValueError('AOutR: channel out of range')
       return
 
-    value = unpack('HH',self.udev.controlRead(request_type, self.AOUT, wValue, wIndex, 8, timeout = 400))
+    value = unpack('HHHH',self.udev.controlRead(request_type, self.AOUT, wValue, wIndex, 8, timeout = 400))
     voltage = (value[channel] - self.table_AOut[channel].intercept) / self.table_AOut[channel].slope
-    voltage = (voltage - 32768)*10./32768.
+    voltage = (voltage - 2048)*10./2048.
     return voltage
 
   def AOutScanStart(self, count, retrig_count, frequency, options):
@@ -1117,10 +1117,10 @@ class usb_1208HS_2AO(usb1208HS):
     both channels are used, one scan is an update to both channels).
 
     The time base is controlled by an internal 32-bit timer running at
-    a base rate of 64 MHz.  The timer is controlled by pacer_period.  
+    a base rate of 40 MHz.  The timer is controlled by pacer_period.  
     The equation for calculating pacer_period is:
 
-        pacer_period = (64 MHz / sample_frequency) - 1
+        pacer_period = (40 MHz / sample_frequency) - 1
 
     The same time base is used for all channels when the scan involved
     multiple channels.  The output data is to be sent using the bulk
@@ -1144,14 +1144,14 @@ class usb_1208HS_2AO(usb1208HS):
     if frequency < 0.:
       raise ValueError('AOutScanStart: frequency must be positive')
       return
-    elif frequency > 50000:
-      raise ValueError('AOutScanStart: frequency must be less than 50 kHz')
+    elif frequency > 200000:
+      raise ValueError('AOutScanStart: frequency must be less than 200 kHz')
       return
 
     if frequency == 0:
-      pacer_period = 0    # use AOCKI pin 47
+      pacer_period = 0    # use AOCKI pin 37
     else:
-      pacer_period = round((64.E6 / frequency) - 1)
+      pacer_period = round((40.E6 / frequency) - 1)
 
     self.frequency_AOut = frequency
     self.options_AOut = options
