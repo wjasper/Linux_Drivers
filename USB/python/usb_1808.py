@@ -898,11 +898,6 @@ class usb1808(mccUSB):
     wIndex = 0
     result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CLEAR_FIFO, wValue, wIndex, [0x0], timeout = 100)
 
-
-  ##########################################
-  #            Counter Commands            #
-  ##########################################
-
   def CounterSet(self, counter, count):
     """
     This command reads or sets the value of the 32-bit counters.  Counter 0 and 1

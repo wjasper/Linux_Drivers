@@ -368,6 +368,7 @@ class usb1608G(mccUSB):
     """
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     bytesPerScan = (self.lastElement+1)*2
+    self.mode = mode
 
     if self.productID == self.USB_1608G_PID and frequency > 250000: # 250k S/s throughput
       frequency = 250000.
@@ -381,9 +382,9 @@ class usb1608G(mccUSB):
 
     if count == 0:
       self.mode |= self.CONTINUOUS_READOUT
-      self.bytesToRead = -1  # disable and sample forever
+      self.bytesToRead = -1                    # disable and sample forever
     else:
-      self.bytesToRead = count*(self.lastElement+1)*2  # total number of bytes to read
+      self.bytesToRead = count*bytesPerScan*2  # total number of bytes to read
 
     if self.mode & self.FORCE_PACKET_SIZE:
       packet_size = self.packet_size
@@ -412,7 +413,6 @@ class usb1608G(mccUSB):
     self.status = self.Status()
 
   def AInScanRead(self):
-
     if self.mode & self.CONTINUOUS_READOUT or self.mode & self.SINGLEIO :
       nSamples = self.packet_size
     else:
