@@ -438,6 +438,7 @@ class usb1208HS(mccUSB):
 
     if self.mode & self.VOLTAGE:
       for i in range(len(data)):
+        channel = self.AInScanChannels[i%len(self.AInScanChannels)]
         gain = self.AInConfig[channel] & 0x3
         mode = self.AInMode
         data[i] = data[i]*self.table_AIn[mode][gain].slope + self.table_AIn[mode][gain].intercept

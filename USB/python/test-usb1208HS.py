@@ -182,16 +182,15 @@ def main():
       frequency = float(input("Enter desired sampling frequency (greater than 1000): "))
       usb1208HS.AInScanStop()
       nScans = 0  # for conitnuous mode
-      nChan = 8  # 16 channels
+      nChan = 8   # 8 channels
       gain = usb1208HS.BP_10V
-      modeAIn = usb1208HS.SINGLE_ENDED
+      modeAIn = usb1208HS.SINGLE_ENDED 
       channels = 0xff
       for channel in range(nChan):
-        usb1208HS.AInConfigW(channel, mode, gain)
+        usb1208HS.AInConfigW(channel, modeAIn, gain)
       time.sleep(1)
-      mode = usb1208HS.CONTINUOUS_READOUT
       options = 0
-      usb1208HS.AInScanStart(nScans, 0, frequency, channels, options, mode)
+      usb1208HS.AInScanStart(nScans, 0, frequency, channels, options, usb1208HS.CONTINUOUS_READOUT | usb1208HS.VOLTAGE)
       flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
       i = 0
