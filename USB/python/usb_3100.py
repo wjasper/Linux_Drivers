@@ -425,14 +425,14 @@ class usb_3100(mccUSB):    # HID USB-31XX devices
         value = 0
       else:
         value = volt*65536./10.
-    elif gain == BP_10_00V:
+    elif gain == self.BP_10_00V:
       if volt >= 10.:
         value = 0xffff
       elif volt <- -10.:
         value = 0
       else:
         value = volt*32728./10 + 32768
-    elif gain == I_0_20_mA:
+    elif gain == self.I_0_20_mA:
       if volt >= 0.02: # 20 mA
         value = 0xffff
       elif volt <= 0.0:

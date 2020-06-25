@@ -98,8 +98,8 @@ def main():
       print('Testing the analog output ...')
       chan = int(input('Enter channel [0-15]: '))
       for value in range(0,0xfff0,0xf):
-        usb3100.AOut(channel, value, 0)
-      usb3100.AOut(channel, 0x0, 0)
+        usb3100.AOut(chan, value, 0)
+      usb3100.AOut(chan, 0x0, 0)
     elif ch == 'o':
       print('Testing the analog output for a single channel.')
       channel = int(input('Enter channel [0-15]: '))
@@ -137,7 +137,6 @@ def main():
       value = usb3100.DIn()
       print('Digital Input =', hex(value))
     elif ch == 'e':
-      usb3100.Reset()
       usb3100.h.close()
       exit(0)
     elif ch == 'I':
@@ -150,14 +149,17 @@ def main():
       usb3100.Reset()
       return 0
     elif ch == 'R':
-      memory = usb3100.MemRead(0x0000, 62)
       print('reading from EEPROM: ')
-      for i in range(0,60,2):
-        print('address =', hex(i), '\t\tvalue = ', hex(memory[i]),'\taddress =', hex(i+1), '\t\tvalue = ', hex(memory[i+1]))
+      for i in range(0, 0xff, 32):
+        memory = usb3100.MemRead(i, 32)
+        for j in range(0, 32, 2):
+          print('address =', hex(j+i), '\tvalue = ', hex(memory[j]),'\t\taddress =', hex(j+i+1), '\tvalue = ', hex(memory[j+1]))
       print(' ')
-      memory = usb3100.MemRead(0x0100, 62)
-      for i in range(0,62,2):
-        print('address =', hex(i+0x100), '\tvalue = ', hex(memory[i]),'\taddress =', hex(i+0x101), '\tvalue = ', hex(memory[i+1]))
+      print('reading from FLASH: ')
+      for i in range(0x100,0x2ff,32):
+        memory = usb3100.MemRead(i, 32)
+        for j in range(0, 32, 2):
+          print('address =', hex(j+i), '\tvalue = ', hex(memory[j]),'\t\taddress =', hex(j+i+1), '\tvalue = ', hex(memory[j+1]))
     elif ch == 's':
       print('Status = ',hex(usb3100.Status()))
       
