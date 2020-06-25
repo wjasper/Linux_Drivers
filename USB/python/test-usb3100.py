@@ -128,7 +128,7 @@ def main():
           break
     elif ch == 'd':
       print('Testing Digital I/O ...')
-      value = hex(input('Enter a byte value [0-0xff]: '))
+      value = int(input('Enter a byte value [0-0xff]: '),16)
       usb3100.DConfigPort(usb3100.DIO_DIR_OUT)
       usb3100.DOut(value & 0xff)
     elif ch == 'i':
@@ -137,6 +137,7 @@ def main():
       value = usb3100.DIn()
       print('Digital Input =', hex(value))
     elif ch == 'e':
+      usb3100.Reset()
       usb3100.h.close()
       exit(0)
     elif ch == 'I':
