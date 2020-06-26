@@ -150,13 +150,13 @@ def main():
       return 0
     elif ch == 'R':
       print('reading from EEPROM: ')
-      for i in range(0, 0xff, 32):
+      for i in range(0x0, 0xff, 32):
         memory = usb3100.MemRead(i, 32)
         for j in range(0, 32, 2):
           print('address =', hex(j+i), '\tvalue = ', hex(memory[j]),'\t\taddress =', hex(j+i+1), '\tvalue = ', hex(memory[j+1]))
       print(' ')
       print('reading from FLASH: ')
-      for i in range(0x100,0x2ff,32):
+      for i in range(0x0100,0x02ff,32):
         memory = usb3100.MemRead(i, 32)
         for j in range(0, 32, 2):
           print('address =', hex(j+i), '\tvalue = ', hex(memory[j]),'\t\taddress =', hex(j+i+1), '\tvalue = ', hex(memory[j+1]))

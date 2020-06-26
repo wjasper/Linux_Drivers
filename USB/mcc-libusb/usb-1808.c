@@ -526,8 +526,8 @@ int usbAInScanConfigW_USB1808(libusb_device_handle *udev, uint8_t scanQueue[13],
   int ret;
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (lastChan > 12) {
-    fprintf(stderr, "usbAInScanConfigW_USB1808: lastChan larger than 12.\n");
+  if (lastChan > 13) {
+    fprintf(stderr, "usbAInScanConfigW_USB1808: lastChan larger than 13.\n");
     return -1;
   }
   
@@ -543,8 +543,8 @@ int usbAInScanConfigR_USB1808(libusb_device_handle *udev, uint8_t *scanQueue, ui
   int ret;
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (lastChan > 12) {
-    fprintf(stderr, "usbAInScanConfigR_USB1808: lastChan larger than 12.\n");
+  if (lastChan > 13) {
+    fprintf(stderr, "usbAInScanConfigR_USB1808: lastChan larger than 13.\n");
     return -1;
   }
   
@@ -660,7 +660,7 @@ int usbAOutScanConfigR_USB1808(libusb_device_handle *udev, uint8_t *scanQueue, u
   int ret;
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
 
-  if (lastChan > 13) {
+  if (lastChan > 3) {
     fprintf(stderr, "usbAOutScanConfigR_USB1808: lastChan larger than 3.\n");
     return -1;
   }
@@ -706,7 +706,7 @@ int usbAOutScanStart_USB1808(libusb_device_handle *udev, uint32_t count, uint32_
     a base rate of 100MHz.  The timer is controlled by pacer period.
     The equation for calculating the pacer period is:
 
-        pacer_period = (100MHz / (frequency)) - 1
+        pacer_period = (100 MHz / frequency) - 1
 
     The same time base is used for all channels when the scan involves
     multiple channels.  A pulse will be output at the OCLKO pin at

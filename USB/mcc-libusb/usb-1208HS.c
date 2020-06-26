@@ -376,7 +376,7 @@ void usbAInConfig_USB1208HS(libusb_device_handle *udev, uint8_t mode, uint8_t ra
     Note:
         1. All 8 values used for modes 0 and 3.
         2. Even values used for modes 1 and 2.
-        3. 0V - +10V range acts line +/-5V in mode 2.
+        3. 0V - +10V range acts like +/-5V in mode 2.
   */
 
   int i;
