@@ -1,5 +1,4 @@
 /*
- *
  *  Copyright (c) 2015 Warren J. Jasper <wjasper@ncsu.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -29,7 +28,7 @@ extern "C" {
 #define DIO_PORTB  (0x01)
 #define DIO_PORTS  (0x02)  // Ports A & B
 #define PORT0      (0x1)   // Port A for channel_map
-#define PORT1      (0x2)   // Port B  for channel_map
+#define PORT1      (0x2)   // Port B for channel_map
 
 #define DIO_DIR_IN  (0x01)
 #define DIO_DIR_OUT (0x00)

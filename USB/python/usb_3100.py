@@ -445,6 +445,12 @@ class usb_3100(mccUSB):    # HID USB-31XX devices
 
     return int(value) & 0xffff
 
+  def exit(self):
+    self.Reset()
+    self.h.close()
+    time.sleep(1)
+
+
 ###########################################################
 
 class usb_3101(usb_3100):

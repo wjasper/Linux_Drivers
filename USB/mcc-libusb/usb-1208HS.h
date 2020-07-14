@@ -52,11 +52,11 @@ extern "C" {
 
 
 /* Analog Input Scan and Modes */
-#define SINGLE_ENDED        0     // 8 single-ended inputs
-#define PSEUDO_DIFFERENTIAL 1     // 4 pseudo differential inputs
-#define DIFFERENTIAL        2     // 4 true differential inputs
-#define PSEUDO_DIFFERENTIAL_UP    // 7 pseudo differential inputs
-#define PACKET_SIZE         512   // max bulk transfer size in bytes
+#define SINGLE_ENDED            0     // 8 single-ended inputs
+#define PSEUDO_DIFFERENTIAL     1     // 4 pseudo differential inputs
+#define DIFFERENTIAL            2     // 4 true differential inputs
+#define PSEUDO_DIFFERENTIAL_UP  3     // 7 pseudo differential inputs
+#define PACKET_SIZE             512   // max bulk transfer size in bytes
 
 /* Analog Input Scan Options */
 #define CHAN0  (0x1 << 0)

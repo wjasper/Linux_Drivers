@@ -137,9 +137,7 @@ def main():
       value = usb3100.DIn()
       print('Digital Input =', hex(value))
     elif ch == 'e':
-      usb3100.Reset()
-      usb3100.h.close()
-      time.sleep(1)
+      usb3100.exit()
       exit(0)
     elif ch == 'I':
       print("Manufacturer: %s" % usb3100.h.get_manufacturer_string())

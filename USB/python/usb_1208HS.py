@@ -111,21 +111,21 @@ class usb1208HS(mccUSB):
   HS_DELAY = 2000
 
   def __init__(self):
-    self.status = 0                    # status of the device
-    self.samplesToRead = -1            # number of bytes left to read from a scan
-    self.AInConfig = [0]*8             # depth of analog input channel configuration
-    self.AInMode = 0x0                 # analog input channel configuration
-    self.scanQueueAOut= [0]*4          # depth of analog output scan queue is 3
+    self.status = 0               # status of the device
+    self.samplesToRead = -1       # number of bytes left to read from a scan
+    self.AInConfig = [0]*8        # depth of analog input channel configuration
+    self.AInMode = 0x0            # analog input channel configuration
+    self.scanQueueAOut= [0]*4     # depth of analog output scan queue is 3
     self.count = 0
     self.retrig_count = 0
     self.options = 0
-    self.frequency = 0.0               # frequency of scan (0 for external clock)
-    self.packet_size = 512             # number of samples to return from FIFO
-    self.mode = 0                      # mode bits:
-                                       # bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
-                                       # bit 1:   1 = SINGLEIO
-                                       # bit 2:   1 = use packet size in self.packet_size
-                                       # bit 3:   1 = convert raw readings to voltages
+    self.frequency = 0.0          # frequency of scan (0 for external clock)
+    self.packet_size = 512        # number of samples to return from FIFO
+    self.mode = 0                 # mode bits:
+                                  # bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
+                                  # bit 1:   1 = SINGLEIO
+                                  # bit 2:   1 = use packet size in self.packet_size
+                                  # bit 3:   1 = convert raw readings to voltages
 
     # Configure the FPGA
     if not (self.Status() & self.FPGA_CONFIGURED) :
@@ -290,7 +290,8 @@ class usb1208HS(mccUSB):
     return value
 
   def AInScanStart(self, count, retrig_count, frequency, channels, options, mode=0):
-    """This command starts the analog input channel scan.  The gain
+    """
+    This command starts the analog input channel scan.  The gain
     ranges that are currently set on the desired channels will be
     used (these may be changed with AInConfig) This command will
     result in a bus stall if an AInScan is currently running.
@@ -961,7 +962,7 @@ class usb1208HS(mccUSB):
     if status & self.AIN_SCAN_DONE:
       print(' Analog Input scan done.')
     if status & self.AOUT_SCAN_DONE:
-      print(' Analog Outputt scan done.')
+      print(' Analog Output scan done.')
     if status & self.FPGA_CONFIGURED:
       print('  FPGA is configured.')
     if status & self.FPGA_CONFIG_MODE:

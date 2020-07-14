@@ -78,8 +78,9 @@ extern "C" {
 #define SINGLE_IO         0x10   // 1 = use SINGLE_IO data transfer,  0 = use BLOCK_IO transfer
   
 /* Ananlog Output Scan Options */
-#define AO_CHAN0       0x1   // Include Channel 0 in output scan
-#define AO_CHAN1       0x2   // Include Channel 1 in output scan
+#define AO_CHAN0       0x0   // Analog Output Channel 0 in output scan
+#define AO_CHAN1       0x1   // Analog Output Channel 1 in output scan
+#define AO_DIO         0x2   // Output DIO
 #define AO_TRIG        0x10  // Use Trigger
 #define AO_RETRIG_MODE 0x20  // Retrigger Mode
   

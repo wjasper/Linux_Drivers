@@ -43,7 +43,7 @@ def main():
         usb1208HS = usb_1208HS_4AO()
         print("USB-1208HS-4AO device found.")
       except:
-        print('No USB-1208HS device found.')
+        print("No USB-1208HS device found.")
         return
 
 # print out the calibration tables
