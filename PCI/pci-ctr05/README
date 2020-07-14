@@ -43,26 +43,26 @@ RegMapPCI-CTR05.pdf - Register Map for the PCI-CTR05
 Building and installing the driver:
 -----------------------------------
 
-1. Untar the tar file:
+1. Get the driver from https://github.com/wjasper/Linux_Drivers
 
-   tar zxvf PCI-CTR05.1.10.tgz
+   git clone https://github.com/wjasper/Linux_Drivers
+   cd Linux_Drivers/PCI/pci-ctr05
 
 2. This should create the following files:
-
-c9513.c
-c9513_2_4.c
-c9513_2_6.c
-c9513_2_6_29.c
-c9513_3_3_7.c
-c9513_3_10_11.c
-c9513_4_0_8.c
-c9513.h
-pci-ctr05.h
-test-ctr05.c
-License
-Makefile
-README
-ModList
+    c9513.c
+    c9513_2_4.c
+    c9513_2_6.c
+    c9513_2_6_29.c
+    c9513_3_3_7.c
+    c9513_3_10_11.c
+    c9513_4_0_8.c
+    c9513.h
+    pci-ctr05.h
+    test-ctr05.c
+    License
+    Makefile
+    README
+    ModList
 
 3. The default configuration is for the kernel to dynamically set the
    major number.  If you wish to override this option and force a particular
@@ -93,11 +93,11 @@ To test your updated rules you can do one of the following:
 
 7. To install the driver type:
 
-    make install
+    sudo make install
 
 8. To test run the test program "test-ctr05":
 
-    test-ctr05
+    ./test-ctr05
 
 Having the driver install at boot: (2.4 kernel only)
 ----------------------------------

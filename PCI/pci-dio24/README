@@ -42,9 +42,10 @@ RegMapPCI-DIO24X.pdf - Register Maps
 
 Building and installing the driver:
 -----------------------------------
-1. Untar the tar file:
+1. Get the driver from https://github.com/wjasper/Linux_Drivers
 
-   tar zxvf PCI-DIO24.2.15.tgz
+   git clone https://github.com/wjasper/Linux_Drivers
+   cd Linux_Drivers/PCI/pci-dio24
 
 2. This should create the following files:
     README  
@@ -88,7 +89,7 @@ Building and installing the driver:
 
 5. To install the driver type:
 
-    make install
+    sudo make install
 
     check that the destination directory is correct.
 

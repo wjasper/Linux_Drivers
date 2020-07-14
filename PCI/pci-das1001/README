@@ -39,30 +39,31 @@ PCI-DAS100x.pdf   - Users Manual for the PCI-DAS1001
 Building and installing the driver:
 -----------------------------------
 
-1. Untar the tar file:
+1. Get the driver from https://github.com/wjasper/Linux_Drivers
 
-   tar zxvf PCI-DAS1001.1.9.tgz
+   git clone https://github.com/wjasper/Linux_Drivers
+   cd Linux_Drivers/PCI/pci-das1001
+
 
 2. This should create the following files:
-
-a2dc_2_4.c
-a2dc_2_6.c
-a2dc_2_6_29.c
-a2dc_3_3_7.c
-a2dc_3_10_11.c
-AD7376_0.pdf
-Makefile
-a2dc.c      
-cal100x.doc   
-ModList        
-RegMapSTC1000.pdf
-PCI-DAS100x.pdf
-dac8800.pdf   
-pci-das1001.h  
-test-das1001.c
-a2dc.h      
-License
-README
+  a2dc_2_4.c
+  a2dc_2_6.c
+  a2dc_2_6_29.c
+  a2dc_3_3_7.c
+  a2dc_3_10_11.c
+  AD7376_0.pdf
+  Makefile
+  a2dc.c      
+  cal100x.doc   
+  ModList        
+  RegMapSTC1000.pdf
+  PCI-DAS100x.pdf
+  dac8800.pdf   
+  pci-das1001.h  
+  test-das1001.c
+  a2dc.h      
+  License
+  README
 
 3. The default configuration is for the kernel to dynamically set the
    major number.  If you wish to override this option and force a particular
@@ -81,7 +82,7 @@ README
 
 5. To install the driver type:
 
-    make install
+    sudo make install
 
 Note:   The driver tries to install itself in /lib/modules/`uname -r`/kernel/drivers/char
         Edit MODULE_DIR in the Makefile to install the driver in another directory.
@@ -106,7 +107,7 @@ You will be able to search the attributes of the device by
 
 7. To test run the test program 'test-das1001'
 
-    test-das1001
+    ./test-das1001
 
 Having the driver install at boot:   (2.4 kernel only)
 ----------------------------------

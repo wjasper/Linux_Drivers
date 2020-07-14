@@ -35,27 +35,27 @@ pci-prod.pdf       - AMCC pci chip documentation
 Building and installing the driver:
 -----------------------------------
 
-1. Untar the tar file:
+1. Get the driver from https://github.com/wjasper/Linux_Drivers
 
-   tar xvf PCI-DAS1602-16.2.11.tgz
+   git clone https://github.com/wjasper/Linux_Drivers
+   cd Linux_Drivers/PCI/pci-das1602-16
 
 2. This should create the following files:
-
-License
-a2dc.c
-a2dc_2_4.c
-a2dc_2_6.c
-a2dc_2_6_29.c
-a2dc_3_3_7.c
-a2dc_3_10_11.c
-a2dc.h
-pci-das1602-16.h
-test-das1602.c
-Makefile
-README
-ModList
-pci-das1602_16.pdf
-pci-prod.pdf
+  License
+  a2dc.c
+  a2dc_2_4.c
+  a2dc_2_6.c
+  a2dc_2_6_29.c
+  a2dc_3_3_7.c
+  a2dc_3_10_11.c
+  a2dc.h
+  pci-das1602-16.h
+  test-das1602.c
+  Makefile
+  README
+  ModList
+  pci-das1602_16.pdf
+  pci-prod.pdf
 
 
 3. The default configuration is for the kernel to dynamically set the
@@ -69,15 +69,13 @@ pci-prod.pdf
 
         NUM_BOARDS=2
 
-
 4. To compile, type:
 
    make
 
-
 5. To install the driver type:
 
-    make install
+    sudo make install
 
 Note:   The driver tries to install itself in /lib/modules/`uname -r`/kernel/drivers/char
         Edit MODULE_DIR in the Makefile to install the driver in another directory.
@@ -102,7 +100,7 @@ You will be able to search the attributes of the device by
 
 7. To test run the test program 'test-das1602'
 
-    test-das1602
+    ./test-das1602
 
 Having the driver install at boot:  (2.4 kernel only)
 ----------------------------------

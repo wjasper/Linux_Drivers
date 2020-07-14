@@ -42,30 +42,30 @@ Calibration.ps      - Documentation for the Calibration ceofficents.
 Building and installing the driver:
 -----------------------------------
 
-1. Untar the tar file:
+1. Get the driver from https://github.com/wjasper/Linux_Drivers
 
-   tar zxvf PCI-DAS4020-12.1.25.tgz
+   git clone https://github.com/wjasper/Linux_Drivers
+   cd Linux_Drivers/PCI/pci-das4020-12
 
 2. This should create the following files:
-
-License
-a2dc.c
-a2dc_2_4.c
-a2dc_2_6_20.c
-a2dc_2_6_26.c
-a2dc_2_6_29.c
-a2dc_3_3_7.c
-a2dc_3_10_11.c
-a2dc.h
-pci-das4020.h
-test-das4020.c
-Makefile
-README
-ModList
-plx9080.pdf
-9080-3errata-13.pdf
-9080-3dn-13.pdf
-Calibration.ps
+  License
+  a2dc.c
+  a2dc_2_4.c
+  a2dc_2_6_20.c
+  a2dc_2_6_26.c
+  a2dc_2_6_29.c
+  a2dc_3_3_7.c
+  a2dc_3_10_11.c
+  a2dc.h
+  pci-das4020.h
+  test-das4020.c
+  Makefile
+  README
+  ModList
+  plx9080.pdf
+  9080-3errata-13.pdf
+  9080-3dn-13.pdf
+  Calibration.ps
 
 3. The default configuration is for the kernel to dynamically set the
    major number.  If you wish to override this option and force a particular
@@ -80,7 +80,7 @@ Calibration.ps
 
 5. To install the driver type:
 
-    make install
+    sudo make install
 
 6. Copy the file 61-mcc.rules to /etc/udev/rules.d,
    (or 60-mcc.rules for the older 2.6 kernel).

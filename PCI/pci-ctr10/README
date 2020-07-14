@@ -43,28 +43,28 @@ RegMapPCI-CTR10.pdf - Register Map for the PCI-CTR10
 Building and installing the driver:
 -----------------------------------
 
-1. Untar the tar file:
+1. Get the driver from https://github.com/wjasper/Linux_Drivers
 
-   tar zxvf PCI-CTR10.1.10.tgz
+   git clone https://github.com/wjasper/Linux_Drivers
+   cd Linux_Drivers/PCI/pci-ctr10
 
 2. This should create the following files:
-
-c9513.c
-c9513_2_4.c
-c9513_2_6.c
-c9513_2_6_29.c
-c9513_3_3_7.c
-c9513_3_10_11.c
-c9513_4_0_8.c
-c9513.h
-pci-ctr10.h
-test-ctr10.c
-License
-Makefile
-README
-ModList
-RegMapPCI-CTR10.pdf
-9513A.pdf
+    c9513.c
+    c9513_2_4.c
+    c9513_2_6.c
+    c9513_2_6_29.c
+    c9513_3_3_7.c
+    c9513_3_10_11.c
+    c9513_4_0_8.c
+    c9513.h
+    pci-ctr10.h
+    test-ctr10.c
+    License
+    Makefile
+    README
+    ModList
+    RegMapPCI-CTR10.pdf
+    9513A.pdf
 
 3. The default configuration is for the kernel to dynamically set the
    major number.  If you wish to override this option and force a particular
@@ -79,6 +79,10 @@ RegMapPCI-CTR10.pdf
 5. To compile, type:
 
    make
+
+  To install the driver:
+   
+   sudo make install
 
 6. Copy the file 61-mcc.rules to /etc/udev/rules.d
    (or 60-mcc.rules for 2.6 kernel).
@@ -96,7 +100,7 @@ To test your updated rules you can do one of the following:
 
 8. To test run the test program "test-ctr10":
 
-    test-ctr10
+    ./test-ctr10
 
 Having the driver install at boot: (2.4 kernel only)
 ----------------------------------

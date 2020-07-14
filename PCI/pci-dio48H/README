@@ -39,10 +39,11 @@ PCI-DIOxxH.pdf   - Users Manual
 Building and installing the driver:
 -----------------------------------
 
-1. Untar the tar file:
+1.  Get the driver from https://github.com/wjasper/Linux_Drivers
 
-   tar zxvf PCI-DIO48H.1.10.tgz
-
+   git clone https://github.com/wjasper/Linux_Drivers
+   cd Linux_Drivers/PCI/pci-dio48H
+   
 2. This should create the following files:
     README  
     Makefile
@@ -73,7 +74,7 @@ Note: Only 82C55 mode 0 is available on the PCI-DIO48H, as this board emulates
 
 5. To install the driver type:
 
-    make install
+    sudo make install
 
     check that the destination directory is correct.
 

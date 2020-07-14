@@ -38,7 +38,10 @@ PCI-DIO24x.pdf   - Users Manual
 Building and installing the driver:
 -----------------------------------
 
-1.  Get the driver from https://github.com/Linux_Drivers/wjasper/pci-dio24H
+1.  Get the driver from https://github.com/wjasper/Linux_Drivers
+
+   git clone https://github.com/wjasper/Linux_Drivers
+   cd Linux_Drivers/PCI/pci-dio24H
    
 
 2. This should create the following files:
@@ -74,7 +77,7 @@ Building and installing the driver:
 
 5. To install the driver type:
 
-    make install
+    sudo make install
 
     check that the destination directory is correct.
 

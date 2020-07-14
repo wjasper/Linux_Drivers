@@ -36,9 +36,11 @@ RegMapPCI-DDA0x-16.pdf - Register Map
 Building and installing the driver:
 -----------------------------------
 
-1. Untar the tar file:
+1. Get the driver from https://github.com/wjasper/Linux_Drivers
 
-   tar zxvf PCI-DDA0X-16.0.6.tgz
+   git clone https://github.com/wjasper/Linux_Drivers
+   cd Linux_Drivers/PCI/pci-dda0X-16
+
 
 2. This should create the following files:
     README  
@@ -64,7 +66,7 @@ Building and installing the driver:
 
 5. To install the driver type:
 
-    make install
+    sudo make install
 
   check that the destination directory is correct.
 
