@@ -45,9 +45,10 @@ PCIe-DIO96H.pdf      - Register Map for the PCIe-DIO96H
 Building and installing the driver:
 -----------------------------------
 
-1. Untar the tar file:
+1. Get the driver from https://github.com/wjasper/Linux_Drivers
 
-   tar zxvf PCI-DIO96H.1.9.tgz
+   git clone https://github.com/wjasper/Linux_Drivers
+   cd Linux_Drivers
 
 2. This should create the following files:
     README  
@@ -79,13 +80,13 @@ Building and installing the driver:
 
 5. To install the driver type:
 
-    make install
+    sudo make install
 
     check that the destination directory is correct.
 
 6. Copy the file 61-mcc.rules to /etc/udev/rules.d,
    (or 60-mcc.rules for the older 2.6 kernel).  These files can be found
-   at ftp://lx10.tx.ncsu.edu/pub/Linux/drivers
+   at the top of the repository
 
    or inlcude the following rule:
 
