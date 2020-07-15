@@ -395,7 +395,7 @@ void usbOutScanStart_USBDIO32HS(libusb_device_handle *udev, uint8_t channel_map,
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
 
   if (frequency == 0.0) {
-    pacer_period = 0;  // user ICLKO
+    pacer_period = 0;  // use ICLKO
   } else {
     pacer_period = rint((96.E6 / frequency) - 1);
   }

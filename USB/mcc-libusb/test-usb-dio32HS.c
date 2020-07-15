@@ -152,7 +152,7 @@ int main (int argc, char **argv)
 	  usbDLatchW_USBDIO32HS(udev, (uint16_t) i, DIO_PORTA);  // write a trial number
 	  usleep(800);
 	  if (!(usbStatus_USBDIO32HS(udev) & IN_SCAN_RUNNING)) {
-	    printf("Pattern Detected!!\n");
+	    printf("Pattern Detected!!  pattern = %#x\n", i);
 	    break;
 	  }
 	}
