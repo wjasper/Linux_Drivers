@@ -75,6 +75,24 @@ def main():
           print('Bit %d = %d' % (i, (value2>>i)&0x1))
         if toContinue() != True:
           break
+    elif ch == 'o':
+      dio32HS.DTristateW(dio32HS.PORTA, 0x0)                # port A all output
+      dio32HS.OutScanStop()
+      dio32HS.OutScanClearFIFO()
+      print('Test of DIO Output Scan.  Connect P0D0 to scope')
+      frequency = float(input('Enter frequency [Hz]: '))
+      count = 6000
+      outData = [0]*count               # make a square wave
+      for i in range(count,2):
+        outData[i] = 0
+        outData[i+1] = 1
+      options = 0
+      for i in range(10*int(frequency)):
+        dio32HS.OutScanStart(dio32HS.PORT0, count, 0, frequency, options)
+        dio32HS.OutScanWrite(outData)
+        time.sleep(count/frequency)
+      dio32HS.OutScanStop()
+      dio32HS.OutScanClearFIFO()
     elif ch == 'p':
       print('Test of Patten Triggering.  Connect Port A to Port B')
       pattern = int(input('Enter bit pattern to trigger [0-0xffff]: '), 16)

@@ -356,9 +356,11 @@ class usb_dio32HS(mccUSB):
       nchan = 2
     bytesPerScan = nchan*2  # 2 ports of 16 bits each
 
-    self.nchan = nchan
-    self.mode = mode
-    self.frequency = frequency
+    self.in_nchan = nchan                   # number of input channels
+    self.in_frequency = frequency           # input frequency
+    self.in_channel_map = channel_map       # input channel map
+    self.mode = mode & 0xff                 # input scan mode
+
     if count == 0:
       self.mode |= self.CONTINUOUS_READOUT
       self.bytesToRead = -1                  # disable and sample forever
@@ -376,14 +378,12 @@ class usb_dio32HS(mccUSB):
     self.packet_size = packet_size
 
     if self.mode & self.CONTINUOUS_READOUT:
-      self.count = 0
+      self.in_count = 0
     else:
-      self.count = count
+      self.in_count = count
 
-    self.retrig_count = retrig_count
-    self.mode = mode & 0xff
-    self.options = options
-    self.frequency = frequency
+    self.in_retrig_count = retrig_count
+    self.in_options = options
 
     packet_size -= 1  # force to uint8_t size in range 0-255
     scanPacket = bytearray(15)
@@ -399,7 +399,7 @@ class usb_dio32HS(mccUSB):
     if self.mode & self.CONTINUOUS_READOUT or self.mode & self.SINGLEIO :
       nSamples = self.packet_size
     else:
-      nSamples = self.count*self.nchan
+      nSamples = self.in_count*self.in_nchan
 
     try:
       data =  list(unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(2*nSamples), self.HS_DELAY)))
@@ -518,13 +518,51 @@ class usb_dio32HS(mccUSB):
                     bit 2  1 = use retrigger mode, 0 = normal trigger
                     bits 3-7: Reserved
     """
-    requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     if frequency == 0:
       pacer_period = 0  # use ICLKO
     else:
       pacer_period = round((96.E6 / frequency) - 1)
 
+    channel_map &= 0x3
+    if channel_map == 0x0:
+      raise ValueError('OutScanWrite: error in channel_map.')
+      return
+    if channel_map == 0x1 or channel_map == 0x2:
+      nchan = 1
+    else:
+      nchan = 2
+    bytesPerScan = nchan*2  # 2 ports of 16 bits each
+
+    if count == 0:
+      self.bytesToWrite = -1
+    else:
+      self.bytesToWrite = count*bytesPerScan
+
+    self.out_nchan = nchan                   # number of output channels
+    self.out_frequency = frequency
     
+    scanPacket = bytearray(14)
+    scanPacket[0] = channel_map
+    pack_into('III',scanPacket, 1, count, retrig_count, pacer_period)
+    scanPacket[13] = options
+    result = self.udev.controlWrite(request_type, self.OUT_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
+
+    self.status = self.Status()
+
+  def OutScanWrite(self, data):
+    # data is a list of unsigned 16 bit numbers
+    value = [0]*len(data)*2
+    timeout = int(500 + 1000*len(data)/self.out_frequency)
+    for i in range(len(data)):
+      value[2*i] = data[i] & 0xff
+      value[2*i+1] = (data[i] >> 8) & 0xff
+    try:
+      result = self.udev.bulkWrite(2, value, timeout)
+    except:
+      print('OutScanWrite: error in bulkWrite')
+      return
+
   def OutScanStop(self):
     """
     This command stops the output scan (if running).
