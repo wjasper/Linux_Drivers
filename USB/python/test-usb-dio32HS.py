@@ -49,6 +49,7 @@ def main():
     print("Hit 'o' to test DIO Out Scan")
     print("Hit 'p' for pattern triggering")
     print("Hit 'r' to reset the device.")
+    print("Hit 'M' for information.")
     print("Hit 'S' to get status")
     print("Hit 's' to get serial number.")
     print("Hit 'v' to get version numbers")
@@ -74,6 +75,28 @@ def main():
           print('Bit %d = %d' % (i, (value2>>i)&0x1))
         if toContinue() != True:
           break
+    elif ch == 'p':
+      print('Test of Patten Triggering.  Connect Port A to Port B')
+      pattern = int(input('Enter bit pattern to trigger [0-0xffff]: '), 16)
+      dio32HS.DTristateW(dio32HS.PORTA, 0x0)                # port A all output
+      dio32HS.DTristateW(dio32HS.PORTB, 0xffff)             # port B all input
+      dio32HS.DLatchW(dio32HS.PORTA, [0x0, 0x0])            # write 0 to output port
+      options = 0x1                                         # Trigger on Port 1 when equal to pattern
+      dio32HS.PatternDetectConfig(pattern, 0xffff, options) # Configure Pattern Detection trigger
+      print('Pattern = %#x' % (pattern))
+      count = 2                                             # total number of scans
+      options = 0x2                                         # use pattern detection trigger
+      frequency = 10000                                     # sample at 10 kHz
+      dio32HS.InScanStart(dio32HS.PORT1, count, 0, frequency, options)
+      for i in range(0xffff):
+        dio32HS.DLatchW(dio32HS.PORTA, [i,0x0])             # write a trial number
+        if not dio32HS.Status() & dio32HS.IN_SCAN_RUNNING:
+          print('Pattern Detected! pattern = %#x' % i)
+          break
+      data = dio32HS.InScanRead()
+      print('data = [%#x, %#x]' % (data[0], data[1]))
+      dio32HS.InScanStop()
+      dio32HS.InScanClearFIFO()
     elif ch == 'e':
       dio32HS.udev.close()
       exit(0)
@@ -82,6 +105,10 @@ def main():
     elif ch == 'S':
       print('Status =', hex(dio32HS.Status()))
       dio32HS.printStatus()
+    elif ch == 'M':
+      print("Manufacturer: %s" % dio32HS.getManufacturer())
+      print("Product: %s" % dio32HS.getProduct())
+      print("Serial No: %s" % dio32HS.getSerialNumber())
     elif ch == 's':
       print("Serial No: %s" % dio32HS.getSerialNumber())
     elif ch == 'v':

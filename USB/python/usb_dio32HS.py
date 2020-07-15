@@ -31,7 +31,7 @@ class usb_dio32HS(mccUSB):
   PORTB = 0x1
   DIO_PORTS = 0x2  # Ports A & B
   PORT0 = 0x1      # Port A for channel_map
-  PORT1 = 0x2      # Port B for channel_ma
+  PORT1 = 0x2      # Port B for channel_map
 
   DIR_IN = 0x1
   DIR_OUT= 0x0
@@ -45,6 +45,14 @@ class usb_dio32HS(mccUSB):
   OUT_SCAN_DONE     = 0x40   # Output scan done
   FPGA_CONFIGURED   = 0x100  # FPGA is configured
   FPGA_CONFIG_MODE  = 0x200  # FPGA config mode
+  
+  # Scan Modes
+  CONTINUOUS_READOUT   = 0x1  # Continuous mode
+  SINGLEIO             = 0x2  # Return data after every read (used for low frequency scans)
+  FORCE_PACKET_SIZE    = 0x4  # Force packet_size
+
+  MAX_PACKET_SIZE_HS = 512  # max packet size for HS device
+  MAX_PACKET_SIZE_FS = 64   # max packet size for HS device
 
   # Commands and Codes for USB-DIO32HS
   # Digital I/O Commands
@@ -121,7 +129,7 @@ class usb_dio32HS(mccUSB):
         self.udev.detachKernelDriver(0)
         self.udev.resetDevice()
 
-    # claim all the needed interfaces for AInScan
+    # claim all the needed interfaces for InScan
     self.udev.claimInterface(0)
 
     # Find the maxPacketSize for bulk transfers
@@ -262,7 +270,7 @@ class usb_dio32HS(mccUSB):
   ##########################################
   #        Acquisition  Commands           #
   ##########################################
-  def InScanStart(self, channel_map, count, retrig_cout, frequency, options, mode=0):
+  def InScanStart(self, channel_map, count, retrig_count, frequency, options, mode=0):
     """
     This command starts the input channel scan.  This command will
     result in a bus stall if an input scan is currently running.
@@ -372,18 +380,170 @@ class usb_dio32HS(mccUSB):
     else:
       self.count = count
 
-    self.retirg_count = retrig_count
+    self.retrig_count = retrig_count
     self.mode = mode & 0xff
     self.options = options
     self.frequency = frequency
 
-    packet_size -= 1  # force to uint8_t size in range 0-255    
-    scanPacket = pack('BIIIBB', channel_map, count, retrig_count, pacer_period, packet_size, options)
+    packet_size -= 1  # force to uint8_t size in range 0-255
+    scanPacket = bytearray(15)
+    scanPacket[0] = channel_map
+    pack_into('III',scanPacket, 1, count, retrig_count, pacer_period)
+    scanPacket[13] = packet_size
+    scanPacket[14] = options
     result = self.udev.controlWrite(request_type, self.IN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
 
     self.status = self.Status()
 
   def InScanRead(self):
+    if self.mode & self.CONTINUOUS_READOUT or self.mode & self.SINGLEIO :
+      nSamples = self.packet_size
+    else:
+      nSamples = self.count*self.nchan
+
+    try:
+      data =  list(unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(2*nSamples), self.HS_DELAY)))
+    except:
+      print('InScanRead: error in bulkRead.')
+
+    if len(data) != nSamples:
+      raise ValueError('InScanRead: error in number of samples transferred.')
+      return len(data)
+
+    if self.bytesToRead > len(data)*2:
+      self.bytesToRead -= len(data)*2
+    elif self.bytesToRead > 0 and self.bytesToRead < len(data)*2:  # all done
+      self.InScanStop()
+      self.InScanClearFIFO()
+      self.status = self.Status()
+      return data
+
+    if self.mode & self.CONTINUOUS_READOUT:
+      return data
+
+    # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
+    if nSamples*2%self.wMaxPacketSize == 0:
+     dummy = self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, 2, 100)
+     
+    self.status = self.Status()
+    if self.status & self.IN_SCAN_OVERRUN:
+      self.InScanStop()
+      raise ValueError('InScanRead: Scan overrun.')
+      return
+
+    return data
+
+  
+  def InScanStop(self):
+    """
+    This command stops the input scan (if running).
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.IN_SCAN_STOP
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def InScanClearFIFO(self):
+    """
+    This command clears the input firmware buffer
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.IN_SCAN_CLEAR_FIFO
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def InBulkFlush(self, count=5):
+    """
+    This command flushes the input Bulk ipie a number of times
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.IN_BULK_FLUSH
+    wValue = count
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def OutScanStart(self, channel_map, count, retrig_count, frequency, options):
+    """
+    This command starts the output channel scan.  This command will
+    result in a bus stall if an input scan is currently running.
+
+    Notes:
+    
+    The output scan operates with the host continuously transferring
+    data from the outputs until the end of the scan.  If the count
+    parameter is 0, the scan will run until the OutScanStop command is
+    issued by the host; if it is nonzero, the scan will stop
+    automatically after the specified number of scans have been output.
+    The channels in the scan are selected in the options bit field.
+    Scans refers to the number of updates to the channels (if both
+    channels are used, one scan is an update to both channels.)
+
+    The time base is controlled by an internal 32-bit timer running at
+    a base rate of 96MHz.  The timer is controlled by pacer_period.
+    The equation for calculating pacer_period is:
+  
+      pacer_period = [96MHz / (sample frequency)] - 1
+
+    The same time base is used for all channels when the scan involved
+    multiple channels.  The output data is to be sent using bulk out
+    endpoints.  The data must be in the format:
+
+    low channel sample 0: [high channel sample 0]
+    low channel sample 1: [high channel sample 1]
+    ...
+    low channel sample 1: [high channel sample n]
+
+    The output data is written to an internal FIFO.  The bulk endpoint
+    data is only accepted if there is room in the FIFO.  Output data
+    may be sent to the FIFO before the start of the scan, and the FIFO
+    is cleared when the OutScanClearFIFO command is received.  The
+    scan will not begin until the OutScanStart command is sent (and
+    output data is in the FIFO).  Data will be output until reaching
+    the specified number of scans (in single execution mode) or an
+    OutScanStop command is sent.
+
+
+    channel_map:  bit field marking which channels are in the scan
+                   bit 0: 1 = Port 0
+                   bit 1: 1 = Port 1
+                   bits 2-7: Reserved
+    count:        the total number of scans to perform (0 for continuous scan)
+    retrig_count: the number of scans to perform for each trigger in retrigger mode
+    pacer_period: pacer timer period value (0 for external clock)
+    options:      bit field that controls various options
+                    bit 0: 1 = use external trigger
+                    bit 1: 1 = use Pattern Detection trigger
+                    bit 2  1 = use retrigger mode, 0 = normal trigger
+                    bits 3-7: Reserved
+    """
+    requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    if frequency == 0:
+      pacer_period = 0  # use ICLKO
+    else:
+      pacer_period = round((96.E6 / frequency) - 1)
+
+    
+  def OutScanStop(self):
+    """
+    This command stops the output scan (if running).
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.OUT_SCAN_STOP
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def OutScanClearFIFO(self):
+    """
+    This command clears the output firmware buffer
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.OUT_SCAN_CLEAR_FIFO
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
     
 
   ##########################################
