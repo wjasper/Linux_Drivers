@@ -104,7 +104,7 @@ class usb_2020(mccUSB):
   USB_2020_PID = 0x011c
 
   # Gain Ranges
-  BP_10  = 0    # +/- 10. V
+  BP_10V = 0    # +/- 10. V
   BP_5V  = 1    # +/-  5. V
   BP_2V  = 2    # +/-  2. V
   UP_1V  = 3    # +/-  1. V
@@ -120,6 +120,14 @@ class usb_2020(mccUSB):
   NGAIN              = 4     # max number of gain levels
   MAX_PACKET_SIZE_HS = 512   # max packet size for HS device
   MAX_PACKET_SIZE_FS = 64    # max packet size for HS device
+  LAST_CHANNEL       = 0x08  # Last channel
+  CALIBRATION_MODE   = 0x10  # Calibration Mode
+
+  # AIn Scan Modes
+  CONTINUOUS_READOUT   = 0x1  # Continuous mode
+  SINGLEIO             = 0x2  # Return data after every read (used for low frequency scans)
+  FORCE_PACKET_SIZE    = 0x4  # Force packet_size
+  VOLTAGE              = 0x8  # return values as voltages
 
   # Commands and Codes for USB-2020
   # Digital I/O Commands
@@ -163,7 +171,7 @@ class usb_2020(mccUSB):
       return
     self.status = 0                       # status of the device
     self.samplesToRead = -1               # number of bytes left to read from a scan
-    self.scanList = bytearray(self.NCHAN) # depth of scan queue is 15
+    self.scanList = bytearray(self.NCHAN) # depth of scan queue is 2
     self.lastElement = 0                  # last element of the scan list
     self.count = 0
     self.retrig_count = 0
@@ -179,7 +187,6 @@ class usb_2020(mccUSB):
     # Configure the FPGA
     if not (self.Status() & self.FPGA_CONFIGURED) :
       # load the FPGA data into memory
-      print('3')      
       from usb_2020_rbf import FPGA_data
       print("Configuring FPGA.  This may take a while ...")
       self.FPGAConfig()
@@ -224,7 +231,6 @@ class usb_2020(mccUSB):
       for gain in range(self.NGAIN):
         self.table_AIn[channel][gain].slope, = unpack('f', self.MemoryR(4))
         self.table_AIn[channel][gain].intercept, = unpack('f', self.MemoryR(4))
-
 
   def CalDate(self):
     """
@@ -306,6 +312,303 @@ class usb_2020(mccUSB):
     wValue = value & 0xffff
     wIndex = 0
     self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], self.HS_DELAY)
+
+  #############################################
+  #        Analog Input Commands              #
+  #############################################
+
+  def AIn(self, channel, gain, voltage=False):
+    """
+    This command reads the value of an analog input channel.  This
+    command will result in a bus stall if an AInScan is currently
+    running.  
+
+     channel: the channel to read (0-1)
+     value:   12 bits of data, right justified.
+     voltage: True = return voltage, False = return raw reading
+    """
+
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue =  channel
+    wIndex = 0
+    
+    if channel < 0 or channel >= self.NCHAN:
+      raise ValueError('AIn: Error in channel value')
+      return
+
+    if gain < 0 or gain >= self.NGAIN:
+      raise ValueError('AIn: Error in gain value')
+      return
+    
+    data ,= unpack('H',self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 2, timeout = 200))
+
+    # only first 12 bits of data are significant
+    if data > 0xffd:
+      raise ValueError("DAC is saturated at +FS")
+    elif data < 0x60:
+      raise ValueError("DAC is saturated at -FS")
+    else:
+      data = round(float(data)*self.table_AIn[channel][gain].slope + self.table_AIn[channel][gain].intercept)
+
+    if voltage == True:
+      data = self.volts(gain, value)
+
+    return data
+
+  def AInScanStart(self, count, retrig_count, frequency, options, mode):
+    """
+    This command starts the analog input channel scan.  The gain
+    ranges that are currently set on the desired channels will be used
+    (these may be changed with AInConfig) This command will result in
+    a bus stall if an AInScan is currently running.  The data on this
+    devie goes straight into DRAM memory and will be uploaded over USB
+    when the count is reached, or ethe meory becomes full.
+
+    count:        the total number of scans to perform (0 for continuous scan)
+    retrig_count: the number of scans to perform for each trigger in retrigger mode
+    pacer_period: pacer timer period value (0 for PACER_IN)
+    frequency:    pacer frequency in Hz
+    packet_size:  number of samples to transfer at a time
+    options:      bit field that controls various options
+                   bit 0: Reserved
+                   bit 1: Reserved
+                   bit 2: Reserved
+                   bit 3: 1 = use trigger or gate  0 = no trigger
+                   bit 4: Reserved
+                   bit 5: 1 = External Pacer Output, 0 = External Pacer Input
+                   bit 6: 1 = retrigger mode, 0 = normal trigger
+                   bit 7: 1 = Use DDR RAM as storage, 0 = Stream via USB
+
+    mode:         mode bits:
+                  bit 0:  0 = counting mode,  1 = CONTINUOUS_READOUT
+                  bit 1:  1 = SINGLEIO
+                  bit 2:  1 = use packet size passed usb_2020->packet_size
+                  bit 3:  1 = convert to voltages  
+    Notes:
+
+    The pacer rate is set by an internal 32-bit incrementing timer
+    running at a base rate of 80 MHz.  The timer is controlled by
+    pacer_period. The maximum rate on this ADC is 20 MHz.
+
+    If pacer_period is set to 0 the device does not generate an A/D clock.  It uses
+    PACER_IN pin as the pacer source.
+
+    The timer will be reset and sample acquired when its value equals
+    timer_period.  The equation for calculating timer_period is:
+
+         timer_period = [80MHz / (sample frequency)] - 1
+
+    The data will be returned in packets utilizing a bulk IN endpoint.
+    The data will be in the format:
+
+      lowchannel sample 0: lowchannel + 1 sample 0: ... :hichannel sample 0
+      lowchannel sample 1: lowchannel + 1 sample 1: ... :hichannel sample 1
+      ...
+      lowchannel sample n: lowchannel + 1 sample n: ... :hichannel sample n
+
+    The scan will not begin until the AInScanStart command is sent (and
+    any trigger conditiions are met.)  Data will be sent until reaching
+    the specified count or an AInScanStop command is sent.
+
+    The packet_size parameter is used for low sampling rates to avoid
+    delays in receiving the sampled data. The buffer will be sent,
+    rather than waiting for the buffer to fill.  This mode should
+    not be used for high sample rates in order to avoid data loss.
+
+    The external trigger may be used to start data collection
+    synchronously.  If the bit is set, the device will wait until the
+    appropriate trigger edge is detected, then begin sampling data at
+    the specified rate.  No messages will be sent until the trigger
+    is detected.
+
+    The retrigger mode option and the retrig_count parameter are only
+    used if trigger is used.  This option will cause the trigger to
+    be rearmed after retrig_count samples are acquired, with a total
+    of count samples being returned from the entire scan.
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    bytesPerScan = (self.lastElement+1)*2
+    self.mode = mode
+
+    if  frequency > 20000000: # 20MHz S/s throughput
+      frequency = 20.E6
+
+    if frequency == 0.0:
+      pacer_period = 0     # use external pacer
+    else:
+      pacer_period = round((80.E6 / frequency) - 1)
+
+    if count == 0:
+      self.mode |= self.CONTINUOUS_READOUT
+      self.bytesToRead = -1                    # disable and sample forever
+    else:
+      self.bytesToRead = count*bytesPerScan*2  # total number of bytes to read
+
+    if self.mode & self.FORCE_PACKET_SIZE:
+      packet_size = self.packet_size
+    elif self.mode & self.SINGLEIO:
+      packet_size = self.lastElement + 1
+    elif self.mode & self.CONTINUOUS_READOUT:
+      packet_size = int((( (self.wMaxPacketSize//bytesPerScan) * bytesPerScan) // 2))
+    else:
+      packet_size = self.wMaxPacketSize // 2
+    self.packet_size = packet_size
+
+    if self.mode & self.CONTINUOUS_READOUT:
+      self.count = 0
+    else:
+      self.count = count
+
+    self.retirg_count = retrig_count
+    self.mode = mode & 0xff
+    self.options = options
+    self.frequency = frequency
+
+    packet_size -= 1  # force to uint8_t size in range 0-255    
+    scanPacket = pack('IIIBB', count, retrig_count, pacer_period, packet_size, options)
+    result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
+
+    self.status = self.Status()
+
+  def AInScanRead(self):
+    if self.mode & self.CONTINUOUS_READOUT or self.mode & self.SINGLEIO :
+      nSamples = self.packet_size
+    else:
+      nSamples = self.count*(self.lastElement+1)
+
+    try:
+      data =  list(unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(2*nSamples), self.HS_DELAY)))
+    except:
+      print('AInScanRead: error in bulkRead.')
+
+    if len(data) != nSamples:
+      raise ValueError('AInScanRead: error in number of samples transferred.')
+      return len(data)
+    
+    if self.mode & self.VOLTAGE:
+      for i in range(len(data)):
+        gain = (self.scanList[i%(self.lastElement+1)] >> 2) & 0x3
+        channel = (self.scanList[i%(self.lastElement+1)]) & 0x1
+        data[i] = data[i]*self.table_AIn[channel][gain].slope + self.table_AIn[channel][gain].intercept
+        if data[i] > 0xfff:
+          data[i] = 0xfff
+        elif data[i] < 0.0:
+          data[i] = 0x0
+        else:
+          data[i] = int(round(data[i]))
+        data[i] = self.volts(gain, data[i])
+        
+    if self.bytesToRead > len(data)*2:
+      self.bytesToRead -= len(data)*2
+    elif self.bytesToRead > 0 and self.bytesToRead < len(data)*2:  # all done
+      self.AInScanStop()
+      self.AInScanClearFIFO()
+      self.status = self.Status()
+      return data
+
+    if self.mode & self.CONTINUOUS_READOUT:
+      return data
+
+    # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
+    if nSamples*2%self.wMaxPacketSize == 0:
+     dummy = self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, 2, 100)
+     
+    self.status = self.Status()
+    if self.status & self.AIN_SCAN_OVERRUN:
+      self.AInScanStop()
+      self.AInScanFIFO()
+      raise ValueError('AInScanRead: Scan overrun.')
+      return
+
+    return data
+        
+  def AInScanStop(self):
+    """
+    This command stops the analog input scan (if running).
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AIN_SCAN_STOP
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def AInConfigR(self):
+    """
+    This command reads or writes the analog input channel
+    configurations.  This command will result in a bus stall if an
+    AIn scan is currently running.  The scan list is setup to
+    acquire data from the channels in the order that they are placed
+    in the scan list.
+
+    ScanList[2]  channel configuration:
+      bit    0: Channel Number
+      bits 1-2: Range 
+      bit 3:    Last Channel: 1 = last channel, 0 = not last channel
+      bit 4:    Calibration Mode: 1 = Calibration voltage reference is input to ADC, 0 = Channel input is tied to ADC
+
+    Range:  00 = +/- 10V
+            01 = +/-  5V
+            10 = +/-  2V
+            11 = +/-  1V
+    """
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = 0
+    value = self.udev.controlRead(request_type, self.AIN_SCAN_CONFIG, wValue, wIndex, 2, self.HS_DELAY)
+    for i in range(len(value)):
+      self.scanList[i] = value[i]
+      if value[i] & self.LAST_CHANNEL:
+        self.lastElement = i  # depth of queue (either 0 or 1)
+    return
+
+  def AInConfigW(self, entry, channel, gain, lastElement=False, calibrationMode=False):
+    """
+    entry:    channel entry in the queue (0 - 1)
+    channel:  channel number (Differential: 0-7, Single Ended: 0-15)
+    gain:     range  ( 0:+/- 10V,  1: +/- 5V, 2: +/- 1V, 3: +/- 1V)
+    lastElement: Set to True is last element in the queue
+    """
+
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AIN_SCAN_CONFIG
+    wValue = 0
+    wIndex = 0
+
+    if entry < 0 or entry > 1:
+      raise ValueError('AInConfigW: Exceed depth of queue')
+      return
+
+    if channel < 0 or channel > 1:
+      raise ValueError('AInConfigW: Exceed depth of queue')
+      return
+
+    if self.Status() & self.AIN_SCAN_RUNNING:
+      self.AInScanStop()
+
+    self.scanList[entry] = channel | (gain << 0x1)
+
+    if lastElement == True:
+      self.lastElement = entry
+      self.scanList[entry] |= self.LAST_CHANNEL
+
+    if calibrationMode == True:
+      self.scanList[entry] |= self.CALIBRATION_MODE
+
+    try:
+      result = self.udev.controlWrite(request_type, request, wValue, wIndex, self.scanList, self.HS_DELAY)
+    except:
+      print('AInConfigW: error in control Write result =', result)
+      return
+    
+  def AInScanClearFIFO(self):
+    """
+    This command clears the analog input firmware buffer.
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AIN_SCAN_CLEAR_FIFO
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
 
   ##########################################
   #           Memory Commands              #
@@ -578,3 +881,16 @@ class usb_2020(mccUSB):
     if status & self.FPGA_CONFIG_MODE:
       print('  FPGA in configuration mode.')
 
+  def volts(self, gain, value):
+    if gain == self.BP_10V:
+      volt = (value - 2048) * 10./2048.
+    elif gain == self.BP_5V:
+      volt = (value - 2048) * 5./2048.
+    elif gain == self.BP_2V:
+      volt = (value - 2048) * 2./2048.
+    elif gain == self.BP_1V:
+      volt = (value - 2048) * 1./2048.
+    else:
+      raise ValueError('volts: unknown gain')
+      return
+    return volt

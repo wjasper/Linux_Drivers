@@ -56,6 +56,7 @@ def main():
     print("\nUSB-2020 Testing")
     print("------------------")
     print("Hit 'b' to blink LED.")
+    print("Hit 'B' for BURSTIO using onboard DDR RAM")
     print("Hit 'C' to test continous sampling")
     print("Hit 'd' to read/write digital port.")
     print("Hit 'e' to exit.")
@@ -87,6 +88,30 @@ def main():
         value2 = usb2020.DLatchR()
         value3 = usb2020.DPort() >> 4
         print("The number you entered: ", hex(value3), "  Latched value: ", hex(value2))
+        if toContinue() != True:
+          break
+    elif ch == 'i':
+      channel = int(input('Input channel [0-1]: '))
+      gain = int(input('Enter gain.  1 = +/-10V  2 = +/- 5V  3 = +/- 2V  4 = +/- 1V: '))
+      if gain == 1:
+        gain = usb2020.BP_10V
+      elif gain == 2:
+        gain = usb2020.BP_5V
+      elif gain == 3:
+        gain = usb2020.BP_2V
+      elif gain == 4:
+        gain = usb2020.BP_1V
+      else:
+        print('Unknown gain choice.')
+        break
+      usb2020.AInConfigW(0, channel, gain, True)
+      while True:
+        try:
+          value = usb2020.AIn(channel, gain)
+        except ValueError as e:
+          print(e)
+          break
+        print("AIn: %#x  volt = %f" % (value, usb2020.volts(gain, value)))
         if toContinue() != True:
           break
     elif ch == 'M':

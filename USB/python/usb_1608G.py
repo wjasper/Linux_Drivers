@@ -300,7 +300,7 @@ class usb1608G(mccUSB):
     result in a bus stall if an AInScan is currently running.
 
     count:        the total number of scans to perform (0 for continuous scan)
-    retrig_count: the number of scan to perform for each trigger in retrigger mode
+    retrig_count: the number of scans to perform for each trigger in retrigger mode
     pacer_period: pacer timer period value (0 for AI_CLK_IN)
     frequency:    pacer frequency in Hz
     packet_size:  number of samples to transfer at a time
