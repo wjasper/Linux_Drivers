@@ -46,7 +46,7 @@ def main():
         print('No USB-1608G device found.')
         return
 
-# print out the calibration tables
+  # print out the calibration tables
   print('\nCalibration Analog Input Table:')
   for gain in range(usb1608G.NGAIN):
     print('  Range =',gain, \
@@ -68,7 +68,7 @@ def main():
 
   while True:
     print("\nUSB-1608G/1608GX/1608GX_2AO Testing")
-    print("----------------")
+    print("-------------------------------------")
     print("Hit 'b' to blink LED.")
     print("Hit 'c' to test counter. ")
     print("Hit 'C' to test continous sampling")
