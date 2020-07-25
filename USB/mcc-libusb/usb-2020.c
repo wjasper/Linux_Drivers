@@ -251,7 +251,10 @@ void usbAInScanStart_USB2020(libusb_device_handle *udev, uint32_t count, uint32_
   /* This command starts the analog input channel scan.  The gain
      ranges that are currently set on the desired channels will be
      used (these may be changed with AInConfig) This command will
-     result in a bus stall if an AInScan is currently running.
+     result in a bus stall if an AInScan is currently running.  The
+     data on this device goes straight into DRAM memory and will be
+     uploaded over USB when the count is reached, or the memory
+     becomes full.
 
      Notes:
 
@@ -294,7 +297,6 @@ void usbAInScanStart_USB2020(libusb_device_handle *udev, uint32_t count, uint32_
      used if trigger is used.  This option will cause the trigger to
      be rearmed after retrig_count samples are acquired, with a total
      of count samples being returned from the entire scan.
-     
   */
 
   struct AInScan_t {

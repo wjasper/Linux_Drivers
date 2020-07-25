@@ -30,8 +30,8 @@ extern "C" {
 /* Aanalog Input */
 #define SINGLE_ENDED   0
 #define CALIBRATION    1
-#define LAST_CHANNEL   (0x80)
-#define PACKET_SIZE    512       // max bulk transfer size in bytes
+#define LAST_CHANNEL  (0x8)
+#define PACKET_SIZE    512    // max bulk transfer size in bytes
   
 /* Ranges */
 #define BP_10V 0x0    // +/- 10 V

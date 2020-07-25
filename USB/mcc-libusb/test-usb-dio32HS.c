@@ -128,6 +128,7 @@ int main (int argc, char **argv)
 	  outData[i+1] = 1;
 	}
 	count = 1000;
+	options = 0;
 	//usbOutScanStart_USBDIO32HS(udev,PORT0,0,0,frequency,options);
 	for (i = 0; i < 10*frequency; i++) {
 	  usbOutScanStart_USBDIO32HS(udev,PORT0,count,0,frequency,options);
