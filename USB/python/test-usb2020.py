@@ -114,6 +114,115 @@ def main():
         print("AIn: %#x  volt = %f" % (value, usb2020.volts(gain, value)))
         if toContinue() != True:
           break
+    elif ch == 'I':
+      print('Testing USB-2020 Analog Input Scan.')
+      usb2020.AInScanStop()
+      usb2020.AInScanClearFIFO()
+      count = int(input('Enter total number of scans: '))
+      nRepeat = int(input('Enter nuber of repeats: '))
+      gain = int(input('Enter gain.  1 = +/-10V  2 = +/- 5V  3 = +/- 2V  4 = +/- 1V: '))
+      frequency = float(input('Enter sampling frequency [Hz]: '))
+      nChan = int(input('Enter number of channels [1-2]: '))
+      for channel in range(nChan):
+        if gain == 1:
+          gain = usb2020.BP_10V
+        elif gain == 2:
+          gain = usb2020.BP_5V
+        elif gain == 3:
+          gain = usb2020.BP_2V
+        elif gain == 4:
+          gain = usb2020.BP_1V
+        else:
+          print('Unknown gain choice.')
+          break
+        usb2020.AInConfigW(channel, channel, gain)
+      usb2020.AInConfigW(nChan-1, nChan-1, gain, True)
+      for repeat in range(nRepeat):
+        print('\n\n---------------------------------------')
+        print('repeat: %d' % (repeat))
+#        mode = usb2020.VOLTAGE
+        mode = 0
+        options = 0
+        usb2020.AInScanStart(count, 0, frequency, options, mode)
+        data = usb2020.AInScanRead()
+        print('Number of samples read = %d (should be %d)' % (len(data), count*nChan))
+        for i in range(count):
+          print("%6d" % (i), end ='')
+          for j in range(nChan):
+            k = i*nChan + j
+            if mode & usb2020.VOLTAGE:   # data returned in volts
+              print(", %8.4lf V" % data[k], end='')
+            else:
+              if data[k] >= 0xffd:
+                print("DAC is saturated at +FS")
+              elif data[k] <= 0x30:
+                print("DAC is saturated at -FS")
+              else:
+                data[k] = int(round(data[k]*usb2020.table_AIn[j][gain].slope + usb2020.table_AIn[j][gain].intercept))
+              print(", %8.4lf V" % usb2020.volts(gain, data[k]), end='')
+          print("")
+      print("\n---------------------------------------\n")
+      usb2020.AInScanStop()
+      usb2020.AInScanClearFIFO()
+    elif ch == 'C':
+      print("Testing USB-2020 Analog Input Scan in continuous mode 2 channels")
+      print("Hit any key to exit")
+      frequency = float(input("Enter desired sampling frequency (greater than 1000): "))
+      usb2020.AInScanStop()
+      nScans = 0  # for conitnuous mode
+      nChan = 2   # 2 channels
+      gain = usb2020.BP_10V
+      for channel in range(nChan):
+        usb2020.AInConfigW(channel, channel, gain)
+      usb2020.AInConfigW(nChan-1, nChan-1, gain, lastElement=True)        
+      time.sleep(1)
+      mode = usb2020.CONTINUOUS_READOUT
+      options = 0
+      usb2020.AInScanStart(nScans, 0, frequency, options, mode)
+      flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      i = 0
+      while True:
+        raw_data = usb2020.AInScanRead()
+        if i%100 == 0:
+          print('Scan =', i, 'samples returned =', len(raw_data))
+        i += 1
+        c = sys.stdin.readlines()
+        if (len(c) != 0):
+          break
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+      usb2020.AInScanStop()
+      usb2020.AInScanClearFIFO()
+    elif ch == 'B':
+      print('Testing USB-2020 Analog Input Scan BURSTIO mode')
+      usb2020.AInScanStop()
+      usb2020.AInScanClearFIFO()
+      nSamples = int(input('Enter number of samples (greater than or equal to 256, less than 64 MB and a multiple of 256): '))
+      channel = int(input('Input channel [0-1]: '))
+      frequency = float(input("Enter desired sampling frequency (greater than 1000): "))
+      gain = int(input('Enter gain.  1 = +/-10V  2 = +/- 5V  3 = +/- 2V  4 = +/- 1V: '))
+      if gain == 1:
+        gain = usb2020.BP_10V
+      elif gain == 2:
+        gain = usb2020.BP_5V
+      elif gain == 3:
+        gain = usb2020.BP_2V
+      elif gain == 4:
+        gain = usb2020.BP_1V
+      else:
+        print('Unknown gain choice.')
+        break
+      usb2020.AInConfigW(0, channel, gain, lastElement=True)
+      options = usb2020.DDR_RAM
+#      options = (0x1 << 7)
+      print('options = ', options)
+      mode = 0x0
+      usb2020.AInScanStart(nSamples, 0, frequency, options, mode)
+      data = usb2020.AInScanRead()
+      print('Number of samples read = %d (should be %d)' % (len(data), nSamples))
+
+      usb2020.AInScanStop()
+      usb2020.AInScanClearFIFO()
     elif ch == 'M':
       print("Manufacturer: %s" % usb2020.getManufacturer())
       print("Product: %s" % usb2020.getProduct())

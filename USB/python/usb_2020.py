@@ -107,7 +107,7 @@ class usb_2020(mccUSB):
   BP_10V = 0    # +/- 10. V
   BP_5V  = 1    # +/-  5. V
   BP_2V  = 2    # +/-  2. V
-  UP_1V  = 3    # +/-  1. V
+  BP_1V  = 3    # +/-  1. V
 
   # Status Bits
   AIN_SCAN_RUNNING   = 0x2   # AIn pacer running
@@ -122,6 +122,12 @@ class usb_2020(mccUSB):
   MAX_PACKET_SIZE_FS = 64    # max packet size for HS device
   LAST_CHANNEL       = 0x08  # Last channel
   CALIBRATION_MODE   = 0x10  # Calibration Mode
+
+  # Options for AInScan
+  TRIGGER             = 0x8  # Use trigger or gate
+  PACER_OUT           = 0x20 # 1 = External Pacer Output, 0 = External Pacer Input
+  RETRIGGER           = 0x40 # 1 = retrigger mode, 0 = normal trigger
+  DDR_RAM             = 0x80 # 1 = Use DDR RAM as storage (BURSTIO) , 0 = Stream via USB
 
   # AIn Scan Modes
   CONTINUOUS_READOUT   = 0x1  # Continuous mode
@@ -464,23 +470,50 @@ class usb_2020(mccUSB):
     self.options = options
     self.frequency = frequency
 
+    if options & self.DDR_RAM:
+      print('Burst mode enabled!')
+      # If using the onboard DDR RAM (BURSTIO Mode), there are 3 constraints:
+      # 1. The total count must be greater than or equal to 256
+      # 2. The total count must be less than 64 MB
+      # 3. The total count must be a multiple of 256
+      if count < 256:
+        raise ValueError('AInScanStart: count less than 256 in BURSTIO mode.')
+        return
+      if count > 64*1024*1024:
+        raise ValueError('AInScanStart: count grester then 64MB.')
+        return
+      if count%256 != 0:
+        raise ValueError('AInScanStart: count must be a multiple of 256.')
+        return
     packet_size -= 1  # force to uint8_t size in range 0-255    
     scanPacket = pack('IIIBB', count, retrig_count, pacer_period, packet_size, options)
+    print(count, retrig_count, frequency, packet_size, options)
     result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
 
     self.status = self.Status()
 
   def AInScanRead(self):
+    """
+    Bulk transactions will be considered complete when a packet is sent
+    that is less than the max packet size.  If an integer muliple of the
+    max packet size of data is to be sent during a transaction, an empty
+    packet must be sent to indicate the end of the transaction.
+    """
+
     if self.mode & self.CONTINUOUS_READOUT or self.mode & self.SINGLEIO :
       nSamples = self.packet_size
     else:
       nSamples = self.count*(self.lastElement+1)
 
+    timeout = round(500 + 1000*nSamples/self.frequency)
+    print('AInScanRead: nSamples = ', nSamples, '   timeout = ', timeout)
+
     try:
-      data =  list(unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(2*nSamples), self.HS_DELAY)))
+      data =  list(unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(2*nSamples), timeout)))
     except:
       print('AInScanRead: error in bulkRead.')
-
+      return
+    
     if len(data) != nSamples:
       raise ValueError('AInScanRead: error in number of samples transferred.')
       return len(data)
