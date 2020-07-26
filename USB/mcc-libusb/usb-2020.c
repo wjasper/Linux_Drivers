@@ -67,21 +67,26 @@
 static int wMaxPacketSize;  // will be the same for all devices of this type so
                             // no need to be reentrant. 
 
-void usbBuildGainTable_USB2020(libusb_device_handle *udev, float table[NGAINS_2020][2])
+void usbBuildGainTable_USB2020(libusb_device_handle *udev, Calibration_AIN table[NCHAN_2020][NGAINS_2020])
 {
   /* 
      Builds a lookup table of calibration coefficents to translate values into voltages:
-       voltage = value*table[gain#][0] + table[gain#][1]
+       voltage = value*table[chan#][gain#].slope + table[chan#][gain#].offset
      only needed for fast lookup.
+     Stored as IEEE-754 4-byte floating point values.
   */
 
   int i, j;
-  uint16_t address = 0x7000;
+  uint16_t address = 0x7000;  // base address of ADC calibration coefficients.
 
-  usbMemAddressW_USB2020(udev, address);  // Beginning of Calibration Table
-  for (i = 0; i < NGAINS_2020; i++) {
-    for (j = 0; j < 2; j++) {
-      usbMemoryR_USB2020(udev, (uint8_t *) &table[i][j], sizeof(float));
+  for (i = 0; i < NCHAN_2020; i++) {
+    for (j = 0; j < NGAINS_2020; j++) {
+      usbMemAddressW_USB2020(udev, address);  
+      usbMemoryR_USB2020(udev, (uint8_t *) &table[i][j].slope, sizeof(float));
+      address += 4;
+      usbMemAddressW_USB2020(udev, address);  
+      usbMemoryR_USB2020(udev, (uint8_t *) &table[i][j].offset, sizeof(float));
+      address += 4;
     }
   }
   return;

@@ -58,6 +58,11 @@ extern "C" {
 #define MAX_PACKET_SIZE_HS  512 // max packet size for HS device
 #define MAX_PACKET_SIZE_FS   64 // max packet size for FS device
 
+typedef struct Calibration_AIN_t {
+  float slope;
+  float offset;
+} Calibration_AIN;
+
 typedef struct ScanList_t {
   uint8_t channel;
   uint8_t mode;
@@ -73,9 +78,9 @@ typedef struct TriggerConfig_t {
 } TriggerConfig;
 
 typedef struct usbDevice2020_t {
-  libusb_device_handle *udev;       // libusb 1.0 handle
-  float table_AIn[NGAINS_2020][2];  // calibration coefficients
-  ScanList list[NCHAN_2020];        // scan list used to configure the A/D channels.
+  libusb_device_handle *udev;                          // libusb 1.0 handle
+  Calibration_AIN table[NCHAN_2020][NGAINS_2020];  // calibration coefficients ADC
+  ScanList list[NCHAN_2020];                           // scan list used to configure the A/D channels.
   uint8_t options;
   uint8_t nChannels;
   int nSamples;
@@ -115,7 +120,7 @@ int usbAInScanRead_USB2020(libusb_device_handle *udev, int nScan, int nChan, uin
 void usbAInConfig_USB2020(libusb_device_handle *udev, ScanList scanList[NCHAN_2020]);
 void usbAInConfigR_USB2020(libusb_device_handle *udev, ScanList scanList[NCHAN_2020]);
 void usbAInScanClearFIFO_USB2020(libusb_device_handle *udev);
-void usbBuildGainTable_USB2020(libusb_device_handle *udev, float table[NGAINS_2020][2]);
+void usbBuildGainTable_USB2020(libusb_device_handle *udev, Calibration_AIN table[NCHAN_2020][NGAINS_2020]);
 void usbCalDate_USB2020(libusb_device_handle *udev, struct tm *date);
 double volts_USB2020(const uint8_t gain, uint16_t value);
 

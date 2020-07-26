@@ -52,7 +52,7 @@ int main (int argc, char **argv)
   double frequency;
   float temperature;
   int ch;
-  int i;
+  int i,j;
   int flag;
   int nSamples = 0;
   uint8_t input;
@@ -84,9 +84,11 @@ int main (int argc, char **argv)
   //print out the wMaxPacketSize.  Should be 512
   printf("wMaxPacketSize = %d\n", usb_get_max_packet_size(device.udev,0));
 
-  usbBuildGainTable_USB2020(device.udev, device.table_AIn);
-  for (i = 0; i < NGAINS_2020; i++) {
-    printf("Gain: %d   Slope = %f   Offset = %f\n", i, device.table_AIn[i][0], device.table_AIn[i][1]);
+  usbBuildGainTable_USB2020(device.udev, device.table);
+  for (i = 0; i < NCHAN_2020; i++) {
+    for (j = 0; j < NGAINS_2020; j++) {
+      printf("Channel = %d  Gain: %d   Slope = %f   Offset = %f\n", i, j, device.table[i][j].slope, device.table[i][j].offset);
+    }
   }
 
   usbCalDate_USB2020(device.udev, &calDate);
@@ -150,14 +152,14 @@ int main (int argc, char **argv)
 	  case '4': gain = BP_1V; break;
 	  default:  gain = BP_10V; break;
 	}
-	mode = (LAST_CHANNEL| SINGLE_ENDED);
+	mode = (LAST_CHANNEL);
 	device.list[0].range = gain;
         device.list[0].mode = mode;
 	device.list[0].channel = channel;
 	usbAInConfig_USB2020(device.udev, device.list);
 	for (i = 0; i < 20; i++) {
 	  value = usbAIn_USB2020(device.udev, channel);
-	  value = rint(value*device.table_AIn[gain][0] + device.table_AIn[gain][1]);
+	  value = rint(value*device.table[channel][gain].slope + device.table[channel][gain].offset);
 	  printf("Channel %d  Mode = %#x  Gain = %d Sample[%d] = %#x Volts = %lf\n",
 		 device.list[0].channel, device.list[0].mode, device.list[0].range, i, value, volts_USB2020(gain, value));
 	  usleep(50000);	  
@@ -180,7 +182,7 @@ int main (int argc, char **argv)
 	  case '4': gain = BP_1V; break;
 	  default:  gain = BP_10V; break;
 	}
-	mode = (LAST_CHANNEL | SINGLE_ENDED);
+	mode = (LAST_CHANNEL);
         device.list[0].range = gain;
         device.list[0].mode = mode;
         device.list[0].channel = channel;
@@ -196,7 +198,7 @@ int main (int argc, char **argv)
 	printf("Number samples read = %d\n", ret/2);
 	for (i = 0; i < nSamples; i++) {
           dataAIn[i] &= 0xfff;
-	  dataAIn[i] = rint(dataAIn[i]*device.table_AIn[gain][0] + device.table_AIn[gain][1]);
+	  dataAIn[i] = rint(dataAIn[i]*device.table[channel][gain].slope + device.table[channel][gain].offset);
 	  printf("Channel %d  Mode = %d  Gain = %d Sample[%d] = %#x Volts = %lf\n", channel,
 		 mode, gain, i, dataAIn[i], volts_USB2020(gain, dataAIn[i]));
 	}
@@ -221,7 +223,7 @@ int main (int argc, char **argv)
 	  case '4': gain = BP_1V; break;
 	  default:  gain = BP_10V; break;
 	}
-	mode = (LAST_CHANNEL | SINGLE_ENDED);
+	mode = (LAST_CHANNEL);
         device.list[0].range = gain;
         device.list[0].mode = mode;
         device.list[0].channel = channel;
@@ -237,7 +239,7 @@ int main (int argc, char **argv)
 	printf("Number samples read = %d\n", ret/2);
 	for (i = 0; i < nSamples; i++) {
           dataAInBurst[i] &= 0xfff;
-	  dataAInBurst[i] = rint(dataAInBurst[i]*device.table_AIn[gain][0] + device.table_AIn[gain][1]);
+	  dataAInBurst[i] = rint(dataAInBurst[i]*device.table[channel][gain].slope + device.table[channel][gain].offset);
 	  printf("Channel %d  Mode = %d  Gain = %d Sample[%d] = %#x Volts = %lf\n", channel,
 		 mode, gain, i, dataAInBurst[i], volts_USB2020(gain, dataAInBurst[i]));
 	}
@@ -255,7 +257,7 @@ int main (int argc, char **argv)
         nSamples = 0;       // put in continuous mode
         channel = 0;        // use channel 0
         gain = BP_10V;      // set gain to +/- 10 V
-	mode = (LAST_CHANNEL | SINGLE_ENDED);
+	mode = LAST_CHANNEL;
         device.list[0].range = gain;
         device.list[0].mode = mode;
         device.list[0].channel = channel;
