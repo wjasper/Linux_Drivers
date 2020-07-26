@@ -487,7 +487,7 @@ class usb_2020(mccUSB):
         return
     packet_size -= 1  # force to uint8_t size in range 0-255    
     scanPacket = pack('IIIBB', count, retrig_count, pacer_period, packet_size, options)
-    print(count, retrig_count, frequency, packet_size, options)
+    print(count, retrig_count, frequency, packet_size, options, len(scanPacket))
     result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
 
     self.status = self.Status()
@@ -512,6 +512,7 @@ class usb_2020(mccUSB):
       data =  list(unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(2*nSamples), timeout)))
     except:
       print('AInScanRead: error in bulkRead.')
+      raise
       return
     
     if len(data) != nSamples:
