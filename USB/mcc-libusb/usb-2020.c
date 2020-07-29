@@ -250,8 +250,7 @@ uint16_t usbAIn_USB2020(libusb_device_handle *udev, uint16_t channel)
   return value;
 }
 
-void usbAInScanStart_USB2020(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, double frequency,
-			       uint32_t packet_size, uint8_t options)
+void usbAInScanStart_USB2020(libusb_device_handle *udev, usbDevice2020 *usb2020)
 {
   /* This command starts the analog input channel scan.  The gain
      ranges that are currently set on the desired channels will be
@@ -260,6 +259,25 @@ void usbAInScanStart_USB2020(libusb_device_handle *udev, uint32_t count, uint32_
      data on this device goes straight into DRAM memory and will be
      uploaded over USB when the count is reached, or the memory
      becomes full.
+
+     count:        the total number of scans to perform (0 for continuous scan)
+     retrig_count: the number of scan to perform for each trigger in retrigger mode
+     pacer_period: pacer timer period value (0 for PACER_IN)
+     frequency:    pacer frequency in Hz
+     packet_size:  number of samples to transfer at a time
+     options:      bit field that controls various options
+                   bit 0: Reserved
+                   bit 1: Reserved
+                   bit 2: Reserved
+                   bit 3: 1 = use trigger or gate
+                   bit 4: Reserved
+                   bit 5: 1 = External Pacer Output, 0 = External Pacer Input
+                   bit 6: 1 = retrigger mode, 0 = normal trigger
+                   bit 7: 1 = Use DDR RAM as storage, 0 = Stream via USB
+    mode:  mode bits:
+           bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
+           bit 1:   1 = SINGLEIO
+           bit 2:   1 = use packet size passed usbDevice1608G->packet_size
 
      Notes:
 
@@ -278,10 +296,10 @@ void usbAInScanStart_USB2020(libusb_device_handle *udev, uint32_t count, uint32_
      The data will be returned in packets utilizing a bulk IN endpoint.
      The data will be in the format:
 
-     lowchannel sample 0: lowchannel + 1 sample 0: ... :hichannel sample 0
-     lowchannel sample 1: lowchannel + 1 sample 1: ... :hichannel sample 1
-     ...
-     lowchannel sample n: lowchannel + 1 sample n: ... :hichannel sample n
+       lowchannel sample 0: lowchannel + 1 sample 0: ... :hichannel sample 0
+       lowchannel sample 1: lowchannel + 1 sample 1: ... :hichannel sample 1
+       ...
+       lowchannel sample n: lowchannel + 1 sample n: ... :hichannel sample n
 
      The scan will not begin until the AInScanStart command is sent (and
      any trigger conditiions are met.)  Data will be sent until reaching
@@ -322,34 +340,54 @@ void usbAInScanStart_USB2020(libusb_device_handle *udev, uint32_t count, uint32_
   } AInScan;
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
   uint8_t status;
-
-  if (count == 0) packet_size = 255;
-
-  AInScan.count = count;
-  AInScan.retrig_count = retrig_count;
-  if (frequency == 0.0) {
-    AInScan.pacer_period = 0;
+  uint16_t packet_size;
+  int bytesPerScan = (usb2020->lastElement+1)*2;    // number of bytes transferred in one scan;
+  
+  if (usb2020->frequency == 0.0) {
+    AInScan.pacer_period = 0; // use external pacer
   } else {
-    AInScan.pacer_period = rint((80.E6 / frequency) - 1);
+    AInScan.pacer_period = rint((80.E6 / usb2020->frequency) - 1);
   }
-  if (packet_size > wMaxPacketSize/2 - 1) packet_size = wMaxPacketSize/2 - 1;
-  AInScan.packet_size = (uint8_t) packet_size;
-  AInScan.options = options;
-  if (options & DDR_RAM) {
+
+  if (usb2020->count == 0) {
+    usb2020->mode |= USB_CONTINUOUS_READOUT;
+    usb2020->bytesToRead = -1;                                          // disable and sample forever
+  } else {
+    usb2020->bytesToRead = usb2020->count*(usb2020->lastElement+1)*2;  // total number of bytes to read
+  }
+
+  if (usb2020->mode & USB_FORCE_PACKET_SIZE) {
+    packet_size = usb2020->packet_size;
+  } else if (usb2020->mode & USB_SINGLEIO) {
+    packet_size = usb2020->lastElement + 1;
+  } else if (usb2020->mode & USB_CONTINUOUS_READOUT) {
+    packet_size = (( (wMaxPacketSize/bytesPerScan) * bytesPerScan) / 2);
+  } else {
+    packet_size = wMaxPacketSize/2;
+  }
+  usb2020->packet_size = packet_size;
+
+  if (usb2020->mode & USB_CONTINUOUS_READOUT) {
+    AInScan.count = 0;
+  } else {
+    AInScan.count = usb2020->count;
+  }
+
+  if (usb2020->options & DDR_RAM) {
     /* If using the onboard DDR RAM (BURSTIO Mode), there are 3 constraints:
        1. The total count must be greater than or equal to 256
        2. The total count must be less than 64 MB
        3. The total count must be a multiple of 256
     */
-    if (count < 256) {
+    if (usb2020->count < 256) {
       printf("usbAInScanStart_USB2020: count must be greater than or equal to 256.\n");
       return;
     }
-    if (count > 64*1024*1024) {
+    if (usb2020->count > 64*1024*1024) {
       printf("usbAInScanStart_USB2020: count must be less than 64MB.\n");
       return;
     }
-    if (count % 256 ) {
+    if (usb2020->count % 256 ) {
       printf("usbAInScanStart_USB2020: count must be a multiple of 256.\n");
       return;
     }
@@ -362,10 +400,17 @@ void usbAInScanStart_USB2020(libusb_device_handle *udev, uint32_t count, uint32_
   }
 
   /* Pack the data into 14 bytes */
-  libusb_control_transfer(udev, requesttype, AIN_SCAN_START, 0x0, 0x0, (unsigned char *) &AInScan, 14, HS_DELAY);
+  AInScan.retrig_count = usb2020->retrig_count;
+  AInScan.options = usb2020->options;
+  AInScan.packet_size = usb2020->packet_size - 1;
+
+  if (libusb_control_transfer(udev, requesttype, AIN_SCAN_START, 0x0, 0x0, (unsigned char *) &AInScan, 14, HS_DELAY) < 0) {
+    perror("usbAInScanStart_USB2020: Error");
+  }
+  usb2020->status = usbStatus_USB2020(udev);
 }
 
-int usbAInScanRead_USB2020(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, unsigned int timeout, int options)
+int usbAInScanRead_USB2020(libusb_device_handle *udev, usbDevice2020 *usb2020, uint16_t *data)
 {
   /*
     Bulk transactions will be considered complete when a packet is sent
@@ -376,41 +421,63 @@ int usbAInScanRead_USB2020(libusb_device_handle *udev, int nScan, int nChan, uin
 
   char value[MAX_PACKET_SIZE_HS];
   int ret = -1;
-  int nbytes = nChan*nScan*2;    // number of bytes to read;
+  int nbytes;       // number of bytes to read
   int transferred;
-  uint8_t status;
+  unsigned int timeout;
+
+  if ((usb2020->status & AIN_SCAN_RUNNING) == 0x0) {
+    perror("usbScanRead_USB2020: pacer must be running to read from buffer");
+    return -1;
+  }
+
+  if ((usb2020->mode & USB_CONTINUOUS_READOUT) || (usb2020->mode & USB_SINGLEIO)) {
+    nbytes = 2*(usb2020->packet_size);
+  } else {
+    nbytes = usb2020->count*(usb2020->lastElement+1)*2;
+  }
+
+  timeout = rint((1000.*nbytes)/usb2020->frequency + 200.);
 
   ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) data, nbytes, &transferred, timeout);
 
   if (ret  < 0) {
     perror("usbAInScanRead_USB2020: error in libusb_bulk_transferred (1).");
   }
+
   if (transferred != nbytes) {
     fprintf(stderr, "usbAInScanRead_USB2020: number of bytes transferred = %d, nbytes = %d\n", transferred, nbytes);
-    status = usbStatus_USB2020(udev);
-    if ((status & AIN_SCAN_OVERRUN)) {
-      printf("usbAInScanRead: Analog In scan overrun.\n");
-    }
-    return ret;
+    return transferred;
   }
 
-  if (options & CONTINUOUS) return transferred;
-  
-  status = usbStatus_USB2020(udev);
+  if (usb2020->bytesToRead > transferred) {
+    usb2020->bytesToRead -= transferred;
+  } else if (usb2020->bytesToRead > 0 && usb2020->bytesToRead < transferred) {  // all done
+    usbAInScanStop_USB2020(udev);
+    usbAInScanClearFIFO_USB2020(udev);
+    usb2020->status = usbStatus_USB2020(udev);
+    return usb2020->bytesToRead;
+  }
+
+  if (usb2020->mode & USB_CONTINUOUS_READOUT) { // continuous mode
+    return transferred;
+  }
+
+  int dummy;
   // if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
-
-  if ((nbytes%wMaxPacketSize) == 0 && !(status & AIN_SCAN_RUNNING)) {
-    libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) value, 2, &ret, 100);
+  if ((nbytes%wMaxPacketSize) == 0) {
+    libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) value, 2, &dummy, 100);
   }
 
-  if ((status & AIN_SCAN_OVERRUN)) {
-    printf("usbAInScanRead: Analog In scan overrun.\n");
+  if ((usb2020->status & AIN_SCAN_OVERRUN)) {
+    perror("Scan overrun.");
+    usbAInScanStop_USB2020(udev);
+    usbAInScanClearFIFO_USB2020(udev);
   }
 
-  return transferred ;
+  return transferred;
 }
 
-void usbAInConfig_USB2020(libusb_device_handle *udev, ScanList scanList[NCHAN_2020])
+void usbAInConfig_USB2020(libusb_device_handle *udev, usbDevice2020 *usb2020)
 {
   /*
     This command reads or writes the analog input channel
@@ -431,42 +498,49 @@ void usbAInConfig_USB2020(libusb_device_handle *udev, ScanList scanList[NCHAN_20
   */
 
   int i;
-  static uint8_t Scan_list[2];
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+  uint8_t scan_list[2];
 
   for (i = 0; i < NCHAN_2020; i++) {
-    if (scanList[i].channel >= 0 && scanList[i].channel < NCHAN_2020) {
-      Scan_list[i] = ((scanList[i].channel & 0x1)           |
-		      ((scanList[i].range  & 0x3) << 0x1)   |
-		      ((scanList[i].mode   & 0x1) << 0x4));
+    if (usb2020->scanList[i].channel >= 0 && usb2020->scanList[i].channel < NCHAN_2020) {
+      scan_list[i] = ((usb2020->scanList[i].channel & 0x1)           |
+		      ((usb2020->scanList[i].range  & 0x3) << 0x1)   |
+		      ((usb2020->scanList[i].mode    & 0x1) << 0x4));
+      if (usb2020->scanList[i].last_channel == 1) {
+        scan_list[i] |= (0x1 << 3);
+        break;
+      } 
     } else {
       printf("Error in Scan List[%d]  mode = %#x   channel = %d  range = %#x\n",
-	     i, scanList[i].mode, scanList[i].channel, scanList[i].range);
+	     i, usb2020->scanList[i].mode, usb2020->scanList[i].channel, usb2020->scanList[i].range);
       return;
-    }
-    
-    if (scanList[i].mode & LAST_CHANNEL) {
-      Scan_list[i] |= (0x1 << 3);
-      break;
     }
   }
 
   if (usbStatus_USB2020(udev) | AIN_SCAN_RUNNING) {
     usbAInScanStop_USB2020(udev);
   }
-  libusb_control_transfer(udev, requesttype, AIN_CONFIG, 0x0, i, (unsigned char *) &Scan_list[0], sizeof(Scan_list), HS_DELAY);
+  libusb_control_transfer(udev, requesttype, AIN_CONFIG, 0x0, i, (unsigned char *) &scan_list[0], sizeof(scan_list), HS_DELAY);
 }
 
-void usbAInConfigR_USB2020(libusb_device_handle *udev, ScanList scanList[NCHAN_2020])
+void usbAInConfigR_USB2020(libusb_device_handle *udev, usbDevice2020 *usb2020)
 {
-  static uint8_t Scan_list[NCHAN_2020];
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+  uint8_t scan_list[2];
+  int i;
 
   if (usbStatus_USB2020(udev) | AIN_SCAN_RUNNING) {
     usbAInScanStop_USB2020(udev);
   }
   
-  libusb_control_transfer(udev, requesttype, AIN_CONFIG, 0x0, 0x0, (unsigned char *) Scan_list, sizeof(Scan_list), HS_DELAY);
+  libusb_control_transfer(udev, requesttype, AIN_CONFIG, 0x0, 0x0, (unsigned char *) scan_list, sizeof(scan_list), HS_DELAY);
+
+  for (i = 0; i < NCHAN_2020; i++) {
+    usb2020->scanList[i].channel = scan_list[i] & 0x1;
+    usb2020->scanList[i].range = (scan_list[i] >> 1) & 0x3;
+    usb2020->scanList[i].last_channel = (scan_list[i] >> 3) & 0x1;
+    usb2020->scanList[i].mode = (scan_list[i] >> 4) & 0x1;
+  }
 }
 
 void usbAInScanStop_USB2020(libusb_device_handle *udev)

@@ -28,10 +28,12 @@ extern "C" {
 #define USB2020_PID (0x011c)
 
 /* Aanalog Input */
-#define SINGLE_ENDED   0
 #define CALIBRATION    1
 #define LAST_CHANNEL  (0x8)
 #define PACKET_SIZE    512    // max bulk transfer size in bytes
+#define USB_CONTINUOUS_READOUT (0x1)
+#define USB_SINGLEIO           (0x2)
+#define USB_FORCE_PACKET_SIZE  (0x4)
   
 /* Ranges */
 #define BP_10V 0x0    // +/- 10 V
@@ -40,7 +42,6 @@ extern "C" {
 #define BP_1V  0x3    // +/- 1V
 
 /* Options for AInScan */
-#define CONTINUOUS         (0x1 << 1) // continuous mode
 #define TRIGGER            (0x1 << 3) // 1 = use trigger or gate
 #define PACER_OUT          (0x1 << 5) // 1 = External Pacer Output, 0 = External Pacer Input
 #define RETRIGGER          (0x1 << 6) // 1 = retrigger mode, 0 = normal trigger
@@ -64,10 +65,10 @@ typedef struct Calibration_AIN_t {
 } Calibration_AIN;
 
 typedef struct ScanList_t {
-  uint8_t channel;
-  uint8_t mode;
+  uint8_t channel;      // 0 = channel 0,    1 = channel 1
   uint8_t range;
-  uint8_t last_channel;
+  uint8_t last_channel; // 1 = last channel,   0 = not last channel
+  uint8_t mode;         // 1 = Calibration Mode,  0 = Cahnnel input is tied to ACD
 } ScanList;
 
 typedef struct TriggerConfig_t {
@@ -78,12 +79,24 @@ typedef struct TriggerConfig_t {
 } TriggerConfig;
 
 typedef struct usbDevice2020_t {
-  libusb_device_handle *udev;                          // libusb 1.0 handle
-  Calibration_AIN table[NCHAN_2020][NGAINS_2020];  // calibration coefficients ADC
-  ScanList list[NCHAN_2020];                           // scan list used to configure the A/D channels.
+  libusb_device_handle *udev;                       // libusb 1.0 handle
+  Calibration_AIN table[NCHAN_2020][NGAINS_2020];   // calibration coefficients ADC
+  ScanList scanList[NCHAN_2020];                    // scan list used to configure the A/D channels.
+  int lastElement;                                  // last element of the scan list
+  uint32_t count;
+  uint32_t retrig_count;
   uint8_t options;
   uint8_t nChannels;
-  int nSamples;
+  double frequency;                    // frequency of the scan  (0 for external clock)
+  uint16_t packet_size;                // number of samples to return from FIFO
+  uint16_t status;                     // status word of the device
+  int bytesToRead;                     // number of bytes left to read in the scan
+  uint8_t mode;                        /* mode bits:
+                                        bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
+                                        bit 1:   1 = SINGLEIO
+                                        bit 2:   1 = use packet size passed scanData->packet_size
+                                       */
+
 } usbDevice2020;
 
 /* function prototypes for the USB-2020 */
@@ -113,12 +126,11 @@ void usbTriggerConfigR_USB2020(libusb_device_handle *udev, TriggerConfig *trigge
 void usbTemperature_USB2020(libusb_device_handle *udev, float *temperature);
 void usbGetSerialNumber_USB2020(libusb_device_handle *udev, char serial[9]);
 uint16_t usbAIn_USB2020(libusb_device_handle *udev, uint16_t channel);
-void usbAInScanStart_USB2020(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, double frequency,
-			      uint32_t packet_size, uint8_t options);
+void usbAInScanStart_USB2020(libusb_device_handle *udev, usbDevice2020 *usb2020);
 void usbAInScanStop_USB2020(libusb_device_handle *udev);
-int usbAInScanRead_USB2020(libusb_device_handle *udev, int nScan, int nChan, uint16_t *data, unsigned int timeout, int options);
-void usbAInConfig_USB2020(libusb_device_handle *udev, ScanList scanList[NCHAN_2020]);
-void usbAInConfigR_USB2020(libusb_device_handle *udev, ScanList scanList[NCHAN_2020]);
+int usbAInScanRead_USB2020(libusb_device_handle *udev, usbDevice2020 *usb2020, uint16_t *data);
+void usbAInConfig_USB2020(libusb_device_handle *udev, usbDevice2020 *usb2020);
+void usbAInConfigR_USB2020(libusb_device_handle *udev, usbDevice2020 *usb2020);
 void usbAInScanClearFIFO_USB2020(libusb_device_handle *udev);
 void usbBuildGainTable_USB2020(libusb_device_handle *udev, Calibration_AIN table[NCHAN_2020][NGAINS_2020]);
 void usbCalDate_USB2020(libusb_device_handle *udev, struct tm *date);

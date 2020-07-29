@@ -140,6 +140,7 @@ int main (int argc, char **argv)
       case 'e':
         cleanup_USB2020(device.udev);
         return 0;
+	break;
       case 'i':
 	printf("Input channel [0-1]: ");
 	scanf("%hhd", &channel);
@@ -152,16 +153,17 @@ int main (int argc, char **argv)
 	  case '4': gain = BP_1V; break;
 	  default:  gain = BP_10V; break;
 	}
-	mode = (LAST_CHANNEL);
-	device.list[0].range = gain;
-        device.list[0].mode = mode;
-	device.list[0].channel = channel;
-	usbAInConfig_USB2020(device.udev, device.list);
+	device.scanList[0].range = gain;
+        device.scanList[0].mode = 0x0;
+	device.scanList[0].channel = channel;
+	device.scanList[0].last_channel = 1;
+        device.lastElement = 0;
+	usbAInConfig_USB2020(device.udev, &device);
 	for (i = 0; i < 20; i++) {
 	  value = usbAIn_USB2020(device.udev, channel);
 	  value = rint(value*device.table[channel][gain].slope + device.table[channel][gain].offset);
 	  printf("Channel %d  Mode = %#x  Gain = %d Sample[%d] = %#x Volts = %lf\n",
-		 device.list[0].channel, device.list[0].mode, device.list[0].range, i, value, volts_USB2020(gain, value));
+		 device.scanList[0].channel, device.scanList[0].mode, device.scanList[0].range, i, value, volts_USB2020(gain, value));
 	  usleep(50000);	  
 	}
         break;
@@ -169,7 +171,7 @@ int main (int argc, char **argv)
 	printf("Testing USB-2020 Analog Input Scan.\n");
 	usbAInScanStop_USB2020(device.udev);
 	usbAInScanClearFIFO_USB2020(device.udev);
-        printf("Enter number of samples (less than 5000): ");
+        printf("Enter number of scans (less than 5000): ");
         scanf("%d", &nSamples);
 	printf("Input channel [0-1]: ");
         scanf("%hhd", &channel);
@@ -182,19 +184,27 @@ int main (int argc, char **argv)
 	  case '4': gain = BP_1V; break;
 	  default:  gain = BP_10V; break;
 	}
-	mode = (LAST_CHANNEL);
-        device.list[0].range = gain;
-        device.list[0].mode = mode;
-        device.list[0].channel = channel;
-	usbAInConfig_USB2020(device.udev, device.list);
+        device.scanList[0].range = gain;
+        device.scanList[0].mode = 0x0;
+        device.scanList[0].channel = channel;
+	device.scanList[0].last_channel = 1;
+	device.lastElement = 0;
+	usbAInConfig_USB2020(device.udev, &device);
         printf("Enter sampling frequency [Hz]: ");
 	scanf("%lf", &frequency);
         options = 0x0;
+	mode = 0;
         for (i = 0; i < nSamples; i++) {
           dataAIn[i] = 0xbeef;
 	}
-	usbAInScanStart_USB2020(device.udev, nSamples, 0, frequency, nSamples-1, options);
-	ret = usbAInScanRead_USB2020(device.udev, nSamples, 1, &dataAIn[0], 2000, 0);
+	device.count = nSamples;
+	device.retrig_count = 0;
+	device.frequency = frequency;
+	device.options = options;
+	device.mode = 0x0;
+	  
+	usbAInScanStart_USB2020(device.udev, &device);
+	ret = usbAInScanRead_USB2020(device.udev, &device, &dataAIn[0]);
 	printf("Number samples read = %d\n", ret/2);
 	for (i = 0; i < nSamples; i++) {
           dataAIn[i] &= 0xfff;
@@ -209,7 +219,7 @@ int main (int argc, char **argv)
 	printf("Testing USB-2020 Analog Input Scan BURSTIO mode.\n");
 	usbAInScanStop_USB2020(device.udev);
 	usbAInScanClearFIFO_USB2020(device.udev);
-        printf("Enter number of samples (greater than or equal to 256, less than 64 MB and a multiple of 256): ");
+        printf("Enter number of scans (greater than or equal to 256, less than 64 MB and a multiple of 256): ");
         scanf("%d", &nSamples);
 	dataAInBurst = malloc(2*nSamples);
 	printf("Input channel [0-1]: ");
@@ -223,19 +233,27 @@ int main (int argc, char **argv)
 	  case '4': gain = BP_1V; break;
 	  default:  gain = BP_10V; break;
 	}
-	mode = (LAST_CHANNEL);
-        device.list[0].range = gain;
-        device.list[0].mode = mode;
-        device.list[0].channel = channel;
-	usbAInConfig_USB2020(device.udev, device.list);
+	mode = 0;
+        device.scanList[0].range = gain;
+        device.scanList[0].mode = mode;
+        device.scanList[0].channel = channel;
+	device.scanList[0].last_channel = 1;
+	device.lastElement = 0;
+	usbAInConfig_USB2020(device.udev, &device);
         printf("Enter sampling frequency [Hz]: ");
 	scanf("%lf", &frequency);
         options = DDR_RAM;
         for (i = 0; i < nSamples; i++) {
           dataAInBurst[i] = 0xbeef;
 	}
-	usbAInScanStart_USB2020(device.udev, nSamples, 0, frequency, nSamples-1, options);
-	ret = usbAInScanRead_USB2020(device.udev, nSamples, 1, &dataAInBurst[0], 2000, options);
+	device.frequency = frequency;
+	device.options = options;
+	device.count = nSamples;
+	device.retrig_count = 0;
+	device.mode = 0;
+
+	usbAInScanStart_USB2020(device.udev, &device);
+	ret = usbAInScanRead_USB2020(device.udev, &device, &dataAInBurst[0]);
 	printf("Number samples read = %d\n", ret/2);
 	for (i = 0; i < nSamples; i++) {
           dataAInBurst[i] &= 0xfff;
@@ -257,21 +275,29 @@ int main (int argc, char **argv)
         nSamples = 0;       // put in continuous mode
         channel = 0;        // use channel 0
         gain = BP_10V;      // set gain to +/- 10 V
-	mode = LAST_CHANNEL;
-        device.list[0].range = gain;
-        device.list[0].mode = mode;
-        device.list[0].channel = channel;
-	usbAInConfig_USB2020(device.udev, device.list);
+        device.scanList[0].range = gain;
+        device.scanList[0].mode = mode;
+        device.scanList[0].channel = channel;
+	device.scanList[0].last_channel = 1;
+	device.lastElement = 0;
+	usbAInConfig_USB2020(device.udev, &device);
         options = 0x0;
-	usbAInScanStart_USB2020(device.udev, nSamples, 0, frequency, nSamples-1, options);
+
+	device.count = 0;
+	device.retrig_count = 0;
+	device.frequency = frequency;
+	device.mode = USB_CONTINUOUS_READOUT;
+	device.options = options;
+	usbAInScanStart_USB2020(device.udev, &device);
         i = 0;
+	nSamples = 0;
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
         do {
 	  i++;
-	  usbAInScanRead_USB2020(device.udev, 1024, 1, &dataAIn[0], 2000, CONTINUOUS);
-          if (i%((int)frequency/1024) == 0) {
-	    printf("Scan = %d.  Samples read = %d\n", i, 1024*i);
+	  nSamples += usbAInScanRead_USB2020(device.udev, &device, &dataAIn[0]);
+          if (i%100 == 0) {
+	    printf("Scan = %d.  Samples read = %d\n", i, nSamples/2);
 	  }
 	} while (!isalpha(getchar()));
 	fcntl(fileno(stdin), F_SETFL, flag);
@@ -303,7 +329,7 @@ int main (int argc, char **argv)
         usbFPGAVersion_USB2020(device.udev, &version);
 	printf("FPGA version %02x.%02x\n", version >> 0x8, version & 0xff);
 	break;
-    default:
+      default:
         break;
     }
   }

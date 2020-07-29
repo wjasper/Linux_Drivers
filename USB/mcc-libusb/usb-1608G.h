@@ -93,6 +93,7 @@ typedef struct ScanList_t {
 #define USB_FORCE_PACKET_SIZE  (0x4)
 
 typedef struct usbDevice1608G_t {
+  libusb_device_handle *udev;          // libusb 1.0 handle
   float table_AIn[NGAINS_1608G][2];    // calibration coefficients
   float table_AOut[NCHAN_AO_1608GX][2];
   ScanList list[NCHAN_1608G];

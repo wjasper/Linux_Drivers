@@ -450,7 +450,7 @@ void usbAInScanStart_USB1608G(libusb_device_handle *udev, usbDevice1608G *usb160
 {
   char value[PACKET_SIZE];
   int ret = -1;
-  int nbytes;     // number of bytes to read;
+  int nbytes;     // number of bytes to read
   int transferred;
 
   if ((usb1608G->status & AIN_SCAN_RUNNING) == 0x0) {
