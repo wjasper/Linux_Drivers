@@ -37,7 +37,11 @@ version or email me.  The pci drivers should also work on the 3.X and
 4.X kernels.  Most should also work with the 5.X kernels.
 
 I have divided the drivers into categories by bus type.  Thus, all the
-USB drivers are in the USB directory, etc. 
+USB drivers are in the USB directory, etc. There are additional README files for each
+bus type, and also for C and Python.  Therefore, please look carefully for the README files
+as they provide additional information and will save us an email exchange. This might seem
+overly long and complicated, but you will save yourself a lot of upfront time if you
+prepare your system with the correct packages before beginning.
 
 I have written drivers for the following boards:
 
