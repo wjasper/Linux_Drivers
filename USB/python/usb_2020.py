@@ -471,7 +471,6 @@ class usb_2020(mccUSB):
     self.frequency = frequency
 
     if options & self.DDR_RAM:
-      print('Burst mode enabled!')
       # If using the onboard DDR RAM (BURSTIO Mode), there are 3 constraints:
       # 1. The total count must be greater than or equal to 256
       # 2. The total count must be less than 64 MB
@@ -487,7 +486,6 @@ class usb_2020(mccUSB):
         return
     packet_size -= 1  # force to uint8_t size in range 0-255    
     scanPacket = pack('IIIBB', count, retrig_count, pacer_period, packet_size, options)
-    print(count, retrig_count, frequency, packet_size, options, len(scanPacket))
     result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
 
     self.status = self.Status()
@@ -506,7 +504,6 @@ class usb_2020(mccUSB):
       nSamples = self.count*(self.lastElement+1)
 
     timeout = round(500 + 1000*nSamples/self.frequency)
-    print('AInScanRead: nSamples = ', nSamples, '   timeout = ', timeout)
 
     try:
       data =  list(unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(2*nSamples), timeout)))
