@@ -436,7 +436,11 @@ int usbAInScanRead_USB2020(libusb_device_handle *udev, usbDevice2020 *usb2020, u
     nbytes = usb2020->count*(usb2020->lastElement+1)*2;
   }
 
-  timeout = rint((1000.*nbytes)/usb2020->frequency + 200.);
+  if (usb2020->options & DDR_RAM) {
+    timeout = 0;
+  } else {
+    timeout = rint((2000.*nbytes)/usb2020->frequency + 200.);
+  }
 
   ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) data, nbytes, &transferred, timeout);
 

@@ -56,6 +56,7 @@ def main():
     print("\nUSB-2020 Testing")
     print("------------------")
     print("Hit 'b' to blink LED.")
+    print("Hit 'B' to test BURSTIO.")
     print("Hit 'C' to test continous sampling")
     print("Hit 'd' to read/write digital port.")
     print("Hit 'e' to exit.")
