@@ -12,6 +12,7 @@ NOTE:  kernel 2.4 driver is called:    dio96H_2_4.c
        kernel 3.3.7   driver is called: dio96H_3_3_7.c 
        kernel 3.10.11 driver is called: dio96H_3_10_11.c
        kernel 4.0.8   driver is called: dio96H_4_0_8.c
+       kernel 5.0.0   driver is called: dio96H_5_0_0.c
 
 Introduction:
 -------------
@@ -35,6 +36,7 @@ dio96H_2_6_29.c      - PCI-DIO-96H Driver source 2.6.29 Kernel
 dio96H_3_3_7.c       - PCI-DIO-96H Driver source 3.3.7 Kernel
 dio96H_3_10_11.c     - PCI-DIO-96H Driver source 3.10.11 Kernel
 dio96H_4_0_8.c       - PCI-DIO-96H Driver source 4.0.8  Kernel
+dio96H_5_0_0.c       - PCI-DIO-96H Driver source 5.0.0  Kernel
 dio96H.h             - Driver definitions and constants.
 pci-dio96h.H         - User and driver definitions and constants.
 test-dio96H.c        - Test program.
@@ -61,6 +63,7 @@ Building and installing the driver:
     dio96H_3_3_7.c
     dio96H_3_10_11.c
     dio96H_4_0_8.c
+    dio96H_5_0_0.c
     dio96H.h
     pci-dio96H.h	
     test-dio96H.c

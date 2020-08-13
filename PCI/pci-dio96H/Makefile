@@ -29,7 +29,7 @@
 ###########################################################################
 
 #  Current Version of the driver
-VERSION=1.9
+VERSION=1.10
 
 #  Number of PCI-DIO96H boards on your system: (1-4)
 #  MUST ALSO CHANGE MAX_BOARDS in dio.h

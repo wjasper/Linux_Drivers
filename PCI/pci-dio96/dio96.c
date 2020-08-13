@@ -61,7 +61,11 @@
 #include "dio96_4_0_8.c"
 #endif
 
-#if LINUX_VERSION_CODE >= VERSION_CODE(4,20,0)
+#if LINUX_VERSION_CODE >= VERSION_CODE(5,0,0) && LINUX_VERSION_CODE < VERSION_CODE(5,20,0)
+#include "dio96_5_0_0.c"
+#endif
+
+#if LINUX_VERSION_CODE >= VERSION_CODE(5,20,0)
 #error "Your kernel is too new for the current driver.  It may work but is untested."
 #endif
 
