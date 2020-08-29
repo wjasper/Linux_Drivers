@@ -412,7 +412,7 @@ static int das1602_init_one(struct pci_dev *pdev, const struct pci_device_id *en
   BoardData[NumBoards].ADC_acqtype = ADC_ACQ_NORMAL;
   #ifdef DEBUG
   printk("das1602_init-one: Board %d: ringbuf_vaddr = %p ringbuf_size: %d\n",
-	 NumBoards, BoardData[Numboards].ringbuf_vaddr, BoardData[NumBoards].rb_size);
+	 NumBoards, BoardData[NumBoards].ringbuf_vaddr, BoardData[NumBoards].rb_size);
   #endif
 
   printk("%s: BADR0=%#x BADR1=%#x BADR2=%#x BADR3=%#x BADR4=%#x\n",
