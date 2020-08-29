@@ -98,18 +98,32 @@ def main():
       usb2600.BlinkLED(count)
     elif ch == 'c':
       counter = int(input('Enter counter [0-3]: '))
-      if counter == 0:                    
-        usb2600.CounterInit(usb2600.COUNTER0)
-        print("Connect DIO0 to CTR0")
-      elif counter == 1:
-        usb2600.CounterInit(usb2600.COUNTER1)
-        print("Connect DIO0 to CTR1")
-      usb2600.DTristateW(0xf0)
+      print('Connect A0 to counter input')
+      usb2600.CounterInit(counter)
+      usb2600.DTristateW(usb2600.PORTA,0xf0)
       toContinue()
       for i in range(100):
-        usb2600.DLatchW(0x0)
-        usb2600.DLatchW(0x1)
+        usb2600.DLatchW(usb2600.PORTA, 0x0)
+        usb2600.DLatchW(usb2600.PORTA,0x1)
       print("Count = %d.  Should read 100" % (usb2600.Counter(counter)))
+    elif ch == 't':
+      timer = int(input('Enter timer [0-3]: '))
+      frequency = float(input('Enter frequency of timer: '))
+      period = 1000./frequency     # period in ms 
+      usb2600.TimerPeriodW(timer, period)
+      usb2600.TimerPulseWidthW(timer, period/2)
+      usb2600.TimerCountW(timer, 0)
+      usb2600.TimerStartDelayW(timer, 0)
+      usb2600.TimerControlW(timer, 0x1)
+      toContinue()
+      usb2600.TimerControlW(timer, 0x0)
+#      usb2600.TimerParamsR()
+      print("Timer:", usb2600.timerParameters[timer].timer, \
+            "  Control Reg:",hex(usb2600.TimerControlR(timer)), \
+            "\tPeriod:", usb2600.TimerPeriodR(timer),"ms" \
+            "\tPulse Width:", usb2600.TimerPulseWidthR(timer),"ms"\
+            "    \tCount Reg:",hex(usb2600.TimerCountR(timer)), \
+            "    \tDelay:", usb2600.TimerStartDelayR(timer),"ms")
     elif ch == 'M':
       print("Manufacturer: %s" % usb2600.getManufacturer())
       print("Product: %s" % usb2600.getProduct())

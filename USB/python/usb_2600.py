@@ -148,9 +148,17 @@ class usb2600(mccUSB):
   NCHAN              = 64   # max number of A/D channels in the device (single_ended)
   NGAIN              = 4    # max number of gain levels
   NMODE              = 2    # max number of configuration modes
+  NCOUNTER           = 4    # max number of counters
+  NTIMER             = 4    # max number of timers
   MAX_PACKET_SIZE_HS = 512  # max packet size for HS device
   MAX_PACKET_SIZE_FS = 64   # max packet size for HS device
 
+
+  #Digital Ports
+  PORTA              = 0    # Port A
+  PORTB              = 1    # Port B
+  PORTC              = 2    # Port C
+  
   #Counters and Timers
   COUNTER0           = 0    # Counter 0
   COUNTER1           = 1    # Counter 1
@@ -282,6 +290,8 @@ class usb2600(mccUSB):
 
     # Set up structure for Timer Parameters
     self.timerParameters = [TimerParameters(), TimerParameters(), TimerParameters(), TimerParameters()]
+    for timer in range(self.NTIMER):
+      self.timerParameters[timer].timer = timer
 
     # initialize input channel configuration, single ended, +/- 10V
     mode = self.SINGLE_ENDED
@@ -405,7 +415,7 @@ class usb2600(mccUSB):
     This command initializes the 32-bit event counter.  On a write,
     the specified counter (0 -3)) will be reset to zero.
     """
-    if counter < 0 or counter > 3:
+    if counter < 0 or counter >= self.NCOUNTER :
       raise ValueError('CounterInit: error in counter number.')
       return
       
@@ -418,7 +428,7 @@ class usb2600(mccUSB):
     """
     This command reads the 32-bit event counters.  
     """
-    if counter < 0 or counter > 3:
+    if counter < 0 or counter >= self.NCOUNTER:
       raise ValueError('Counter: error in counter number.')
       return
 
@@ -439,7 +449,7 @@ class usb2600(mccUSB):
                            0 = normal output (active high)
                  bits 3-7: reserved
     """
-    if timer < 0 or timer > 3:
+    if timer < 0 or timer >= self.NTIMER:
       raise ValueError('TimerControlR: Invalid timer number.')
       return
 
@@ -451,7 +461,7 @@ class usb2600(mccUSB):
     return data
 
   def TimerControlW(self, timer, control):
-    if timer < 0 or timer > 3:
+    if timer < 0 or timer >= self.NTIMER:
       raise ValueError('TimerControlW: Invalid timer number.')
       return
 
@@ -476,9 +486,10 @@ class usb2600(mccUSB):
     allowable value for the period of 1, which sets the maximum frequency to 40 MHz/2.
 
     timer:     the timer selected (0-3)
+    Value returned is the timer period is ms
     """
-    if timer < 0 or timer > 3:
-      raise ValueError('TimerPeriodlW: Invalid timer number.')
+    if timer < 0 or timer >= self.NTIMER:
+      raise ValueError('TimerPeriodlR: Invalid timer number.')
       return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
@@ -486,11 +497,12 @@ class usb2600(mccUSB):
     period ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PERIOD, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters[timer].period = period
     self.timerParameters[timer].frequency = 64.E6/(period + 1)
-    return period
+    return round(1000./self.timerParameters[timer].frequency)
 
   def TimerPeriodW(self, timer, period):
-    if timer < 0 or timer > 3:
-      raise ValueError('TimerPeriodR: Invalid timer number.')
+    # period is in ms
+    if timer < 0 or timer >= self.NTIMER:
+      raise ValueError('TimerPeriodW: Invalid timer number.')
       return
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -498,6 +510,8 @@ class usb2600(mccUSB):
     period = int(period)
     wValue = 0
     wIndex = timer
+    period = round(period*64.E6/1000. - 1)
+    self.timerParameters[timer].period = period
     period = pack('I', period)
     self.udev.controlWrite(request_type, request, wValue, wIndex, period, self.HS_DELAY)
 
@@ -513,8 +527,9 @@ class usb2600(mccUSB):
     the period register or you may get unexpected results.
 
     timer:     the timer selected (0-3)
+    Note: pule_width is in ms
     """
-    if timer < 0 or timer > 3:
+    if timer < 0 or timer >= self.NTIMER:
       raise ValueError('TimerPulseWidthR: Invalid timer number.')
       return
 
@@ -523,19 +538,21 @@ class usb2600(mccUSB):
     wIndex = timer
     pulse_width ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PULSE_WIDTH, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters[timer].pulseWidth = pulse_width
-    return pulse_width
+    return (pulse_width + 1)*1000/64.E6
 
   def TimerPulseWidthW(self, timer, pulse_width):
-    if timer < 0 or timer > 3:
+    # Note: pulse_width is in ms
+    if timer < 0 or timer >= self.NTIMER:
       raise ValueError('TimerPulseWidthW: Invalid timer number.')
       return
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PULSE_WIDTH
-    pulse_width = int(pulse_width)
     wValue = 0
     wIndex = timer
-    pulse_width = pack ('I', pulse_width)
-    self.udev.controlWrite(request_type, request, wValue, wIndex, pulse_width, self.HS_DELAY)
+    pulseWidth = round(pulse_width*64.E6/1000. - 1)
+    self.timerParameters[timer].pulseWidth = pulseWidth
+    pulseWidth = pack ('I', pulseWidth)
+    self.udev.controlWrite(request_type, request, wValue, wIndex, pulseWidth, self.HS_DELAY)
     
   def TimerCountR(self, timer):
     """
@@ -547,7 +564,7 @@ class usb2600(mccUSB):
 
     timer:     the timer selected (0-3)
     """
-    if timer < 0 or timer > 3:
+    if timer < 0 or timer >= self.NTIMER:
       raise ValueError('TimerCountR: Invalid timer number.')
       return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -558,7 +575,7 @@ class usb2600(mccUSB):
     return count
 
   def TimerCountW(self, timer, count):
-    if timer < 0 or timer > 3:
+    if timer < 0 or timer >= self.NTIMER:
       raise ValueError('TimerCountW: Invalid timer number.')
       return
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -566,6 +583,7 @@ class usb2600(mccUSB):
     count = int(count)
     wValue = 0
     wIndex = timer
+    self.timerParameters[timer].count = count
     count = pack('I', count)
     self.udev.controlWrite(request_type, request, wValue, wIndex, count, self.HS_DELAY)
     return count
@@ -575,12 +593,13 @@ class usb2600(mccUSB):
     This command reads/writes the timer start delay register.  This
     register is the amount of time to delay before starting the timer
     output after enabling the output.  The value specifies the number
-    of 40 MHZ clock pulses to delay.  This value may not be written
+    of 64 MHZ clock pulses to delay.  This value may not be written
     while the timer output is enabled.
 
     timer:     the timer selected (0-3)
+    Note: the start_delay is in ms
     """
-    if timer < 0 or timer > 3:
+    if timer < 0 or timer >= self.NTIMER:
       raise ValueError('TimerStartDelayR: Invalid timer number.')
       return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -588,15 +607,17 @@ class usb2600(mccUSB):
     wIndex = timer
     delay ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_START_DELAY, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters[timer].delay = delay
-    return delay
+    return delay*1000./64.E6
 
   def TimerStartDelayW(self, timer, delay):
-    if timer < 0 or timer > 3:
+    # delay is in ms
+    if timer < 0 or timer >= self.NTIMER:
       raise ValueError('TimerStartDelayW: Invalid timer number.')
       return
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_START_DELAY
-    delay = int(delay)
+    delay = round(delay*64.E6/1000.)
+    self.timerParameters[timer].delay = delay
     wValue = 0
     wIndex = timer
     delay = pack('I', delay)
@@ -610,7 +631,7 @@ class usb2600(mccUSB):
 
     timer:     the timer selected (0-3)
     """
-    if timer < 0 or timer > 3:
+    if timer < 0 or timer >= self.NTIMER:
       raise ValueError('TimerParamsR: Invalid timer number.')
       return
 
@@ -626,18 +647,18 @@ class usb2600(mccUSB):
     return 
 
   def TimerParamsW(self, timer):
-    if timer < 0 or timer > 3:
+    if timer < 0 or timer >= self.NTIMERS:
       raise ValueError('TimerParamsW: Invalid timer number.')
       return
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    request = self.TIMER_START_DELAY
+    request = self.TIMER_PARAMETERS
     wValue = 0
     wIndex = timer
     barray = pack('IIII', self.timerParameters[timer].period, self.timerParameters[timer].pulseWidth, \
                   self.timerParameters[timer].count, self.timerParameters[timer].delay)
     self.udev.controlWrite(request_type, request, wValue, wIndex, barray, self.HS_DELAY)
 
-
+    
   ##########################################
   #           Memory Commands              #
   ##########################################

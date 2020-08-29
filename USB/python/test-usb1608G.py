@@ -225,7 +225,7 @@ def main():
       print("FPGA version %s" % (usb1608G.FPGAVersion()))
     elif ch == 't':
       frequency = float(input('Enter frequency of timer: '))
-      period = 64.E6/frequency  - 1.
+      period = 1000/frequency  # period in ms
       usb1608G.TimerPeriodW(period)
       usb1608G.TimerPulseWidthW(period / 2)
       usb1608G.TimerCountW(0)
@@ -236,10 +236,10 @@ def main():
 #      usb1608G.TimerParamsR()
       print("Timer:", usb1608G.timerParameters.timer, \
             "  Control Reg:",hex(usb1608G.TimerControlR()), \
-            "\tPeriod Reg:",hex(usb1608G.TimerPeriodR()), \
-            "\tPulse Width Reg:",hex(usb1608G.TimerPulseWidthR()), \
-            "    \tCount Reg:",hex(usb1608G.TimerCountR()), \
-            "    \tDelay Reg:",hex(usb1608G.TimerStartDelayR()))
+            "\tPeriod:", usb1608G.TimerPeriodR(),"ms" \
+            "\tPulse Width:", usb1608G.TimerPulseWidthR(),"ms" \
+            "    \tCount Reg:", hex(usb1608G.TimerCountR()), \
+            "    \tDelay:", usb1608G.TimerStartDelayR(),"ms")
     elif ch == 'o':
       voltage = float(input('Enter voltage: '))
       usb1608G.AOut(0, voltage)

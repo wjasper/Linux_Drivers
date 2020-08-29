@@ -157,6 +157,7 @@ class usb1608G(mccUSB):
 
     # Set up the Timers
     self.timerParameters = TimerParameters()
+    self.timerParameters.timer = 0    
 
     # Build a lookup table of calibration coefficients to translate values into voltages:
     # The calibration coefficients are stored in the onboard FLASH memory on the device in
@@ -625,18 +626,23 @@ class usb1608G(mccUSB):
     Note that the value for pulseWidth should always be smaller than the value for
     the period register or you may get unexpected results.  This results in a minimum
     allowable value for the period of 1, which sets the maximum frequency to 64 MHz/2.
+
+    Value returned is the timer period is ms
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
     period ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PERIOD, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters.period = period
-    return period
+    self.timerParameters.frequency = 64.E6/(period + 1)
+    return round(1000./self.timerParameters.frequency)
 
   def TimerPeriodW(self, period):
+    # period is in ms
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PERIOD
-    period = int(period)
+    period = round(period*64.E6/1000. - 1)
+    self.timerParameters.period = period
     wValue = period & 0xffff
     wIndex = (period >> 16) & 0xffff
     period = pack('I', period)
@@ -652,22 +658,26 @@ class usb1608G(mccUSB):
 
     Note that the value for pulseWidth should always be smaller than the value for
     the period register or you may get unexpected results.
+
+    Note: pule_width is in ms
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
     pulse_width ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PULSE_WIDTH, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters.pulseWidth = pulse_width
-    return pulse_width
+    return (pulse_width + 1)*1000/64.E6
 
   def TimerPulseWidthW(self, pulse_width):
+    # Note: pulse_width is in ms
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PULSE_WIDTH
-    pulse_width = int(pulse_width)
-    wValue = pulse_width & 0xffff
-    wIndex = (pulse_width >> 16) & 0xffff
-    pulse_width = pack ('I', pulse_width)
-    self.udev.controlWrite(request_type, request, wValue, wIndex, pulse_width, self.HS_DELAY)
+    pulseWidth = round(pulse_width*64.E6/1000. - 1)
+    self.timerParameters.pulseWidth = pulseWidth
+    wValue = pulseWidth & 0xffff
+    wIndex = (pulseWidth >> 16) & 0xffff
+    pulseWidth = pack ('I', pulseWidth)
+    self.udev.controlWrite(request_type, request, wValue, wIndex, pulseWidth, self.HS_DELAY)
     
   def TimerCountR(self):
     """
@@ -699,20 +709,24 @@ class usb1608G(mccUSB):
     This command reads/writes the timer start delay register.  This
     register is the amount of time to delay before starting the timer
     output after enabling the output.  The value specifies the number
-    of 40 MHZ clock pulses to delay.  This value may not be written
+    of 64 MHZ clock pulses to delay.  This value may not be written
     while the timer output is enabled.
+
+    Note: the start_delay is in ms
     """
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
     delay ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_START_DELAY, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters.delay = delay
-    return delay
+    return delay*1000/64.E6
 
   def TimerStartDelayW(self, delay):
+    # delay is in ms
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_START_DELAY
-    delay = int(delay)
+    delay = round(delay*64.E6/1000)
+    self.timerParameters.delay = delay
     wValue = delay & 0xffff
     wIndex = (delay >> 16) & 0xffff
     delay = pack('I', delay)
@@ -735,9 +749,9 @@ class usb1608G(mccUSB):
     self.TimerControlW(self.timerParameters.control)
     return 
 
-  def TimerParamsW(self, timer):
+  def TimerParamsW(self):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
-    request = self.TIMER_START_DELAY
+    request = self.TIMER_PARAMETERS
     wValue = 0
     wIndex = 0
     barray = pack('IIII', self.timerParameters.period, self.timerParameters.pulseWidth, \

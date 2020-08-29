@@ -803,7 +803,7 @@ class usb_ctr(mccUSB):
                            0 = normal output (active high)
                  bits 3-7: reserved
     """
-    if timer > self.NTIMER:
+    if timer >= self.NTIMER:
       raise ValueError('TimerControlR: timer out of range')
       return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -814,7 +814,7 @@ class usb_ctr(mccUSB):
     return data
 
   def TimerControlW(self, timer, control):
-    if timer > self.NTIMER:
+    if timer >= self.NTIMER:
       raise ValueError('TimerControlW: timer out of range')
       return
 
@@ -836,8 +836,10 @@ class usb_ctr(mccUSB):
     Note that the value for pulseWidth should always be smaller than the value for
     the period register or you may get unexpected results.  This results in a minimum
     allowable value for the period of 1, which sets the maximum frequency to 96 MHz/2.
+
+    Value returned is the timer period is ms
     """
-    if timer > self.NTIMER:
+    if timer >= self.NTIMER:
       raise ValueError('TimerPeriodR: timer out of range')
       return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -845,10 +847,12 @@ class usb_ctr(mccUSB):
     wIndex = timer
     period ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PERIOD, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters[timer].period = period
-    return period
+    self.timerParameters[timer].frequency = 96.E6/(period + 1)
+    return round(1000./self.timerParameters[timer].frequency)
 
   def TimerPeriodW(self, timer, period):
-    if timer > self.NTIMER:
+    # period is in ms
+    if timer >= self.NTIMER:
       raise ValueError('TimerPeriodW: timer out of range')
       return
 
@@ -856,6 +860,8 @@ class usb_ctr(mccUSB):
     request = self.TIMER_PERIOD
     wValue = 0x0
     wIndex = timer
+    period = round(period*96.E6/1000. - 1)
+    self.timerParameters[timer].period = period
     period = pack('I', period)
     self.udev.controlWrite(request_type, request, wValue, wIndex, period, self.HS_DELAY)
 
@@ -869,8 +875,10 @@ class usb_ctr(mccUSB):
 
     Note that the value for pulseWidth should always be smaller than the value for
     the period register or you may get unexpected results.
+
+    Note: pule_width is in ms
     """
-    if timer > self.NTIMER:
+    if timer >= self.NTIMER:
       raise ValueError('TimerPulseWidthR: timer out of range')
       return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -878,18 +886,21 @@ class usb_ctr(mccUSB):
     wIndex = timer
     pulse_width ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PULSE_WIDTH, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters[timer].pulseWidth = pulse_width
-    return pulse_width
+    return (pulse_width + 1)*1000/96.E6
 
   def TimerPulseWidthW(self, timer, pulse_width):
-    if timer > self.NTIMER:
+    # Note: pulse_width is in ms
+    if timer >= self.NTIMER:
       raise ValueError('TimerPulseWidthW: timer out of range')
       return
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PULSE_WIDTH
     wValue = 0x0
     wIndex = timer
-    pulse_width = pack('I', pulse_width)
-    self.udev.controlWrite(request_type, request, wValue, wIndex, pulse_width, self.HS_DELAY)
+    pulseWidth = round(pulse_width*96.E6/1000. - 1)
+    self.timerParameters[timer].pulseWidth = pulseWidth
+    pulseWidth = pack('I', pulseWidth)
+    self.udev.controlWrite(request_type, request, wValue, wIndex, pulseWidth, self.HS_DELAY)
     
   def TimerCountR(self, timer):
     """
@@ -899,7 +910,8 @@ class usb_ctr(mccUSB):
     Setting it to a non-zero value will results in the specified number of pulses being
     generated then the output will go low until the timer is disabled.
     """
-    if timer > self.NTIMER:
+
+    if timer >= self.NTIMER:
       raise ValueError('TimerCountR: timer out of range')
       return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -918,6 +930,7 @@ class usb_ctr(mccUSB):
     request = self.TIMER_COUNT
     wValue = 0x0
     wIndex = timer
+    self.timerParameters[timer].count = count
     count = pack('I', count)
     self.udev.controlWrite(request_type, request, wValue, wIndex, count, self.HS_DELAY)
     return count
@@ -927,10 +940,12 @@ class usb_ctr(mccUSB):
     This command reads/writes the timer start delay register.  This
     register is the amount of time to delay before starting the timer
     output after enabling the output.  The value specifies the number
-    of 64 MHZ clock pulses to delay.  This value may not be written
+    of 96 MHZ clock pulses to delay.  This value may not be written
     while the timer output is enabled.
+
+    Note: the start_delay is in ms
     """
-    if timer > self.NTIMER:
+    if timer >= self.NTIMER:
       raise ValueError('TimerStartDelayR: timer out of range')
       return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -938,10 +953,11 @@ class usb_ctr(mccUSB):
     wIndex = timer
     delay ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_START_DELAY, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters[timer].delay = delay
-    return delay
+    return delay*1000./96.E6
 
   def TimerStartDelayW(self, timer, delay):
-    if timer > self.NTIMER:
+    # delay is in ms
+    if timer >= self.NTIMER:
       raise ValueError('TimerStartDelayW: timer out of range')
       return
 
@@ -949,6 +965,8 @@ class usb_ctr(mccUSB):
     request = self.TIMER_START_DELAY
     wValue = 0x0
     wIndex = timer
+    delay = round(delay*96.E6/1000)
+    self.timerParameters[timer].delay = delay
     delay = pack('I', delay)
     self.udev.controlWrite(request_type, request, wValue, wIndex, delay, self.HS_DELAY)
 
@@ -958,7 +976,7 @@ class usb_ctr(mccUSB):
     See the individual command descriptions for futher information
     on each parameter.
     """
-    if timer > self.NTIMER:
+    if timer >= self.NTIMER:
       raise ValueError('TimerParamsR: timer out of range')
       return
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -973,7 +991,7 @@ class usb_ctr(mccUSB):
     return 
 
   def TimerParamsW(self, timer):
-    if timer > self.NTIMER:
+    if timer >= self.NTIMER:
       raise ValueError('TimerParamsW: timer out of range')
       return
 

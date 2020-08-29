@@ -141,8 +141,8 @@ def main():
         ctr.CounterOutConfigW(counter, 0)   # output off
 
       # set up the timer to generate some pulses
-      timer_frequency = 100000   # 100 pulses per scan
-      period = int(96.E6/timer_frequency - 1)
+      timer_frequency = 100000      # 100 pulses per scan
+      period = 1000/timer_frequency # period in ms
       timer = 1
       ctr.TimerPeriodW(timer, period)
       ctr.TimerPulseWidthW(timer, int(period/2))
@@ -188,7 +188,7 @@ def main():
 
       # set up the timer to generate some pulses
       timer_frequency = 100000   # 100 pulses per scan
-      period = int(96.E6/timer_frequency - 1)
+      period = 1000/timer_frequency
       timer = 1
       ctr.TimerPeriodW(timer, period)
       ctr.TimerPulseWidthW(timer, int(period/2))
@@ -247,7 +247,7 @@ def main():
 
       # set up the timer to generate some pulses
       timer_frequency = 100000          
-      period = int(96.E6/timer_frequency - 1)
+      period = 1000/timer_frequency
       timer = 1
       ctr.TimerPeriodW(timer, period)
       ctr.TimerPulseWidthW(timer, int(period/2))
@@ -288,8 +288,8 @@ def main():
       print("Connect Timer 1 to Counter 1")
 
       # set up the timer to generate some pulses
-      timer_frequency = 1000   # 10000 Hz
-      period = int(96.E6/timer_frequency - 1)
+      timer_frequency = 1000         # 1000 Hz
+      period = 1000/timer_frequency  # period in ms
       timer = 1
       ctr.TimerPeriodW(timer, period)
       ctr.TimerPulseWidthW(timer, int(period/2))
@@ -329,7 +329,7 @@ def main():
     elif ch == 't':
       frequency = int(input('Enter frequency of timer: '))
       timer     = int(input('Enter timer [0-3]: '))
-      period = int(96.E6/frequency - 1)
+      period = 1000/frequency       # period in ms
       ctr.TimerPeriodW(timer, period)
       ctr.TimerPulseWidthW(timer, int(period/2))
       ctr.TimerCountW(timer, 0)
@@ -341,10 +341,10 @@ def main():
       for timer in range(ctr.NTIMER):
         print("Timer:", ctr.timerParameters[timer].timer, \
               "  Control Reg:",hex(ctr.TimerControlR(timer)), \
-              "\tPeriod Reg:",hex(ctr.TimerPeriodR(timer)), \
-              "\tPulse Width Reg:",hex(ctr.TimerPulseWidthR(timer)), \
+              "\tPeriod:",ctr.TimerPeriodR(timer),"ms" \
+              "\tPulse Width:",ctr.TimerPulseWidthR(timer),"ms" \
               "    \tCount Reg:",hex(ctr.TimerCountR(timer)), \
-              "    \tDelay Reg:",hex(ctr.TimerStartDelayR(timer)))
+              "    \tDelay Reg:",ctr.TimerStartDelayR(timer),"ms")
     elif ch == 'L':
       ctr.ScanConfigR()
       print("Scan list: ", end='')

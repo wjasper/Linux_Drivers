@@ -224,7 +224,7 @@ def main():
       print("FPGA version %s" % (usb1208HS.FPGAVersion()))
     elif ch == 't':
       frequency = float(input('Enter frequency of timer: '))
-      period = 40.E6/frequency  - 1.
+      period = 1000./frequency  # period in ms
       usb1208HS.TimerPeriodW(period)
       usb1208HS.TimerPulseWidthW(period / 2)
       usb1208HS.TimerCountW(0)
@@ -235,10 +235,10 @@ def main():
 #      usb1208HS.TimerParamsR()
       print("Timer:", usb1208HS.timerParameters.timer, \
             "  Control Reg:",hex(usb1208HS.TimerControlR()), \
-            "\tPeriod Reg:",hex(usb1208HS.TimerPeriodR()), \
-            "\tPulse Width Reg:",hex(usb1208HS.TimerPulseWidthR()), \
-            "    \tCount Reg:",hex(usb1208HS.TimerCountR()), \
-            "    \tDelay Reg:",hex(usb1208HS.TimerStartDelayR()))
+            "\tPeriod:",usb1208HS.TimerPeriodR(),"ms" \
+            "\tPulse Width:",usb1208HS.TimerPulseWidthR(),"ms" \
+            "\tCount Reg:",hex(usb1208HS.TimerCountR()), \
+            "\tDelay:",usb1208HS.TimerStartDelayR(),"ms")
     elif ch == 'o':
       voltage = float(input('Enter voltage: '))
       usb1208HS.AOut(0, voltage)
