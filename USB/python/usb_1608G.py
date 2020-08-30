@@ -507,7 +507,7 @@ class usb1608G(mccUSB):
     """
     entry:    channel entry in the queue (0 - 15)
     channel:  channel number (Differential: 0-7, Single Ended: 0-15)
-    gain:     range  ( 0:+/- 10V,  1: +/- 5V, 2: +/- 1V, 3: +/- 1V)
+    gain:     range  ( 0:+/- 10V,  1: +/- 5V, 2: +/- 2V, 3: +/- 1V)
     lastElement: Set to True is last element in the queue
     """
 

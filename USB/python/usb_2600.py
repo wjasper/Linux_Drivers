@@ -155,9 +155,9 @@ class usb2600(mccUSB):
 
 
   #Digital Ports
-  PORTA              = 0    # Port A
-  PORTB              = 1    # Port B
-  PORTC              = 2    # Port C
+  DIO_A           = 0    # DIO Port A
+  DIO_B           = 1    # DIO Port B
+  DIO_C           = 2    # DIO Port C
   
   #Counters and Timers
   COUNTER0           = 0    # Counter 0
@@ -169,7 +169,10 @@ class usb2600(mccUSB):
   TIMER2             = 2    # Timer 2 
   TIMER3             = 3    # Timer 3 
 
-  # AIn Scan Modes
+  # AIn Scan Modes and Options
+  BURST_MODE           = 0x1  # Burst Mode
+  TRIGGER              = 0x8  # Use Trigger
+  RETRIGGER            = 0x40 # Use Re-trigger mode
   CONTINUOUS_READOUT   = 0x1  # Continuous mode
   SINGLEIO             = 0x2  # Return data after every read (used for low frequency scans)
   FORCE_PACKET_SIZE    = 0x4  # Force packet_size
@@ -219,21 +222,23 @@ class usb2600(mccUSB):
   HS_DELAY = 2000
 
   def __init__(self):
-    self.status = 0               # status of the device
-    self.samplesToRead = -1       # number of bytes left to read from a scan
-    self.AInConfig = [0]*64       # depth of analog input channel configuration
-    self.AInMode = 0x0            # analog input channel configuration
-    self.scanQueueAOut= [0]*4     # depth of analog output scan queue is 3
+    self.status = 0                       # status of the device
+    self.samplesToRead = -1               # number of bytes left to read from a scan
+    self.scanList = bytearray(self.NCHAN) # depth of scan queue is 64
+    self.gainList = bytearray(self.NCHAN) # gain for each channel
+    self.nchan = 0                        # number of channels in a scan
+    self.AInMode = 0x0                    # analog input channel configuration
+    self.scanQueueAOut= [0]*4             # depth of analog output scan queue is 3
     self.count = 0
     self.retrig_count = 0
     self.options = 0
-    self.frequency = 0.0          # frequency of scan (0 for external clock)
-    self.packet_size = 512        # number of samples to return from FIFO
-    self.mode = 0                 # mode bits:
-                                  # bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
-                                  # bit 1:   1 = SINGLEIO
-                                  # bit 2:   1 = use packet size in self.packet_size
-                                  # bit 3:   1 = convert raw readings to voltages
+    self.frequency = 0.0                  # frequency of scan (0 for external clock)
+    self.packet_size = 512                # number of samples to return from FIFO
+    self.mode = 0                         # mode bits:
+                                          # bit 0:   0 = counting mode,  1 = CONTINUOUS_READOUT
+                                          # bit 1:   1 = SINGLEIO
+                                          # bit 2:   1 = use packet size in self.packet_size
+                                          # bit 3:   1 = convert raw readings to voltages
 
     # Configure the FPGA
     if not (self.Status() & self.FPGA_CONFIGURED) :
@@ -294,11 +299,10 @@ class usb2600(mccUSB):
       self.timerParameters[timer].timer = timer
 
     # initialize input channel configuration, single ended, +/- 10V
-    mode = self.SINGLE_ENDED
     gain = self.BP_10V
-#    for channel in range(self.NCHAN):
-#      self.AInConfigW(channel, mode, gain)
-
+    for channel in range(self.NCHAN):
+      self.AInConfigW(channel, channel, gain)
+      self.gainList[channel] = gain
 
   def CalDate(self):
     """
@@ -333,7 +337,7 @@ class usb2600(mccUSB):
 
     port:  the port number to select (0-2)
     """
-    if port < 0 or port > 3:
+    if port < 0 or port >= 3:
       raise ValueError('DTristateR: invalid port number.')
       return
 
@@ -352,14 +356,14 @@ class usb2600(mccUSB):
 
     port:  the port number to select (0-2)
     """
-    if port < 0 or port > 3:
+    if port < 0 or port >= 3:
       raise ValueError('DTristateW: invalid port number.')
       return
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.DTRISTATE
     wValue = value & 0xffff
-    wIndex = 0
+    wIndex = port
     self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], self.HS_DELAY)
 
   def DPort(self, port):
@@ -367,7 +371,7 @@ class usb2600(mccUSB):
     This command reads the current state of the digital pins.
     port:  the port number to select (0-2)
     """
-    if port < 0 or port > 3:
+    if port < 0 or port >= 3:
       raise ValueError('DPort: invalid port number.')
       return
 
@@ -382,7 +386,7 @@ class usb2600(mccUSB):
     This command reads the digital port latch register
     port:  the port number to select (0-2)
     """
-    if port < 0 or port > 3:
+    if port < 0 or port >= 3:
       raise ValueError('DLatchR: invalid port number.')
       return
 
@@ -397,7 +401,7 @@ class usb2600(mccUSB):
     This command writes the digital port latch register
     port:  the port number to select (0-2)
     """
-    if port < 0 or port > 3:
+    if port < 0 or port >= 3:
       raise ValueError('DLatchW: invalid port number.')
       return
 
@@ -406,6 +410,286 @@ class usb2600(mccUSB):
     wValue = value & 0xffff
     wIndex = port
     self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], self.HS_DELAY)
+
+  #############################################
+  #        Analog Input Commands              #
+  #############################################
+
+  def AIn(self, channel, voltage = False):
+    """
+    This command returns the value from an analog input channel.  This
+    command will result in a bus stall if an AIn scan is currently running
+
+     channel: the channel to read (0-15)
+     value:   16 bits of data, right justified.
+     voltage: True = return voltage, False = return raw reading
+    """
+
+    if channel < 0 or channel >= self.NCHAN:
+      raise ValueError('AIn: error in channel number.')
+      return
+
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = channel
+    wIndex = 0
+    value ,= unpack('H', self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 2, self.HS_DELAY))
+    gain = self.gainList[channel]
+    value = self.table_AIn[gain].slope*value + self.table_AIn[gain].intercept
+    if value > 0xffff:
+      value = 0xffff
+    elif value < 0:
+      value = 0x0
+    else:
+      value = round(value)
+
+    if voltage == True:  # return voltage instead of raw readings
+      value = self.volts(gain, value)
+    
+    return value
+
+  def AInScanStart(self, count, retrig_count, frequency, options, mode=0):
+    """
+    This command starts the analog input channel scan.  The gain
+    ranges that are currently set on the desired channels will be
+    used (these may be changed with AInConfig) This command will
+    result in a bus stall if an AInScan is currently running.
+
+    count:        the total number of scans to perform (0 for continuous scan)
+    retrig_count: the number of scan to perform for each trigger in retrigger mode
+    pacer_period: pacer timer period value (0 for AI_CLK_IN)
+    frequency:    pacer frequency in Hz
+    packet_size:  number of samples to transfer at a time
+    options:      bit field that controls various options
+                   bit 0: 1 = burst mode, 0 = normal mode
+                   bit 1: Reserved
+                   bit 2: Reserved
+                   bit 3: 1 = use trigger  0 = no trigger
+                   bit 4: Reserved
+                   bit 5: Reserved
+                   bit 6: 1 = retrigger mode, 0 = normal trigger
+                   bit 7: Reserved
+    mode:  mode bits:
+           bit 0:  0 = counting mode,  1 = CONTINUOUS_READOUT
+           bit 1:  1 = SINGLEIO
+           bit 2:  1 = use packet size passed usbDevice1808->packet_size
+           bit 3:  1 = convert to voltages  
+    Notes:
+
+    The pacer rate is set by an internal 32-bit incrementing timer
+    running at a base rate of 64 MHz.  The timer is controlled by
+    pacer_period. If burst mode is specified, then this value is the
+    period of the scan and the A/D is clocked at this maximum rate
+    (1MHz) for each channel in the scan.  If burst mode is not
+    specified, then this value is the period of the A/D readings.  A
+    pulse will be output at the AI_CLK_OUT pin at every pacer_period
+    interval regardless of the mode.
+
+    If pacer_period is set to 0, the device does not generate an A/D
+    clock.  It uses the AI_CLK_IN pin as the pacer source.  Burst
+    mode operates in the same fashion: if specified, the scan starts
+    on every rising edge of AI_CLK_IN and the A/D is clocked at 1MHz
+    for the number of channels in the scan; if not specified, the A/D
+    is clocked on every rising edge of AI_CLK_IN.
+
+    The timer will be reset and sample acquired when its value equals 
+    pacer_period.  The equation for calculating pacer_period is:
+
+          pacer_period = [64MHz / (sample frequency)] - 1
+
+    The data will be returned in packets utilizing a bulk IN endpoint.
+    The data will be in the format:
+
+      lowchannel sample 0: lowchannel + 1 sample 0: ... :hichannel sample 0
+      lowchannel sample 1: lowchannel + 1 sample 1: ... :hichannel sample 1
+      ...
+      lowchannel sample n: lowchannel + 1 sample n: ... :hichannel sample n
+
+    The scan will not begin until the AInScanStart command is sent
+    (and any trigger conditions are met).  Data will be sent until
+    reaching the specified count or an AInScanStop command is sent.
+
+    The packet_size parameter is used for low sampling rates to avoid
+    delays in receiving the sampled data. The buffer will be sent,
+    rather than waiting for the buffer to fill.  This mode should
+    not be used for high sample rates in order to avoid data loss.
+
+    The external trigger may be used to start data collection
+    synchronously.  If the bit is set, the device will wait until the
+    appropriate trigger edge is detected, then begin sampling data at
+    the specified rate.  No messages will be sent until the trigger
+    is detected.
+
+    The retrigger mode option and the retrig_count parameter are only
+    used if trigger is used.  This option will cause the trigger to
+    be rearmed after retrig_count samples are acquired, with a total
+    of count samples being returned from the entire scan.
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+
+    if frequency > 1000000:  # 1M S/s throughput
+      frequency = 1000000
+
+    if frequency == 0.0:
+      pacer_period = 0     # use external pacer
+    else:
+      pacer_period = round((64.E6 / frequency) - 1)
+
+    nchan = self.nchan                        # number of channels in a scan
+    bytesPerScan = nchan*2
+    self.mode = mode
+    self.frequency = frequency
+
+    if count == 0:
+      self.mode |= self.CONTINUOUS_READOUT
+      self.bytesToRead = -1                    # disable and sample forever
+    else:
+      self.bytesToRead = count*bytesPerScan    # total number of bytes to read
+
+    if self.mode & self.FORCE_PACKET_SIZE:
+      packet_size = self.packet_size
+    elif self.mode & self.SINGLEIO:
+      packet_size = nchan
+    elif self.mode & self.CONTINUOUS_READOUT:
+      packet_size = int((( (self.wMaxPacketSize//bytesPerScan) * bytesPerScan) // 2))
+    else:
+      packet_size = self.wMaxPacketSize // 2
+    self.packet_size = packet_size
+
+    if self.mode & self.CONTINUOUS_READOUT:
+      self.count = 0
+    else:
+      self.count = count
+
+    self.retirg_count = retrig_count
+    self.mode = mode & 0xff
+    self.options = options
+    self.frequency = frequency
+
+    packet_size -= 1  # force to uint8_t size in range 0-255    
+    scanPacket = pack('IIIBB', count, retrig_count, pacer_period, packet_size, options)
+    result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
+
+    self.status = self.Status()
+
+  def AInScanRead(self):
+    if self.mode & self.CONTINUOUS_READOUT or self.mode & self.SINGLEIO :
+      nSamples = self.packet_size
+    else:
+      nSamples = self.count*self.nchan
+
+    try:
+      data =  list(unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(2*nSamples), self.HS_DELAY)))
+    except:
+      print('AInScanRead: error in bulkRead.')
+
+    if len(data) != nSamples:
+      raise ValueError('AInScanRead: error in number of samples transferred.')
+      return len(data)
+
+    if self.mode & self.VOLTAGE:
+      for i in range(len(data)):
+        channel = self.AInScanChannels[i%len(self.AInScanChannels)]
+        gain = self.gainList[channel]
+        data[i] = data[i]*self.table_AIn[gain].slope + self.table_AIn[gain].intercept
+        if data[i] > 0xffff:
+          data[i] = 0xffff
+        elif data[i] < 0.0:
+          data[i] = 0x0
+        else:
+          data[i] = int(round(data[i]))
+        data[i] = self.volts(gain, data[i])
+        
+    if self.bytesToRead > len(data)*2:
+      self.bytesToRead -= len(data)*2
+    elif self.bytesToRead > 0 and self.bytesToRead < len(data)*2:  # all done
+      self.AInScanStop()
+      self.AInScanClearFIFO()
+      self.status = self.Status()
+      return data
+
+    if self.mode & self.CONTINUOUS_READOUT:
+      return data
+
+    # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
+    if nSamples*2%self.wMaxPacketSize == 0:
+     dummy = self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, 2, 100)
+     
+    self.status = self.Status()
+    if self.status & self.AIN_SCAN_OVERRUN:
+      self.AInScanStop()
+      raise ValueError('AInScanRead: Scan overrun.')
+      return
+
+    return data
+      
+  def AInScanStop(self):
+    """
+    This command stops the analog input scan (if running).
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AIN_SCAN_STOP
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
+
+  def AInConfigW(self, entry, channel, gain, lastElement=False):
+    """
+    This command reads or writes the analog input channel configurations.
+    This command will result in a bus stall if an AIn scan is currently running.
+
+    Calibration:  channel configuration
+             0: Normal Mode
+             1: Calibration Mode
+
+    ScanList[64]: channel configuration
+             bit 0-5 Channel Number (0-63)
+             bit 6-7: Range
+
+    entry:    channel entry in the queue (0 - 63)
+    gain:     range  ( 0:+/- 10V,  1: +/- 5V, 2: +/- 1V, 3: +/- 1V)
+    lastElement: Set to True is last element in the queue
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AIN_SCAN_CONFIG
+    wValue = 0       # 0 = Normal Mode, 1 = Calibration Mode
+    wIndex = 0
+
+    if entry < 0 or entry >= self.NCHAN:
+      raise ValueError('AInConfigW: Exceed depth of queue')
+      return
+
+    self.scanList[entry] =  (gain & 0x3) << 6 | (channel & 0x3f)
+    self.gainList[channel] = gain & 0x3
+
+    if lastElement == True:
+      self.nchan = entry + 1
+      wIndex = entry
+
+    if self.Status() & self.AIN_SCAN_RUNNING:
+      self.AInScanStop()
+
+    try:
+      result = self.udev.controlWrite(request_type, request, wValue, wIndex, self.scanList, self.HS_DELAY)
+    except:
+      print('AInConfigW: error in control Write result =', result)
+      return
+
+  def AInConfigR(self):
+    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
+    wValue = 0
+    wIndex = 0
+    data = unpack('B'*64,self.udev.controlRead(request_type, self.AIN_SCAN_CONFIG, wValue, wIndex, 64, self.HS_DELAY))
+    return data
+
+  def AInScanClearFIFO(self):
+    """
+    This command clears the analog input firmware buffer.
+    """
+    request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
+    request = self.AIN_SCAN_CLEAR_FIFO
+    wValue = 0
+    wIndex = 0
+    result = self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], timeout = 100)
 
   ##########################################
   #         Counter/Timer Commands         #
@@ -938,27 +1222,19 @@ class usb2600(mccUSB):
     if status & self.FPGA_CONFIG_MODE:
       print('  FPGA in configuration mode.')
 
-  def volts(self, mode, gain, value):
-    if mode == self.DIFFERENTIAL:
-      if gain == self.BP_20V_DE:
-        volt = (value - 0xfff)*20./4096.
-      elif gain == self.BP_10V_DE:
-        volt = (value - 0xfff)*10./4096.
-      elif gain == self.BP_5V_DE:
-        volt = (value - 0xfff)*5./4096.
-      else:
-        raise ValueError('volts: Unknown gain value.')
+  def volts(self, gain, value):
+    # converts unsigned short value to volts
+    if gain == self.BP_10V:
+      volt = (value - 0x8000) * 10. / 32768
+    elif gain == self.BP_5V:
+      volt = (value - 0x8000) * 5. / 32768
+    elif gain == self.BP_2V:
+      volt = (value - 0x8000) * 2. / 32768
+    elif gain == self.BP_1V:
+      volt = (value - 0x8000) * 1. / 32768
     else:
-      if gain == self.BP_10V:
-        volt = (value - 0xfff)*10./4096.
-      elif gain == self.BP_5V:
-        volt = (value - 0xfff)*5./4096.
-      elif gain == self.BP_2_5V:
-        volt = (value - 0xfff)*2.5/4096.
-      elif gain == self.UP_10V:
-        volt = (value)*10./8192.
-      else:
-        raise ValueError('volts: Unknown gain value.')
+      raise ValueError('volts: Unknown range.')
+
     return volt
 
 ################################################################################################################

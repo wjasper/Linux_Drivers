@@ -100,12 +100,110 @@ def main():
       counter = int(input('Enter counter [0-3]: '))
       print('Connect A0 to counter input')
       usb2600.CounterInit(counter)
-      usb2600.DTristateW(usb2600.PORTA,0xf0)
+      usb2600.DTristateW(usb2600.DIO_A,0xf0)
       toContinue()
       for i in range(100):
-        usb2600.DLatchW(usb2600.PORTA, 0x0)
-        usb2600.DLatchW(usb2600.PORTA,0x1)
+        usb2600.DLatchW(usb2600.DIO_A, 0x0)
+        usb2600.DLatchW(usb2600.DIO_A,0x1)
       print("Count = %d.  Should read 100" % (usb2600.Counter(counter)))
+    elif ch == 'd':
+      print("Testing Digital I/O ...")
+      print("connect pins Port A <--> Port B")
+      usb2600.DTristateW(usb2600.DIO_A, 0x00)
+      usb2600.DTristateW(usb2600.DIO_B, 0xff)
+      
+      print("Digital Port Tristate Register A = ", hex(usb2600.DTristateR(usb2600.DIO_A))) # outupt Port A
+      print("Digital Port Tristate Register B = ", hex(usb2600.DTristateR(usb2600.DIO_B))) # input Port B
+      while True:
+        value = int(input('Enter a hex number [0-0xff]: '),16) & 0xff 
+        usb2600.DLatchW(usb2600.DIO_A, value)
+        value2 = usb2600.DLatchR(usb2600.DIO_A)
+        value3 = usb2600.DPort(usb2600.DIO_B)
+        print("The number you entered: ", hex(value2), "  Latched value: ", hex(value3))
+        if toContinue() != True:
+          break
+    elif ch == 'i':
+      channel = int(input('Enter channel number (0-63): '))
+      gain = int(input('Enter Gain: 0 = +/- 10V, 1 = +/- 5V, 2 = +/- 2V, 3 = +/- 1V: '))
+      usb2600.AInConfigW(0, channel, gain, lastElement=True)
+      while True:
+        try:
+          value = usb2600.AIn(channel)
+        except ValueError as e:
+          print(e)
+          break
+        print("AIn: %#x  volt = %f" % (value, usb2600.volts(gain, value)))
+        if toContinue() != True:
+          break
+    elif ch == 'I':
+      print('Testing USB-1608G Multi-Channel Analog Input Scan.')
+      usb2600.AInScanStop()
+      usb2600.AInScanClearFIFO()
+      nChan = int(input('Enter number of channels 1-64: '))
+      nScans = int(input('Enter number of scans: '))
+      nRepeat = int(input('Enter nuber of repeats: '))
+      frequency = float(input('Enter sampling frequency [Hz]: '))
+      for channel in range(nChan):
+        gain = int(input('Enter Gain: 0 = +/- 10V, 1 = +/- 5V, 2 = +/- 2V, 3 = +/- 1V: '))
+        usb2600.AInConfigW(channel, channel, gain)
+      usb2600.AInConfigW(nChan-1, nChan-1, gain, lastElement=True)
+
+      for repeat in range(nRepeat):
+        print('\n\n---------------------------------------')
+        print('repeat: %d' % (repeat))
+#        mode = usb2600.VOLTAGE
+        mode = 0
+        options = 0
+        usb2600.AInScanStart(nScans, 0, frequency, options, mode)
+        data = usb2600.AInScanRead()
+        print('Number of samples read = %d (should be %d)' % (len(data), nChan*nScans))
+        for i in range(nScans):
+          print("%6d" % (i), end ='')
+          for j in range(nChan):
+            k = i*nChan + j
+            if mode & usb2600.VOLTAGE:   # data returned in volts
+              print(", %8.4lf V" % data[k], end='')
+            else:
+              if data[k] >= 0xfffd:
+                print("DAC is saturated at +FS")
+              elif data[k] <= 0x60:
+                print("DAC is saturated at -FS")
+              else:
+                data[k] = int(round(data[k]*usb2600.table_AIn[gain].slope + usb2600.table_AIn[gain].intercept))
+              print(", %8.4lf V" % usb2600.volts(gain, data[k]), end='')
+          print("")
+      print("\n\n---------------------------------------")
+    elif ch == 'C':
+      print("Testing USB-2600 Analog Input Scan in continuous mode 16 channels")
+      print("Hit any key to exit")
+      frequency = float(input("Enter desired sampling frequency (greater than 1000): "))
+      usb2600.AInScanStop()
+      nScans = 0  # for conitnuous mode
+      nChan = 64  # 64 channels
+      gain = usb2600.BP_10V
+      for channel in range(nChan):
+        usb2600.AInConfigW(channel, channel, gain)
+      usb2600.AInConfigW(nChan-1, nChan-1, gain, lastElement=True)
+      time.sleep(1)
+      mode = usb2600.CONTINUOUS_READOUT
+      options = 0
+      usb2600.AInScanStart(nScans, 0, frequency, options, mode)
+      flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      i = 0
+      total_samples_returned = 0
+      while True:
+        i += 1
+        raw_data = usb2600.AInScanRead()
+        total_samples_returned += len(raw_data)
+        if i%1000 == 0:
+          print('Scan =', i, 'total samples returned =', total_samples_returned)
+        c = sys.stdin.readlines()
+        if (len(c) != 0):
+          break
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+      usb2600.AInScanStop()
+      usb2600.AInScanClearFIFO()
     elif ch == 't':
       timer = int(input('Enter timer [0-3]: '))
       frequency = float(input('Enter frequency of timer: '))
