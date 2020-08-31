@@ -1262,6 +1262,7 @@ class usb_2637(usb2600):
   AO_CHAN3       = 0x2   # Include Channel 1 in output scan
   AO_TRIG        = 0x10  # Use Trigger
   AO_RETRIG_MODE = 0x20  # Retrigger Mode
+  NCHAN_AO             = 4     # Number of analog output channels
 
   def __init__(self, serial=None):
     self.productID = self.USB_2637_PID  #usb-2637
@@ -1271,7 +1272,7 @@ class usb_2637(usb2600):
       return
     usb2600.__init__(self)
     
-    self.NCHAN_AO             = 4     # Number of analog output channels
+    self.samplesToWrite       = -1    # Total number of samples to write
 
     # Read calibration table for analog out
     self.table_AOut = [table(), table(), table(), table()]
@@ -1326,7 +1327,7 @@ class usb_2637(usb2600):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     wIndex = channel & 0x31
 
-    if channel > self.NCHAN_AO:
+    if channel >= self.NCHAN_AO:
       raise ValueError('AOut: channel out of range')
       return
 
@@ -1385,7 +1386,7 @@ class usb_2637(usb2600):
     both channels are used, one scan is an update to both channels).
 
     The time base is controlled by an internal 32-bit timer running at
-    a base rate of 40 MHz.  The timer is controlled by pacer_period.  
+    a base rate of 64 MHz.  The timer is controlled by pacer_period.  
     The equation for calculating pacer_period is:
 
         pacer_period = (64 MHz / sample_frequency) - 1
@@ -1426,8 +1427,15 @@ class usb_2637(usb2600):
     self.count_AOut = count
     if count == 0:
       self.continuous_mode_AOUT = True
+      self.samplesToWrite = -1
     else:
       self.continuous_mode_AOUT = False
+      # calculate number of channels per scan
+      for i in range(self.NCHAN_AO): 
+        if (options >> i) & 0x1 == 1:
+          self.samplesToWrite += 1
+      self.samplesToWrite *= count
+
     self.retrig_count = retrig_count
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -1447,12 +1455,15 @@ class usb_2637(usb2600):
     except:
       print('AOutScanWrite: error in bulkWrite')
       return
+
+    # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
+    if self.continuous_mode_AOUT == False and len(data) % self.wMaxPacketSize == 0:
+      dummy = self.udev.bulkWrite(2, 0x1, timeout)
     
   def AOutScanStop(self):
     """
     This command stops the analog output scan (if running).
     """
-
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0

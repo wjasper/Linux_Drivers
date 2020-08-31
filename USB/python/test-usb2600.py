@@ -240,6 +240,45 @@ def main():
       print("Internal temperature = %.2f deg C or %.2f deg " % (usb2600.Temperature(), usb2600.Temperature()*9./5. + 32.))
     elif ch == 'v':
       print("FPGA version %s" % (usb2600.FPGAVersion()))
+    elif ch == 'o':
+      voltage = float(input('Enter voltage: '))
+      usb2600.AOut(0, voltage)
+      voltage = usb2600.AOutR(0)
+      print('Analog Output Voltage = %f V' % (voltage))
+    elif ch == 'O':
+      print('Test of Analog Output Scan.')
+      print('Hook scope up to VDAC 0')
+      frequency = float(input('Enter desired frequency of sine wave [ 1-40 Hz]: '))
+      frequency *= 512
+      data = [0]*512
+      for i in range(512):
+        voltage = 10*math.sin(2.* math.pi * i / 512.)
+        voltage = voltage / 10. * 32768. + 32768.
+        data[i] = voltage * usb2600.table_AOut[channel].slope + usb2600.table_AOut[channel].intercept
+        if data[i] > 0xffff:
+          data[i] = 0xffff
+        elif data[i] < 0:
+          data[i] = 0
+        else:
+          data[i] = int(data[i])
+      usb2600.AOutScanStop()
+      usb2600.AOutScanStart(0,0,frequency,usb2600.AO_CHAN0)
+      print("Hit 's <CR>' to stop")
+      flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
+      while True:
+        try:
+          ret = usb2600.AOutScanWrite(data)
+        except:
+          fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+          usb2600.AOutScanStop()
+          break
+        c = sys.stdin.readlines()
+        if (len(c) != 0):
+          break
+      fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
+      usb2600.AOutScanStop()
+      usb2600.AOutScanClearFIFO
 
 
 if __name__ == "__main__":

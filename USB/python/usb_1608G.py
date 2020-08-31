@@ -1044,13 +1044,14 @@ class usb_1608GX_2AO(usb1608G):
   AOUT_SCAN_START      = 0x1A  # Start analog output scan
   AOUT_SCAN_STOP       = 0x1B  # Stop analog output scan
   AOUT_SCAN_CLEAR_FIFO = 0x1C  # Clear the analog output scan FIFO
-  NCHAN_AO             = 2     # Number of analog output channels
 
   # Analog Output Scan Options
   AO_CHAN0       = 0x1   # Include Channel 0 in output scan
   AO_CHAN1       = 0x2   # Include Channel 1 in output scan
   AO_TRIG        = 0x10  # Use Trigger
   AO_RETRIG_MODE = 0x20  # Retrigger Mode
+
+  NCHAN_AO       = 2     # Number of analog output channels
 
   def __init__(self, serial=None):
     self.productID = self.USB_1608GX_2AO_PID   # usb-1608GX_2AO
@@ -1059,6 +1060,8 @@ class usb_1608GX_2AO(usb1608G):
       raise IOError("MCC USB-1608GX_2AO not found")
       return
     usb1608G.__init__(self)
+
+    self.samplesToWrite       = -1    # Total number of samples to write
 
     # Read calibration table for analog out
     self.table_AOut = [table(), table()]
@@ -1094,7 +1097,7 @@ class usb_1608GX_2AO(usb1608G):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     wIndex = channel & 0x1
 
-    if channel > self.NCHAN_AO:
+    if channel >= self.NCHAN_AO:
       raise ValueError('AOut: channel out of range')
       return
 
@@ -1115,7 +1118,7 @@ class usb_1608GX_2AO(usb1608G):
     wValue = 0
     wIndex = 0
     channel = int(channel)
-    if channel >= self.NCHAN_AO or channel < 0:
+    if channel < 0 or channel >= self.NCHAN_AO:
       raise ValueError('AOutR: channel out of range')
       return
 
@@ -1194,8 +1197,15 @@ class usb_1608GX_2AO(usb1608G):
     self.count_AOut = count
     if count == 0:
       self.continuous_mode_AOUT = True
+      self.samplesToWrite = -1
     else:
       self.continuous_mode_AOUT = False
+      # calculate number of channels per scan
+      for i in range(self.NCHAN_AO): 
+        if (options >> i) & 0x1 == 1:
+          self.samplesToWrite += 1
+      self.samplesToWrite *= count
+
     self.retrig_count = retrig_count
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -1216,11 +1226,15 @@ class usb_1608GX_2AO(usb1608G):
       print('AOutScanWrite: error in bulkWrite')
       return
     
+    # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
+    if self.continuous_mode_AOUT == False  and len(data) % self.wMaxPacketSize == 0:
+      dummy = self.udev.bulkWrite(2, 0x1, timeout)
+
+    
   def AOutScanStop(self):
     """
     This command stops the analog output scan (if running).
     """
-
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0

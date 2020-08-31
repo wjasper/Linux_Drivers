@@ -1195,12 +1195,15 @@ class usb_1208HS_2AO(usb1208HS):
     except:
       print('AOutScanWrite: error in bulkWrite')
       return
+
+    # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
+    if self.continuous_mode_AOUT == False  and len(data) % self.wMaxPacketSize == 0:
+      dummy = self.udev.bulkWrite(2, 0x1, timeout)
     
   def AOutScanStop(self):
     """
     This command stops the analog output scan (if running).
     """
-
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
