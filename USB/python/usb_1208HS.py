@@ -50,24 +50,25 @@ class usb1208HS(mccUSB):
   FPGA_CONFIG_MODE   = 0x200 # FPGA config mode
 
   # Analog Input Scan and Modes
-  SINGLE_ENDED           =  0  # 8 single-ended inputs
-  PSEUDO_DIFFERENTIAL    =  1  # 4 pseudo differential inputs
-  DIFFERENTIAL           =  2  # 4 true differential inputs
-  PSEUDO_DIFFERENTIAL_UP =  3  # 7 pseudo differential inputs
+  SINGLE_ENDED           =  0    # 8 single-ended inputs
+  PSEUDO_DIFFERENTIAL    =  1    # 4 pseudo differential inputs
+  DIFFERENTIAL           =  2    # 4 true differential inputs
+  PSEUDO_DIFFERENTIAL_UP =  3    # 7 pseudo differential inputs
 
-  NCHAN              = 8    # max number of A/D channels in the device (single_ended)
-  NGAIN              = 4    # max number of gain levels
-  NMODE              = 4    # max number of configuration modes
-  MAX_PACKET_SIZE_HS = 512  # max packet size for HS device
-  MAX_PACKET_SIZE_FS = 64   # max packet size for HS device
-  COUNTER0           = 0
-  COUNTER1           = 1
+  NCHAN                = 8     # max number of A/D channels in the device (single_ended)
+  NGAIN                = 4     # max number of gain levels
+  NMODE                = 4     # max number of configuration modes
+  MAX_PACKET_SIZE_HS   = 512   # max packet size for HS device
+  MAX_PACKET_SIZE_FS   = 64    # max packet size for HS device
+  BASE_CLOCK           = 40.E6 # base frequency of the board
+  COUNTER0             = 0
+  COUNTER1             = 1
 
   # AIn Scan Modes
-  CONTINUOUS_READOUT   = 0x1  # Continuous mode
-  SINGLEIO             = 0x2  # Return data after every read (used for low frequency scans)
-  FORCE_PACKET_SIZE    = 0x4  # Force packet_size
-  VOLTAGE              = 0x8  # return values as voltages
+  CONTINUOUS_READOUT   = 0x1   # Continuous mode
+  SINGLEIO             = 0x2   # Return data after every read (used for low frequency scans)
+  FORCE_PACKET_SIZE    = 0x4   # Force packet_size
+  VOLTAGE              = 0x8   # return values as voltages
 
   # Commands and Codes for USB-1208HS
   # Digital I/O Commands
@@ -376,7 +377,7 @@ class usb1208HS(mccUSB):
     if frequency == 0.0:
       pacer_period = 0     # use external pacer
     else:
-      pacer_period = round((40.E6 / frequency) - 1)
+      pacer_period = round((self.BASE_CLOCK / frequency) - 1)
 
     self.AInScanChannels = []
     nchan = 0
@@ -615,14 +616,14 @@ class usb1208HS(mccUSB):
     wIndex = 0
     period ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PERIOD, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters.period = period
-    self.timerParameters.frequency = 40.E6/(period + 1)
-    return round(1000/self.timerParameters.frequency)
+    self.timerParameters.frequency = self.BASE_CLOCK/(period + 1)
+    return 1000/self.timerParameters.frequency
 
   def TimerPeriodW(self, period):
     # period is in ms
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PERIOD
-    period = round(period*40.E6/1000. - 1)
+    period = round(period*self.BASE_CLOCK/1000. - 1)
     self.timerParameters.period = period
     wValue = period & 0xffff
     wIndex = (period >> 16) & 0xffff
@@ -647,13 +648,13 @@ class usb1208HS(mccUSB):
     wIndex = 0
     pulse_width ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PULSE_WIDTH, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters.pulseWidth = pulse_width
-    return (pulse_width + 1)*1000/40.E6
+    return (pulse_width + 1)*1000/self.BASE_CLOCK
 
   def TimerPulseWidthW(self, pulse_width):
     # Note: pulse_width is in ms
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PULSE_WIDTH
-    pulseWidth = round(pulse_width*40.E6/1000. - 1)
+    pulseWidth = round(pulse_width*self.BASE_CLOCK/1000. - 1)
     self.timerParameters.pulseWidth = pulseWidth
     wValue = pulseWidth & 0xffff
     wIndex = (pulseWidth >> 16) & 0xffff
@@ -701,13 +702,13 @@ class usb1208HS(mccUSB):
     wIndex = 0
     delay ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_START_DELAY, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters.delay = delay
-    return delay*1000/40.E6
+    return delay*1000/self.BASE_CLOCK
 
   def TimerStartDelayW(self, delay):
     # delay is in ms
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_START_DELAY
-    delay = round(delay*40.E6/1000)
+    delay = round(delay*self.BASE_CLOCK/1000)
     self.timerParameters.delay = delay
     wValue = delay & 0xffff
     wIndex = (delay >> 16) & 0xffff
@@ -1167,7 +1168,7 @@ class usb_1208HS_2AO(usb1208HS):
     if frequency == 0:
       pacer_period = 0    # use AOCKI pin 37
     else:
-      pacer_period = round((40.E6 / frequency) - 1)
+      pacer_period = round((self.BASE_CLOCK / frequency) - 1)
 
     self.frequency_AOut = frequency
     self.options_AOut = options
@@ -1197,7 +1198,7 @@ class usb_1208HS_2AO(usb1208HS):
       return
 
     # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
-    if self.continuous_mode_AOUT == False  and len(data) % self.wMaxPacketSize == 0:
+    if self.continuous_mode_AOUT == False and len(data) % self.wMaxPacketSize == 0:
       dummy = self.udev.bulkWrite(2, 0x1, timeout)
     
   def AOutScanStop(self):

@@ -227,9 +227,9 @@ def main():
       frequency = float(input('Enter frequency of timer: '))
       period = 1000/frequency  # period in ms
       usb1608G.TimerPeriodW(period)
-      usb1608G.TimerPulseWidthW(period / 2)
-      usb1608G.TimerCountW(0)
-      usb1608G.TimerStartDelayW(0)
+      usb1608G.TimerPulseWidthW(period/2)
+      usb1608G.TimerCountW(1000)
+      usb1608G.TimerStartDelayW(period/10)
       usb1608G.TimerControlW(0x1)
       toContinue()
       usb1608G.TimerControlW(0x0)

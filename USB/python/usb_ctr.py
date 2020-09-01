@@ -25,7 +25,8 @@ from mccUSB import *
 
 class usb_ctr(mccUSB):
 
-  NTIMER   = 4      # Number of PWM Timers
+  NTIMER     = 4      # Number of PWM Timers
+  BASE_CLOCK = 96.E6 # base clock frequency
 
   # Status bit values 
   PACER_RUNNING    = 0x1 << 1
@@ -685,7 +686,7 @@ class usb_ctr(mccUSB):
     if frequency == 0:
       pacer_period = 0
     else:
-      pacer_period = int((96.E6/frequency) - 1)
+      pacer_period = int((self.BASE_CLOCK/frequency) - 1)
 
     if count == 0:    # continuous mode
       self.scan_mode |= self.CONTINUOUS_READOUT
@@ -847,8 +848,8 @@ class usb_ctr(mccUSB):
     wIndex = timer
     period ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PERIOD, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters[timer].period = period
-    self.timerParameters[timer].frequency = 96.E6/(period + 1)
-    return round(1000./self.timerParameters[timer].frequency)
+    self.timerParameters[timer].frequency = self.BASE_CLOCK/(period + 1)
+    return 1000./self.timerParameters[timer].frequency
 
   def TimerPeriodW(self, timer, period):
     # period is in ms
@@ -860,7 +861,7 @@ class usb_ctr(mccUSB):
     request = self.TIMER_PERIOD
     wValue = 0x0
     wIndex = timer
-    period = round(period*96.E6/1000. - 1)
+    period = round(period*self.BASE_CLOCK/1000. - 1)
     self.timerParameters[timer].period = period
     period = pack('I', period)
     self.udev.controlWrite(request_type, request, wValue, wIndex, period, self.HS_DELAY)
@@ -886,7 +887,7 @@ class usb_ctr(mccUSB):
     wIndex = timer
     pulse_width ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PULSE_WIDTH, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters[timer].pulseWidth = pulse_width
-    return (pulse_width + 1)*1000/96.E6
+    return (pulse_width + 1)*1000/self.BASE_CLOCK
 
   def TimerPulseWidthW(self, timer, pulse_width):
     # Note: pulse_width is in ms
@@ -897,7 +898,7 @@ class usb_ctr(mccUSB):
     request = self.TIMER_PULSE_WIDTH
     wValue = 0x0
     wIndex = timer
-    pulseWidth = round(pulse_width*96.E6/1000. - 1)
+    pulseWidth = round(pulse_width*self.BASE_CLOCK/1000. - 1)
     self.timerParameters[timer].pulseWidth = pulseWidth
     pulseWidth = pack('I', pulseWidth)
     self.udev.controlWrite(request_type, request, wValue, wIndex, pulseWidth, self.HS_DELAY)
@@ -953,7 +954,7 @@ class usb_ctr(mccUSB):
     wIndex = timer
     delay ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_START_DELAY, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters[timer].delay = delay
-    return delay*1000./96.E6
+    return delay*1000./self.BASE_CLOCK
 
   def TimerStartDelayW(self, timer, delay):
     # delay is in ms
@@ -965,7 +966,7 @@ class usb_ctr(mccUSB):
     request = self.TIMER_START_DELAY
     wValue = 0x0
     wIndex = timer
-    delay = round(delay*96.E6/1000)
+    delay = round(delay*self.BASE_CLOCK/1000)
     self.timerParameters[timer].delay = delay
     delay = pack('I', delay)
     self.udev.controlWrite(request_type, request, wValue, wIndex, delay, self.HS_DELAY)

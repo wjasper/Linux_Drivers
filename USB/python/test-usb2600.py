@@ -210,8 +210,8 @@ def main():
       period = 1000./frequency     # period in ms 
       usb2600.TimerPeriodW(timer, period)
       usb2600.TimerPulseWidthW(timer, period/2)
-      usb2600.TimerCountW(timer, 0)
-      usb2600.TimerStartDelayW(timer, 0)
+      usb2600.TimerCountW(timer, 1000)
+      usb2600.TimerStartDelayW(timer, period/10)
       usb2600.TimerControlW(timer, 0x1)
       toContinue()
       usb2600.TimerControlW(timer, 0x0)
@@ -220,7 +220,7 @@ def main():
             "  Control Reg:",hex(usb2600.TimerControlR(timer)), \
             "\tPeriod:", usb2600.TimerPeriodR(timer),"ms" \
             "\tPulse Width:", usb2600.TimerPulseWidthR(timer),"ms"\
-            "    \tCount Reg:",hex(usb2600.TimerCountR(timer)), \
+            "    \tCount Reg:",usb2600.TimerCountR(timer), \
             "    \tDelay:", usb2600.TimerStartDelayR(timer),"ms")
     elif ch == 'M':
       print("Manufacturer: %s" % usb2600.getManufacturer())

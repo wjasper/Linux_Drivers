@@ -142,22 +142,21 @@ class usb2600(mccUSB):
   FPGA_CONFIG_MODE   = 0x200 # FPGA config mode
 
   # Analog Input Scan and Modes
-  SINGLE_ENDED           =  0  # 64 single-ended inputs
-  CALIBRATION            =  1  # Calibration mode
+  SINGLE_ENDED       =  0    # 64 single-ended inputs
+  CALIBRATION        =  1    # Calibration mode
 
-  NCHAN              = 64   # max number of A/D channels in the device (single_ended)
-  NGAIN              = 4    # max number of gain levels
-  NMODE              = 2    # max number of configuration modes
-  NCOUNTER           = 4    # max number of counters
-  NTIMER             = 4    # max number of timers
-  MAX_PACKET_SIZE_HS = 512  # max packet size for HS device
-  MAX_PACKET_SIZE_FS = 64   # max packet size for HS device
-
+  NGAIN              = 4     # max number of gain levels
+  NMODE              = 2     # max number of configuration modes
+  NCOUNTER           = 4     # max number of counters
+  NTIMER             = 4     # max number of timers
+  MAX_PACKET_SIZE_HS = 512   # max packet size for HS device
+  MAX_PACKET_SIZE_FS = 64    # max packet size for HS device
+  BASE_CLOCK         = 64.E6 # base frequency of the board
 
   #Digital Ports
-  DIO_A           = 0    # DIO Port A
-  DIO_B           = 1    # DIO Port B
-  DIO_C           = 2    # DIO Port C
+  DIO_A              = 0    # DIO Port A
+  DIO_B              = 1    # DIO Port B
+  DIO_C              = 2    # DIO Port C
   
   #Counters and Timers
   COUNTER0           = 0    # Counter 0
@@ -176,7 +175,7 @@ class usb2600(mccUSB):
   CONTINUOUS_READOUT   = 0x1  # Continuous mode
   SINGLEIO             = 0x2  # Return data after every read (used for low frequency scans)
   FORCE_PACKET_SIZE    = 0x4  # Force packet_size
-  VOLTAGE              = 0x8  # return values as voltages
+  VOLTAGE              = 0x8  # return values as voltages. default is raw values
 
   # Commands and Codes for USB-1208HS
   # Digital I/O Commands
@@ -224,7 +223,7 @@ class usb2600(mccUSB):
   def __init__(self):
     self.status = 0                       # status of the device
     self.samplesToRead = -1               # number of bytes left to read from a scan
-    self.scanList = bytearray(self.NCHAN) # depth of scan queue is 64
+    self.scanList = bytearray(self.NCHAN) # depth of scan queue 
     self.gainList = bytearray(self.NCHAN) # gain for each channel
     self.nchan = 0                        # number of channels in a scan
     self.AInMode = 0x0                    # analog input channel configuration
@@ -532,7 +531,7 @@ class usb2600(mccUSB):
     if frequency == 0.0:
       pacer_period = 0     # use external pacer
     else:
-      pacer_period = round((64.E6 / frequency) - 1)
+      pacer_period = round((self.BASE_CLOCK / frequency) - 1)
 
     nchan = self.nchan                        # number of channels in a scan
     bytesPerScan = nchan*2
@@ -655,7 +654,11 @@ class usb2600(mccUSB):
     wIndex = 0
 
     if entry < 0 or entry >= self.NCHAN:
-      raise ValueError('AInConfigW: Exceed depth of queue')
+      raise ValueError('AInConfigW: Exceed depth of queue.')
+      return
+
+    if channel < 0 or channel >= self.NCHAN:
+      raise ValueError('AInConfigW: Invalid channel number.')
       return
 
     self.scanList[entry] =  (gain & 0x3) << 6 | (channel & 0x3f)
@@ -678,7 +681,7 @@ class usb2600(mccUSB):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
-    data = unpack('B'*64,self.udev.controlRead(request_type, self.AIN_SCAN_CONFIG, wValue, wIndex, 64, self.HS_DELAY))
+    data = unpack('B'*self.NCHAN,self.udev.controlRead(request_type, self.AIN_SCAN_CONFIG, wValue, wIndex, self.NCHAN, self.HS_DELAY))
     return data
 
   def AInScanClearFIFO(self):
@@ -780,8 +783,8 @@ class usb2600(mccUSB):
     wIndex = timer
     period ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PERIOD, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters[timer].period = period
-    self.timerParameters[timer].frequency = 64.E6/(period + 1)
-    return round(1000./self.timerParameters[timer].frequency)
+    self.timerParameters[timer].frequency = self.BASE_CLOCK/(period + 1)
+    return  1000./self.timerParameters[timer].frequency
 
   def TimerPeriodW(self, timer, period):
     # period is in ms
@@ -791,10 +794,9 @@ class usb2600(mccUSB):
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PERIOD
-    period = int(period)
     wValue = 0
     wIndex = timer
-    period = round(period*64.E6/1000. - 1)
+    period = round(period*self.BASE_CLOCK/1000. - 1)
     self.timerParameters[timer].period = period
     period = pack('I', period)
     self.udev.controlWrite(request_type, request, wValue, wIndex, period, self.HS_DELAY)
@@ -822,7 +824,7 @@ class usb2600(mccUSB):
     wIndex = timer
     pulse_width ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PULSE_WIDTH, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters[timer].pulseWidth = pulse_width
-    return (pulse_width + 1)*1000/64.E6
+    return (pulse_width + 1)*1000/self.BASE_CLOCK
 
   def TimerPulseWidthW(self, timer, pulse_width):
     # Note: pulse_width is in ms
@@ -833,7 +835,7 @@ class usb2600(mccUSB):
     request = self.TIMER_PULSE_WIDTH
     wValue = 0
     wIndex = timer
-    pulseWidth = round(pulse_width*64.E6/1000. - 1)
+    pulseWidth = round(pulse_width*self.BASE_CLOCK/1000. - 1)
     self.timerParameters[timer].pulseWidth = pulseWidth
     pulseWidth = pack ('I', pulseWidth)
     self.udev.controlWrite(request_type, request, wValue, wIndex, pulseWidth, self.HS_DELAY)
@@ -891,7 +893,7 @@ class usb2600(mccUSB):
     wIndex = timer
     delay ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_START_DELAY, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters[timer].delay = delay
-    return delay*1000./64.E6
+    return delay*1000./self.BASE_CLOCK
 
   def TimerStartDelayW(self, timer, delay):
     # delay is in ms
@@ -900,7 +902,7 @@ class usb2600(mccUSB):
       return
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_START_DELAY
-    delay = round(delay*64.E6/1000.)
+    delay = round(delay*self.BASE_CLOCK/1000)
     self.timerParameters[timer].delay = delay
     wValue = 0
     wIndex = timer
@@ -1238,10 +1240,20 @@ class usb2600(mccUSB):
     return volt
 
 ################################################################################################################
+class usb_2623(usb2600):
+  NCHAN           = 16   # max number of A/D channels in the device (single_ended)
+  def __init__(self, serial=None):
+    self.productID = self.USB_2623_PID  # usb-2623
+    self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
+    if not self.udev:
+      raise IOError("MCC USB-2623 not found")
+      return
+    usb2600.__init__(self)
 
 class usb_2633(usb2600):
+  NCHAN              = 64   # max number of A/D channels in the device (single_ended)
   def __init__(self, serial=None):
-    self.productID = self.USB_2633_PID  #usb-2633
+    self.productID = self.USB_2633_PID  # usb-2633
     self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
       raise IOError("MCC USB-2633 not found")
@@ -1262,7 +1274,8 @@ class usb_2637(usb2600):
   AO_CHAN3       = 0x2   # Include Channel 1 in output scan
   AO_TRIG        = 0x10  # Use Trigger
   AO_RETRIG_MODE = 0x20  # Retrigger Mode
-  NCHAN_AO             = 4     # Number of analog output channels
+  NCHAN          = 64    # max number of A/D channels in the device (single_ended)
+  NCHAN_AO       = 4     # max number of analog output channels
 
   def __init__(self, serial=None):
     self.productID = self.USB_2637_PID  #usb-2637
@@ -1420,7 +1433,7 @@ class usb_2637(usb2600):
     if frequency == 0:
       pacer_period = 0    # use AOCKI pin 37
     else:
-      pacer_period = round((64.E6 / frequency) - 1)
+      pacer_period = round((self.BASE_CLOCK / frequency) - 1)
 
     self.frequency_AOut = frequency
     self.options_AOut = options
@@ -1477,4 +1490,14 @@ class usb_2637(usb2600):
     wValue = 0
     wIndex = 0
     result = self.udev.controlWrite(request_type, self.AOUT_SCAN_CLEAR_FIFO, wValue, wIndex, [0x0], timeout = 100)
+
+class usb_2627(usb_2637):
+  NCHAN           = 16   # max number of A/D channels in the device (single_ended)
+  def __init__(self, serial=None):
+    self.productID = self.USB_2627_PID  #usb-2627
+    self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
+    if not self.udev:
+      raise IOError("MCC USB-2627 not found")
+      return
+    usb2637.__init__(self)
 

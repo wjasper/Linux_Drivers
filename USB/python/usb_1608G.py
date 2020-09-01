@@ -55,6 +55,7 @@ class usb1608G(mccUSB):
   NGAIN              = 4     # max number of gain levels
   MAX_PACKET_SIZE_HS = 512   # max packet size for HS device
   MAX_PACKET_SIZE_FS = 64    # max packet size for HS device
+  BASE_CLOCK         = 64.E6 # base frequency of the board
   COUNTER0           = 0
   COUNTER1           = 1
 
@@ -379,7 +380,7 @@ class usb1608G(mccUSB):
     if frequency == 0.0:
       pacer_period = 0     # use external pacer
     else:
-      pacer_period = round((64.E6 / frequency) - 1)
+      pacer_period = round((self.BASE_CLOCK / frequency) - 1)
 
     if count == 0:
       self.mode |= self.CONTINUOUS_READOUT
@@ -634,14 +635,14 @@ class usb1608G(mccUSB):
     wIndex = 0
     period ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PERIOD, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters.period = period
-    self.timerParameters.frequency = 64.E6/(period + 1)
-    return round(1000./self.timerParameters.frequency)
+    self.timerParameters.frequency = self.BASE_CLOCK/(period + 1)
+    return 1000./self.timerParameters.frequency
 
   def TimerPeriodW(self, period):
     # period is in ms
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PERIOD
-    period = round(period*64.E6/1000. - 1)
+    period = round(period*self.BASE_CLOCK/1000. - 1)
     self.timerParameters.period = period
     wValue = period & 0xffff
     wIndex = (period >> 16) & 0xffff
@@ -666,13 +667,13 @@ class usb1608G(mccUSB):
     wIndex = 0
     pulse_width ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_PULSE_WIDTH, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters.pulseWidth = pulse_width
-    return (pulse_width + 1)*1000/64.E6
+    return (pulse_width + 1)*1000/self.BASE_CLOCK
 
   def TimerPulseWidthW(self, pulse_width):
     # Note: pulse_width is in ms
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PULSE_WIDTH
-    pulseWidth = round(pulse_width*64.E6/1000. - 1)
+    pulseWidth = round(pulse_width*self.BASE_CLOCK/1000. - 1)
     self.timerParameters.pulseWidth = pulseWidth
     wValue = pulseWidth & 0xffff
     wIndex = (pulseWidth >> 16) & 0xffff
@@ -719,13 +720,13 @@ class usb1608G(mccUSB):
     wIndex = 0
     delay ,= unpack('I', self.udev.controlRead(request_type, self.TIMER_START_DELAY, wValue, wIndex, 4, self.HS_DELAY))
     self.timerParameters.delay = delay
-    return delay*1000/64.E6
+    return delay*1000/self.BASE_CLOCK
 
   def TimerStartDelayW(self, delay):
     # delay is in ms
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_START_DELAY
-    delay = round(delay*64.E6/1000)
+    delay = round(delay*self.BASE_CLOCK/1000)
     self.timerParameters.delay = delay
     wValue = delay & 0xffff
     wIndex = (delay >> 16) & 0xffff
@@ -1190,7 +1191,7 @@ class usb_1608GX_2AO(usb1608G):
     if frequency == 0:
       pacer_period = 0    # use AOCKI pin 47
     else:
-      pacer_period = round((64.E6 / frequency) - 1)
+      pacer_period = round((self.BASE_CLOCK / frequency) - 1)
 
     self.frequency_AOut = frequency
     self.options_AOut = options
@@ -1227,9 +1228,8 @@ class usb_1608GX_2AO(usb1608G):
       return
     
     # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
-    if self.continuous_mode_AOUT == False  and len(data) % self.wMaxPacketSize == 0:
+    if self.continuous_mode_AOUT == False and len(data) % self.wMaxPacketSize == 0:
       dummy = self.udev.bulkWrite(2, 0x1, timeout)
-
     
   def AOutScanStop(self):
     """

@@ -880,7 +880,7 @@ class usb1808(mccUSB):
       print('AOutScanWrite: error in bulkWrite 2')
 
     # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
-    if self.continuous_mode_AOUT == False  and len(data) % self.wMaxPacketSize == 0:
+    if self.continuous_mode_AOUT == False and len(data) % self.wMaxPacketSize == 0:
       dummy = self.udev.bulkWrite(2, 0x1, timeout)
     
   def AOutScanStop(self):
