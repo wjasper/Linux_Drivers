@@ -541,7 +541,7 @@ class usb1808(mccUSB):
     elif self.bytesToRead <= self.wMaxPacketSize:
       packet_size = self.bytesToRead // 4  # causes timeout error for small sample size
     else:
-      packet_size = self.wMaxPacketSize // 4
+      packet_size = self.wMaxPacketSize // 2
     self.packet_size = packet_size
 
     if self.mode & self.CONTINUOUS_READOUT:
@@ -657,19 +657,25 @@ class usb1808(mccUSB):
       self.scanQueueAIn[i] = value[i]
     return value
 
-  def AInScanConfigW(self, entry, value, lastElement=-1):
+  def AInScanConfigW(self, entry, value, lastElement=False):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_CONFIG
     wValue = 0
-    wIndex = 0
 
     if entry < 0 or entry > 12:
       raise ValueError('AInScanConfigW: Exceed depth of queue')
       return
 
-    if lastElement >= 0:
-      self.lastElementAIn = lastElement
-      wIndex = lastElement
+    if value < 0 or value > 12:
+      raise ValueError('AInScanConfigW: Unknown entry for ScanQueue')
+      return
+
+    if lastElement == True:
+      self.lastElementAIn = entry
+      wIndex = entry               # This element is the last entry in the queue
+    else:
+      self.lastElementAIn = 0
+      wIndex = 0
 
     if self.Status() & self.AIN_SCAN_RUNNING:
       self.AInScanStop()

@@ -622,8 +622,11 @@ class usb_2020(mccUSB):
     self.scanList[entry] = channel | (gain << 0x1)
 
     if lastElement == True:
-      self.lastElement = entry
-      self.scanList[entry] |= self.LAST_CHANNEL
+      if entry >= self.NCHAN:
+        raise ValueError('AInConfigW: lastelement exceeds scan queue depth.')
+      else:
+        self.lastElement = entry
+        self.scanList[entry] |= self.LAST_CHANNEL
 
     if calibrationMode == True:
       self.scanList[entry] |= self.CALIBRATION_MODE

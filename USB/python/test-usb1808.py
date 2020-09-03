@@ -144,8 +144,8 @@ def main():
     elif ch == 'I':
       print('Testing USB-1808 Multi-Channel Analog Input Scan')
       usb1808.AInScanStop()
-      usb1808.AInBulkFlush(5)
       usb1808.AInScanClearFIFO()
+      usb1808.AInBulkFlush(5)
       mode = int(input('Enter 0 for Differential and 1 for Single Ended: '))
       if mode == 0:
         mode = usb1808.DIFFERENTIAL
@@ -171,7 +171,8 @@ def main():
         else:
           gain = usb1808.BP_10V
         usb1808.ADCSetup(channel, gain, mode)
-        usb1808.AInScanConfigW(channel, channel, channel)
+        usb1808.AInScanConfigW(channel, channel)
+      usb1808.AInScanConfigW(nchan-1, nchan-1, True)  # Set last entry
 
       for m in range(repeats):
         print("\n---------------------------------------")
@@ -201,16 +202,20 @@ def main():
       print('Hit any key to exit')
       frequency = float(input('Enter desired sampling frequency (great than 1000 Hz): '))
       usb1808.AInScanStop()
+      usb1808.AInScanClearFIFO()
+      usb1808.AInBulkFlush(5)
       nScans = 0                    # for continuous mode
       nchan = 8                     # 8 channels
       gain = usb1808.BP_10V         # +/- 10V
       mode = usb1808.SINGLE_ENDED   # single ended
       for channel in range(nchan):
         usb1808.ADCSetup(channel, gain, mode)
-        usb1808.AInScanConfigW(channel, channel, channel)
+        usb1808.AInScanConfigW(channel, channel)
+      usb1808.AInScanConfigW(channel, channel, True) # Set last entry
       nread = 128
       i = 0
-      usb1808.AInScanStart(nScans, 0, frequency, 0, usb1808.CONTINUOUS_READOUT | usb1808.VOLTAGE)
+#      usb1808.AInScanStart(nScans, 0, frequency, 0, usb1808.CONTINUOUS_READOUT | usb1808.VOLTAGE)
+      usb1808.AInScanStart(nScans, 0, frequency, 0, usb1808.CONTINUOUS_READOUT)
       flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
       while True:
