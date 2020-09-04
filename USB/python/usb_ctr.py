@@ -152,7 +152,22 @@ class usb_ctr(mccUSB):
       print("USB-CTR FPGA configured.")
       return
 
-  
+  def printStatus(self):
+    print('**** USB-CTR04/08 Status ****')
+    status = self.Status()
+    print('Status = ', hex(status))
+    if status & self.PACER_RUNNING:
+      print("USB-CTR: Pacer running.")
+    if status & self.SCAN_OVERRUN:
+      print("USB-CTR: Scan overrun.")
+    if status & self.SCAN_DONE:
+      print("USB-CTR: Scan done.")
+    if status & self.FPGA_CONFIGURED:
+      print("USB-CTR: FPGA configured.")
+    if status & self.FPGA_CONFIG_MODE:
+      print("USB-CTR: FPGA config mode.")
+
+      
   ##############################################
   #           Digital I/O  Commands            #
   ##############################################

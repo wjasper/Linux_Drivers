@@ -82,19 +82,10 @@ def main():
           break
     elif ch == 's':
       print('Serial Number: ', ctr.GetSerialNumber())
+      print("Manufacturer: %s" % ctr.getManufacturer())
+      print("Product: %s" % ctr.getProduct())
     elif ch == 'S':
-      status = ctr.Status()
-      print('Status = ', hex(status))
-      if status & ctr.PACER_RUNNING:
-        print("USB-CTR: Pacer running.")
-      if status & ctr.SCAN_OVERRUN:
-        print("USB-CTR: Scan overrun.")
-      if status & ctr.SCAN_DONE:
-        print("USB-CTR: Scan done.")
-      if status & ctr.FPGA_CONFIGURED:
-        print("USB-CTR: FPGA configured.")
-      if status & ctr.FPGA_CONFIG_MODE:
-        print("USB-CTR: FPGA config mode.")
+      ctr.printStatus()      
     elif ch == 'e':
       ctr.udev.close()
       exit(0)
@@ -145,7 +136,7 @@ def main():
       period = 1000/timer_frequency # period in ms
       timer = 1
       ctr.TimerPeriodW(timer, period)
-      ctr.TimerPulseWidthW(timer, int(period/2))
+      ctr.TimerPulseWidthW(timer, period/2)
       ctr.TimerCountW(timer, 0)
       ctr.TimerStartDelayW(timer,0)
       ctr.TimerControlW(timer, 0x1)
@@ -191,7 +182,7 @@ def main():
       period = 1000/timer_frequency
       timer = 1
       ctr.TimerPeriodW(timer, period)
-      ctr.TimerPulseWidthW(timer, int(period/2))
+      ctr.TimerPulseWidthW(timer, period/2)
       ctr.TimerCountW(timer, 0)
       ctr.TimerStartDelayW(timer,0)
       ctr.TimerControlW(timer, 0x1)
@@ -250,7 +241,7 @@ def main():
       period = 1000/timer_frequency
       timer = 1
       ctr.TimerPeriodW(timer, period)
-      ctr.TimerPulseWidthW(timer, int(period/2))
+      ctr.TimerPulseWidthW(timer, period/2)
       ctr.TimerCountW(timer, 0)
       ctr.TimerStartDelayW(timer,0)
       ctr.TimerControlW(timer, 0x1)
@@ -292,7 +283,7 @@ def main():
       period = 1000/timer_frequency  # period in ms
       timer = 1
       ctr.TimerPeriodW(timer, period)
-      ctr.TimerPulseWidthW(timer, int(period/2))
+      ctr.TimerPulseWidthW(timer, period/2)
       ctr.TimerCountW(timer, 0)
       ctr.TimerStartDelayW(timer,0)
       ctr.TimerControlW(timer, 0x1)
@@ -307,12 +298,15 @@ def main():
 
       time.sleep(2.0)                     
       count = ctr.Counter(counter)
-      period = count*20.83E-9/1000.
-      frequency = 1/period
-      print("count =", count, "   period =", period, "   frequency = {0:.1f} Hz".format(frequency), \
+      if count == 0:
+        print('Error: count = 0')
+        break
+      else:
+        period = count*20.83E-9/1000.
+        frequency = 1/period
+        print("count =", count, "   period =", period, "   frequency = {0:.1f} Hz".format(frequency), \
             "   timer frequency =", timer_frequency, "Hz")
-        
-      ctr.TimerControlW(timer, 0x0)
+        ctr.TimerControlW(timer, 0x0)
     elif ch == 'P':
       for counter in range(ctr.NCOUNTER):
         ctr.CounterParamsR(counter)
@@ -331,12 +325,18 @@ def main():
       timer     = int(input('Enter timer [0-3]: '))
       period = 1000/frequency       # period in ms
       ctr.TimerPeriodW(timer, period)
-      ctr.TimerPulseWidthW(timer, int(period/2))
-      ctr.TimerCountW(timer, 0)
-      ctr.TimerStartDelayW(timer,0)
+      ctr.TimerPulseWidthW(timer, period/2)
+      ctr.TimerCountW(timer, 1000)
+      ctr.TimerStartDelayW(timer, period/10)
       ctr.TimerControlW(timer, 0x1)
       toContinue()
       ctr.TimerControlW(timer, 0x0)
+      print("Timer:", ctr.timerParameters[timer].timer, \
+            "  Control Reg:",hex(ctr.TimerControlR(timer)), \
+            "\tPeriod:", ctr.TimerPeriodR(timer),"ms" \
+            "\tPulse Width:", ctr.TimerPulseWidthR(timer),"ms"\
+            "    \tCount Reg:",ctr.TimerCountR(timer), \
+            "    \tDelay:", ctr.TimerStartDelayR(timer),"ms")
     elif ch == 'T':
       for timer in range(ctr.NTIMER):
         print("Timer:", ctr.timerParameters[timer].timer, \
