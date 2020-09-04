@@ -646,7 +646,7 @@ class usb2600(mccUSB):
 
     entry:    channel entry in the queue (0 - 63)
     gain:     range  ( 0:+/- 10V,  1: +/- 5V, 2: +/- 1V, 3: +/- 1V)
-    lastElement: Set to True is last element in the queue
+    lastElement: Set to True if last element in the queue
     """
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.AIN_SCAN_CONFIG

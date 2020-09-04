@@ -509,7 +509,7 @@ class usb1608G(mccUSB):
     entry:    channel entry in the queue (0 - 15)
     channel:  channel number (Differential: 0-7, Single Ended: 0-15)
     gain:     range  ( 0:+/- 10V,  1: +/- 5V, 2: +/- 2V, 3: +/- 1V)
-    lastElement: Set to True is last element in the queue
+    lastElement: Set to True if last element in the queue
     """
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -517,7 +517,7 @@ class usb1608G(mccUSB):
     wValue = 0
     wIndex = 0
 
-    if entry < 0 or entry > 15:
+    if entry < 0 or entry >= self.NCHAN:
       raise ValueError('AInConfigW: Exceed depth of queue')
       return
 
@@ -527,7 +527,7 @@ class usb1608G(mccUSB):
       else:
         self.scanList[entry] = (gain & 0x3) << 3 | (channel & 0x7)
     else:         # single ended mode
-      if channel > 15:
+      if channel >= self.NCHAN:
         raise ValueError('AInConfigW: Exceed number of channels in single ended mode')
       elif channel > 7:
         self.scanList[entry] = (0x1 << 6) | (gain & 0x3) << 3 | (channel & 0x7)

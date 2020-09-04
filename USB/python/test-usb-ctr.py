@@ -118,9 +118,7 @@ def main():
       # Set up the scan list (use 4 counters 0-3)
       for counter in  range(4):  # use the first 4 counters
         for bank in range(4):    # each counter has 4 banks of 16-bit registers to be scanned
-          ctr.scanList[4*counter + bank] = (counter & 0x7) | (bank & 0x3) << 3 | (0x2 << 5)
-      ctr.lastElement = 15        # depth of scan list [0-32]
-      ctr.ScanConfigW()
+          ctr.ScanConfigW(4*counter+bank, counter, bank, zero_fill=True, lastElement=True)
       ctr.ScanConfigR()
       
       # set up the counters
@@ -158,19 +156,16 @@ def main():
       print("Connect Timer 1 to Counter 1")
       count = 100                # total number of scans to perform
       frequency = 1000           # scan rate at 1000 Hz
-      numCounters = 3
-      numBanks = 4
+      numCounters = 4            # 4 counters 
 
       # Set up the scan list (use 4 counters 0-3)
       for counter in  range(numCounters):            # use the first 4 counters
-        for bank in range(numBanks):                 # each counter has 4 banks of 16-bit registers to be scanned
-          ctr.scanList[numBanks*counter + bank] = (counter & 0x7) | (bank & 0x3) << 3 | (0x2 << 5)
-      ctr.lastElement = numCounters*numBanks - 1     # depth of scan list [0-32]
-      ctr.ScanConfigW()
+        for bank in range(ctr.NBANK):                 # each counter has 4 banks of 16-bit registers to be scanned
+          ctr.ScanConfigW(ctr.NBANK*counter+bank, counter, bank, zero_fill=True, lastElement=True)
       ctr.ScanConfigR()
       
       # set up the counters
-      for counter in  range(numCounters):  # use the first 4 counters
+      for counter in range(numCounters):  # use the first 4 counters
         ctr.CounterSet(counter, 0x0)        # set counter to 0
         ctr.CounterModeW(counter, 0x0)
         ctr.CounterOptionsW(counter, 0)     # count on rising edge
@@ -193,26 +188,27 @@ def main():
       ctr.BulkFlush(5)
 
       ctr.ScanStart(count, 0, frequency, 0, ctr.CONTINUOUS_READOUT)
-      print("lastElement =", ctr.lastElement, "   packet_size =", ctr.packet_size, "  options =", ctr.scan_options,
-            "mode = ", ctr.scan_mode)
+      print("lastElement =", ctr.lastElement, "   packet_size =", ctr.packet_size, "  options =", ctr.scan_options, "mode = ", ctr.scan_mode)
       counter_data = [0, 0, 0, 0, 0, 0, 0, 0]
       currentCounter = 0
       while (currentCounter < count):
         data = ctr.ScanRead(count)
         numSamplesRead = len(data)
-        numScansRead = numSamplesRead//(numCounters * numBanks)
+        numScansRead = numSamplesRead//(numCounters * ctr.NBANK)
+#       print('number of samples read =', numSamplesRead, 'number of Scans Read =', numScansRead)
         for scan in range(numScansRead):
           for counter in range(numCounters):
-            offset = scan*numCounters*numBanks + counter*numBanks   # there are 4 banks of 16-bit values per counter
+            offset = scan*numCounters*ctr.NBANK + counter*ctr.NBANK   # there are 4 banks of 16-bit values per counter
             counter_data[counter] = 0
-            for bank in range(numBanks):
+            for bank in range(ctr.NBANK):
               counter_data[counter] += (data[offset+bank] & 0xffff) << (16*bank)
           print("Scan:", currentCounter, end="")
           for counter in range(numCounters):
             print("   ",counter_data[counter], " ", end="")
           print("")
           currentCounter += 1
-
+          if currentCounter > count:
+            break
       ctr.TimerControlW(timer, 0x0)
     elif ch == 'C':
       print("Testing Continuous scan input")
@@ -223,9 +219,7 @@ def main():
       # Set up the scan list (use 4 counters 0-3)
       for counter in  range(4):  # use the first 4 counters
         for bank in range(4):    # each counter has 4 banks of 16-bit registers to be scanned
-          ctr.scanList[4*counter + bank] = (counter & 0x7) | (bank & 0x3) << 3 | (0x2 << 5)
-      ctr.lastElement = 15        # depth of scan list [0-32]
-      ctr.ScanConfigW()
+          ctr.ScanConfigW(4*counter+bank, counter, bank, zero_fill=True, lastElement=True)
       ctr.ScanConfigR()
       
       # set up the counters

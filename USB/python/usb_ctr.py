@@ -25,8 +25,12 @@ from mccUSB import *
 
 class usb_ctr(mccUSB):
 
-  NTIMER     = 4      # Number of PWM Timers
+  USB_CTR04_PID  =  0x012E
+  USB_CTR08_PID  =  0x0127
+
+  NTIMER     = 4     # Number of PWM Timers
   BASE_CLOCK = 96.E6 # base clock frequency
+  NBANK      = 4     # number of counter banks
 
   # Status bit values 
   PACER_RUNNING    = 0x1 << 1
@@ -151,22 +155,6 @@ class usb_ctr(mccUSB):
     else:
       print("USB-CTR FPGA configured.")
       return
-
-  def printStatus(self):
-    print('**** USB-CTR04/08 Status ****')
-    status = self.Status()
-    print('Status = ', hex(status))
-    if status & self.PACER_RUNNING:
-      print("USB-CTR: Pacer running.")
-    if status & self.SCAN_OVERRUN:
-      print("USB-CTR: Scan overrun.")
-    if status & self.SCAN_DONE:
-      print("USB-CTR: Scan done.")
-    if status & self.FPGA_CONFIGURED:
-      print("USB-CTR: FPGA configured.")
-    if status & self.FPGA_CONFIG_MODE:
-      print("USB-CTR: FPGA config mode.")
-
       
   ##############################################
   #           Digital I/O  Commands            #
@@ -244,7 +232,7 @@ class usb_ctr(mccUSB):
     wValue = 0x0
     wIndex = counter & 0xff
 
-    if counter > self.NCOUNTER:
+    if counter >= self.NCOUNTER:
       raise ValueError('CounterSet: counter out of range.')
       return
 
@@ -256,7 +244,7 @@ class usb_ctr(mccUSB):
     wValue = 0
     wIndex = counter & 0xff
 
-    if counter > self.NCOUNTER:
+    if counter >= self.NCOUNTER:
       raise ValueError('Counter: counter out of range.')
       return
 
@@ -614,11 +602,33 @@ class usb_ctr(mccUSB):
       self.scanList[i] = value[i]
     return
 
-  def ScanConfigW(self):
+  def ScanConfigW(self, entry, counter, bank, dio=False, zero_fill=False, lastElement=False):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.SCAN_CONFIG
     wValue = 0x0
-    wIndex = self.lastElement
+    wIndex = 0x0
+
+    if entry < 0 or entry >= 33:
+      raise ValueError('ScanConfigW: entry out of range.')
+      return
+    if counter >= self.NCOUNTER:
+      raise ValueError('ScanConfigW: counter out of range.')
+      return
+    if bank >= self.NBANK:
+      raise ValueError('ScanConfigW: bank out of range.')
+      return
+    
+    self.scanList[entry] = (counter & 0x7) | (bank & 0x3) << 3
+    if dio == True:
+      self.scanList[entry] |= (0x1 << 5)
+    if zero_fill == True:
+      self.scanList[entry] |= (0x1 << 6)
+    if lastElement == True:
+      self.lastElement = entry
+      wIndex = entry
+    else:
+      self.lastElement = 0
+
     self.udev.controlWrite(request_type, request, wValue, wIndex, self.scanList, self.HS_DELAY)
     return
 
@@ -1228,9 +1238,25 @@ class usb_ctr(mccUSB):
     version ,= unpack('H',self.udev.controlRead(request_type, self.FPGA_VERSION, wValue, wIndex, 2, self.HS_DELAY))
     return "{0:02x}.{1:02x}".format((version>>8)&0xff, version&0xff)
 
+  def printStatus(self):
+    print('**** USB-CTR04/08 Status ****')
+    status = self.Status()
+    print('Status = ', hex(status))
+    if status & self.PACER_RUNNING:
+      print("USB-CTR: Pacer running.")
+    if status & self.SCAN_OVERRUN:
+      print("USB-CTR: Scan overrun.")
+    if status & self.SCAN_DONE:
+      print("USB-CTR: Scan done.")
+    if status & self.FPGA_CONFIGURED:
+      print("USB-CTR: FPGA configured.")
+    if status & self.FPGA_CONFIG_MODE:
+      print("USB-CTR: FPGA config mode.")
+
+################################################################################################################
+
 class usb_ctr04(usb_ctr):
   NCOUNTER = 4      # Number of Counters
-  USB_CTR04_PID  =  0x012E
   
   def __init__(self, serial=None):
     self.productID = 0x012E  # usb-ctr04
@@ -1247,7 +1273,6 @@ class usb_ctr04(usb_ctr):
 
 class usb_ctr08(usb_ctr):
   NCOUNTER = 8      # Number of Counters
-  USB_CTR08_PID  =  0x0127
 
   def __init__(self, serial=None):
     self.productID = 0x0127   # usb-ctr08
