@@ -600,7 +600,7 @@ class usb_2020(mccUSB):
     entry:    channel entry in the queue (0 - 1)
     channel:  channel number (Differential: 0-7, Single Ended: 0-15)
     gain:     range  ( 0:+/- 10V,  1: +/- 5V, 2: +/- 1V, 3: +/- 1V)
-    lastElement: Set to True is last element in the queue
+    lastElement: Set to True if last element in the queue
     """
 
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
@@ -608,12 +608,12 @@ class usb_2020(mccUSB):
     wValue = 0
     wIndex = 0
 
-    if entry < 0 or entry > 1:
+    if entry < 0 or entry >= self.NCHAN:
       raise ValueError('AInConfigW: Exceed depth of queue')
       return
 
-    if channel < 0 or channel > 1:
-      raise ValueError('AInConfigW: Exceed depth of queue')
+    if channel < 0 or channel >= self.NCHAN:
+      raise ValueError('AInConfigW: Invalid channel number')
       return
 
     if self.Status() & self.AIN_SCAN_RUNNING:

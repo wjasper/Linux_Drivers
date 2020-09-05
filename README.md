@@ -11,7 +11,7 @@ maintained by Warren J. Jasper (wjasper@ncsu.edu).  Please send any
 comments, suggestions, or questions to me.  All the PCI drivers are licensed
 under the Gnu Public License while the USB, Ethernet, and Bluetooth drivers are
 licensed under the Lesser Gnu Public License or LGPL.  Most PCI drivers
-will run under the Linux 2.6, 3.X and 4.X kernels.
+will run under the Linux 2.6, 3.X ,4.X  and 5.X kernels.
 
 For more information on these cards, go to 
 http://www.measurementcomputing.com
@@ -23,7 +23,8 @@ write me (wjasper@ncsu.edu) about it.
 There have been many requests for Python drivers, which I have put off
 for many reasons.  However, I am beginning the process starting with
 the E-1608.py (Ethernet devices) and am now writing them for USB HID
-and high speed USB devices. Please send me comments and feedback.
+and high speed USB devices. I should have most of them done by 2020.
+Please send me comments and feedback.
 
 **Note:** There have been many changes to the 2.6 kernel API.  All the
 drivers have been tested with the 2.6.22 kernel.  There are backward
@@ -37,11 +38,12 @@ version or email me.  The pci drivers should also work on the 3.X and
 4.X kernels.  Most should also work with the 5.X kernels.
 
 I have divided the drivers into categories by bus type.  Thus, all the
-USB drivers are in the USB directory, etc. There are additional README files for each
-bus type, and also for C and Python.  Therefore, please look carefully for the README files
-as they provide additional information and will save us an email exchange. This might seem
-overly long and complicated, but you will save yourself a lot of upfront time if you
-prepare your system with the correct packages before beginning.
+USB drivers are in the USB directory, etc. There are additional README
+files for each bus type, and also for C and Python.  Therefore, please
+look carefully for the README files as they provide additional
+information and will save us an email exchange. This might seem overly
+long and complicated, but you will save yourself a lot of upfront time
+if you prepare your system with the correct packages before beginning.
 
 I have written drivers for the following boards:
 
@@ -73,7 +75,6 @@ I have written drivers for the following boards:
 3. E-TC     (C/Python)
 4. E-TC32   (C/Python)
 
-
 **Bluetooth**
 1. BTH-1208LS (C/Python)
 
@@ -97,7 +98,8 @@ I have written drivers for the following boards:
   USB-2408, USB-2408-2AO, USB-3101, USB-3101, USB-3102, USB-3103, USB-3104, USB-3105,
   USB-3106, USB-3110, USB-3112, USB-3114, USB-2001TC, USB-CTR-04, USB-CTR08, BTH-120LS,
   USB-201, USB-202, USB-204, USB-205, USB-1608G, USB-1608GX, USB-1608GX-2AO,
-  USB-1808, USB-1808X.
+  USB-1808, USB-1808X, USB-2623, USB-2627, USB-2633, USB-2637, USB-DIO32HS, USB-1208HS,
+  USB-1208HS-2AO, USB-1208HS-4AO
 
 **New Python**:heavy_exclamation_mark:  USB-31XX, USB-2001TC USB-CTR04, USB-CTR08, USB-201,
 USB-202, USB-204, USB-205, USB-1608G, USB-1608GX, USB-1608GX-2AO, USB-1808, USB-1808X.
