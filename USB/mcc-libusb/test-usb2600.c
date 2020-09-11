@@ -63,7 +63,7 @@ int main (int argc, char **argv)
   int temp, ret;
   uint8_t options;
   char serial[9];
-  uint32_t period;
+  float period;
   uint16_t version;
 
   uint16_t value;
@@ -338,12 +338,12 @@ int main (int argc, char **argv)
         printf("Enter timer [0-3]: ");
         scanf("%hhd", &timer);
         printf("Enter frequency of timer: ");
-        scanf("%lf", &frequency);
-	period = 64.E6/frequency - 1;
+        scanf("%lf", &frequency);    // frequency in Hz
+	period = 1000./frequency;    // period in ms
 	usbTimerPeriodW_USB2600(udev, timer, period);
-	usbTimerPulseWidthW_USB2600(udev, timer, period / 2);
+	usbTimerPulseWidthW_USB2600(udev, timer, period/2);
 	usbTimerCountW_USB2600(udev, timer, 0);
-	usbTimerDelayW_USB2600(udev, timer, 0);
+	usbTimerDelayW_USB2600(udev, timer, period/10.);
 	usbTimerControlW_USB2600(udev, timer, 0x1);
 	toContinue();
 	usbTimerControlW_USB2600(udev, timer, 0x0);

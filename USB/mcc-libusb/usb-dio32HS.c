@@ -264,7 +264,7 @@ void usbInScanStart_USBDIO32HS(libusb_device_handle *udev, uint8_t channel_map, 
   if (frequency == 0.0) {
     pacer_period = 0;  // use INPUT_PACER_IN pin
   } else {
-    pacer_period = rint((96.E6 / frequency) - 1);
+    pacer_period = rint((BASE_CLOCK / frequency) - 1);
   }
 
   InScan.channel_map = channel_map;
@@ -397,7 +397,7 @@ void usbOutScanStart_USBDIO32HS(libusb_device_handle *udev, uint8_t channel_map,
   if (frequency == 0.0) {
     pacer_period = 0;  // use ICLKO
   } else {
-    pacer_period = rint((96.E6 / frequency) - 1);
+    pacer_period = rint((BASE_CLOCK / frequency) - 1);
   }
   
   OutScan.channel_map = channel_map;

@@ -320,7 +320,7 @@ def main():
       period = 1000/frequency       # period in ms
       ctr.TimerPeriodW(timer, period)
       ctr.TimerPulseWidthW(timer, period/2)
-      ctr.TimerCountW(timer, 1000)
+      ctr.TimerCountW(timer, 0)
       ctr.TimerStartDelayW(timer, period/10)
       ctr.TimerControlW(timer, 0x1)
       toContinue()

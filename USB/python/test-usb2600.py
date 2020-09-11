@@ -210,7 +210,7 @@ def main():
       period = 1000./frequency     # period in ms 
       usb2600.TimerPeriodW(timer, period)
       usb2600.TimerPulseWidthW(timer, period/2)
-      usb2600.TimerCountW(timer, 1000)
+      usb2600.TimerCountW(timer, 0)
       usb2600.TimerStartDelayW(timer, period/10)
       usb2600.TimerControlW(timer, 0x1)
       toContinue()

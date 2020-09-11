@@ -28,8 +28,11 @@ extern "C" {
 #define USB_CTR08_PID      (0x0127)
 #define USB_CTR04_PID      (0x012E)
 
-#define USB_CTR_NTIMER    4        // Number of PWM Timers
-#define USB_CTR_NCOUNTER  8        // Number of Counters
+#define USB_CTR_NTIMER    4     // Number of PWM Timers
+#define USB_CTR_NCOUNTER  8     // Number of Counters
+#define BASE_CLOCK        96.E6 // Base clock frequency
+#define MAX_PACKET_SIZE_HS  512 // max packet size for HS device
+#define MAX_PACKET_SIZE_FS   64 // max packet size for FS device
 
 // Status bit values 
 #define USB_CTR_PACER_RUNNING      (0x1 << 1)
@@ -132,14 +135,14 @@ void usbTriggerConfig_USB_CTR(libusb_device_handle *udev, uint8_t options);
 void usbTriggerConfigR_USB_CTR(libusb_device_handle *udev, uint8_t *options);
 void usbTimerControlR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint8_t *control);
 void usbTimerControlW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint8_t control);
-void usbTimerPeriodR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t *period);
-void usbTimerPeriodW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t period);
-void usbTimerPulseWidthR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t *pulseWidth);
-void usbTimerPulseWidthW_USB_CTR(libusb_device_handle *udev, uint8_t timer,uint32_t pulseWidth);
+void usbTimerPeriodR_USB_CTR(libusb_device_handle *udev, uint8_t timer, float *period);
+void usbTimerPeriodW_USB_CTR(libusb_device_handle *udev, uint8_t timer, float period);
+void usbTimerPulseWidthR_USB_CTR(libusb_device_handle *udev, uint8_t timer, float *pulseWidth);
+void usbTimerPulseWidthW_USB_CTR(libusb_device_handle *udev, uint8_t timer, float pulseWidth);
 void usbTimerCountR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t *count);
 void usbTimerCountW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t count);
-void usbTimerDelayR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t *delay);
-void usbTimerDelayW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t delay);
+void usbTimerDelayR_USB_CTR(libusb_device_handle *udev, uint8_t timer, float *delay);
+void usbTimerDelayW_USB_CTR(libusb_device_handle *udev, uint8_t timer, float delay);
 void usbTimerParamsR_USB_CTR(libusb_device_handle *udev, uint8_t timer, TimerParams *params);
 void usbTimerParamsW_USB_CTR(libusb_device_handle *udev, uint8_t timer, TimerParams params);
 void usbCounterSet_USB_CTR(libusb_device_handle *udev, uint8_t counter, uint64_t count);

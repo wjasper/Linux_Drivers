@@ -655,7 +655,7 @@ void usbScanStart_USB_CTR(libusb_device_handle *udev, ScanData *scanData)
   if (scanData->frequency == 0) {
     pacer_period = 0;
   } else {
-    pacer_period = rint((96.E6/scanData->frequency) - 1);
+    pacer_period = rint((BASE_CLOCK/scanData->frequency) - 1);
   }
   
   if (scanData->count == 0) {
@@ -826,7 +826,7 @@ void usbTimerControlW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint8_t
   libusb_control_transfer(udev, requesttype, TIMER_CONTROL, control, timer, NULL, 0x0, HS_DELAY);
 }
 
-void usbTimerPeriodR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t *period)
+void usbTimerPeriodR_USB_CTR(libusb_device_handle *udev, uint8_t timer, float *period)
 {
   /*
     The timer is based on a 96 MHz input clock and has a 32-bit period register. The
@@ -837,28 +837,42 @@ void usbTimerPeriodR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t
     Note that the value for pulseWidth should always be smaller than the value for
     the period register or you may get unexpected results.  This results in a minimum
     allowable value for the period of 1, which sets the maximum frequency to 96 MHz/2.
+
+    timer:   the timer selected (0-3)
+    period:  timer period in ms
   */
+
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+  uint32_t value;
 
   if (timer > USB_CTR_NTIMER) {
     printf("usbTimerPeriodR_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
-  libusb_control_transfer(udev, requesttype, TIMER_PERIOD, 0x0, timer, (unsigned char *) period, sizeof(period), HS_DELAY);
+  if (libusb_control_transfer(udev, requesttype, TIMER_PERIOD, 0x0, timer, (unsigned char *) &value, sizeof(value), HS_DELAY) < 0) {
+    perror("usbTimerPeriodR_USB_CTR error");
+  }
+  *period = (value + 1)*1000./BASE_CLOCK;
+  return;
 }
 
-void usbTimerPeriodW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t period)
+void usbTimerPeriodW_USB_CTR(libusb_device_handle *udev, uint8_t timer, float period)
 {
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+  uint32_t value;
 
   if (timer > USB_CTR_NTIMER) {
     printf("usbTimerControlW_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
-  libusb_control_transfer(udev, requesttype, TIMER_PERIOD, 0x0, timer, (unsigned char *) &period, sizeof(period),  HS_DELAY);
+
+  value = rint(period*BASE_CLOCK/1000. - 1);
+  if (libusb_control_transfer(udev, requesttype, TIMER_PERIOD, 0x0, timer, (unsigned char *) &value, sizeof(value),  HS_DELAY) < 0) {
+    perror("usbTimerPeriodW_USB_CTR error.");
+  }
 }
 
-void usbTimerPulseWidthR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t *pulseWidth)
+void usbTimerPulseWidthR_USB_CTR(libusb_device_handle *udev, uint8_t timer, float *pulseWidth)
 {
   /*
     This command reads/writes the timer pulse width register.
@@ -869,25 +883,38 @@ void usbTimerPulseWidthR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint
 
     Note that the value for pulseWidth should always be smaller than the value for
     the period register or you may get unexpected results.
+
+    timer:      the timer selected (0-3)
+    pulseWidth: the pulse width in ms
+
   */
 
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+  uint32_t pulse_width;
 
   if (timer > USB_CTR_NTIMER) {
     printf("usbTimerPulseWidthR_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
-  libusb_control_transfer(udev, requesttype, TIMER_PULSE_WIDTH, 0x0, timer, (unsigned char *) pulseWidth, sizeof(pulseWidth), HS_DELAY);
+  if(libusb_control_transfer(udev, requesttype, TIMER_PULSE_WIDTH, 0x0, timer, (unsigned char *) &pulse_width, sizeof(pulse_width), HS_DELAY) < 0) {
+    perror("usbTimerPulseWidthR_USB_CTR error.");
+  }
+   *pulseWidth = (pulse_width + 1)*1000./BASE_CLOCK;
 }
 
-void usbTimerPulseWidthW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t pulseWidth)
+void usbTimerPulseWidthW_USB_CTR(libusb_device_handle *udev, uint8_t timer, float pulseWidth)
 {
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
+  uint32_t pulse_width;
+  
   if (timer > USB_CTR_NTIMER) {
     printf("usbTimerPulseWidthW_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
-  libusb_control_transfer(udev, requesttype, TIMER_PULSE_WIDTH, 0x0, timer, (unsigned char *) &pulseWidth, sizeof(pulseWidth), HS_DELAY);
+  pulse_width = rint(pulseWidth*BASE_CLOCK/1000. - 1);
+  if (libusb_control_transfer(udev, requesttype, TIMER_PULSE_WIDTH, 0x0, timer, (unsigned char *) &pulse_width, sizeof(pulse_width), HS_DELAY) < 0) {
+    perror("usbTimerPulseWidthW_USB_CTR: error.");
+  }
 }
 
 void usbTimerCountR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t *count)
@@ -905,7 +932,9 @@ void usbTimerCountR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t 
     printf("usbTimerCountR_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
-  libusb_control_transfer(udev, requesttype, TIMER_COUNT, 0x0, timer, (unsigned char *) count, sizeof(count), HS_DELAY);
+  if (libusb_control_transfer(udev, requesttype, TIMER_COUNT, 0x0, timer, (unsigned char *) count, sizeof(count), HS_DELAY) < 0) {
+    perror("usbTimerCountR_USB2600 error.");
+  }
 }
 
 void usbTimerCountW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t count)
@@ -916,10 +945,12 @@ void usbTimerCountW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t 
     printf("usbTimerCountW_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
-  libusb_control_transfer(udev, requesttype, TIMER_COUNT, 0x0, timer, (unsigned char *) &count, sizeof(count), HS_DELAY);
+  if (libusb_control_transfer(udev, requesttype, TIMER_COUNT, 0x0, timer, (unsigned char *) &count, sizeof(count), HS_DELAY) < 0) {
+    perror("usbTimerCountW_USB_CTR error.");
+  }
 }
 
-void usbTimerDelayR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t *delay)
+void usbTimerDelayR_USB_CTR(libusb_device_handle *udev, uint8_t timer, float *delay)
 {
   /*
     This command reads/writes the timer start delay register.  This
@@ -927,25 +958,36 @@ void usbTimerDelayR_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t 
     output after enabling the output.  The value specifies the number
     of 64 MHZ clock pulses to delay.  This value may not be written
     while the timer output is enabled.
+
+    Note: delay in ms.
   */
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
+  uint32_t value;
 
   if (timer > USB_CTR_NTIMER) {
     printf("usbTimerDelayR_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
-  libusb_control_transfer(udev, requesttype, TIMER_START_DELAY, 0x0, timer, (unsigned char *) delay, sizeof(delay), HS_DELAY);
+
+  if (libusb_control_transfer(udev, requesttype, TIMER_START_DELAY, 0x0, timer, (unsigned char *) &value, sizeof(value), HS_DELAY) < 0) {
+    perror("usbTimerDelayR_USB_CTR: error.");
+  }
+  *delay = value*1000./BASE_CLOCK;
 }
 
-void usbTimerDelayW_USB_CTR(libusb_device_handle *udev, uint8_t timer, uint32_t delay)
+void usbTimerDelayW_USB_CTR(libusb_device_handle *udev, uint8_t timer, float delay)
 {
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
-
+  uint32_t value;
+  
   if (timer > USB_CTR_NTIMER) {
     printf("usbTimerDelayW_USB_CTR: timer >= %d\n", USB_CTR_NTIMER);
     return;
   }
-  libusb_control_transfer(udev, requesttype, TIMER_START_DELAY, 0x0, timer, (unsigned char *) &delay, sizeof(delay), HS_DELAY);
+  value = rint(delay*BASE_CLOCK/1000.);
+  if (libusb_control_transfer(udev, requesttype, TIMER_START_DELAY, 0x0, timer, (unsigned char *) &value, sizeof(value), HS_DELAY) < 0) {
+    perror("usbTimerDelayW_USB_CTR: error.");
+  }
 }
 
 void usbTimerParamsR_USB_CTR(libusb_device_handle *udev, uint8_t timer, TimerParams *params)

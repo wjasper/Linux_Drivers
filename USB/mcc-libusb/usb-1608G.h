@@ -74,6 +74,7 @@ extern "C" {
 #define NCHAN_AO_1608GX       2  // number of analog output channels
 #define MAX_PACKET_SIZE_HS  512  // max packet size for HS device
 #define MAX_PACKET_SIZE_FS   64  // max packet size for FS device
+#define BASE_CLOCK        64.E6  // base clock frequency
 
 typedef struct timerParams_t {
   uint32_t period;
@@ -135,14 +136,14 @@ void usbCounterInit_USB1608G(libusb_device_handle *udev, uint8_t counter);
 uint32_t usbCounter_USB1608G(libusb_device_handle *udev, uint8_t counter);
 void usbTimerControlR_USB1608G(libusb_device_handle *udev, uint8_t *control);
 void usbTimerControlW_USB1608G(libusb_device_handle *udev, uint8_t control);
-void usbTimerPeriodR_USB1608G(libusb_device_handle *udev, uint32_t *period);
-void usbTimerPeriodW_USB1608G(libusb_device_handle *udev, uint32_t period);
-void usbTimerPulseWidthR_USB1608G(libusb_device_handle *udev, uint32_t *pulseWidth);
-void usbTimerPulseWidthW_USB1608G(libusb_device_handle *udev, uint32_t pulseWidth);
+void usbTimerPeriodR_USB1608G(libusb_device_handle *udev, float *period);
+void usbTimerPeriodW_USB1608G(libusb_device_handle *udev, float period);
+void usbTimerPulseWidthR_USB1608G(libusb_device_handle *udev, float *pulseWidth);
+void usbTimerPulseWidthW_USB1608G(libusb_device_handle *udev, float pulseWidth);
 void usbTimerCountR_USB1608G(libusb_device_handle *udev, uint32_t *count);
 void usbTimerCountW_USB1608G(libusb_device_handle *udev, uint32_t count);
-void usbTimerDelayR_USB1608G(libusb_device_handle *udev, uint32_t *delay);
-void usbTimerDelayW_USB1608G(libusb_device_handle *udev, uint32_t delay);
+void usbTimerDelayR_USB1608G(libusb_device_handle *udev, float *delay);
+void usbTimerDelayW_USB1608G(libusb_device_handle *udev, float delay);
 void usbTimerParamsR_USB1608G(libusb_device_handle *udev, timerParams *params);
 void usbTimerParamsW_USB1608G(libusb_device_handle *udev, timerParams *params);
 void usbMemoryR_USB1608G(libusb_device_handle *udev, uint8_t *data, uint16_t length);

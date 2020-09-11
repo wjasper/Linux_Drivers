@@ -24,6 +24,8 @@ extern "C" {
 
 #define USBDIO32HS_PID  (0x0133)
 
+#define BASE_CLOCK 96.E6   // Base clock frequency
+
 #define DIO_PORTA  (0x00)
 #define DIO_PORTB  (0x01)
 #define DIO_PORTS  (0x02)  // Ports A & B

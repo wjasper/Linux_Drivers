@@ -52,7 +52,7 @@ int main (int argc, char **argv)
   int ret;
   int flag;
   int device;
-  uint32_t period;
+  float period;
   uint16_t version;
   uint16_t status;
 
@@ -83,6 +83,7 @@ int main (int argc, char **argv)
   double Frequency;
 
   udev = NULL;
+  scanData.frequency = 0;
 
   ret = libusb_init(NULL);
   if (ret < 0) {
@@ -198,9 +199,9 @@ int main (int argc, char **argv)
 	// set up the timer to generate some pulses
 	timer = 1;
 	timer_frequency = 1000.;
-	period = 96.E6/timer_frequency - 1;	
+	period = 1000./timer_frequency;
 	usbTimerPeriodW_USB_CTR(udev, timer, period);
-	usbTimerPulseWidthW_USB_CTR(udev, timer, period / 2);
+	usbTimerPulseWidthW_USB_CTR(udev, timer, period/2);
 	usbTimerCountW_USB_CTR(udev, timer, 0);
 	usbTimerDelayW_USB_CTR(udev, timer, 0);
 	usbTimerControlW_USB_CTR(udev, timer, 0x1);
@@ -262,7 +263,7 @@ int main (int argc, char **argv)
 	// set up the timer to generate some pulses
 	timer = 1;
 	timer_frequency = 1000.;
-	period = 96.E6/timer_frequency - 1;	
+	period = 1000./timer_frequency;	 // period in ms
 	usbTimerPeriodW_USB_CTR(udev, timer, period);
 	usbTimerPulseWidthW_USB_CTR(udev, timer, period / 2);
 	usbTimerCountW_USB_CTR(udev, timer, 0);
@@ -341,7 +342,7 @@ int main (int argc, char **argv)
 	// set up the timer to generate some pulses
 	timer = 1;
 	timer_frequency = 100000.;
-	period = 96.E6/timer_frequency - 1;	
+	period = 1000./timer_frequency;	  // period in ms
 	usbTimerPeriodW_USB_CTR(udev, timer, period);
 	usbTimerPulseWidthW_USB_CTR(udev, timer, period / 2);
 	usbTimerCountW_USB_CTR(udev, timer, 0);
@@ -384,8 +385,8 @@ int main (int argc, char **argv)
 	printf("Connect Timer 1 to Counter 1\n");
 	// set up the timer to generate some pulses
 	timer = 1;
-	timer_frequency = 1000.;   // 1000 Hz
-	period = 96.E6/timer_frequency - 1;	
+	timer_frequency = 1000.;        // 1000 Hz
+	period = 1000./timer_frequency;	// period in ms
 	usbTimerPeriodW_USB_CTR(udev, timer, period);
 	usbTimerPulseWidthW_USB_CTR(udev, timer, period / 2);
 	usbTimerCountW_USB_CTR(udev, timer, 0);
@@ -441,7 +442,7 @@ int main (int argc, char **argv)
 	  usbCounterOptionsW_USB_CTR(udev, 0, 0x0);  // count on rising edge
 	  usbCounterGateConfigW_USB_CTR(udev, 0, 0); // disable gate
 	  usbCounterOutConfigW_USB_CTR(udev, 0, 0);  // Output off
-	  period = 96.E6/frequency - 1;
+	  period = 1000./frequency;                  // period in ms
 	  usbTimerPeriodW_USB_CTR(udev, timer, period);
 	  usbTimerPulseWidthW_USB_CTR(udev, timer, period/2);
 	  usbTimerCountW_USB_CTR(udev, timer, 0);
@@ -493,7 +494,7 @@ int main (int argc, char **argv)
         scanf("%lf", &frequency);
 	printf("Enter timer [0-3]: ");
 	scanf("%hhd", &timer);
-	period = 96.E6/frequency - 1;
+	period = 1000./frequency;     // period in ms
 	usbTimerPeriodW_USB_CTR(udev, timer, period);
 	usbTimerPulseWidthW_USB_CTR(udev, timer, period / 2);
 	usbTimerCountW_USB_CTR(udev, timer, 0);

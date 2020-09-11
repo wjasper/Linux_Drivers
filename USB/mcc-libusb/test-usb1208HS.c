@@ -63,7 +63,7 @@ int main (int argc, char **argv)
   int ch;
   int ret, nchan;
   
-  uint32_t period;
+  float period;
   uint16_t version;
   uint32_t count;
   uint16_t sdataOut[128];   // holds 12 bit unsigned analog output data
@@ -338,8 +338,8 @@ int main (int argc, char **argv)
 	break;
       case 't':
         printf("Enter frequency of timer: ");
-        scanf("%lf", &frequency);
-	period = 40.E6/frequency - 1;
+        scanf("%lf", &frequency);    // frequency in Hz
+	period = 1000./frequency;    // period in ms
 	usbTimerPeriodW_USB1208HS(udev, period);
 	usbTimerPulseWidthW_USB1208HS(udev, period / 2);
 	usbTimerCountW_USB1208HS(udev, 0);

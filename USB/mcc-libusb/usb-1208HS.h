@@ -49,7 +49,7 @@ extern "C" {
 #define NCHAN_AO_1208HS       4   // number of analog output channels
 #define MAX_PACKET_SIZE_HS  512   // max packet size for HS device
 #define MAX_PACKET_SIZE_FS   64   // max packet size for FS device
-
+#define BASE_CLOCK        40.E6   // base clock frequency
 
 /* Analog Input Scan and Modes */
 #define SINGLE_ENDED            0     // 8 single-ended inputs
@@ -125,14 +125,14 @@ void usbCounterInit_USB1208HS(libusb_device_handle *udev, uint8_t counter);
 uint32_t usbCounter_USB1208HS(libusb_device_handle *udev, uint8_t counter);
 void usbTimerControlR_USB1208HS(libusb_device_handle *udev, uint8_t *control);
 void usbTimerControlW_USB1208HS(libusb_device_handle *udev, uint8_t control);
-void usbTimerPeriodR_USB1208HS(libusb_device_handle *udev, uint32_t *period);
-void usbTimerPeriodW_USB1208HS(libusb_device_handle *udev, uint32_t period);
-void usbTimerPulseWidthR_USB1208HS(libusb_device_handle *udev, uint32_t *pulseWidth);
-void usbTimerPulseWidthW_USB1208HS(libusb_device_handle *udev, uint32_t pulseWidth);
+void usbTimerPeriodR_USB1208HS(libusb_device_handle *udev, float *period);
+void usbTimerPeriodW_USB1208HS(libusb_device_handle *udev, float period);
+void usbTimerPulseWidthR_USB1208HS(libusb_device_handle *udev, float *pulseWidth);
+void usbTimerPulseWidthW_USB1208HS(libusb_device_handle *udev, float pulseWidth);
 void usbTimerCountR_USB1208HS(libusb_device_handle *udev, uint32_t *count);
 void usbTimerCountW_USB1208HS(libusb_device_handle *udev, uint32_t count);
-void usbTimerDelayR_USB1208HS(libusb_device_handle *udev, uint32_t *delay);
-void usbTimerDelayW_USB1208HS(libusb_device_handle *udev, uint32_t delay);
+void usbTimerDelayR_USB1208HS(libusb_device_handle *udev, float *delay);
+void usbTimerDelayW_USB1208HS(libusb_device_handle *udev, float delay);
 void usbTimerParamsR_USB1208HS(libusb_device_handle *udev, timerParams *params);
 void usbTimerParamsW_USB1208HS(libusb_device_handle *udev, timerParams *params);
 uint16_t usbAIn_USB1208HS(libusb_device_handle *udev, uint8_t channel);

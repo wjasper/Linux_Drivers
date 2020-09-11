@@ -73,9 +73,11 @@ extern "C" {
 
 #define NCHAN_2600           64 // max number of A/D channels in the device
 #define NGAINS_2600           4 // max number of gain levels
-#define NCHAN_AO_26X7         4 // number of analog output channels 
+#define NCHAN_AO_26X7         4 // number of analog output channels
+#define NTIMER_2600           4 // number of timers (0-3)
 #define MAX_PACKET_SIZE_HS  512 // max packet size for HS device
 #define MAX_PACKET_SIZE_FS   64 // max packet size for FS device
+#define BASE_CLOCK        64.E6 // Base clock frequency
 
 typedef struct timerParams_t {
   uint32_t period;
@@ -110,14 +112,14 @@ void usbCounterInit_USB2600(libusb_device_handle *udev, uint8_t counter);
 uint32_t usbCounter_USB2600(libusb_device_handle *udev, uint8_t counter);
 void usbTimerControlR_USB2600(libusb_device_handle *udev, uint8_t timer, uint8_t *control);
 void usbTimerControlW_USB2600(libusb_device_handle *udev, uint8_t timer, uint8_t control);
-void usbTimerPeriodR_USB2600(libusb_device_handle *udev, uint8_t timer, uint32_t *period);
-void usbTimerPeriodW_USB2600(libusb_device_handle *udev, uint8_t timer, uint32_t period);
-void usbTimerPulseWidthR_USB2600(libusb_device_handle *udev, uint8_t timer, uint32_t *pulseWidth);
-void usbTimerPulseWidthW_USB2600(libusb_device_handle *udev, uint8_t timer, uint32_t pulseWidth);
+void usbTimerPeriodR_USB2600(libusb_device_handle *udev, uint8_t timer, float *period);
+void usbTimerPeriodW_USB2600(libusb_device_handle *udev, uint8_t timer, float period);
+void usbTimerPulseWidthR_USB2600(libusb_device_handle *udev, uint8_t timer, float *pulseWidth);
+void usbTimerPulseWidthW_USB2600(libusb_device_handle *udev, uint8_t timer, float pulseWidth);
 void usbTimerCountR_USB2600(libusb_device_handle *udev, uint8_t timer, uint32_t *count);
 void usbTimerCountW_USB2600(libusb_device_handle *udev, uint8_t timer, uint32_t count);
-void usbTimerDelayR_USB2600(libusb_device_handle *udev, uint8_t timer, uint32_t *delay);
-void usbTimerDelayW_USB2600(libusb_device_handle *udev, uint8_t timer, uint32_t delay);
+void usbTimerDelayR_USB2600(libusb_device_handle *udev, uint8_t timer, float *delay);
+void usbTimerDelayW_USB2600(libusb_device_handle *udev, uint8_t timer, float delay);
 void usbTimerParamsR_USB2600(libusb_device_handle *udev, uint8_t timer, timerParams *params);
 void usbTimerParamsW_USB2600(libusb_device_handle *udev, uint8_t timer, timerParams *params);
 void usbMemoryR_USB2600(libusb_device_handle *udev, uint8_t *data, uint16_t length);

@@ -61,7 +61,7 @@ int main (int argc, char **argv)
   int temp, ret;
   uint8_t options;
   char serial[9];
-  uint32_t period;
+  float period;
   uint16_t version;
   uint16_t status;
   int usb1608GX_2AO = FALSE;
@@ -422,7 +422,7 @@ int main (int argc, char **argv)
       case 't':
         printf("Enter frequency of timer: ");
         scanf("%lf", &frequency);
-	period = 64.E6/frequency - 1;
+	period = 1000./frequency;
 	usbTimerPeriodW_USB1608G(udev, period);
 	usbTimerPulseWidthW_USB1608G(udev, period / 2);
 	usbTimerCountW_USB1608G(udev, 0);

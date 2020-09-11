@@ -812,8 +812,8 @@ class usb2600(mccUSB):
     Note that the value for pulseWidth should always be smaller than the value for
     the period register or you may get unexpected results.
 
-    timer:     the timer selected (0-3)
-    Note: pule_width is in ms
+    timer: the timer selected (0-3)
+    Note:  pule_width is in ms
     """
     if timer < 0 or timer >= self.NTIMER:
       raise ValueError('TimerPulseWidthR: Invalid timer number.')
@@ -902,7 +902,7 @@ class usb2600(mccUSB):
       return
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_START_DELAY
-    delay = round(delay*self.BASE_CLOCK/1000)
+    delay = round(delay*self.BASE_CLOCK/1000.)
     self.timerParameters[timer].delay = delay
     wValue = 0
     wIndex = timer

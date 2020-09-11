@@ -51,8 +51,9 @@ class usb_dio32HS(mccUSB):
   SINGLEIO             = 0x2  # Return data after every read (used for low frequency scans)
   FORCE_PACKET_SIZE    = 0x4  # Force packet_size
 
-  MAX_PACKET_SIZE_HS = 512  # max packet size for HS device
-  MAX_PACKET_SIZE_FS = 64   # max packet size for HS device
+  BASE_CLOCK         = 96.E6  # Base clock frequency
+  MAX_PACKET_SIZE_HS = 512    # max packet size for HS device
+  MAX_PACKET_SIZE_FS = 64     # max packet size for HS device
 
   # Commands and Codes for USB-DIO32HS
   # Digital I/O Commands
@@ -344,7 +345,7 @@ class usb_dio32HS(mccUSB):
     if frequency == 0.0:
       pacer_period = 0     # use external clock
     else:
-      pacer_period = round((96.E6 / frequency) - 1)
+      pacer_period = round((self.BASE_CLOCK / frequency) - 1)
 
     channel_map &= 0x3
     if channel_map == 0x0:
@@ -522,7 +523,7 @@ class usb_dio32HS(mccUSB):
     if frequency == 0:
       pacer_period = 0  # use ICLKO
     else:
-      pacer_period = round((96.E6 / frequency) - 1)
+      pacer_period = round((self.BASE_CLOCK / frequency) - 1)
 
     channel_map &= 0x3
     if channel_map == 0x0:
