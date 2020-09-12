@@ -105,6 +105,7 @@ extern "C" {
 #define NCHAN_AO_1808        2  // number of analog output channels
 #define MAX_PACKET_SIZE_HS  512 // max packet size for HS device
 #define MAX_PACKET_SIZE_FS   64 // max packet size for FS device
+#define BASE_CLOCK       100.E6 // base clock frequency
 
 typedef struct Calibration_AIN_t {
   float slope;
@@ -194,8 +195,8 @@ int usbCounterParametersW_USB1808(libusb_device_handle *udev, uint8_t counter, u
 int usbCounterParametersR_USB1808(libusb_device_handle *udev, uint8_t counter, uint8_t *mode, uint8_t *options);
 int usbTimerControlW_USB1808(libusb_device_handle *udev, uint8_t timer, uint8_t control);
 int usbTimerControlR_USB1808(libusb_device_handle *udev, uint8_t timer, uint8_t *control);
-int usbTimerParametersW_USB1808(libusb_device_handle *udev, uint8_t timer, double frequency, double dutyCycle, uint32_t count, uint32_t delay);
-int usbTimerParametersR_USB1808(libusb_device_handle *udev, uint8_t timer, uint32_t *period, uint32_t *pulseWidth, uint32_t *count, uint32_t *delay);
+int usbTimerParametersW_USB1808(libusb_device_handle *udev, uint8_t timer, double frequency, double dutyCycle, uint32_t count, double delay);
+int usbTimerParametersR_USB1808(libusb_device_handle *udev, uint8_t timer, double *frequency, double *dutyCycle, uint32_t *count, double *delay);
 uint16_t voltsTou16_USB1808(double volts, int channel, float table_AO[NCHAN_AO_1808][2]);
 double volts_USB1808(const uint8_t gain, uint32_t value);
 

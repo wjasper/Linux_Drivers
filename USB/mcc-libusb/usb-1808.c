@@ -446,7 +446,7 @@ int usbAInScanStart_USB1808(libusb_device_handle *udev, uint32_t count, uint32_t
   if (frequency == 0.0) {
     AInScan.pacer_period = 0; // use external pacer
   } else {
-    AInScan.pacer_period = rint((100.E6 / frequency) - 1);
+    AInScan.pacer_period = rint((BASE_CLOCK / frequency) - 1);
   }
   AInScan.options = options;
 
@@ -747,7 +747,7 @@ int usbAOutScanStart_USB1808(libusb_device_handle *udev, uint32_t count, uint32_
     fprintf(stderr, "frequency = %f out of range.\n", frequency);
     return -1;
   }
-  AOutScan.pacer_period = (100.E6 / frequency) - 1;
+  AOutScan.pacer_period = (BASE_CLOCK / frequency) - 1;
   AOutScan.count = count;
   AOutScan.retrig_count = retrig_count;
   AOutScan.options = options;
@@ -1044,7 +1044,7 @@ int usbTimerControlR_USB1808(libusb_device_handle *udev, uint8_t timer, uint8_t 
   return ret;
 }
 
-int usbTimerParametersW_USB1808(libusb_device_handle *udev, uint8_t timer, double frequency, double dutyCycle, uint32_t count, uint32_t delay)
+int usbTimerParametersW_USB1808(libusb_device_handle *udev, uint8_t timer, double frequency, double dutyCycle, uint32_t count, double delay)
 {
   /* 
     This command reads or writes all of a given timer's parameters in one call.
@@ -1089,16 +1089,21 @@ int usbTimerParametersW_USB1808(libusb_device_handle *udev, uint8_t timer, doubl
     return -1;
   }
 
-  value[0] = 100.E6/frequency - 1;     // period
+  if (dutyCycle <= 0 || dutyCycle >= 1.) {
+    perror("usbTimerParametersW_USB1808: duty cycle must be between 0 and 1.");
+    return -1;
+  }
+      
+  value[0] = BASE_CLOCK/frequency - 1; // period
   value[1] = value[0] * dutyCycle;     // pulseWidth
   value[2] = count;
-  value[3] = delay;
+  value[3] = rint(delay*BASE_CLOCK/1000);
 
   ret = libusb_control_transfer(udev, requesttype, TIMER_PARAMETERS, 0x0, timer, (unsigned char *) value, sizeof(value),  HS_DELAY);
   return ret;
 }
 
-int usbTimerParametersR_USB1808(libusb_device_handle *udev, uint8_t timer, uint32_t *period, uint32_t *pulseWidth, uint32_t *count, uint32_t *delay)
+int usbTimerParametersR_USB1808(libusb_device_handle *udev, uint8_t timer, double *frequency, double *dutyCycle, uint32_t *count, double *delay)
 {
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
   int ret;
@@ -1108,12 +1113,14 @@ int usbTimerParametersR_USB1808(libusb_device_handle *udev, uint8_t timer, uint3
     perror("usbTimerParametersR_USB1808: timer must be 0-1.");
     return -1;
   }
-  ret = libusb_control_transfer(udev, requesttype, TIMER_PARAMETERS, 0x0, timer, (unsigned char *) value, sizeof(value),  HS_DELAY);
+  ret = libusb_control_transfer(udev, requesttype, TIMER_PARAMETERS, 0x0, timer, (unsigned char *) value, sizeof(value), HS_DELAY);
+  printf(" timer = %d, %d %d %d %d\n", timer, value[0], value[1], value[2], value[3]);
 
-  *period = value[0];
-  *pulseWidth = value[1];
+  value[0] = 2*value[1];
+  *frequency = BASE_CLOCK/(value[0] + 1.);
+  *dutyCycle = (double) value[1] / (double) value[0];
   *count = value[2];
-  *delay = value[3];
+  *delay = (double) value[3]*1000./BASE_CLOCK;
   
   return ret;
 }

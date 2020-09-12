@@ -295,7 +295,10 @@ def main():
       duty_cycle = float(input('Enter desired duty cycle [0.0 - 1.0]: '))
       usb1808.TimerControlW(timer, 0x0)  # stop timer
       usb1808.TimerParametersW(timer, frequency, duty_cycle, count, delay)
-      usb1808.TimerControlW(usb1808.TIMER0, usb1808.TIMER_ENABLE) # enable timer
+      usb1808.TimerControlW(timer, usb1808.TIMER_ENABLE) # enable timer
+      print("timer = %d    period = %d     pulseWidth = %d     count = %d     delay = %d \n" %
+            (timer, usb1808.timerParameters[timer].period, usb1808.timerParameters[timer].pulseWidth,
+             usb1808.timerParameters[timer].count, usb1808.timerParameters[timer].delay))
     elif ch == 'T':
       print('Testing counter and timer.')
       print('Connect Timer 0 to Counter 0')

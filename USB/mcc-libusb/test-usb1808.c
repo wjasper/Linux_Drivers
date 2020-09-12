@@ -49,7 +49,7 @@ int main (int argc, char **argv)
   struct tm calDate;
   
   double voltage;
-  double frequency, duty_cycle;
+  double frequency, duty_cycle, delay;
   Calibration_AIN table_AIN[NCHAN_1808][NGAINS_1808];
   Calibration_AOUT table_AO[NCHAN_AO_1808];
   ScanList list[NCHAN_1808];  // scan list used to configure the A/D channels.
@@ -141,7 +141,7 @@ int main (int argc, char **argv)
     printf("Hit 's' to get serial number\n");
     printf("Hit 'S' to get Status\n");
     printf("Hit 't' to test the timers\n");
-    printf("Hit 'v' to get version numbers\n");
+   printf("Hit 'v' to get version numbers\n");
     printf("Hit 'e' to exit\n");
 
     while((ch = getchar()) == '\0' || ch == '\n');
@@ -188,12 +188,12 @@ int main (int argc, char **argv)
 	scanf("%lf", &frequency);
 	duty_cycle = 0.5;
 	usbTimerControlW_USB1808(udev, TIMER0, 0x0);  // stop timer0
-	usbTimerParametersW_USB1808(udev, TIMER0, frequency, duty_cycle, 0, 0);
+	usbTimerParametersW_USB1808(udev, TIMER0, frequency, duty_cycle, 0.0, 0.0);
 	usbTimerControlW_USB1808(udev, TIMER0, TIMER_ENABLE);  // enable timer0
 	usbCounterParametersW_USB1808(udev, COUNTER0, COUNTER_PERIOD | PERIOD_MODE_10X, 0x0);
 	sleep(1);
 	usbCounterR_USB1808(udev, COUNTER0, &period);
-	frequency = 100.E6/(period + 1)*5.0;
+	frequency = BASE_CLOCK/(period + 1)*5.0;
 	usbTimerControlW_USB1808(udev, TIMER0, 0x0);  // stop timer0
 	printf("frequency = %f\n", frequency);
 	break;
@@ -403,7 +403,7 @@ int main (int argc, char **argv)
 	printf("Test timers.\n");
 	printf("Enter timer (0-1): ");
 	scanf("%hhd", &timer);
-	printf("Enter desired frequency: ");
+	printf("Enter desired frequency [Hz]: ");
 	scanf("%lf", &frequency);
 	usbTimerControlW_USB1808(udev, timer, 0x0);  // stop timer
 	if (frequency == 0.0) {
@@ -413,6 +413,9 @@ int main (int argc, char **argv)
 	scanf("%lf", &duty_cycle);
 	usbTimerParametersW_USB1808(udev, timer, frequency, duty_cycle, 0, 0);
 	usbTimerControlW_USB1808(udev, timer, TIMER_ENABLE);  // enable timer
+	usbTimerParametersR_USB1808(udev, timer, &frequency, &duty_cycle, &count, &delay);
+	printf("Timer: %d    frequency: %lf Hz     duty cycle: %lf    count: %d    delay: %lf ms\n",
+	       timer, frequency, duty_cycle, count, delay);
 	break;
       case 'v':
 	version = 0xbeef;

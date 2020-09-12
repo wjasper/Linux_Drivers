@@ -106,6 +106,7 @@ class usb1808(mccUSB):
   NTIMER              =   2  # total number of timers
   MAX_PACKET_SIZE_HS  = 512  # max packet size for HS device
   MAX_PACKET_SIZE_FS  =  64  # max packet size for FS device
+  BASE_CLOCK       = 100.E6  # Base clock frequency
 
   # AIn Scan Modes
   CONTINUOUS_READOUT   = 0x1  # Continuous mode
@@ -524,7 +525,7 @@ class usb1808(mccUSB):
     if frequency == 0.0:
       pacer_period = 0     # use external pacer
     else:
-      pacer_period = round((100.E6 / frequency) - 1)
+      pacer_period = round((self.BASE_CLOCK / frequency) - 1)
 
     if count == 0:
       self.mode |= self.CONTINUOUS_READOUT
@@ -851,7 +852,7 @@ class usb1808(mccUSB):
     if frequency == 0:
       pacer_period = 0  # use external clock pin 22 OCLKI      
     else:
-      pacer_period = round((100.E6 / frequency) - 1)
+      pacer_period = round((self.BASE_CLOCK / frequency) - 1)
 
     self.frequency_AOut = frequency
     self.options_AOut = options
@@ -1152,7 +1153,11 @@ class usb1808(mccUSB):
     request = self.TIMER_CONTROL
     wValue = control
     wIndex = timer
-    self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], self.HS_DELAY)
+    self.timerParameters[timer].control = control
+    try:
+      self.udev.controlWrite(request_type, request, wValue, wIndex, [0x0], self.HS_DELAY)
+    except:
+      raise
 
   def TimerParametersR(self, timer):
     """
@@ -1197,7 +1202,11 @@ class usb1808(mccUSB):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = timer
-    data = unpack('IIII', self.udev.controlRead(request_type, self.TIMER_PARAMETERS, wValue, wIndex, 16, self.HS_DELAY))
+    try:
+      data = unpack('IIII', self.udev.controlRead(request_type, self.TIMER_PARAMETERS, wValue, wIndex, 16, self.HS_DELAY))
+    except:
+      print('TimerParametersR: error in reading data.')
+      
     self.timerParameters[timer].period = data[0]
     self.timerParameters[timer].pulseWidth = data[1]
     self.timerParameters[timer].count = data[2]
@@ -1214,8 +1223,8 @@ class usb1808(mccUSB):
     wValue = 0x0
     wIndex = timer
 
-    period = round(100.E6/frequency - 1)
-    pulseWidth = period * dutyCycle
+    period = round(self.BASE_CLOCK/frequency - 1)
+    pulseWidth = round(period * dutyCycle)
 
     self.timerParameters[timer].period = int(period)
     self.timerParameters[timer].pulseWidth = int(pulseWidth)
