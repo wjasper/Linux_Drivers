@@ -1191,27 +1191,21 @@ class usb1808(mccUSB):
     the timer output after enabling the output.  The value specifies
     the number of 100MHz clock pulses to delay.  This value may not be
     written while the timer output is enabled.
-    """
-    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0
-    wIndex = timer
 
+    Note: The TimerParameterR method currently does not return the
+    correct register values in the firmware.  Return a tuple
+    of (frequency [Hz], duty cycle, count and delay (in ms))
+    """
     if timer > self.NTIMER:
       raise ValueError('TimerParametersR: timer out of range')
       return
-    request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
-    wValue = 0
-    wIndex = timer
-    try:
-      data = unpack('IIII', self.udev.controlRead(request_type, self.TIMER_PARAMETERS, wValue, wIndex, 16, self.HS_DELAY))
-    except:
-      print('TimerParametersR: error in reading data.')
-      
-    self.timerParameters[timer].period = data[0]
-    self.timerParameters[timer].pulseWidth = data[1]
-    self.timerParameters[timer].count = data[2]
-    self.timerParameters[timer].delay = data[3]
-    return 
+
+    frequency = self.BASE_CLOCK / (self.timerParameters[timer].period + 1)
+    duty_cycle = self.timerParameters[timer].pulseWidth / self.timerParameters[timer].period
+    count =  self.timerParameters[timer].count
+    delay =  (self.timerParameters[timer].delay * 1000.) / self.BASE_CLOCK # delay in ms
+
+    return (frequency, duty_cycle, count, delay)
 
   def TimerParametersW(self, timer, frequency, dutyCycle, count, delay):
     if timer > self.NTIMER:
@@ -1274,7 +1268,7 @@ class usb1808(mccUSB):
     Address                            Description
     =============               ============================
     0x0000-0x6FF7               Microcontroller firmware (write protected)
-    0x6FF8-0x6FF8               Serial Number
+    0x6FF8-0x6FFF               Serial Number
     0x7000-0x7FFF               User data (Calibration Coefficients)
 
     The firmware area is protected by a separate command so is not typically

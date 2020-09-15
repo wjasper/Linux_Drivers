@@ -296,9 +296,12 @@ def main():
       usb1808.TimerControlW(timer, 0x0)  # stop timer
       usb1808.TimerParametersW(timer, frequency, duty_cycle, count, delay)
       usb1808.TimerControlW(timer, usb1808.TIMER_ENABLE) # enable timer
-      print("timer = %d    period = %d     pulseWidth = %d     count = %d     delay = %d \n" %
+      [frequency, duty_cycle, count, delay] = usb1808.TimerParametersR(timer)
+      print("timer = %d    period = %d     pulseWidth = %d     count = %d     delay = %d" %
             (timer, usb1808.timerParameters[timer].period, usb1808.timerParameters[timer].pulseWidth,
              usb1808.timerParameters[timer].count, usb1808.timerParameters[timer].delay))
+      print("timer = %d    frequency = %.3f   duty cycle = %.1f%%   delay = %.3f ms" %
+            (timer, frequency, duty_cycle*100, delay))
     elif ch == 'T':
       print('Testing counter and timer.')
       print('Connect Timer 0 to Counter 0')

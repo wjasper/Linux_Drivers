@@ -46,6 +46,7 @@ int toContinue()
 int main (int argc, char **argv)
 {
   libusb_device_handle *udev = NULL;
+  usbDevice1808 device;    // device handle for the usb-1808
   struct tm calDate;
   
   double voltage;
@@ -96,6 +97,17 @@ int main (int argc, char **argv)
   } else {
     printf("Failure, did not find a USB 1808 series device!\n");
     return 0;
+  }
+
+  device.udev = udev;    // keep local copy of the usb device
+
+  // intialize the timers
+  for (i = 0; i < NTIMER_1808; i++) {
+    device.timerParameters[i].timer = i;
+    device.timerParameters[i].period =BASE_CLOCK/1000 - 1;                      // set to 1kHz default
+    device.timerParameters[i].pulseWidth = device.timerParameters[i].period/2;  // 50% duty cycle
+    device.timerParameters[i].count = 0;
+    device.timerParameters[i].delay = 0;
   }
 
   //print out the wMaxPacketSize.  Should be 512
@@ -182,18 +194,18 @@ int main (int argc, char **argv)
         printf("Count = %d.  Should read 100.\n", count);
         break;
       case 'p':
-	printf("Test counter and timer.\n");
+	printf("Test counter and timer by measuring timer frequency.\n");
 	printf("Connect Timer0 to Counter0\n");
 	printf("Enter desired frequency: ");
 	scanf("%lf", &frequency);
 	duty_cycle = 0.5;
 	usbTimerControlW_USB1808(udev, TIMER0, 0x0);  // stop timer0
-	usbTimerParametersW_USB1808(udev, TIMER0, frequency, duty_cycle, 0.0, 0.0);
+	usbTimerParametersW_USB1808(udev, &device.timerParameters[TIMER0], frequency, duty_cycle, 0.0, 0.0);
 	usbTimerControlW_USB1808(udev, TIMER0, TIMER_ENABLE);  // enable timer0
 	usbCounterParametersW_USB1808(udev, COUNTER0, COUNTER_PERIOD | PERIOD_MODE_10X, 0x0);
 	sleep(1);
-	usbCounterR_USB1808(udev, COUNTER0, &period);
-	frequency = BASE_CLOCK/(period + 1)*5.0;
+	usbCounterR_USB1808(udev, COUNTER0, &period); // read the input period from the counter
+	frequency = BASE_CLOCK/(period + 1)*5.0;      // calculate the effective frequency
 	usbTimerControlW_USB1808(udev, TIMER0, 0x0);  // stop timer0
 	printf("frequency = %f\n", frequency);
 	break;
@@ -411,11 +423,11 @@ int main (int argc, char **argv)
 	}
 	printf("Enter desired duty cycle (0-1.0): ");
 	scanf("%lf", &duty_cycle);
-	usbTimerParametersW_USB1808(udev, timer, frequency, duty_cycle, 0, 0);
+	usbTimerParametersW_USB1808(udev, &device.timerParameters[timer], frequency, duty_cycle, 0.0, 0.0);
 	usbTimerControlW_USB1808(udev, timer, TIMER_ENABLE);  // enable timer
-	usbTimerParametersR_USB1808(udev, timer, &frequency, &duty_cycle, &count, &delay);
-	printf("Timer: %d    frequency: %lf Hz     duty cycle: %lf    count: %d    delay: %lf ms\n",
-	       timer, frequency, duty_cycle, count, delay);
+	usbTimerParametersR_USB1808(udev, &device.timerParameters[timer], &frequency, &duty_cycle, &count, &delay);
+	printf("Timer: %d    frequency: %.1lf Hz     duty cycle: %.1lf%%    count: %d    delay: %.3lf ms\n",
+	       timer, frequency, 100.*duty_cycle, count, delay);
 	break;
       case 'v':
 	version = 0xbeef;

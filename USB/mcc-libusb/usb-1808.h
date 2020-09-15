@@ -103,6 +103,7 @@ extern "C" {
 #define NCHAN_1808           8  // max number of A/D channels in the device
 #define NGAINS_1808          4  // max number of gain levels
 #define NCHAN_AO_1808        2  // number of analog output channels
+#define NTIMER_1808          2  // number of timers
 #define MAX_PACKET_SIZE_HS  512 // max packet size for HS device
 #define MAX_PACKET_SIZE_FS   64 // max packet size for FS device
 #define BASE_CLOCK       100.E6 // base clock frequency
@@ -117,12 +118,13 @@ typedef struct Calibration_AOUT_t {
   float offset;
 } Calibration_AOUT;
 
-typedef struct timerParams_t {
+typedef struct TimerParams_t {
+  uint8_t  timer;
   uint32_t period;
   uint32_t pulseWidth;
   uint32_t count;
   uint32_t delay;
-} timerParams;
+} TimerParams;
 
 typedef struct ScanList_t {
   uint8_t range;       // BP10V, BP5V, UP10V, UP5V
@@ -133,6 +135,7 @@ typedef struct usbDevice1808_t {
   libusb_device_handle *udev;                           // libusb 1.0 handle
   Calibration_AIN  table_AIn[NCHAN_1808][NGAINS_1808];  // calibration coefficients ADC
   Calibration_AOUT table_AOut[NCHAN_AO_1808];           // calibration coefficients DAC
+  TimerParams timerParameters[NTIMER_1808];
   ScanList list[NCHAN_1808];
   uint8_t scan_list[NCHAN_1808];                        // scan list
   uint8_t options;
@@ -195,8 +198,8 @@ int usbCounterParametersW_USB1808(libusb_device_handle *udev, uint8_t counter, u
 int usbCounterParametersR_USB1808(libusb_device_handle *udev, uint8_t counter, uint8_t *mode, uint8_t *options);
 int usbTimerControlW_USB1808(libusb_device_handle *udev, uint8_t timer, uint8_t control);
 int usbTimerControlR_USB1808(libusb_device_handle *udev, uint8_t timer, uint8_t *control);
-int usbTimerParametersW_USB1808(libusb_device_handle *udev, uint8_t timer, double frequency, double dutyCycle, uint32_t count, double delay);
-int usbTimerParametersR_USB1808(libusb_device_handle *udev, uint8_t timer, double *frequency, double *dutyCycle, uint32_t *count, double *delay);
+int usbTimerParametersW_USB1808(libusb_device_handle *udev, TimerParams *timerParameters, double frequency, double dutyCycle, uint32_t count, double delay);
+int usbTimerParametersR_USB1808(libusb_device_handle *udev, TimerParams *timerParameters, double *frequency, double *dutyCycle, uint32_t *count, double *delay);
 uint16_t voltsTou16_USB1808(double volts, int channel, float table_AO[NCHAN_AO_1808][2]);
 double volts_USB1808(const uint8_t gain, uint32_t value);
 

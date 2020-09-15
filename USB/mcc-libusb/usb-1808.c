@@ -1044,7 +1044,7 @@ int usbTimerControlR_USB1808(libusb_device_handle *udev, uint8_t timer, uint8_t 
   return ret;
 }
 
-int usbTimerParametersW_USB1808(libusb_device_handle *udev, uint8_t timer, double frequency, double dutyCycle, uint32_t count, double delay)
+int usbTimerParametersW_USB1808(libusb_device_handle *udev, TimerParams *timerParameters, double frequency, double dutyCycle, uint32_t count, double delay)
 {
   /* 
     This command reads or writes all of a given timer's parameters in one call.
@@ -1078,10 +1078,12 @@ int usbTimerParametersW_USB1808(libusb_device_handle *udev, uint8_t timer, doubl
     the number of 100MHz clock pulses to delay.  This value may not be
     written while the timer output is enabled.
 
+    Note:  delay is in ms.
   */
 
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
   int ret;
+  int timer = timerParameters->timer;
   uint32_t value[4];
 
   if (timer > 1) {
@@ -1099,30 +1101,33 @@ int usbTimerParametersW_USB1808(libusb_device_handle *udev, uint8_t timer, doubl
   value[2] = count;
   value[3] = rint(delay*BASE_CLOCK/1000);
 
+  // keep local copy of the timer parameters
+  timerParameters->period = value[0];
+  timerParameters->pulseWidth = value[1];
+  timerParameters->count = value[2];
+  timerParameters->delay = value[3];
+
   ret = libusb_control_transfer(udev, requesttype, TIMER_PARAMETERS, 0x0, timer, (unsigned char *) value, sizeof(value),  HS_DELAY);
   return ret;
 }
 
-int usbTimerParametersR_USB1808(libusb_device_handle *udev, uint8_t timer, double *frequency, double *dutyCycle, uint32_t *count, double *delay)
+int usbTimerParametersR_USB1808(libusb_device_handle *udev, TimerParams *timerParameters, double *frequency, double *dutyCycle, uint32_t *count, double *delay)
 {
+  // Note:  currently the device does not return the correct values from firmware so  read from local copy.
+
+  /*
   uint8_t requesttype = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT);
   int ret;
   uint32_t value[4];
 
-  if (timer > 1) {
-    perror("usbTimerParametersR_USB1808: timer must be 0-1.");
-    return -1;
-  }
   ret = libusb_control_transfer(udev, requesttype, TIMER_PARAMETERS, 0x0, timer, (unsigned char *) value, sizeof(value), HS_DELAY);
-  printf(" timer = %d, %d %d %d %d\n", timer, value[0], value[1], value[2], value[3]);
+  */
 
-  value[0] = 2*value[1];
-  *frequency = BASE_CLOCK/(value[0] + 1.);
-  *dutyCycle = (double) value[1] / (double) value[0];
-  *count = value[2];
-  *delay = (double) value[3]*1000./BASE_CLOCK;
-  
-  return ret;
+  *frequency = BASE_CLOCK/(timerParameters->period + 1.);
+  *dutyCycle = (double) timerParameters->pulseWidth / (double) timerParameters->period;
+  *count = timerParameters->count;
+  *delay = (double) timerParameters->delay*1000./BASE_CLOCK;  // delay in ms
+  return 0;
 }
 
 /***********************************************
