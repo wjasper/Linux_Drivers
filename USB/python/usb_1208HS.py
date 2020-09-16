@@ -187,14 +187,15 @@ class usb1208HS(mccUSB):
     # Set up structure for Timer Parameters
     self.timerParameters = TimerParameters()
     self.timerParameters.timer = 0          # only 1 timer
+    self.TimerParamsW(1000., 0.5, 0, 0)
 
     # initialize input channel configuration, single ended, +/- 10V
     mode = self.SINGLE_ENDED
     gain = self.BP_10V
     for channel in range(self.NCHAN):
       self.AInConfigW(channel, mode, gain)
-      
 
+      
   ##############################################
   #           Digital I/O  Commands            #
   ##############################################
@@ -730,13 +731,33 @@ class usb1208HS(mccUSB):
     self.timerParameters.count = data[2]
     self.timerParameters.delay = data[3]
     self.TimerControlW(self.timerParameters.control)
-    return 
 
-  def TimerParamsW(self):
+    frequency = self.BASE_CLOCK / (self.timerParameters.period + 1)
+    duty_cycle = self.timerParameters.pulseWidth / self.timerParameters.period
+    count =  self.timerParameters.count
+    delay =  (self.timerParameters.delay * 1000.) / self.BASE_CLOCK # delay in ms
+
+    return (frequency, duty_cycle, count, delay)
+
+  def TimerParamsW(self, frequency, dutyCycle, count, delay):
     request_type = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT)
     request = self.TIMER_PARAMETERS
     wValue = 0
     wIndex = 0
+
+    period = round(self.BASE_CLOCK/frequency - 1)
+    pulseWidth = round(period * dutyCycle)
+
+    if period < 1:
+      raise ValueError('TimerParametersW: period less than 1.')
+      period = 1         # set to lowest value
+
+    self.timerParameters.period = int(period)
+    self.timerParameters.pulseWidth = int(pulseWidth)
+    self.timerParameters.count = int(count)
+    self.timerParameters.delay = int(delay)
+    self.timerParameters.frequency = frequency
+
     barray = pack('IIII', self.timerParameters.period, self.timerParameters.pulseWidth, \
                   self.timerParameters.count, self.timerParameters.delay)
     self.udev.controlWrite(request_type, request, wValue, wIndex, barray, self.HS_DELAY)

@@ -104,7 +104,7 @@ int main (int argc, char **argv)
   // intialize the timers
   for (i = 0; i < NTIMER_1808; i++) {
     device.timerParameters[i].timer = i;
-    device.timerParameters[i].period =BASE_CLOCK/1000 - 1;                      // set to 1kHz default
+    device.timerParameters[i].period = rint(BASE_CLOCK/1000. - 1.);             // set to 1kHz default
     device.timerParameters[i].pulseWidth = device.timerParameters[i].period/2;  // 50% duty cycle
     device.timerParameters[i].count = 0;
     device.timerParameters[i].delay = 0;

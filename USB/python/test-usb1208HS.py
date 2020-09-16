@@ -227,12 +227,12 @@ def main():
       period = 1000./frequency  # period in ms
       usb1208HS.TimerPeriodW(period)
       usb1208HS.TimerPulseWidthW(period/2)
-      usb1208HS.TimerCountW(1000)
+      usb1208HS.TimerCountW(0)
       usb1208HS.TimerStartDelayW(period/10)
       usb1208HS.TimerControlW(0x1)
       toContinue()
       usb1208HS.TimerControlW(0x0)
-#      usb1208HS.TimerParamsR()
+      print(usb1208HS.TimerParamsR())
       print("Timer:", usb1208HS.timerParameters.timer, \
             "  Control Reg:",hex(usb1208HS.TimerControlR()), \
             "\tPeriod:",usb1208HS.TimerPeriodR(),"ms" \

@@ -43,8 +43,11 @@ def main():
         usb2600 = usb_2623()
         print("USB-usb-2623 device found.")
       except:
-        print("No USB-2623 device found.")
-        return
+        try:
+          usb2600 = usb_2627()
+        except:
+          print("No USB-2600 device found.")
+          return
 
   # print out the calibration tables
   print('\nCalibration Analog Input Table:')
@@ -215,7 +218,6 @@ def main():
       usb2600.TimerControlW(timer, 0x1)
       toContinue()
       usb2600.TimerControlW(timer, 0x0)
-#      usb2600.TimerParamsR()
       print("Timer:", usb2600.timerParameters[timer].timer, \
             "  Control Reg:",hex(usb2600.TimerControlR(timer)), \
             "\tPeriod:", usb2600.TimerPeriodR(timer),"ms" \

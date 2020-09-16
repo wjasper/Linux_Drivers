@@ -134,6 +134,7 @@ class usb_ctr(mccUSB):
     self.timerParameters = [TimerParameters(), TimerParameters(), TimerParameters(), TimerParameters()]
     for timer in range(self.NTIMER):
       self.timerParameters[timer].timer = timer
+      self.TimerParamsW(timer, 1000., 0.5, 0, 0)
 
     # Configure the FPGA
     if  not (self.Status() & self.FPGA_CONFIGURED) :
@@ -1002,22 +1003,30 @@ class usb_ctr(mccUSB):
     See the individual command descriptions for futher information
     on each parameter.
     """
-    if timer >= self.NTIMER:
+    if timer < 0 or timer >= self.NTIMER:
       raise ValueError('TimerParamsR: timer out of range')
       return
+    
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = timer
     data = unpack('IIII', self.udev.controlRead(request_type, self.TIMER_PARAMETERS, wValue, wIndex, 16, self.HS_DELAY))
+
     self.timerParameters[timer].period = data[0]
     self.timerParameters[timer].pulseWidth = data[1]
     self.timerParameters[timer].count = data[2]
     self.timerParameters[timer].delay = data[3]
     self.TimerControlW(timer, self.timerParameters[timer].control)
-    return 
 
-  def TimerParamsW(self, timer):
-    if timer >= self.NTIMER:
+    frequency = self.BASE_CLOCK / (self.timerParameters[timer].period + 1)
+    duty_cycle = self.timerParameters[timer].pulseWidth / self.timerParameters[timer].period
+    count =  self.timerParameters[timer].count
+    delay =  (self.timerParameters[timer].delay * 1000.) / self.BASE_CLOCK # delay in ms
+
+    return (frequency, duty_cycle, count, delay)
+
+  def TimerParamsW(self, timer, frequency, dutyCycle, count, delay):
+    if timer < 0 or timer >= self.NTIMER:
       raise ValueError('TimerParamsW: timer out of range')
       return
 
@@ -1025,6 +1034,20 @@ class usb_ctr(mccUSB):
     request = self.TIMER_PARAMETERS
     wValue = 0x0
     wIndex = timer
+
+    period = round(self.BASE_CLOCK/frequency - 1)
+    pulseWidth = round(period * dutyCycle)
+
+    if period < 1:
+      raise ValueError('TimerParams: period less than 1.')
+      period = 1         # set to lowest value
+
+    self.timerParameters[timer].period = int(period)
+    self.timerParameters[timer].pulseWidth = int(pulseWidth)
+    self.timerParameters[timer].count = int(count)
+    self.timerParameters[timer].delay = int(delay)
+    self.timerParameters[timer].frequency = frequency
+
     barray = pack('IIII', self.timerParameters[timer].period, self.timerParameters[timer].pulseWidth, \
                   self.timerParameters[timer].count, self.timerParameters[timer].delay)
     self.udev.controlWrite(request_type, request, wValue, wIndex, barray, self.HS_DELAY)

@@ -261,8 +261,11 @@ class usb1808(mccUSB):
     # Set up structure for Counter Parameters
     self.counterParameters = [CounterParameters(), CounterParameters(), CounterParameters(), CounterParameters()]
 
-    # Set up structure for Timer Parameters
+    # Set up structure and initialize for Timer Parameters
     self.timerParameters = [TimerParameters(), TimerParameters()]
+    for timer in range(self.NTIMER):
+      self.timerParameters[timer].timer = int(timer)
+      self.TimerParametersW(timer, 1000., 0.5, 0, 0)
 
   def CalDate(self):
     """
@@ -1196,8 +1199,8 @@ class usb1808(mccUSB):
     correct register values in the firmware.  Return a tuple
     of (frequency [Hz], duty cycle, count and delay (in ms))
     """
-    if timer > self.NTIMER:
-      raise ValueError('TimerParametersR: timer out of range')
+    if timer >= self.NTIMER:
+      raise ValueError('TimerParametersW: timer out of range')
       return
 
     frequency = self.BASE_CLOCK / (self.timerParameters[timer].period + 1)
@@ -1220,10 +1223,15 @@ class usb1808(mccUSB):
     period = round(self.BASE_CLOCK/frequency - 1)
     pulseWidth = round(period * dutyCycle)
 
+    if period < 1:
+      raise ValueError('TimerParametersW: period less than 1.')
+      period = 1         # set to lowest value
+ 
     self.timerParameters[timer].period = int(period)
     self.timerParameters[timer].pulseWidth = int(pulseWidth)
     self.timerParameters[timer].count = int(count)
     self.timerParameters[timer].delay = int(delay)
+    self.timerParameters[timer].frequency = frequency
         
     barray = pack('IIII', self.timerParameters[timer].period, self.timerParameters[timer].pulseWidth, \
                   self.timerParameters[timer].count, self.timerParameters[timer].delay)

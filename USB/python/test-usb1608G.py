@@ -233,7 +233,6 @@ def main():
       usb1608G.TimerControlW(0x1)
       toContinue()
       usb1608G.TimerControlW(0x0)
-#      usb1608G.TimerParamsR()
       print("Timer:", usb1608G.timerParameters.timer, \
             "  Control Reg:",hex(usb1608G.TimerControlR()), \
             "\tPeriod:", usb1608G.TimerPeriodR(),"ms" \

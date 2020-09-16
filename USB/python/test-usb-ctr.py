@@ -315,8 +315,8 @@ def main():
         print("Counter Limit Values Min:",hex(ctr.CounterLimitValuesR(counter,0)))
         print("Counter Limit Values Max:",hex(ctr.CounterLimitValuesR(counter,1)))
     elif ch == 't':
-      frequency = int(input('Enter frequency of timer: '))
       timer     = int(input('Enter timer [0-3]: '))
+      frequency = float(input('Enter frequency of timer: '))
       period = 1000/frequency       # period in ms
       ctr.TimerPeriodW(timer, period)
       ctr.TimerPulseWidthW(timer, period/2)
@@ -325,6 +325,7 @@ def main():
       ctr.TimerControlW(timer, 0x1)
       toContinue()
       ctr.TimerControlW(timer, 0x0)
+#      print(ctr.TimerParamsR(timer))
       print("Timer:", ctr.timerParameters[timer].timer, \
             "  Control Reg:",hex(ctr.TimerControlR(timer)), \
             "\tPeriod:", ctr.TimerPeriodR(timer),"ms" \
