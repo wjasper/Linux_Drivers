@@ -228,7 +228,7 @@ int usbAIn_USB2408(libusb_device_handle *udev, uint8_t channel, uint8_t mode, ui
   input1 = (mode << 8) | channel;
   input2 = (rate << 8) | range;
 
-  libusb_control_transfer(udev, requesttype, AIN, input1, input2, (unsigned char *) &data, sizeof(data), HS_DELAY);
+  libusb_control_transfer(udev, requesttype, AIN, input1, input2, (unsigned char *) &data, sizeof(data), 300);
   //  printf("input1 = %#x    input2 = %#x    data = %#x\n", input1, input2, data);
   *flags = (data >> 24);
   data &= 0x00ffffff;

@@ -277,7 +277,7 @@ class usb_2400(mccUSB):
     wValue = (mode << 8) | channel
     wIndex = (rate << 8) | gain
     request_type = libusb1.LIBUSB_TYPE_VENDOR 
-    data ,= unpack('I',self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 4, timeout = 200))
+    data ,= unpack('I',self.udev.controlRead(request_type, self.AIN, wValue, wIndex, 4, timeout = 400))
     flags = (data >> 24)
     data = self.int24ToInt(data)
     return (data, flags)
