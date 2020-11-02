@@ -36,14 +36,14 @@ class queue:
 
 class usb_2400(mccUSB):
   # Gain Ranges
-  BP_10_00V  = 0x1         # +/- 10.0 V
-  BP_5_00V   = 0x2         # +/- 5.00 V
-  BP_2_50V   = 0x3         # +/- 2.50 V
-  BP_1_25V   = 0x4         # +/- 1.25 V
-  BP_0_625V  = 0x5         # +/- 0.625 V
-  BP_0_312V  = 0x6         # +/- 0.3125 V
-  BP_0_156V  = 0x7         # +/- 0.15625 V
-  BP_0_078V  = 0x8         # +/- 0.078125 V (Voltage and Thermocouple)
+  BP_10V      = 0x1         # +/- 10.0 V
+  BP_5V       = 0x2         # +/- 5.00 V
+  BP_2_5V     = 0x3         # +/- 2.50 V
+  BP_1_25V    = 0x4         # +/- 1.25 V
+  BP_625V     = 0x5         # +/- 0.625 V
+  BP_3125V    = 0x6         # +/- 0.3125 V
+  BP_15625V   = 0x7         # +/- 0.15625 V
+  BP_078125V  = 0x8         # +/- 0.078125 V (Voltage and Thermocouple)
 
   # Modes
   DIFFERENTIAL = 0x0        # Voltage differential
@@ -871,24 +871,24 @@ class usb_2400(mccUSB):
     '''
     converts 24 bit signed value to volts
     '''
-    if gain == self.BP_10_00V:
-      volt = value * 10.0 / 0x7fffff;
-    elif gain == self.BP_5_00V:
-      volt = value * 5.0 / 0x7fffff;
-    elif gain == self.BP_2_50V:
-      volt = value * 2.5 / 0x7fffff;
+    if gain == self.BP_10V:
+      volt = value * 10.0 / 0x7fffff
+    elif gain == self.BP_5V:
+      volt = value * 5.0 / 0x7fffff
+    elif gain == self.BP_2_5V:
+      volt = value * 2.5 / 0x7fffff
     elif gain == self.BP_1_25V:
-      volt = value * 1.25 / 0x7fffff;
-    elif gain == self.BP_0_625V:
-      volt = value * 0.625 / 0x7fffff;
-    elif gain == self.BP_0_312V:
-      volt = value * 0.3125 / 0x7fffff;
-    elif gain == self.BP_0_156V:
-      volt = value * 0.15625 / 0x7fffff;
-    elif gain == self.BP_0_078V:
-      volt = value * 0.078125 / 0x7fffff;
+      volt = value * 1.25 / 0x7fffff
+    elif gain == self.BP_625V:
+      volt = value * 0.625 / 0x7fffff
+    elif gain == self.BP_3125V:
+      volt = value * 0.3125 / 0x7fffff
+    elif gain == self.BP_15625V:
+      volt = value * 0.15625 / 0x7fffff
+    elif gain == self.BP_078125V:
+      volt = value * 0.078125 / 0x7fffff
     elif gain == 9:
-      volt = value * 0.078125 / 0x7fffff;
+      volt = value * 0.078125 / 0x7fffff
     else:
       raise ValueError('volts: Unknown voltage range.')
       return 
@@ -1106,7 +1106,7 @@ class usb_2408_2AO(usb_2400):
       return
     
 class usb_2416(usb_2400):
-  BP_20_00V = 0x0      # +/- 20.0 V
+  BP_20V = 0x0        # +/- 20.0 V
 
   def __init__(self, serial=None):
     self.productID = 0x00d0    # usb-2416
@@ -1128,8 +1128,8 @@ class usb_2416(usb_2400):
                         1.2004, 0.9439, 0.6703, 0.3711, 1.2506, 1.1418, 1.0145, 0.9315]
                         
 class usb_2416_4AO(usb_2400):
-  BP_20_00V = 0x0      # +/- 20.0 V
-  NCHAN_AO  = 4        # number of analog output channels (USB-2416-4AO only)
+  BP_20V = 0x0      # +/- 20.0 V
+  NCHAN_AO  = 4     # number of analog output channels (USB-2416-4AO only)
 
   def __init__(self, serial=None):
     self.productID = 0x00d1    # usb-2416-4AO

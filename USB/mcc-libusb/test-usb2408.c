@@ -218,12 +218,17 @@ int main (int argc, char **argv)
       case 'i':
         printf("Input channel [0-7]: ");
         scanf("%hhd", &channel);
-	printf("Gain Range for channel %d:  1 = 10V  2 = 5V  3 = 2.5V Differential: ", channel);
+	printf("Gain Range for channel %d:  1 = 10V  2 = 5V  3 = 2.5V 4 = 1.25V \n\t 5 = 0.625V 6 = 0.3125V 7 = 0.15625V  8 = 0.07125V: ", channel);
 	while((ch = getchar()) == '\0' || ch == '\n');
 	switch(ch) {
   	  case '1': gain = BP_10V; break;
 	  case '2': gain = BP_5V; break;
 	  case '3': gain = BP_2_5V; break;
+	  case '4': gain = BP_1_25V; break;
+ 	  case '5': gain = BP_625V; break;
+	  case '6': gain = BP_3125V; break;
+	  case '7': gain = BP_15625V; break;
+	  case '8': gain = BP_078125V; break;	    
 	  default:  gain = BP_10V; break;
 	}
 	rate = HZ1000;

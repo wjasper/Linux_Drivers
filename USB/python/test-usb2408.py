@@ -119,13 +119,23 @@ def main():
         channel = int(input('Input channel [0-7]: '))
       else:
         channel = int(input('Input channel [0-15]: '))
-      ch = int(input('Input gain range: 1 = 10V  2 = 5V  3 = 2.5V: '))
+      ch = int(input('Input gain range: 1 = 10V  2 = 5V  3 = 2.5V 4 = 1.25V \n\t        5 = 0.625V 6 = 0.3125V 7 = 0.15625V 8 = 0.078125V: '))
       if ch == 1:
-        gain = usb2408.BP_10_00V
+        gain = usb2408.BP_10V
       elif ch == 2:
-        gain = usb2408.BP_5_00V
+        gain = usb2408.BP_5V
       elif ch == 3:
-        gain = usb2408.BP_2_50V
+        gain = usb2408.BP_2_5V
+      elif ch == 4:
+        gain = usb2408.BP_1_25V
+      elif ch == 5:
+        gain = usb2408.BP_625V
+      elif ch == 6:
+        gain = usb2408.BP_3125V
+      elif ch == 7:
+        gain = usb2408.BP_15625V
+      elif ch == 8:
+        gain = usb2408.BP_078125V
       else:
         print('Unknown gain range')
         continue

@@ -901,13 +901,13 @@ double volts_USB2408(const int gain, const int value)
     case BP_625V:
       volt = value * 0.625 / 0x7fffff;
       break;
-    case BP_312V:
+    case BP_3125V:
       volt = value * 0.3125 / 0x7fffff;
       break;
-    case BP_156V:
+    case BP_15625V:
       volt = value * 0.15625 / 0x7fffff;
       break;
-    case BP_078V:
+    case BP_078125V:
       volt = value * 0.078125 / 0x7fffff;
       break;
   }

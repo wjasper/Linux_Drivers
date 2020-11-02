@@ -43,15 +43,15 @@ extern "C" {
 #define CONTINUOUS       (0x1)      // Continuous Mode
 
 // Gain Ranges
-//#define BP_20V           (0x0)     // +/- 20V
+//#define BP_20V         (0x0)     // +/- 20V
 #define BP_10V           (0x1)     // +/- 10V
 #define BP_5V            (0x2)     // +/- 5V
 #define BP_2_5V          (0x3)     // +/- 2.5V
 #define BP_1_25V         (0x4)     // +/- 1.25V
 #define BP_625V          (0x5)     // +/- 0.625V
-#define BP_312V          (0x6)     // +/- 0.3125V
-#define BP_156V          (0x7)     // +/- 0.15625V
-#define BP_078V          (0x8)     // +/- 0.078125V Voltage (all), Thermocouple
+#define BP_3125V         (0x6)     // +/- 0.3125V
+#define BP_15625V        (0x7)     // +/- 0.15625V
+#define BP_078125V       (0x8)     // +/- 0.078125V Voltage (all), Thermocouple
 
 // Rates
 #define HZ30000          (0)       // 30,000 S/s
