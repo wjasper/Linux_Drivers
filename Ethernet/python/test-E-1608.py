@@ -58,7 +58,7 @@ def main():
     print("Hit 'c' to test counter.")
     print("Hit 'd' to test digital IO.")
     print("Hit 'i' to test Analog Input.")
-    print("Hit 'I' to tesr Analog Input Scan.")
+    print("Hit 'I' to test Analog Input Scan.")
     print("Hit 'o' to test Analog Output.")
     print("Hit 'r' to reset the device.")
     print("Hit 'n' to get networking information.")
