@@ -157,8 +157,12 @@ start:
 	}
         usbDOut_miniLAB1008(hid, DIO_PORTA, (uint8_t)temp);
         usbDIn_miniLAB1008(hid, DIO_PORTB, &input);
-        usbDOut_miniLAB1008(hid, DIO_AUXPORT, (uint8_t)temp);
-        printf("The number you entered = %#x\n",input);
+	printf("The number you entered = %#x\n", input);
+        /* reaad the auxiliary port */
+	usbDConfigPort_miniLAB1008(hid, DIO_AUXPORT, 0x0); // all 4 bits to input
+	printf("Reading the Auxilary port: ");
+        usbDIn_miniLAB1008(hid, DIO_AUXPORT,  &input);
+	printf(" %#x\n", input & 0xf);
       } while (toContinue());
       break;
     case 't':

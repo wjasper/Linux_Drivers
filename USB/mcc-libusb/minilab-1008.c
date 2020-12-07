@@ -78,18 +78,19 @@ void usbDConfigPort_miniLAB1008(hid_device* hid, uint8_t port, uint8_t direction
 /* reads digital port  */
 void usbDIn_miniLAB1008(hid_device* hid, uint8_t port, uint8_t* din_value)
 {
-  struct t_report {
+  struct report_t {
+    uint8_t report_id;
     uint8_t cmd;
     uint8_t port;
-    uint8_t direction;
-    uint8_t pad[5];
+    uint8_t pad[6];
   } report;
 
-  struct t_in {
+  struct in_t {
     uint8_t value;
     uint8_t pad[7];
   } in;
-    
+
+  report.report_id = 0;  
   report.cmd = DIN;
   report.port = port;
   
