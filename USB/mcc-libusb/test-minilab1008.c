@@ -75,16 +75,14 @@ start:
     exit(1);
   }
 
-  /* config mask 0x01 means all inputs */
+  /* config bit mask 0x01 means all inputs, 0x0 means all output for the PORT*/
   usbDConfigPort_miniLAB1008(hid, DIO_PORTB, DIO_DIR_IN);
   usbDConfigPort_miniLAB1008(hid, DIO_PORTA, DIO_DIR_OUT);
   usbDConfigPort_miniLAB1008(hid, DIO_PORTCL, DIO_DIR_IN);
   usbDConfigPort_miniLAB1008(hid, DIO_PORTCH, DIO_DIR_OUT);
 
-  /* Note:  I believe the direction setting for the Auxport (DIO0-DIO3)
-     is opposite than for PORTA-PORTC.  This is not documented.
-  */
-  usbDConfigPort_miniLAB1008(hid, DIO_AUXPORT, 0xf); // all 4 bits to output
+  // For Auxiliary Port, direction for each of 4 bits
+  usbDConfigPort_miniLAB1008(hid, DIO_AUXPORT, 0xf); // all 4 bits to input
   usbDOut_miniLAB1008(hid, DIO_PORTA, 0x0);
   
   while(1) {
@@ -133,6 +131,7 @@ start:
       }
       break;
     case 'c':
+      usbDConfigPort_miniLAB1008(hid, DIO_AUXPORT, 0x0); // all 4 bits to output
       printf("connect DIO and CTR\n");
       usbInitCounter_miniLAB1008(hid);
       flag = fcntl(fileno(stdin), F_GETFL);
@@ -159,7 +158,7 @@ start:
         usbDIn_miniLAB1008(hid, DIO_PORTB, &input);
 	printf("The number you entered = %#x\n", input);
         /* reaad the auxiliary port */
-	usbDConfigPort_miniLAB1008(hid, DIO_AUXPORT, 0x0); // all 4 bits to input
+	usbDConfigPort_miniLAB1008(hid, DIO_AUXPORT, 0xf); // all 4 bits to input
 	printf("Reading the Auxilary port: ");
         usbDIn_miniLAB1008(hid, DIO_AUXPORT,  &input);
 	printf(" %#x\n", input & 0xf);

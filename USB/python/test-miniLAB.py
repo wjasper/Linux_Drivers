@@ -92,6 +92,10 @@ def main():
             print('Port B Bit',i,' =', hex(value))
         except:
           pass
+
+        miniLAB.DConfig(miniLAB.DIO_AUXPORT, 0xf)  # AUXPORT all input
+        value = miniLAB.DIn(miniLAB.DIO_AUXPORT)
+        print('Auxilary Port: value =', hex(value))
         if (toContinue() != True):
           break
     elif ch == 't':

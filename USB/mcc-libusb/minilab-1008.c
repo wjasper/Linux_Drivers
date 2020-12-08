@@ -68,6 +68,10 @@ void usbDConfigPort_miniLAB1008(hid_device* hid, uint8_t port, uint8_t direction
     uint8_t pad[5];
   } report;
 
+  if (port == DIO_AUXPORT) {
+    direction = ~direction;  // bug in firmware, take 1's complement
+  }
+
   report.cmd = DCONFIG;
   report.port = port;
   report.direction = direction;

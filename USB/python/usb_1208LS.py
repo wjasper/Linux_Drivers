@@ -591,4 +591,4 @@ class usb_miniLAB(usb_1208):
       print('Can not open USB-MiniLAB1008')
       return
 
-    self.DConfig(self.DIO_AUXPORT, 0x3) # default DIO0 and DIO1 to output
+    self.DConfig(self.DIO_AUXPORT, 0xc) # default DIO0 and DIO1 to output
