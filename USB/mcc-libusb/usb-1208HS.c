@@ -327,7 +327,7 @@ int usbAInScanRead_USB1208HS(libusb_device_handle *udev, int nScan, int nChan, u
   char value[MAX_PACKET_SIZE_HS];
   int ret = -1;
   int transferred;
-  int nbytes = nChan*nScan*2;    // nuber of bytes to read;
+  int nbytes = nChan*nScan*2;    // number of bytes to read;
   uint8_t status;
 
   ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_IN|6, (unsigned char *) data, nbytes, &transferred, HS_DELAY);
