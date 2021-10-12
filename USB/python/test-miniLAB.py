@@ -39,7 +39,7 @@ def main():
     print("Hit 'f' to get serial number.")
     print("Hit 'j' for information.")
     print("Hit 'c' to test counter. ")
-    print("Hit 'd'to test digital I/O.")
+    print("Hit 'd' to test digital I/O.")
     print("Hit 't' to test digital bit I/O.")
     print("Hit 'o' to test analog output.")
     print("Hit 'i' to test analog input.")
