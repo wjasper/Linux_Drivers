@@ -171,7 +171,7 @@ def main():
       print('Testing Analog input scan')
       freq = float(input('Enter desired frequency [Hz]: '))
       count = int(input('Enter number of scans [1-1024]: '))
-      chan = int(input('Enter channel [0-7]: '))
+      nChan = int(input('Enter number of channels [1-8]: '))
       print("\t\t1. +/- 10.0V")
       print("\t\t2. +/- 5.0V")
       print("\t\t3. +/- 2.5V")
@@ -198,12 +198,17 @@ def main():
       elif gain == 8:
         gain = usb1608FS.BP_0_3125V
       gains = [0]*8
-      gains[chan] = gain
-      options = usb1608FS.AIN_EXECUTION
-      data = usb1608FS.AInScan(chan,chan,gains,count,freq,options)
-      for i in range(count):
-        print('data[',i,'] = ', hex(data[i]),'\t',format(usb1608FS.volts(gain, data[i]),'.3f'),'V')
-      usb1608FS.AInStop()
+      for i in range(nChan):
+        gains[i] = gain
+      options = usb1608FS.AIN_EXECUTION | usb1608FS.AIN_BURST_MODE
+      while(True):
+        data = usb1608FS.AInScan(0,nChan-1,gains,count,freq,options)
+        print('data length is', len(data),'  Expected ', count*(nChan))
+        for i in range(count*nChan):
+          print('data[',i,'] = ', hex(data[i]),'\t',format(usb1608FS.volts(gain, data[i]),'.3f'),'V')
+        usb1608FS.AInStop()
+        if toContinue() != True:
+          break
     elif ch == 's':
         print("Serial No: %s" % usb1608FS.getSerialNumber())
     elif ch == 'I':
