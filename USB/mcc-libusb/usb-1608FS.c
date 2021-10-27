@@ -770,7 +770,7 @@ int usbAInScan_USB1608FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
     }
   }
   usbAInStop_USB1608FS(udev);
-  return nscans;
+  return nscans*nchan;  // return total number of samples read
 }
 
 int usbAInRead_USB1608FS(libusb_device_handle *udev, uint16_t sdata[])

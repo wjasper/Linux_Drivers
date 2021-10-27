@@ -43,12 +43,12 @@ int main (int argc, char **argv)
   int flag;
   unsigned char serial[9];
   signed short svalue;
-  uint8_t channel, gain;
+  uint8_t channel, gain, nChan;
   int temp, i,j;
   int ch;
   uint8_t gainArray[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-  int16_t sdata[1024];
-  uint16_t data[2048];
+  int16_t sdata[1024*8];
+  uint16_t data[2048*8];
   int count;
   int options;
   float freq;
@@ -171,8 +171,12 @@ int main (int argc, char **argv)
     case 'g':
       printf("Enter desired frequency [Hz]: ");
       scanf("%f", &freq);
-      printf("Enter number of samples [1-1024]: ");
+      printf("Enter number of scans [1-256]: ");
       scanf("%d", &count);
+      printf("Enter number of channels per scan [1-8]: ");
+      scanf("%d", &temp);
+      if (temp < 1 || temp > 8) break;
+      nChan = (uint8_t) temp;
       printf("\t\t1. +/- 10.V\n");
       printf("\t\t2. +/- 5.V\n");
       printf("\t\t3. +/- 2.5V\n");
@@ -181,7 +185,7 @@ int main (int argc, char **argv)
       printf("\t\t6. +/- 1.0V\n");
       printf("\t\t7. +/- 0.625V\n");
       printf("\t\t8. +/- 0.3125V\n");
-      printf("Select gain: [1-8]\n");
+      printf("Select gain: [1-8] ");
       scanf("%d", &temp);
       switch(temp) {
         case 1: gain = BP_10_00V;
@@ -205,22 +209,24 @@ int main (int argc, char **argv)
       }
       usbAInStop_USB1608FS(udev);
       // Load the gain queue
-      gainArray[0] = gain;
+      for (i = 0; i < nChan; i++) {
+        gainArray[i] = gain;
+      }
       usbAInLoadQueue_USB1608FS(udev, gainArray);
 
       // configure options
       // options = AIN_EXECUTION | AIN_DEBUG_MODE;
       // options = AIN_EXECUTION | AIN_TRANSFER_MODE;
-      options = AIN_EXECUTION;
+      options = AIN_EXECUTION | AIN_BURST_MODE;
 
       for ( i = 0; i < 2048; i++ ) {  // load data with known value
 	data[i] = 0xbeef;
       }
       channel= 0;
-      usbAInScan_USB1608FS(udev, channel, channel, count, &freq, options, data);
-      printf("Actual frequency = %f\n", freq);
+      ret = usbAInScan_USB1608FS(udev, 0, nChan-1, count, &freq, options, data);
+      printf("Actual frequency = %f\t  Total number of samples read = %d\n", freq, ret);
 
-      for ( i = 0; i < count; i++ ) {
+      for ( i = 0; i < count*nChan; i++ ) {
         switch (gain) {
 	  case  BP_10_00V:
 	    sdata[i] = (int) (table_AIN[0][channel].slope*((float) data[i]) + table_AIN[0][channel].offset);
