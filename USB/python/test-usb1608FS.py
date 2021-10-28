@@ -61,8 +61,9 @@ def main():
     print("Hit 'i' to test analog input. (differential)")
     print("Hit 'I' for information.")
     print("Hit 'r' to reset the device.")
-    print("Hit 'S' to get status")
+    print("Hit 'S' to get status.")
     print("Hit 's' to get serial number.")
+    print("Hit 't' to test external trigger.")
 
     ch = input('\n')
 
@@ -221,6 +222,27 @@ def main():
       usb1608FS.Reset()
       usb1608FS.udev.close()
       exit(0)
+    elif ch == 't':
+      print("Connect Pin 37 to +5 to trigger")
+      print("Trigger set to rising edge")
+      print("Sample 8 channels, 625 scans, 25000 Hz, +/- 2V")
+      usb1608FS.SetTrigger(0)        # External trigger falling edge
+      freq = 25000
+      count = 625
+      nChan = 8
+      gain = usb1608FS.BP_2_00V
+      gains = [0]*8
+      for i in range(nChan):
+        gains[i] = gain
+      options = usb1608FS.AIN_EXECUTION | usb1608FS.AIN_BURST_MODE |usb1608FS.AIN_TRIGGER
+      while(True):  # loop forever
+        data = usb1608FS.AInScan(0,nChan-1,gains,count,freq,options)
+        print('data length is', len(data),'  Expected ', count*(nChan))
+        for i in range(count*nChan):
+          print('data[',i,'] = ', hex(data[i]),'\t',format(usb1608FS.volts(gain, data[i]),'.3f'),'V')
+#        usb1608FS.AInStop()
+        time.sleep(10)
+        print("Ready for next trigger event: ")
 
 if __name__ == "__main__":
   main()

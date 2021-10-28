@@ -621,9 +621,6 @@ class usb_1608FS(mccUSB):
     nchan = hichannel - lowchannel + 1    # total number of channels in a scan
     nSamples = count*nchan                # total number of samples
 
-    if options & self.AIN_TRIGGER:
-      timeout = 0                         # wait forever
-
     for prescale in range(9):
       preload = 10.E6/(frequency * (1 << prescale))
       if preload <= 0xffff:
@@ -637,6 +634,9 @@ class usb_1608FS(mccUSB):
       timeout = int(32*1000./(frequency)) + 1000
     else:
       timeout = 1000
+
+    if options & self.AIN_TRIGGER:
+      timeout = 0                         # wait forever
 
     # Load the gain queue
     self.ALoadQueue(gains)
