@@ -116,7 +116,7 @@ void usbReset_USB2408(libusb_device_handle *udev);
 void usbCounterInit_USB2408(libusb_device_handle *udev, uint8_t counter);
 uint32_t usbCounter_USB2408(libusb_device_handle *udev, uint8_t counter);
 uint8_t usbStatus_USB2408(libusb_device_handle *udev);
-void usbCJC_USB2408(libusb_device_handle *udev, float temp[8]);  
+void usbCJC_USB2408(libusb_device_handle *udev, float temp[2]);  
 void usbReadMemory_USB2408(libusb_device_handle *udev, uint16_t length,  uint16_t address, uint8_t *data);
 void usbWriteMemory_USB2408(libusb_device_handle *udev, uint16_t length,  uint16_t address, uint8_t *data);
 void usbCalConfig_USB2408(libusb_device_handle *udev, uint8_t value);

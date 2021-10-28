@@ -68,7 +68,7 @@ uint8_t usbDBitIn_USB1208LS(hid_device *hid, uint8_t port, uint8_t bit);
 void usbDBitOut_USB1208LS(hid_device *hid, uint8_t port, uint8_t bit, uint8_t value);
 signed short usbAIn_USB1208LS(hid_device *hid, uint8_t channel, uint8_t range);
 void usbAInScan_USB1208LS(hid_device *hid, uint16_t count, int rate, uint8_t low_channel, uint8_t high_channel, uint8_t options, int16_t value[], uint8_t gainLoadQueue[]);
-void usbAInLoadQueue_USB1208LS(hid_device *hid, uint8_t chanCount, uint8_t chanLoadQueue[], uint8_t gainLoadQueue[]);
+void usbAInLoadQueue_USB1208LS(hid_device *hid, uint8_t chanCount, uint8_t chanLoadQueue[8], uint8_t gainLoadQueue[8]);
 void usbAOut_USB1208LS(hid_device *hid, uint8_t channel, uint16_t value);
 void usbAInStop_USB1208LS(hid_device *hid);
 void usbInitCounter_USB1208LS(hid_device *hid);

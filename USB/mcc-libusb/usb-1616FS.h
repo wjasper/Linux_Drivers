@@ -68,9 +68,8 @@ void usbAOut_USB1616FS(libusb_device_handle *udev, uint8_t channel, uint16_t val
 void usbAOutStop_USB1616FS(libusb_device_handle *udev);
 void usbAInStop_USB1616FS(libusb_device_handle *udev);
 int usbAInScan_USB1616FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t highchannel, uint32_t nScan,
-			 float *frequency, uint8_t options, int16_t sdata[], float table_AIN[NGAINS_USB1616FS][NCHAN_USB1616FS][2], uint8_t gainArray[]);
-void usbAInLoadQueue_USB1616FS(libusb_device_handle *udev, uint8_t gains[8]);
-
+			 float *frequency, uint8_t options, int16_t sdata[], float table_AIN[NGAINS_USB1616FS][NCHAN_USB1616FS][2], uint8_t gainArray[NCHAN_USB1616FS]);
+void usbAInLoadQueue_USB1616FS(libusb_device_handle *udev, uint8_t gainArray[NCHAN_USB1616FS]);
 void usbInitCounter_USB1616FS(libusb_device_handle *udev);
 uint32_t usbReadCounter_USB1616FS(libusb_device_handle *udev);
 
