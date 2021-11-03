@@ -36,14 +36,14 @@ def main():
     print("USB-1608G device found.")
   except:
     try:
-      usb1608G =usb_1608GX()
+      usb1608G = usb_1608GX()
       print("USB-1608GX device found.")
     except:
       try:
         usb1608G = usb_1608GX_2AO()
         print("USB-1608GX-2AO device found.")
       except:
-        print('No USB-1608G device found.')
+        print('No USB-1608G/GX/GX_2AO device found.')
         return
 
   # print out the calibration tables
