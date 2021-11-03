@@ -672,8 +672,10 @@ int usbAOutWrite_USB1608GX_2AO(libusb_device_handle *udev, uint16_t *data, int n
   }
 
   if ((ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_OUT|2, (unsigned char *) data, nBytes, &transferred, 400)) < 0) {
-    perror("usbAoutWrite_USB1608G_2AO: Error in libusb_bulk_transfer."); 
-    return -1;
+    if (usbStatus_USB1608G(udev) & AOUT_SCAN_RUNNING) {
+      perror("usbAoutWrite_USB1608G_2AO: Error in libusb_bulk_transfer."); 
+      return -1;
+    }
   }
   ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_OUT|2, (unsigned char *) data, 0, &temp, 400);  // make sure the data is pushed.
 

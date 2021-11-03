@@ -398,6 +398,7 @@ int main (int argc, char **argv)
 	  dataOut[i] = voltage*usb1608G.table_AOut[channel][0] + usb1608G.table_AOut[channel][1];
 	}
         usbAOutScanStop_USB1608GX_2AO(udev);
+	usbAOutWrite_USB1608GX_2AO(udev, dataOut, sizeof(dataOut));
 	usbAOutScanStart_USB1608GX_2AO(udev, 0, 0, frequency,  AO_CHAN0);
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
