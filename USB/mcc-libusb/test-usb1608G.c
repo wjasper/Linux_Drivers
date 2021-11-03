@@ -66,10 +66,9 @@ int main (int argc, char **argv)
   uint16_t status;
   int usb1608GX_2AO = FALSE;
   int flag;
-  int transferred;            // number of bytes transferred
   uint16_t value, data;
-  uint16_t *sdataIn;          // holds 16 bit unsigned analog input data
-  uint16_t sdataOut[512];     // holds 16 bit unsigned analog output data
+  uint16_t *sdataIn;         // holds 16 bit unsigned analog input data
+  uint16_t dataOut[512];     // holds 16 bit unsigned analog output data
 
   uint8_t mode, gain, channel;
 
@@ -109,6 +108,9 @@ int main (int argc, char **argv)
 
   //print out the wMaxPacketSize.  Should be 512
   printf("wMaxPacketSize = %d\n", usb_get_max_packet_size(udev,0));
+
+  // clear the AOut FIFO
+  //  usbAOutScanClearFIFO_USB1608GX_2AO(udev);
 
   usbBuildGainTable_USB1608G(udev, usb1608G.table_AIn);
   for (i = 0; i < NGAINS_1608G; i++) {
@@ -393,15 +395,14 @@ int main (int argc, char **argv)
 	for (i = 0; i < 512; i++) {
 	  voltage = 10.*sin(2.*M_PI*i/512.);
           voltage = (voltage/10.*32768. + 32768.);
-	  sdataOut[i] = voltage*usb1608G.table_AOut[channel][0] + usb1608G.table_AOut[channel][1];
+	  dataOut[i] = voltage*usb1608G.table_AOut[channel][0] + usb1608G.table_AOut[channel][1];
 	}
         usbAOutScanStop_USB1608GX_2AO(udev);
 	usbAOutScanStart_USB1608GX_2AO(udev, 0, 0, frequency,  AO_CHAN0);
 	flag = fcntl(fileno(stdin), F_GETFL);
 	fcntl(0, F_SETFL, flag | O_NONBLOCK);
 	do {
-	  ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_OUT|2, (unsigned char *) sdataOut, sizeof(sdataOut), &transferred, 400);
-	  ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_OUT|2, (unsigned char *) sdataOut, 0, &transferred, 400);
+	  usbAOutWrite_USB1608GX_2AO(udev, dataOut, sizeof(dataOut));
 	  // printf("ret = %d  status = %#x\n", ret, usbStatus_USB1608G(udev));
 	} while (!isalpha(getchar()));
 	fcntl(fileno(stdin), F_SETFL, flag);

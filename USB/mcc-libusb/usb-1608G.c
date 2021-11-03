@@ -659,6 +659,27 @@ void usbAOutR_USB1608GX_2AO(libusb_device_handle *udev, uint8_t channel, double 
   *voltage = (*voltage - 32768.)*10./32768.;
 }
 
+int usbAOutWrite_USB1608GX_2AO(libusb_device_handle *udev, uint16_t *data, int nBytes)
+{
+  int ret;
+  int transferred;
+  int temp;
+
+  if (usbStatus_USB1608G(udev) & AOUT_SCAN_UNDERRUN) {
+    perror("usbAOutWrite_USB1608GX_2AO: AOut Scan Underrun");
+    sleep(1);
+    return -1;
+  }
+
+  if ((ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_OUT|2, (unsigned char *) data, nBytes, &transferred, 400)) < 0) {
+    perror("usbAoutWrite_USB1608G_2AO: Error in libusb_bulk_transfer."); 
+    return -1;
+  }
+  ret = libusb_bulk_transfer(udev, LIBUSB_ENDPOINT_OUT|2, (unsigned char *) data, 0, &temp, 400);  // make sure the data is pushed.
+
+  return transferred;
+}
+
 void usbAOutScanStop_USB1608GX_2AO(libusb_device_handle *udev)
 {
   /* This command stops the analog output scan (if running). */
@@ -736,7 +757,6 @@ void usbAOutScanStart_USB1608GX_2AO(libusb_device_handle *udev, uint32_t count, 
     uint8_t options;
   } AOutScan;
   uint8_t requesttype = (HOST_TO_DEVICE | VENDOR_TYPE | DEVICE_RECIPIENT);
-
   
   AOutScan.pacer_period = (BASE_CLOCK / frequency) - 1;
   AOutScan.count = count;

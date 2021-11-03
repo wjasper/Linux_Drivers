@@ -174,7 +174,7 @@ void usbAOutR_USB1608GX_2AO(libusb_device_handle *udev, uint8_t channel, double 
 void usbAOutScanStop_USB1608GX_2AO(libusb_device_handle *udev);
 void usbAOutScanClearFIFO_USB1608GX_2AO(libusb_device_handle *udev);
 void usbAOutScanStart_USB1608GX_2AO(libusb_device_handle *udev, uint32_t count, uint32_t retrig_count, double frequency, uint8_t options);
-
+int usbAOutWrite_USB1608GX_2AO(libusb_device_handle *udev, uint16_t *data, int nBytes);
 
 #ifdef __cplusplus
 } /* closing brace for extern "C" */
