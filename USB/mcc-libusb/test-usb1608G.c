@@ -408,6 +408,7 @@ int main (int argc, char **argv)
 	} while (!isalpha(getchar()));
 	fcntl(fileno(stdin), F_SETFL, flag);
 	usbAOutScanStop_USB1608GX_2AO(udev);
+	usbAOutScanClearFIFO_USB1608GX_2AO(udev);
 	break;
       case 'r':
 	usbReset_USB1608G(udev);

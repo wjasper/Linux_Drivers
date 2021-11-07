@@ -53,7 +53,7 @@ def main():
           'Slope =',format(usb1608G.table_AIn[gain].slope,'.5f'),\
           'Intercept =',format(usb1608G.table_AIn[gain].intercept,'5f'))
 
-  if usb1608G.productID == usb1608G.USB_1608GX_2AO_PID:
+  if usb1608G.productID == usb1608G.USB_1608GX_2AO_PID or usb1608G.productID == usb1608G.USB_1608GX_2AO_v1_PID:
     print('\nCalibration Analog Output Table:')
     for channel in range(usb1608G.NCHAN_AO):
       print('  Channel =',channel, \
@@ -76,7 +76,7 @@ def main():
     print("Hit 'e' to exit.")
     print("Hit 'i' to test analog input. (differential)")
     print("Hit 'I' to test analog input scan.")
-    if usb1608G.productID == usb1608G.USB_1608GX_2AO_PID:
+    if usb1608G.productID == usb1608G.USB_1608GX_2AO_PID or usb1608G.productID == usb1608G.USB_1608GX_2AO_v1_PID:
       print("Hit 'o' to test Analog Output")
       print("Hit 'O' to test Analog Output Scan")
     print("Hit 'M' for information.")
@@ -247,7 +247,7 @@ def main():
     elif ch == 'O':
       print('Test of Analog Output Scan.')
       print('Hook scope up to VDAC 0')
-      frequency = float(input('Enter desired frequency of sine wave [ 1-40 Hz]: '))
+      frequency = float(input('Enter desired frequency of sine wave [ 1-100 Hz]: '))
       frequency *= 512
       data = [0]*512
       for i in range(512):
@@ -261,6 +261,7 @@ def main():
         else:
           data[i] = int(data[i])
       usb1608G.AOutScanStop()
+      usb1608G.AOutScanWrite(data,firstTime=True)      # fill the buffer
       usb1608G.AOutScanStart(0,0,frequency,usb1608G.AO_CHAN0)
       print("Hit 's <CR>' to stop")
       flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)

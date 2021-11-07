@@ -26,9 +26,16 @@ from mccUSB import *
 class usb1608G(mccUSB):
 
   # USB PIDs for family of devices
-  USB_1608G_PID = 0x0134
-  USB_1608GX_PID = 0x0135
-  USB_1608GX_2AO_PID = 0x0136
+  USB_1608G_PID         = 0x0134
+  USB_1608GX_PID        = 0x0135
+  USB_1608GX_2AO_PID    = 0x0136
+
+  # Older version 1 models (deprecated)
+  USB_1608G_v1_PID      = 0x0110
+  USB_1608GX_v1_PID     = 0x0111
+  USB_1608GX_2AO_v1_PID = 0x0112
+
+  VERSION = 2          # default to version 2
 
   # Gain Ranges
   BP_10V   = 0x0       # +/- 10.0 V
@@ -127,15 +134,19 @@ class usb1608G(mccUSB):
     # Configure the FPGA
     if not (self.Status() & self.FPGA_CONFIGURED) :
       # load the FPGA data into memory
-      from usb_1608G_rbf import FPGA_V2_data
-      print("Configuring FPGA.  This may take a while ...")
+      if self.VERSION == 2:
+        from usb_1608G_rbf import FPGA_data
+        print("Configuring FPGA Version 2.  This may take a while ...")
+      else:
+        from usb_1608G_v1_rbf import FPGA_data
+        print("Configuring FPGA Version 1.  This may take a while ...")
       self.FPGAConfig()
       if self.Status() & self.FPGA_CONFIG_MODE:
-        for i in range(0, len(FPGA_V2_data) - len(FPGA_V2_data)%64, 64) :
-          self.FPGAData(FPGA_V2_data[i:i+64])
+        for i in range(0, len(FPGA_data) - len(FPGA_data)%64, 64) :
+          self.FPGAData(FPGA_data[i:i+64])
         i += 64
-        if len(FPGA_V2_data) % 64 :
-          self.FPGAData(FPGA_V2_data[i:i+len(FPGA_V2_data)%64])
+        if len(FPGA_data) % 64 :
+          self.FPGAData(FPGA_data[i:i+len(FPGA_data)%64])
         if not self.Status() & self.FPGA_CONFIGURED:
           print("Error: FPGA for the USB-1608G is not configured.  status = ", hex(self.Status()))
           return
@@ -1043,20 +1054,28 @@ class usb1608G(mccUSB):
 
 class usb_1608G(usb1608G):
   def __init__(self, serial=None):
-    self.productID = self.USB_1608G_PID   #usb-1608G
+    self.productID = self.USB_1608G_PID        # usb-1608G
     self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
-      raise IOError("MCC USB-1608G not found")
-      return
+      self.productID = self.USB_1608G_v1_PID   # usb-1608G
+      self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
+      self.VERSION = 1
+      if not self.udev:
+        raise IOError("MCC USB-1608G not found")
+        return
     usb1608G.__init__(self)
 
 class usb_1608GX(usb1608G):
   def __init__(self, serial=None):
-    self.productID = self.USB_1608GX_PID   #usb-1608GX
+    self.productID = self.USB_1608GX_PID        #usb-1608GX
     self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
-      raise IOError("MCC USB-1608GX not found")
-      return
+      self.productID = self.USB_1608GX_v1_PID   #usb-1608GX
+      self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
+      self.VERSION = 1
+      if not self.udev:
+        raise IOError("MCC USB-1608GX not found")
+        return
     usb1608G.__init__(self)
 
 class usb_1608GX_2AO(usb1608G):
@@ -1075,12 +1094,19 @@ class usb_1608GX_2AO(usb1608G):
 
   NCHAN_AO       = 2     # Number of analog output channels
 
+  continuous_mode_AOUT = False  
+
   def __init__(self, serial=None):
-    self.productID = self.USB_1608GX_2AO_PID   # usb-1608GX_2AO
+    self.productID = self.USB_1608GX_2AO_PID       # usb-1608GX_2AO
     self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
     if not self.udev:
-      raise IOError("MCC USB-1608GX_2AO not found")
-      return
+      self.productID = self.USB_1608GX_2AO_v1_PID  # usb-1608GX_2AO
+      self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
+      print("found a usb1068GX_2AO version 1")
+      self.VERSION = 1
+      if not self.udev:
+        raise IOError("MCC USB-1608GX_2AO not found")
+        return
     usb1608G.__init__(self)
 
     self.samplesToWrite       = -1    # Total number of samples to write
@@ -1144,7 +1170,7 @@ class usb_1608GX_2AO(usb1608G):
       raise ValueError('AOutR: channel out of range')
       return
 
-    value = unpack('HH',self.udev.controlRead(request_type, self.AOUT, wValue, wIndex, 8, timeout = 400))
+    value = unpack('HHHH',self.udev.controlRead(request_type, self.AOUT, wValue, wIndex, 8, timeout = 400))
     voltage = (value[channel] - self.table_AOut[channel].intercept) / self.table_AOut[channel].slope
     voltage = (voltage - 32768)*10./32768.
     return voltage
@@ -1205,8 +1231,11 @@ class usb_1608GX_2AO(usb1608G):
     if frequency < 0.:
       raise ValueError('AOutScanStart: frequency must be positive')
       return
-    elif frequency > 50000:
-      raise ValueError('AOutScanStart: frequency must be less than 50 kHz')
+    elif (options & 0x3 == 3) and frequency > 250000:
+      raise ValueError('AOutScanStart: frequency must be less than 250 kHz')
+      return
+    elif frequency > 500000:
+      raise ValueError('AOutScanStart: frequency must be less than 500 kHz')
       return
 
     if frequency == 0:
@@ -1234,10 +1263,13 @@ class usb_1608GX_2AO(usb1608G):
     scanPacket = pack('IIIB', count, retrig_count, pacer_period, options)
     result = self.udev.controlWrite(request_type, self.AOUT_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
 
-  def AOutScanWrite(self, data):
+  def AOutScanWrite(self, data, firstTime=False):
     # data is a list of unsigned 16 bit numbers
     value = [0]*len(data)*2
-    timeout = int(500 + 1000*len(data)/self.frequency_AOut)
+    if not firstTime:
+      timeout = int(500 + 1000*len(data)/self.frequency_AOut)
+    else:
+      timeout = 400
 
     for i in range(len(data)):
       value[2*i] = data[i] & 0xff
@@ -1249,8 +1281,9 @@ class usb_1608GX_2AO(usb1608G):
       return
     
     # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
-    if self.continuous_mode_AOUT == False and len(data) % self.wMaxPacketSize == 0:
-      dummy = self.udev.bulkWrite(2, 0x1, timeout)
+    if self.continuous_mode_AOUT == False and len(data) % self.wMaxPacketSize == 0 and not firstTime:
+      value = [0]*2 & 0xffff
+      dummy = self.udev.bulkWrite(2, value, timeout)
     
   def AOutScanStop(self):
     """
