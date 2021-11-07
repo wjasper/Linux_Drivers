@@ -1094,7 +1094,8 @@ class usb_1608GX_2AO(usb1608G):
 
   NCHAN_AO       = 2     # Number of analog output channels
 
-  continuous_mode_AOUT = False  
+#  continuous_mode_AOUT = False
+  options_AOut =  0x0
 
   def __init__(self, serial=None):
     self.productID = self.USB_1608GX_2AO_PID       # usb-1608GX_2AO
@@ -1263,17 +1264,26 @@ class usb_1608GX_2AO(usb1608G):
     scanPacket = pack('IIIB', count, retrig_count, pacer_period, options)
     result = self.udev.controlWrite(request_type, self.AOUT_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
 
-  def AOutScanWrite(self, data, firstTime=False):
+  def AOutScanWrite(self, data, data2, firstTime=False):
     # data is a list of unsigned 16 bit numbers
-    value = [0]*len(data)*2
+    if self.options_AOut & 0x3 == 3:  # two channels output
+      value = [0]*len(data)*4
+      for i in range(len(data)):
+        value[4*i]   = data[i] & 0xff
+        value[4*i+1] = (data[i] >> 8) & 0xff
+        value[4*i+2] = data2[i] & 0xff
+        value[4*i+3] = (data2[i] >> 8) & 0xff
+    else:                            # one channel only
+      value = [0]*len(data)*2
+      for i in range(len(data)):
+        value[2*i]   = data[i] & 0xff
+        value[2*i+1] = (data[i] >> 8) & 0xff
+
     if not firstTime:
       timeout = int(500 + 1000*len(data)/self.frequency_AOut)
     else:
       timeout = 400
 
-    for i in range(len(data)):
-      value[2*i] = data[i] & 0xff
-      value[2*i+1] = (data[i] >> 8) & 0xff
     try:
       result = self.udev.bulkWrite(2, value, timeout)
     except:

@@ -246,11 +246,14 @@ def main():
       print('Analog Output Voltage = %f V' % (voltage))
     elif ch == 'O':
       print('Test of Analog Output Scan.')
-      print('Hook scope up to VDAC 0')
-      frequency = float(input('Enter desired frequency of sine wave [ 1-100 Hz]: '))
+      print('Hook scope up to VDAC 0 sine wave and VDAC 1 cosine wave')
+      frequency = float(input('Enter desired frequency of sine wave [1-100 Hz]: '))
       frequency *= 512
-      data = [0]*512
+      data = [0]*512   # data for sine wave
+      data2 = [0]*512  # data for cosine wave
+
       for i in range(512):
+        channel = 0
         voltage = 10*math.sin(2.* math.pi * i / 512.)
         voltage = voltage / 10. * 32768. + 32768.
         data[i] = voltage * usb1608G.table_AOut[channel].slope + usb1608G.table_AOut[channel].intercept
@@ -260,15 +263,28 @@ def main():
           data[i] = 0
         else:
           data[i] = int(data[i])
+
+        channel = 1
+        voltage = 10*math.cos(2.* math.pi * i / 512.)
+        voltage = voltage / 10. * 32768. + 32768.
+        data2[i] = voltage * usb1608G.table_AOut[channel].slope + usb1608G.table_AOut[channel].intercept
+        if data2[i] > 0xffff:
+          data2[i] = 0xffff
+        elif data2[i] < 0:
+          data2[i] = 0
+        else:
+          data2[i] = int(data2[i])
+
       usb1608G.AOutScanStop()
-      usb1608G.AOutScanWrite(data,firstTime=True)      # fill the buffer
-      usb1608G.AOutScanStart(0,0,frequency,usb1608G.AO_CHAN0)
+      usb1608G.AOutScanWrite(data,data2,firstTime=True)      # fill the buffer
+      options = usb1608G.AO_CHAN0 | usb1608G.AO_CHAN1        # use 2 channels
+      usb1608G.AOutScanStart(0, 0, frequency, options)
       print("Hit 's <CR>' to stop")
       flag = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
       fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag|os.O_NONBLOCK)
       while True:
         try:
-          ret = usb1608G.AOutScanWrite(data)
+          ret = usb1608G.AOutScanWrite(data, data2)
         except:
           fcntl.fcntl(sys.stdin, fcntl.F_SETFL, flag)
           usb1608G.AOutScanStop()
