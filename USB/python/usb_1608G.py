@@ -1094,7 +1094,7 @@ class usb_1608GX_2AO(usb1608G):
 
   NCHAN_AO       = 2     # Number of analog output channels
 
-#  continuous_mode_AOUT = False
+  continuous_mode_AOUT = False
   options_AOut =  0x0
 
   def __init__(self, serial=None):
@@ -1291,7 +1291,7 @@ class usb_1608GX_2AO(usb1608G):
       return
     
     # if nbytes is a multiple of wMaxPacketSize the device will send a zero byte packet.
-    if self.continuous_mode_AOUT == False and len(data) % self.wMaxPacketSize == 0 and not firstTime:
+    if not firstTime and self.continuous_mode_AOUT == False and len(data) % self.wMaxPacketSize == 0:
       value = [0]*2 & 0xffff
       dummy = self.udev.bulkWrite(2, value, timeout)
     
