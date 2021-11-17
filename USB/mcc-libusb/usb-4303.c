@@ -535,19 +535,25 @@ int usbWriteMemory_USB4303(hid_device *hid, uint16_t address, uint8_t count, uin
     uint8_t reportID;
     uint8_t address[2];   // the start address for the write
     uint8_t count;        // the number of bytes to write (60 max)
-    uint8_t data[count];  // the data to be written (60 bytes max)
-  } arg;
+    uint8_t data[1];  // the data to be written (60 bytes max)
+  } *arg = NULL;
 
   if (count > 60) count = 60;
 
-  arg.reportID = MEM_WRITE;
-  arg.address[0] = (uint8_t) (address & 0xff);         // low byte
-  arg.address[1] = (uint8_t) ((address >> 8) & 0xff);  // high byte
-  arg.count = count;
-  for ( i = 0; i < count; i++ ) {
-    arg.data[i] = data[i];
+  arg = (struct mem_write_report_t *) malloc(sizeof(struct mem_write_report_t) + count * sizeof(uint8_t) );
+  if(!arg) {
+    printf("Couldn't allocate memory for write\n");
+    return(-1);
   }
-  PMD_SendOutputReport(hid, (uint8_t *) &arg, count+4);
+  arg->reportID = MEM_WRITE;
+  arg->address[0] = (uint8_t) (address & 0xff);         // low byte
+  arg->address[1] = (uint8_t) ((address >> 8) & 0xff);  // high byte
+  arg->count = count;
+  for ( i = 0; i < count; i++ ) {
+    arg->data[i] = data[i];
+  }
+  PMD_SendOutputReport(hid, (uint8_t *) arg, sizeof(struct mem_write_report_t)+count-1);
+  free(arg);
   return 0;
 }
 

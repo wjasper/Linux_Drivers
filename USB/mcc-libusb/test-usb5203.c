@@ -66,7 +66,7 @@ void readHeader(int fd, file_header *header)
   printf("Header information: \n");
   printf("MCC file identifier = %#x\tData file version = %d\tLogging options = %#x\n",
 	 header->identifier, header->version, header->options);
-  printf("Channels logged = %#x\t\tData units = %d\t\tNumber of seconds between entries = %hd\n",
+  printf("Channels logged = %#x\t\tData units = %d\t\tNumber of seconds between entries = %d\n",
 	 header->channels, header->units, second);
   memcpy(&date, header->start_time, 6);  // note time_zone not logged into header.
   second = (date.seconds >> 4)*10 + (date.seconds & 0xf);

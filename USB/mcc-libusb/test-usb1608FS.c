@@ -47,7 +47,7 @@ int main (int argc, char **argv)
   int temp, i,j;
   int ch;
   uint8_t gainArray[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-  int16_t sdata[1024*8];
+  uint16_t sdata[1024*8];
   uint16_t data[2048*8];
   int count;
   int options;

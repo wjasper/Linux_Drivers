@@ -235,7 +235,7 @@ int main (int argc, char **argv)
 	printf("Communcations mico bootloader firmware version = %x.%x\n", version.boot_version_comms>>8, version.boot_version_comms&0xff);
 	printf("Base measurement micro firmware version = %x.%x\n", version.version_base>>8,version.version_base&0xff);
 	printf("Base measurement micro bootloader firmware version = %x.%x\n", version.boot_version_base>>8,version.boot_version_base&0xff);
-	printf("EXP measurement micro firmware version = %x.%x\n", version.version_exp>>8,version.version_exp&&0xff);
+	printf("EXP measurement micro firmware version = %x.%x\n", version.version_exp>>8,version.version_exp&0xff);
 	printf("EXP measurement micro bootloader firmware version = %x.%x\n\n", version.boot_version_exp>>8,version.boot_version_exp&0xff);
 	usbCalDate_TC32(udev, &date_base, &date_exp);
 	printf("Calibration date = %s\n", asctime(&date_base));

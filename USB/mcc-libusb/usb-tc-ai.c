@@ -320,21 +320,27 @@ int usbWriteMemory_USBTC_AI(hid_device *hid, uint16_t address, uint8_t type, uin
     uint16_t address;   // start address for the write (0x00-0xFF)
     uint8_t  type;      // 0 = main microcontroller  1 = isolated microcontroller
     uint8_t  count;     // number of bytes to write (59 max)
-    uint8_t  data[count];
-  } writeMemory;
+    uint8_t  data[1];
+  } *writeMemory = NULL;
 
   if (address > 0xff) return -1;
   if (count > 59) count = 59;
 
-  writeMemory.reportID = MEM_WRITE;
-  writeMemory.address = address;
-  writeMemory.count = count;
-  writeMemory.type = type;
+  writeMemory = (struct writeMemory_t *) malloc(sizeof(struct writeMemory_t) + count * sizeof(uint8_t) );
+  if(!writeMemory) {
+    printf("Couldn't allocate memory for write\n");
+    return(-1);
+  }
+  writeMemory->reportID = MEM_WRITE;
+  writeMemory->address = address;
+  writeMemory->count = count;
+  writeMemory->type = type;
 
   for ( i = 0; i < count; i++ ) {
-    writeMemory.data[i] = data[i];
+    writeMemory->data[i] = data[i];
   }
-  PMD_SendOutputReport(hid, (uint8_t *) &writeMemory, sizeof(writeMemory));
+  PMD_SendOutputReport(hid, (uint8_t *) writeMemory, sizeof(struct writeMemory_t)+count-1);
+  free(writeMemory);
   return 0;
 }
 
