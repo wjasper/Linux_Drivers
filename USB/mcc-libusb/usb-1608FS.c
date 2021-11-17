@@ -1049,13 +1049,12 @@ void usbReadMemory_USB1608FS(libusb_device_handle *udev, uint16_t address, uint8
 int usbWriteMemory_USB1608FS(libusb_device_handle *udev, uint16_t address, uint8_t count, uint8_t* data)
 {
   // Locations 0x00-0x7F are reserved for firmware and my not be written.
-  int i;
 
   struct mem_write_report_t {
     uint8_t reportID;
     uint8_t address[2];
     uint8_t count;
-    uint8_t data[count];
+    uint8_t *data;
   } arg;
 
   int ret;
@@ -1070,11 +1069,9 @@ int usbWriteMemory_USB1608FS(libusb_device_handle *udev, uint16_t address, uint8
   arg.reportID = MEM_WRITE;
   arg.address[0] = address & 0xff;         // low byte
   arg.address[1] = (address >> 8) & 0xff;  // high byte
-
   arg.count = count;
-  for ( i = 0; i < count; i++ ) {
-    arg.data[i] = data[i];
-  }
+  arg.data = data;
+
   ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &arg, sizeof(arg), 5000);
   if (ret < 0) {
     perror("Error in usbWriteMemory_USB1608FS: libusb_control_transfer error");

@@ -162,7 +162,10 @@ class usb1608G(mccUSB):
         self.udev.resetDevice()
 
     # claim all the needed interfaces for AInScan
-    self.udev.claimInterface(0)
+    try:
+      self.udev.claimInterface(0)
+    except:
+      print("Could not claim interface 0")
 
     # Find the maxPacketSize for bulk transfers
     self.wMaxPacketSize = self.getMaxPacketSize(libusb1.LIBUSB_ENDPOINT_IN | 0x6)  #EP IN 6
@@ -1103,7 +1106,6 @@ class usb_1608GX_2AO(usb1608G):
     if not self.udev:
       self.productID = self.USB_1608GX_2AO_v1_PID  # usb-1608GX_2AO
       self.udev = self.openByVendorIDAndProductID(0x9db, self.productID, serial)
-      print("found a usb1068GX_2AO version 1")
       self.VERSION = 1
       if not self.udev:
         raise IOError("MCC USB-1608GX_2AO not found")
