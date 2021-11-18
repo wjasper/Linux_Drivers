@@ -343,7 +343,7 @@ int16_t usbAIn_USB1616FS(libusb_device_handle *udev, uint8_t channel, uint8_t ra
   int transferred;
 
   uint16_t data;
-  int16_t value = 0;
+  uint16_t value = 0;
   uint8_t report[3];
 
   struct ain_t {
@@ -513,7 +513,7 @@ int usbAInScan_USB1616FS(libusb_device_handle *udev, uint8_t lowchannel, uint8_t
   int transferred;
   int timeout = FS_DELAY;
 
-  int16_t value;
+  uint16_t value;
   uint16_t uvalue;
   uint8_t gain;    
 
@@ -924,8 +924,8 @@ int usbWriteMemory_USB1616FS(libusb_device_handle *udev, uint16_t address, uint8
     uint8_t reportID;
     uint8_t address[2];
     uint8_t count;
-    uint8_t data[count];
-  } arg;
+    uint8_t data[1];
+  } *arg = NULL;
 
   int ret;
   uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
@@ -936,19 +936,25 @@ int usbWriteMemory_USB1616FS(libusb_device_handle *udev, uint16_t address, uint8
   if ( address <=0x7f ) return -1;
   if ( count > 59 ) count = 59;
 
-  arg.reportID = MEM_WRITE;
-  arg.address[0] = address & 0xff;         // low byte
-  arg.address[1] = (address >> 8) & 0xff;  // high byte
+  arg = (struct mem_write_report_t *) malloc(sizeof(struct mem_write_report_t) + count * sizeof(uint8_t) );
+  if(!arg) {
+    printf("Couldn't allocate memory for write\n");
+    return(-1);
+  }
+  arg->reportID = MEM_WRITE;
+  arg->address[0] = address & 0xff;         // low byte
+  arg->address[1] = (address >> 8) & 0xff;  // high byte
 
-  arg.count = count;
+  arg->count = count;
   for ( i = 0; i < count; i++ ) {
-    arg.data[i] = data[i];
+    arg->data[i] = data[i];
   }
 
-  ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &arg, sizeof(arg), 5000);
+  ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) arg, sizeof(struct mem_write_report_t)+count-1, 5000);
   if (ret < 0) {
     perror("Error in usbWriteMemory_USB1616FS: libusb_control_transfer error");
   }
+  free(arg);
   return 0;
 }
 

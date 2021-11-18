@@ -146,21 +146,27 @@ int usbWriteMemory_USBSSR(hid_device *hid, uint16_t address, uint8_t count, uint
     uint8_t reportID;
     uint8_t address[2];
     uint8_t count;
-    uint8_t data[count];
-  } arg;
+    uint8_t data[1];
+  } *arg = NULL;
 
   if (address <= 0x7f) return -1;
   if (count > 59) count = 59;
 
-  arg.reportID = MEM_WRITE;
-  arg.address[0] = address & 0xff;         // low byte
-  arg.address[1] = (address >> 8) & 0xff;  // high byte
-
-  arg.count = count;
-  for (i = 0; i < count; i++) {
-    arg.data[i] = data[i];
+  arg = (struct mem_write_report_t *) malloc(sizeof(struct mem_write_report_t) + count * sizeof(uint8_t) );
+  if(!arg) {
+    printf("Couldn't allocate memory for write\n");
+    return(-1);
   }
-  PMD_SendOutputReport(hid, (uint8_t *) &arg, sizeof(arg));
+  arg->reportID = MEM_WRITE;
+  arg->address[0] = address & 0xff;         // low byte
+  arg->address[1] = (address >> 8) & 0xff;  // high byte
+
+  arg->count = count;
+  for (i = 0; i < count; i++) {
+    arg->data[i] = data[i];
+  }
+  PMD_SendOutputReport(hid, (uint8_t *) arg, sizeof(struct mem_write_report_t)+count-1);
+  free(arg);
   return 0;
 }
 
