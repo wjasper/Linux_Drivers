@@ -424,7 +424,7 @@ void usbReadMemory_USB31XX(hid_device *hid, uint16_t address, uint8_t count, uin
 
 int usbWriteMemory_USB31XX(hid_device *hid, uint16_t address, uint8_t count, uint8_t data[])
 {
-    /*
+  /*
     This command writes to the non-volatile memory on the device.  The
     non-volatile memory is used to store calibration coefficients,
     system information, and user data.  There are 256 bytes of EEPROM

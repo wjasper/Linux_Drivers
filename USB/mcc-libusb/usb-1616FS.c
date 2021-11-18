@@ -918,34 +918,41 @@ void usbReadMemory_USB1616FS( libusb_device_handle *udev, uint16_t address, uint
 
 int usbWriteMemory_USB1616FS(libusb_device_handle *udev, uint16_t address, uint8_t count, uint8_t data[])
 {
-  // Locations 0x00-0x7F are reserved for firmware and my not be written.
-  int i;
+  /* 
+    This command writes to the non-volatile EEPROM memory on the
+    device. The non-volatile memory is used to store clibration
+    coefficients, system information, and user data. 
+
+    Locations 0x000-0x07F are reserved for firmware and my not be written.
+  */
+
   struct mem_write_report_t {
     uint8_t reportID;
     uint8_t address[2];
     uint8_t count;
-    uint8_t data[count];
+    uint8_t data[59];   // a max of 59 bytes can be written to EEPROM memory
   } arg;
 
+  int i;
   int ret;
-  uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS|LIBUSB_RECIPIENT_INTERFACE|LIBUSB_ENDPOINT_OUT;
+  uint8_t request_type = LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE | LIBUSB_ENDPOINT_OUT;
   uint8_t request = 0x9;                  // HID Set_Report
   uint16_t wValue = (2 << 8) | MEM_WRITE; // HID output
   uint16_t wIndex = 0;                    // Interface
 
-  if ( address <=0x7f ) return -1;
-  if ( count > 59 ) count = 59;
+  if (address <= 0x7f) return -1;         // reserved
+  if (count > 59) count = 59;             // a max of 59 bytes can be written to EEPROM memory
 
   arg.reportID = MEM_WRITE;
   arg.address[0] = address & 0xff;         // low byte
   arg.address[1] = (address >> 8) & 0xff;  // high byte
-
   arg.count = count;
-  for ( i = 0; i < count; i++ ) {
+
+  for (i = 0; i < count; i++) {
     arg.data[i] = data[i];
   }
 
-  ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &arg, sizeof(arg), 5000);
+  ret = libusb_control_transfer(udev, request_type, request, wValue, wIndex, (unsigned char*) &arg, count+4, 5000);
   if (ret < 0) {
     perror("Error in usbWriteMemory_USB1616FS: libusb_control_transfer error");
   }
