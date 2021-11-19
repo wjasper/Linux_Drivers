@@ -223,10 +223,12 @@ def main():
       usb1608FS.udev.close()
       exit(0)
     elif ch == 't':
-      print("Connect Pin 37 to +5 to trigger")
-      print("Trigger set to rising edge")
+      print("Connect Pin 37 TRIG_IN to Pin 21 DIO0")
+      print("Trigger set to falling edge")
       print("Sample 8 channels, 625 scans, 25000 Hz, +/- 2V")
       usb1608FS.SetTrigger(0)        # External trigger falling edge
+      usb1608FS.DConfig(usb1608FS.DIO_DIR_OUT)
+      counter = 0
       freq = 25000
       count = 625
       nChan = 8
@@ -237,12 +239,12 @@ def main():
       options = usb1608FS.AIN_EXECUTION | usb1608FS.AIN_BURST_MODE |usb1608FS.AIN_TRIGGER
       while(True):  # loop forever
         data = usb1608FS.AInScan(0,nChan-1,gains,count,freq,options)
-        print('data length is', len(data),'  Expected ', count*(nChan))
-        for i in range(count*nChan):
-          print('data[',i,'] = ', hex(data[i]),'\t',format(usb1608FS.volts(gain, data[i]),'.3f'),'V')
+        counter = counter + 1
+        print('counter =', counter, 'data length is', len(data),'  Expected ', count*(nChan))
+#        for i in range(count*nChan):
+#          print('data[',i,'] = ', hex(data[i]),'\t',format(usb1608FS.volts(gain, data[i]),'.3f'),'V')
 #        usb1608FS.AInStop()
-        time.sleep(10)
-        print("Ready for next trigger event: ")
+        time.sleep(1)
 
 if __name__ == "__main__":
   main()
