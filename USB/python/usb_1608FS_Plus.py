@@ -46,13 +46,14 @@ class usb_1608FS_Plus(mccUSB):
   BLOCK_TRANSFER_MODE     = 0x0
   INTERNAL_PACER_ON       = 0x2
   INTERNAL_PACER_OFF      = 0x0
-  AIN_NO_TRIGGER     = 0x0
-  TRIG_EDGE_RISING   = (0x1 << 2)
-  TRIG_EDGE_FALLING  = (0x2 << 2)
-  TRIG_LEVEL_HIGH    = (0x3 << 2)
-  TRIG_LEVEL_LOW     = (0x4 << 2)
-  DEBUG_MODE         = (0x1 << 5)
-  INHIBIT_STALL      = (0x1 << 7)
+  AIN_NO_TRIGGER          = 0x0
+  TRIGGER                 = 0x1a
+  TRIG_EDGE_RISING        = (0x1 << 2)
+  TRIG_EDGE_FALLING       = (0x2 << 2)
+  TRIG_LEVEL_HIGH         = (0x3 << 2)
+  TRIG_LEVEL_LOW          = (0x4 << 2)
+  DEBUG_MODE              = (0x1 << 5)
+  INHIBIT_STALL           = (0x1 << 7)
 
   # Commands and Codes for USB1608FS_Plus
   # Digital I/O Commands
@@ -362,11 +363,19 @@ class usb_1608FS_Plus(mccUSB):
     result = self.udev.controlWrite(request_type, self.AIN_SCAN_START, 0x0, 0x0, scanPacket, timeout = 200)
 
   def AInScanRead(self, nScan):
+
+    status = self.Status()
+    if not (status & self.AIN_SCAN_RUNNING):
+      print('AInScanRead: AInScan not running.')
+      return
+
     nSamples = int(nScan * self.nChan)
     if self.options & self.IMMEDIATE_TRANSFER_MODE:
       for i in range(self.nSamples):
         try:
           timeout = int(1000*self.nChan/self.frequency + 100)
+          if (self.options & self.TRIGGER) : # test for trigger bits 2-4
+            timeout = 0x0                    # block for trigger
           data.extend(unpack('H',self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, 2*self.nChan, timeout)))
         except:
           print('AInScanRead: error in bulk transfer in immmediate transfer mode.')
@@ -374,6 +383,8 @@ class usb_1608FS_Plus(mccUSB):
     else:
       try:
         timeout = int(1000*self.nChan*nScan/self.frequency + 1000)
+        if (self.options & self.TRIGGER) : # test for trigger bits 2-4
+            timeout = 0x0                  # block for trigger
         data =  unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 1, int(2*nSamples), timeout))
       except:
         print('AInScanRead: error in bulk transfer!', len(data), nSamples)

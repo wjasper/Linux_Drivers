@@ -64,6 +64,7 @@ def main():
     print("Hit 'r' to reset the device.")
     print("Hit 'S' to get status")
     print("Hit 's' to get serial number.")
+    print("Hit 't' to test external trigger.")
 
     ch = input('\n')
 
@@ -228,7 +229,37 @@ def main():
       usb1608FS_Plus.printStatus()
     elif ch == 's':
       print("Serial No: %s" % usb1608FS_Plus.getSerialNumber())
-
+    elif ch == 't':
+      print("Connect Pin 37 TRIG_IN to Pin 21 DIO0")
+      print("Trigger set to falling edge")
+      print("Sample 8 channels, 625 scans, 25000 Hz, +/- 2V")
+      usb1608FS_Plus.DTristateW(0x0)  # set all pins to output
+      counter = 0
+      frequency = 25000
+      count = 625
+      nChan = 8
+      channels = 0
+      gain = usb1608FS_Plus.BP_2_00V
+      gains = [0]*8
+      for chan in range(nChan):
+        gains[chan] = gain
+        channels |= (0x1 << chan)
+      usb1608FS_Plus.AInConfigW(gains)        
+      options = usb1608FS_Plus.BLOCK_TRANSFER_MODE | usb1608FS_Plus.TRIG_EDGE_FALLING
+      usb1608FS_Plus.AInScanStart(count, frequency, channels, options)
+      while(True):  # loop forever
+        time.sleep(1)
+        usb1608FS_Plus.DLatchW(0x0)
+        usb1608FS_Plus.DLatchW(0x1)
+        usb1608FS_Plus.DLatchW(0x0)
+        
+        data = usb1608FS_Plus.AInScanRead(count)
+        counter = counter + 1
+        print('counter =', counter, 'data length is', len(data),'  Expected ', count*(nChan))
+#       for i in range(count*nChan):
+#         print('data[',i,'] = ', hex(data[i]),'\t',format(usb1608FS.volts(gain, data[i]),'.3f'),'V')
+#       usb1608FS.AInStop()
+        usb1608FS_Plus.AInScanStart(count, frequency, channels, options)    # reset the scan
 
 if __name__ == "__main__":
   main()
