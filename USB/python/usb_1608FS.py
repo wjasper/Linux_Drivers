@@ -522,8 +522,8 @@ class usb_1608FS(mccUSB):
     currently set on the desired channels will be used (these may be
     changed with AIn or ALoadQueue.
 
-        lowchannel:  the first channel of the scan (0–7)
-        hichannel:   the last channel of the scan (0–7)
+        lowchannel:  the first channel of the scan (0-7)
+        hichannel:   the last channel of the scan (0-7)
         gains:       array of integer ranges for the gain queue (See ALoadQueue)
         count:       the total number of scans to perform, used only in single execution and burst modes.
                      Note: the actual number of samples returned is count*(hichannel - lowchannel + 1)
@@ -562,12 +562,12 @@ class usb_1608FS(mccUSB):
          5 endpoints * 64 bytes/ms = 320 bytes/ms = 320,000 bytes/s = 160,000 samples/s
 
     The data will be in the format:
-    lowchannel sample 0 : lowchannel + 1 sample 0 :… : hichannel sample 0
-    lowchannel sample 1 : lowchannel + 1 sample 1 :… : hichannel sample 1
+    lowchannel sample 0 : lowchannel + 1 sample 0 :... : hichannel sample 0
+    lowchannel sample 1 : lowchannel + 1 sample 1 :... : hichannel sample 1
     .
     .
     .
-    lowchannel sample n : lowchannel + 1 sample n : … : hichannel sample n
+    lowchannel sample n : lowchannel + 1 sample n :... : hichannel sample n
 
     The data will use successive endpoints, beginning with the first
     endpoint at the start of a scan and cycling through the 5 endpoints

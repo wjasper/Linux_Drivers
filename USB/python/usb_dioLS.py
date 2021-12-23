@@ -160,7 +160,7 @@ class usb_dioLS:   # HID LS dio devices
     This command reads data from the configuration memeory (EEPROM).
     """
     if (count > 8):
-      rasie ValueError('MemRead: max count is 8')
+      raise ValueError('MemRead: max count is 8')
       return
     self.h.write([self.MEM_READ, address, count, 0, 0, 0, 0, 0])
     try:
