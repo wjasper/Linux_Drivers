@@ -390,20 +390,20 @@ class usb_20x(mccUSB):
         ---------------------------------------------------------
 
      options:  bit field that controls scan options
-       bit 0: 1 = immediate transfer mode, 0 = block transfer mode
-       bits 1-6:  Reserved
-       bit 7:  0 = stall on overrun, 1 = inhibit stall
+       bit    0: 1 = immediate transfer mode, 0 = block transfer mode
+       bits 1-6: Reserved
+       bit    7: 0 = stall on overrun, 1 = inhibit stall
 
      trigger_source: the trigger source
-                     0 = no trigger,  1 = digital trigger
+              0 = no trigger,  1 = digital trigger
      trigger_mode:  the trigger mode
-                    0: Edge/rising
-                    1: Edge/falling
-                    2: Level/high
-                    3: Level/low
+              0: Edge/rising
+              1: Edge/falling
+              2: Level/high
+              3: Level/low
     """
 
-    if frequency > 500000. and self.productID == USB_205_PID:
+    if frequency > 500000. and (self.productID == USB_204_PID or self.productID == USB_205_PID):
       frequency = 500000.
     elif frequency > 100000.:
       frequency = 100000
