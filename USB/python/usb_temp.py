@@ -24,7 +24,7 @@ class usb_temp:
   DIO_DIR_IN      =  1
   DIO_DIR_OUT     =  0
 
-  # Structures for Temperature */
+# Structures for Temperature 
 ##################################################
 # NIST Thermocouple coefficients
 #
@@ -32,7 +32,7 @@ class usb_temp:
 #
 #    J, K, T, E, R, S, B, N
 #
-# Define the types of Thermocouples supported */
+# Define the types of Thermocouples supported
 
   CHAN_DISABLE  = 0
   TC_TYPE_J     = 1   # Type J thermocouple

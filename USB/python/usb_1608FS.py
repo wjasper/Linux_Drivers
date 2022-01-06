@@ -145,7 +145,7 @@ class usb_1608FS(mccUSB):
       v1 ,= unpack('f', self.MemRead(addr, self.EEPROM, 4))
       y1 = v1*65536./20. + 0x8000    # Calculate the corresponding calibrated value y1
 
-      # Read in the internal reference for +/- 10V at 0xa0 in the EEPROM  (-5.0 Nonminal) */      
+      # Read in the internal reference for +/- 10V at 0xa0 in the EEPROM  (-5.0 Nonminal)      
       addr = 0xa0
       v2 ,= unpack('f', self.MemRead(addr, self.EEPROM, 4))
       y2 = v2*65536./20. + 0x8000    # Calculate the corresponding calibrated value y2

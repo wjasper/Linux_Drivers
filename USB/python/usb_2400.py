@@ -543,11 +543,10 @@ class usb_2400(mccUSB):
     '''
     This command reads data from the available data EEPROM memory.
     The number of bytes to read is specified in the wLength (for
-    writes it is wLength - sizeof(address)).  The first 2 byes of data is
-    the address.
+    writes it is wLength - sizeof(address)).  The first 2 bytes of
+    data is the address.
 
     Note: this function is not reentrant
-  */
     '''
     request_type = libusb1.LIBUSB_TYPE_VENDOR 
     wValue = address
