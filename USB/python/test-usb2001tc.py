@@ -101,10 +101,26 @@ def main():
       usb2001tc.setVoltageRange(4)
       ch = input("Input Thermocouple type [J,K,R,S,T,N,E,B]: ")
       tc_type = ch
+      while (toContinue()):
+        for i in range(10):
+          temperature = usb2001tc.tc_temperature(tc_type)
+          print(f'Thermocouple type: {ch.upper()}  Temperature = {temperature:.2f} C  {temperature*9./5. + 32.:.2f} F')
+          time.sleep(1)
 
-      for i in range(10):
+    elif ch == 'T':
+      file_name = input('Enter filename: ')
+      # put the board in the correct voltage range +/- 73.125mV
+      usb2001tc.setVoltageRange(4)
+      ch = input("Input Thermocouple type [J,K,R,S,T,N,E,B]: ")
+      tc_type = ch
+      with open(file_name,'a',encoding = "utf-8") as f:
+        f.write(f'Type,Temperature,Units,Temperature, Units')
+
+      for i in range(100):
         temperature = usb2001tc.tc_temperature(tc_type)
-        print("Thermocouple type: ", ch, "Temperature = ", temperature, "C  ", temperature*9./5. + 32., "F ")
+        print(f'Thermocouple type: {ch.upper()}  Temperature = {temperature:.2f} C  {temperature*9./5. + 32.:.2f} F')
+        with open(file_name,'a',encoding = "utf-8") as f:
+          f.write(f'{ch.upper()}, {temperature:.2f}, C, {temperature*9./5. + 32.:.2f}, F \n')
         time.sleep(1)
 
         
