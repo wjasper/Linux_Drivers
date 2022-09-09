@@ -14,11 +14,12 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-from usb_2001TC import *
+
+from usb_2001TC import usb_2001TC
 import time
-import sys
-import fcntl
-import os
+from sys import exit
+import matplotlib.pyplot as plt
+
 
 def toContinue():
   answer = input('Continue [yY]? ')
@@ -31,7 +32,6 @@ def main():
   # initalize the class
   try:
     usb2001tc = usb_2001TC()
-    print("got a device\n")
   except:
     print('No USB-2001TC device found.')
     return
@@ -99,13 +99,29 @@ def main():
     elif ch == 't':
       # put the board in the correct voltage range +/- 73.125mV
       usb2001tc.setVoltageRange(4)
-      ch = input("Input Thermocouple type [J,K,R,S,T,N,E,B]: ")
-      tc_type = ch
+      tc_type = input("Input Thermocouple type [J,K,R,S,T,N,E,B]: ")
+      x_vals = []
+      y_vals = []
+      y2_vals = []
+      count = 0
+
       while (toContinue()):
-        for i in range(10):
+        for i in range(30):
           temperature = usb2001tc.tc_temperature(tc_type)
-          print(f'Thermocouple type: {ch.upper()}  Temperature = {temperature:.2f} C  {temperature*9./5. + 32.:.2f} F')
-          time.sleep(1)
+          print(f'Thermocouple type: {tc_type.upper()}  Temperature = {temperature:.2f} C  {temperature*9./5. + 32.:.2f} F')
+          x_vals.append(count)
+          count += 1
+          y_vals.append(temperature)
+          y2_vals.append(temperature*9./5. + 32)
+          plt.cla()
+          plt.plot(x_vals, y_vals,label="Degree C")
+          plt.plot(x_vals, y2_vals,label="Degree F")
+          plt.xlabel("Seconds")
+          plt.ylabel("Temperature")
+          plt.legend(loc="upper left")
+          plt.tight_layout()
+          plt.draw()
+          plt.pause(1)
 
     elif ch == 'T':
       file_name = input('Enter filename: ')
@@ -114,7 +130,7 @@ def main():
       ch = input("Input Thermocouple type [J,K,R,S,T,N,E,B]: ")
       tc_type = ch
       with open(file_name,'a',encoding = "utf-8") as f:
-        f.write(f'Type,Temperature,Units,Temperature, Units')
+        f.write('Type,Temperature,Units,Temperature, Units\n')
 
       for i in range(100):
         temperature = usb2001tc.tc_temperature(tc_type)
