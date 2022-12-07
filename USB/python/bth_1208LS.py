@@ -271,7 +271,7 @@ class bth_1208LS(mccUSB):
     elif (gain == self.UP_2_5V):
       volt = value*2.5/4096.             # analog output
     else:
-      raise ValueError(volts: 'Unknown range.')
+      raise ValueError('volts: Unknown range.')
 
     return volt
 
