@@ -205,6 +205,6 @@ USB-202, USB-204, USB-205, USB-1608G, USB-1608GX, USB-1608GX-2AO, USB-1808, USB-
      and reboot.  After reboot, use lsmod is see if the drivers are gone. If not, seach the web blacklisting
      kernel modules.
 
-9. Q: Under Raspian on the Raspberry Pi, I can not run the test program except as root.  
+9. Q: Under Raspbian on the Raspberry Pi, I can not run the test program except as root.  
    A: Go to /etc/udev/rules.d and rename the file 61-mcc.rules to 99-mcc.rules and reboot.
    
