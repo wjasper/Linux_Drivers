@@ -577,12 +577,13 @@ class usb2600(mccUSB):
     else:
       nSamples = self.count*self.nchan
 
+    data = None
     try:
       data =  list(unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(2*nSamples), self.HS_DELAY)))
     except:
       print('AInScanRead: error in bulkRead.')
 
-    if len(data) != nSamples:
+    if data is not None and len(data) != nSamples:
       raise ValueError('AInScanRead: error in number of samples transferred.')
       return len(data)
 

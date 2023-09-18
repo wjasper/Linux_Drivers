@@ -575,13 +575,14 @@ class usb1808(mccUSB):
 
     timeout = round(500 + 1000*nSamples/self.frequency)
 
+    data = None
     try:
       data =  list(unpack('I'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, 4*nSamples, timeout)))
     except usb1.USBErrorTimeout as exception:
       print('AInScanRead: Bulk Read error.  Timeout')
       return
 
-    if len(data) != nSamples:
+    if data is not None and len(data) != nSamples:
       raise ValueError('AInScanRead: error in number of samples transferred.')
       return len(data)
     
