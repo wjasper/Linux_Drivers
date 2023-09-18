@@ -508,6 +508,7 @@ class usb_2020(mccUSB):
     else:
       timeout = round(500 + 2000*nSamples/self.frequency)
 
+    data = None
     try:
       data =  list(unpack('H'*nSamples, self.udev.bulkRead(libusb1.LIBUSB_ENDPOINT_IN | 6, int(2*nSamples), timeout)))
     except:
@@ -515,7 +516,7 @@ class usb_2020(mccUSB):
       raise
       return
     
-    if len(data) != nSamples:
+    if data is not None and len(data) != nSamples:
       raise ValueError('AInScanRead: error in number of samples transferred.')
       return len(data)
     
