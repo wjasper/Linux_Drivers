@@ -212,7 +212,8 @@ class usb1208HS(mccUSB):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
-    value ,= self.udev.controlRead(request_type, self.DTRISTATE, wValue, wIndex, 1, self.HS_DELAY)
+    value = self.udev.controlRead(request_type, self.DTRISTATE, wValue, wIndex, 2, self.HS_DELAY)
+    value = int.from_bytes(value, 'little')
     return value
 
   def DTristateW(self, value):
@@ -236,7 +237,8 @@ class usb1208HS(mccUSB):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
-    value ,= self.udev.controlRead(request_type, self.DPORT, wValue, wIndex, 1, self.HS_DELAY)
+    value = self.udev.controlRead(request_type, self.DPORT, wValue, wIndex, 2, self.HS_DELAY)
+    value = int.from_bytes(value, 'little')
     return value
 
   def DLatchR(self):
@@ -246,7 +248,8 @@ class usb1208HS(mccUSB):
     request_type = (DEVICE_TO_HOST | VENDOR_TYPE | DEVICE_RECIPIENT)
     wValue = 0
     wIndex = 0
-    value ,= self.udev.controlRead(request_type, self.DLATCH, wValue, wIndex, 1, self.HS_DELAY)
+    value = self.udev.controlRead(request_type, self.DLATCH, wValue, wIndex, 2, self.HS_DELAY)
+    value = int.from_bytes(value, 'little')
     return value
 
   def DLatchW(self, value):
