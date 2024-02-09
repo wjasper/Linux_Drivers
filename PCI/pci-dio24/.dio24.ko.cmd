@@ -1,1 +1,0 @@
-cmd_/home/wjasper/Linux_Drivers/PCI/pci-dio24/dio24.ko := ld -r -m elf_x86_64 -z max-page-size=0x200000 -T ./scripts/module-common.lds --build-id  -o /home/wjasper/Linux_Drivers/PCI/pci-dio24/dio24.ko /home/wjasper/Linux_Drivers/PCI/pci-dio24/dio24.o /home/wjasper/Linux_Drivers/PCI/pci-dio24/dio24.mod.o ;  true
