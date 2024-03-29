@@ -7,8 +7,11 @@ that will interface to the Measurement Computing data acquisition
 devices.  This package uses libusb-1.0 (not libusb-0.1 which is not
 backward compatible).  This is a complete rewrite in python of the C
 drivers found in ../USB/mcc-libusb. It also uses the python hidapi
-and libusb1 packages. Install these packages using pip or pip3 depending on your
+and libusb1 packages. Install these packages using pip or pip3  or apt depending on your
 installation.  Note that you need the python3 version of these packages.  
+
+Note: pip3 may or may not work on raspberry pi / Debian distributions to incompatibility 
+with apt.  use sudo apt install python3-Name_Of_Package instead.
 
 To install the python version of libusb1:
 $ sudo pip install libusb1  or  easy_install libusb1
@@ -16,9 +19,11 @@ $ sudo pip install libusb1  or  easy_install libusb1
 Go to https://github.com/trezor/cython-hidapi and install the python wrapper for hidapi
 and read the instructions on how to install it.  Just run the test-usb*.py file in Python 3.
 
-$ sudo apt-get install python-dev libusb-1.0-0-dev libudev-dev
-$ sudo pip install --upgrade setuptools
-$ sudo pip install hidapi
+On the raspberry pi and Debian distribtions:
+
+$ sudo apt-get install python3-dev libusb-1.0-0-dev libudev-dev
+$ sudo apt install --upgrade setuptools
+$ sudo pip3 install hidapi or sudo apt install python3-hidapi
 
 Once these packages are installed, test them out using:
 test-usb*.py.  On the RaspberryPi, you may need to connect the usb to an externally powered
