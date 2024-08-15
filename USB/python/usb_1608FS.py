@@ -941,8 +941,8 @@ class usb_1608FS(mccUSB):
     This command sets the voltage on the CAL output.  The output
     will be 0V at power up, and should be returned to 0 when not in
     use.
-    
-       setting:  0 = 0V,   1 = 2.5V
+
+       setting:  0 = 0V,   1 = 0.625V,   2 = 1.25V,   3 = 2.5V,   4 = 5V
     """
     request_type = libusb1.LIBUSB_ENDPOINT_OUT | \
                    libusb1.LIBUSB_TYPE_CLASS   | \
