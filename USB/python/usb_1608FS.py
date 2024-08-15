@@ -1047,7 +1047,7 @@ class usb_1608FS(mccUSB):
       volt = value * 2.0 / 0x7fff
     elif gain == self.BP_1_25V:
       volt = value * 1.25 / 0x7fff
-    elif gain == self.BP_1_0V:
+    elif gain == self.BP_1_00V:
       volt = value * 1.00 / 0x7fff
     elif gain == self.BP_0_625V:
       volt = value * 0.625 / 0x7fff
