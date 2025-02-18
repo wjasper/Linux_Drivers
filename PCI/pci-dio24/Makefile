@@ -40,7 +40,7 @@ CONFIG_MODULE_SIG=n
 CONFIG_MODULE_SIG_ALL=n
 
 # Major Number of device
-#MAJOR_DEV=249
+MAJOR_DEV=249
 
 ID=PCI-DIO24
 DIST_NAME=$(ID).$(VERSION).tgz
@@ -107,9 +107,10 @@ uninstall:
 
 devices:
 	-/bin/rm -f /dev/dio24*
-	-/bin/mknod /dev/dio24_0A  c $(MAJOR_DEV) 0
-	-/bin/mknod /dev/dio24_0B  c $(MAJOR_DEV) 1
-	-/bin/mknod /dev/dio24_0C  c $(MAJOR_DEV) 2
+	-/bin/mkdir /dev/dio24/
+	-/bin/mknod /dev/dio24/dio0_0A c $(MAJOR_DEV) 0
+	-/bin/mknod /dev/dio24/dio0_0B c $(MAJOR_DEV) 1
+	-/bin/mknod /dev/dio24/dio0_0C c $(MAJOR_DEV) 2
 
 	-if [ $(NUM_BOARDS) -ge 2 ];  then \
 	/bin/mknod /dev/dio24_1A c $(MAJOR_DEV) 16; \
