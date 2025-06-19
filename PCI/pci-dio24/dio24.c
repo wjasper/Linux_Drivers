@@ -56,11 +56,10 @@
 #include "dio24_3_10_11.c"
 #endif
 
-#if LINUX_VERSION_CODE >= VERSION_CODE(4,0,0) && LINUX_VERSION_CODE < VERSION_CODE(4,20,0)
+#if LINUX_VERSION_CODE >= VERSION_CODE(4,0,0) && LINUX_VERSION_CODE < VERSION_CODE(5,0,0)
 #include "dio24_4_0_8.c"
 #endif
 
-#if LINUX_VERSION_CODE >= VERSION_CODE(4,20,0)
-#error "Your kernel is too new for the current driver.  It may work but is untested."
+#if LINUX_VERSION_CODE >= VERSION_CODE(5,0,0)
+#include "dio24_5_10_0.c"
 #endif
-
